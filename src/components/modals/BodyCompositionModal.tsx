@@ -9,7 +9,8 @@ import {
   saveBodyCompositionEntry,
   BodyComposition 
 } from '@/services/storage';
-import { Plus, TrendingDown, TrendingUp, Minus, Activity, Droplets, Flame, Heart, Save } from 'lucide-react';
+import { BodyCompositionCharts } from '@/components/charts/BodyCompositionCharts';
+import { Plus, TrendingDown, TrendingUp, Minus, Activity, Droplets, Flame, Heart, Save, BarChart3, Grid3X3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,6 +47,7 @@ function getTrend(current: number, previous: number): React.ReactNode {
 
 export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModalProps) {
   const [showAddEntry, setShowAddEntry] = useState(false);
+  const [viewMode, setViewMode] = useState<'metrics' | 'charts'>('metrics');
   const [history, setHistory] = useState<BodyComposition[]>([]);
   const [newEntry, setNewEntry] = useState<Partial<BodyComposition>>({
     weight: undefined,
@@ -209,37 +211,68 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
             </GradientCard>
           )}
 
+          {/* View Toggle */}
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'metrics' ? 'default' : 'outline'}
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={() => setViewMode('metrics')}
+            >
+              <Grid3X3 size={14} />
+              Metrics
+            </Button>
+            <Button
+              variant={viewMode === 'charts' ? 'default' : 'outline'}
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={() => setViewMode('charts')}
+            >
+              <BarChart3 size={14} />
+              Trends
+            </Button>
+          </div>
+
           {/* Latest Reading Date */}
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Latest reading</span>
             <span className="text-sm font-medium text-foreground">{latest.date}</span>
           </div>
 
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            {metrics.map((metric) => {
-              const Icon = metric.icon;
-              const status = getStatusColor(metric.key, metric.value);
-              const prevValue = previous?.[metric.key as keyof BodyComposition] as number;
+          {/* Charts View */}
+          {viewMode === 'charts' && (
+            <GradientCard>
+              <BodyCompositionCharts history={history} />
+            </GradientCard>
+          )}
 
-              return (
-                <GradientCard key={metric.key} className="p-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon size={14} className="text-primary" />
-                      <span className="text-xs text-muted-foreground">{metric.label}</span>
+          {/* Metrics Grid */}
+          {viewMode === 'metrics' && (
+            <div className="grid grid-cols-2 gap-3">
+              {metrics.map((metric) => {
+                const Icon = metric.icon;
+                const status = getStatusColor(metric.key, metric.value);
+                const prevValue = previous?.[metric.key as keyof BodyComposition] as number;
+
+                return (
+                  <GradientCard key={metric.key} className="p-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <Icon size={14} className="text-primary" />
+                        <span className="text-xs text-muted-foreground">{metric.label}</span>
+                      </div>
+                      {previous && getTrend(metric.value, prevValue)}
                     </div>
-                    {previous && getTrend(metric.value, prevValue)}
-                  </div>
-                  <div className="mt-2">
-                    <span className="text-xl font-bold text-foreground">{metric.value}</span>
-                    <span className="text-sm text-muted-foreground ml-1">{metric.unit}</span>
-                  </div>
-                  <span className={cn("text-xs", status.color)}>{status.label}</span>
-                </GradientCard>
-              );
-            })}
-          </div>
+                    <div className="mt-2">
+                      <span className="text-xl font-bold text-foreground">{metric.value}</span>
+                      <span className="text-sm text-muted-foreground ml-1">{metric.unit}</span>
+                    </div>
+                    <span className={cn("text-xs", status.color)}>{status.label}</span>
+                  </GradientCard>
+                );
+              })}
+            </div>
+          )}
 
           {/* Goal Progress */}
           <GradientCard variant="primary">

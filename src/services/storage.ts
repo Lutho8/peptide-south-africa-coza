@@ -39,11 +39,21 @@ export function removeStoredData(key: string): void {
 }
 
 // Body Composition Storage
-import { BodyComposition as BodyCompType, bodyCompositionHistory as defaultBodyComp, DoseSchedule as DoseScheduleType, Cycle as CycleType, todaysDoses as defaultDoses, activeCycles as defaultCycles } from '@/data/userData';
+import { BodyComposition as BodyCompType, bodyCompositionHistory as defaultBodyComp, DoseSchedule as DoseScheduleType, Cycle as CycleType, todaysDoses as defaultDoses, activeCycles as defaultCycles, UserProfile as UserProfileType, userProfile as defaultUserProfile } from '@/data/userData';
 
 export type BodyComposition = BodyCompType;
 export type DoseSchedule = DoseScheduleType;
 export type Cycle = CycleType;
+export type UserProfile = UserProfileType;
+
+// User Profile Storage
+export function getUserProfile(): UserProfile {
+  return getStoredData(STORAGE_KEYS.USER_PROFILE, defaultUserProfile);
+}
+
+export function saveUserProfile(profile: UserProfile): void {
+  setStoredData(STORAGE_KEYS.USER_PROFILE, profile);
+}
 
 export function getBodyCompositionHistory(): BodyComposition[] {
   return getStoredData(STORAGE_KEYS.BODY_COMPOSITION, defaultBodyComp);
