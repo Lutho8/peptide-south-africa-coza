@@ -1,12 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { todaysDoses } from '@/data/userData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { 
+  getDoseSchedules, 
+  saveDoseLog,
+  DoseSchedule,
+  DoseLog 
+} from '@/services/storage';
+import { 
+  isNotificationEnabledForSchedule,
+  enableNotificationForSchedule,
+  disableNotificationForSchedule,
+  scheduleNotification
+} from '@/services/notifications';
+import { NotificationSettings } from '@/components/settings/NotificationSettings';
+import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DoseTrackerModalProps {
@@ -17,21 +30,73 @@ interface DoseTrackerModalProps {
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) {
-  const [selectedDay, setSelectedDay] = useState(0); // 0 = today
+  const [selectedDay, setSelectedDay] = useState(0);
   const [showAddSchedule, setShowAddSchedule] = useState(false);
-  const [doses, setDoses] = useState(todaysDoses);
+  const [showSettings, setShowSettings] = useState(false);
+  const [doses, setDoses] = useState<DoseSchedule[]>([]);
 
-  const handleMarkTaken = (id: string) => {
-    setDoses(prev => prev.map(d => 
-      d.id === id ? { ...d, status: 'taken' as const } : d
-    ));
+  useEffect(() => {
+    if (open) {
+      setDoses(getDoseSchedules());
+    }
+  }, [open]);
+
+  const handleMarkTaken = (dose: DoseSchedule) => {
+    const updatedDoses = doses.map(d => 
+      d.id === dose.id ? { ...d, status: 'taken' as const } : d
+    );
+    setDoses(updatedDoses);
+
+    // Log the dose
+    const log: DoseLog = {
+      id: `log-${Date.now()}`,
+      scheduleId: dose.id,
+      peptideId: dose.peptideId,
+      peptideName: dose.peptideName,
+      dose: dose.dose,
+      scheduledTime: dose.time,
+      actualTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      status: 'taken',
+      date: new Date().toISOString().split('T')[0],
+    };
+    saveDoseLog(log);
   };
 
-  const handleMarkSkipped = (id: string) => {
-    setDoses(prev => prev.map(d => 
-      d.id === id ? { ...d, status: 'skipped' as const } : d
-    ));
+  const handleMarkSkipped = (dose: DoseSchedule) => {
+    const updatedDoses = doses.map(d => 
+      d.id === dose.id ? { ...d, status: 'skipped' as const } : d
+    );
+    setDoses(updatedDoses);
+
+    // Log the skip
+    const log: DoseLog = {
+      id: `log-${Date.now()}`,
+      scheduleId: dose.id,
+      peptideId: dose.peptideId,
+      peptideName: dose.peptideName,
+      dose: dose.dose,
+      scheduledTime: dose.time,
+      status: 'skipped',
+      date: new Date().toISOString().split('T')[0],
+    };
+    saveDoseLog(log);
   };
+
+  const handleToggleNotification = (dose: DoseSchedule) => {
+    const isEnabled = isNotificationEnabledForSchedule(dose.id);
+    if (isEnabled) {
+      disableNotificationForSchedule(dose.id);
+    } else {
+      enableNotificationForSchedule(dose.id);
+      scheduleNotification(dose.id, dose.peptideName, dose.dose, dose.time);
+    }
+    // Force re-render
+    setDoses([...doses]);
+  };
+
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay() + 1);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,6 +106,19 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Notification Settings Toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-2"
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            <Bell size={16} />
+            {showSettings ? 'Hide' : 'Show'} Notification Settings
+          </Button>
+
+          {showSettings && <NotificationSettings />}
+
           {/* Weekly Calendar View */}
           <div className="flex items-center justify-between mb-2">
             <Button variant="ghost" size="icon">
@@ -53,21 +131,29 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
           </div>
 
           <div className="flex gap-2">
-            {weekDays.map((day, index) => (
-              <button
-                key={day}
-                onClick={() => setSelectedDay(index)}
-                className={cn(
-                  "flex-1 py-3 rounded-lg text-center transition-all",
-                  selectedDay === index
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-muted-foreground hover:bg-muted"
-                )}
-              >
-                <p className="text-xs font-medium">{day}</p>
-                <p className="text-lg font-bold">{18 + index}</p>
-              </button>
-            ))}
+            {weekDays.map((day, index) => {
+              const dayDate = new Date(weekStart);
+              dayDate.setDate(weekStart.getDate() + index);
+              const isToday = dayDate.toDateString() === today.toDateString();
+              
+              return (
+                <button
+                  key={day}
+                  onClick={() => setSelectedDay(index)}
+                  className={cn(
+                    "flex-1 py-3 rounded-lg text-center transition-all",
+                    selectedDay === index
+                      ? "bg-primary text-primary-foreground"
+                      : isToday
+                      ? "bg-primary/20 text-primary"
+                      : "bg-card text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  <p className="text-xs font-medium">{day}</p>
+                  <p className="text-lg font-bold">{dayDate.getDate()}</p>
+                </button>
+              );
+            })}
           </div>
 
           {/* Add Schedule Button */}
@@ -118,45 +204,63 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
           <div>
             <h3 className="font-medium text-foreground mb-3">Today's Schedule</h3>
             <div className="space-y-3">
-              {doses.map((dose) => (
-                <GradientCard key={dose.id} className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                        <Clock size={18} className="text-primary" />
+              {doses.map((dose) => {
+                const notificationEnabled = isNotificationEnabledForSchedule(dose.id);
+                
+                return (
+                  <GradientCard key={dose.id} className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                          <Clock size={18} className="text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground">{dose.peptideName}</h4>
+                          <p className="text-xs text-muted-foreground">{dose.time} • {dose.dose}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-medium text-foreground">{dose.peptideName}</h4>
-                        <p className="text-xs text-muted-foreground">{dose.time} • {dose.dose}</p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleToggleNotification(dose)}
+                          className={cn(
+                            "p-1.5 rounded-lg transition-all",
+                            notificationEnabled 
+                              ? "bg-primary/20 text-primary" 
+                              : "bg-muted text-muted-foreground"
+                          )}
+                          title={notificationEnabled ? "Notifications on" : "Notifications off"}
+                        >
+                          {notificationEnabled ? <Bell size={14} /> : <BellOff size={14} />}
+                        </button>
+                        <StatusBadge status={dose.status} />
                       </div>
                     </div>
-                    <StatusBadge status={dose.status} />
-                  </div>
 
-                  {dose.status === 'pending' && (
-                    <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="flex-1 gap-1"
-                        onClick={() => handleMarkTaken(dose.id)}
-                      >
-                        <Check size={14} />
-                        Mark Taken
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 gap-1"
-                        onClick={() => handleMarkSkipped(dose.id)}
-                      >
-                        <X size={14} />
-                        Skip
-                      </Button>
-                    </div>
-                  )}
-                </GradientCard>
-              ))}
+                    {dose.status === 'pending' && (
+                      <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="flex-1 gap-1"
+                          onClick={() => handleMarkTaken(dose)}
+                        >
+                          <Check size={14} />
+                          Mark Taken
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 gap-1"
+                          onClick={() => handleMarkSkipped(dose)}
+                        >
+                          <X size={14} />
+                          Skip
+                        </Button>
+                      </div>
+                    )}
+                  </GradientCard>
+                );
+              })}
             </div>
           </div>
 
