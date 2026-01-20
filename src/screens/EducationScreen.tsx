@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { 
   BookOpen, Shield, Syringe, Layers, FlaskConical, 
-  Activity, ExternalLink, ChevronDown, ChevronUp, Scale
+  Activity, ExternalLink, ChevronDown, ChevronUp, Scale, Grid3X3
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { StackingMatrix } from '@/components/stacking/StackingMatrix';
 
 interface EducationSection {
   id: string;
@@ -14,6 +15,12 @@ interface EducationSection {
 }
 
 const educationSections: EducationSection[] = [
+  {
+    id: 'stacking-matrix',
+    title: 'Stacking Compatibility Matrix',
+    icon: Grid3X3,
+    content: <StackingMatrix />
+  },
   {
     id: 'basics',
     title: 'Peptide Basics',
@@ -47,9 +54,9 @@ const educationSections: EducationSection[] = [
     icon: Shield,
     content: (
       <div className="space-y-3 text-sm text-muted-foreground">
-        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-          <p className="text-red-400 font-medium">Critical Safety Rules:</p>
-          <ul className="list-disc list-inside mt-2 space-y-1 text-red-300/80">
+        <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+          <p className="text-destructive font-medium">Critical Safety Rules:</p>
+          <ul className="list-disc list-inside mt-2 space-y-1 text-destructive/80">
             <li>Start with lowest effective dose</li>
             <li>Never share needles or vials</li>
             <li>Monitor bloodwork every 8-12 weeks</li>
@@ -217,7 +224,7 @@ const educationSections: EducationSection[] = [
 ];
 
 export function EducationScreen() {
-  const [openSection, setOpenSection] = useState<string | null>('basics');
+  const [openSection, setOpenSection] = useState<string | null>('stacking-matrix');
 
   return (
     <div className="pb-24 space-y-6 fade-in">

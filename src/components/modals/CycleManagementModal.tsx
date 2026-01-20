@@ -1,13 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { activeCycles } from '@/data/userData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, ChevronLeft, ChevronRight, Calendar, Play, Pause } from 'lucide-react';
+import { 
+  getCycles, 
+  saveCycle, 
+  updateCycle,
+  Cycle 
+} from '@/services/storage';
+import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface CycleManagementModalProps {
   open: boolean;
@@ -17,11 +23,77 @@ interface CycleManagementModalProps {
 export function CycleManagementModal({ open, onOpenChange }: CycleManagementModalProps) {
   const [showAddCycle, setShowAddCycle] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [newCycle, setNewCycle] = useState<Partial<Cycle>>({});
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      setCycles(getCycles());
+    }
+  }, [open]);
 
   const daysInMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1).getDay();
-
   const monthName = selectedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const handleSaveCycle = () => {
+    if (!newCycle.peptideName || !newCycle.dose) {
+      toast({
+        title: "Required fields missing",
+        description: "Please enter peptide name and dose.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const cycle: Cycle = {
+      id: `cycle-${Date.now()}`,
+      peptideId: newCycle.peptideName?.toLowerCase().replace(/\s+/g, '-') || '',
+      peptideName: newCycle.peptideName || '',
+      dose: newCycle.dose || '',
+      frequency: newCycle.frequency || 'Daily',
+      startDate: new Date().toISOString().split('T')[0],
+      plannedDuration: newCycle.plannedDuration || 90,
+      breakDuration: newCycle.breakDuration || 30,
+      status: 'active',
+      notes: newCycle.notes,
+    };
+
+    saveCycle(cycle);
+    setCycles([...cycles, cycle]);
+    setNewCycle({});
+    setShowAddCycle(false);
+    
+    toast({
+      title: "Cycle started",
+      description: `${cycle.peptideName} cycle has been added.`,
+    });
+  };
+
+  const handleToggleCycleStatus = (cycle: Cycle) => {
+    const newStatus = cycle.status === 'active' ? 'break' : 'active';
+    const updatedCycle = { ...cycle, status: newStatus as 'active' | 'break' };
+    updateCycle(updatedCycle);
+    setCycles(cycles.map(c => c.id === cycle.id ? updatedCycle : c));
+    
+    toast({
+      title: newStatus === 'break' ? "Break started" : "Cycle resumed",
+      description: `${cycle.peptideName} is now ${newStatus === 'break' ? 'on break' : 'active'}.`,
+    });
+  };
+
+  // Get cycle blocks for calendar
+  const getCycleForDay = (day: number): Cycle | undefined => {
+    const dateStr = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return cycles.find(cycle => {
+      const start = new Date(cycle.startDate);
+      const end = new Date(start);
+      end.setDate(end.getDate() + cycle.plannedDuration);
+      const checkDate = new Date(dateStr);
+      return checkDate >= start && checkDate <= end;
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -36,7 +108,7 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
             <Button 
               variant="ghost" 
               size="icon"
-              onClick={() => setSelectedMonth(new Date(selectedMonth.setMonth(selectedMonth.getMonth() - 1)))}
+              onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1))}
             >
               <ChevronLeft size={18} />
             </Button>
@@ -44,7 +116,7 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
             <Button 
               variant="ghost" 
               size="icon"
-              onClick={() => setSelectedMonth(new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)))}
+              onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1))}
             >
               <ChevronRight size={18} />
             </Button>
@@ -65,11 +137,12 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
               ))}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
-                const isToday = day === new Date().getDate() && 
-                  selectedMonth.getMonth() === new Date().getMonth();
+                const today = new Date();
+                const isToday = day === today.getDate() && 
+                  selectedMonth.getMonth() === today.getMonth() &&
+                  selectedMonth.getFullYear() === today.getFullYear();
                 
-                // Simple cycle visualization
-                const hasCycle = day >= 1 && day <= 15; // Example: TA1 cycle
+                const cycle = getCycleForDay(day);
                 
                 return (
                   <div
@@ -77,8 +150,10 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                     className={cn(
                       "aspect-square rounded-lg flex items-center justify-center text-sm transition-all",
                       isToday && "ring-2 ring-primary",
-                      hasCycle && "bg-green-500/20"
+                      cycle?.status === 'active' && "bg-green-500/20",
+                      cycle?.status === 'break' && "bg-blue-500/20"
                     )}
+                    title={cycle?.peptideName}
                   >
                     <span className={cn(
                       isToday ? "text-primary font-bold" : "text-foreground"
@@ -122,31 +197,66 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
             <GradientCard className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2 space-y-1">
-                  <Label className="text-xs">Peptide</Label>
-                  <Input placeholder="Select peptide..." className="bg-muted" />
+                  <Label className="text-xs">Peptide *</Label>
+                  <Input 
+                    placeholder="e.g., Thymosin Alpha-1" 
+                    className="bg-muted"
+                    value={newCycle.peptideName || ''}
+                    onChange={(e) => setNewCycle({ ...newCycle, peptideName: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Dose</Label>
-                  <Input placeholder="e.g., 1.5mg" className="bg-muted" />
+                  <Label className="text-xs">Dose *</Label>
+                  <Input 
+                    placeholder="e.g., 1.5mg" 
+                    className="bg-muted"
+                    value={newCycle.dose || ''}
+                    onChange={(e) => setNewCycle({ ...newCycle, dose: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Frequency</Label>
-                  <Input placeholder="e.g., 3x/week" className="bg-muted" />
+                  <Input 
+                    placeholder="e.g., 3x/week" 
+                    className="bg-muted"
+                    value={newCycle.frequency || ''}
+                    onChange={(e) => setNewCycle({ ...newCycle, frequency: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Duration (days)</Label>
-                  <Input type="number" placeholder="90" className="bg-muted" />
+                  <Input 
+                    type="number" 
+                    placeholder="90" 
+                    className="bg-muted"
+                    value={newCycle.plannedDuration || ''}
+                    onChange={(e) => setNewCycle({ ...newCycle, plannedDuration: parseInt(e.target.value) || undefined })}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Break Duration (days)</Label>
-                  <Input type="number" placeholder="30" className="bg-muted" />
+                  <Input 
+                    type="number" 
+                    placeholder="30" 
+                    className="bg-muted"
+                    value={newCycle.breakDuration || ''}
+                    onChange={(e) => setNewCycle({ ...newCycle, breakDuration: parseInt(e.target.value) || undefined })}
+                  />
                 </div>
                 <div className="col-span-2 space-y-1">
                   <Label className="text-xs">Notes</Label>
-                  <Input placeholder="Optional notes..." className="bg-muted" />
+                  <Input 
+                    placeholder="Optional notes..." 
+                    className="bg-muted"
+                    value={newCycle.notes || ''}
+                    onChange={(e) => setNewCycle({ ...newCycle, notes: e.target.value })}
+                  />
                 </div>
               </div>
-              <Button className="w-full">Start Cycle</Button>
+              <Button className="w-full gap-2" onClick={handleSaveCycle}>
+                <Save size={16} />
+                Start Cycle
+              </Button>
             </GradientCard>
           )}
 
@@ -154,7 +264,7 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
           <div>
             <h3 className="font-medium text-foreground mb-3">Active Cycles</h3>
             <div className="space-y-3">
-              {activeCycles.map((cycle) => (
+              {cycles.filter(c => c.status !== 'completed').map((cycle) => (
                 <GradientCard key={cycle.id} className="p-3">
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -181,12 +291,22 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                     </div>
                     <div className="flex items-end">
                       {cycle.status === 'active' ? (
-                        <Button variant="outline" size="sm" className="gap-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-1"
+                          onClick={() => handleToggleCycleStatus(cycle)}
+                        >
                           <Pause size={12} />
                           Start Break
                         </Button>
                       ) : cycle.status === 'break' ? (
-                        <Button variant="outline" size="sm" className="gap-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-1"
+                          onClick={() => handleToggleCycleStatus(cycle)}
+                        >
                           <Play size={12} />
                           Resume
                         </Button>
@@ -199,15 +319,37 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                   )}
                 </GradientCard>
               ))}
+
+              {cycles.filter(c => c.status !== 'completed').length === 0 && (
+                <GradientCard className="p-3 text-center">
+                  <p className="text-sm text-muted-foreground">No active cycles. Start one above!</p>
+                </GradientCard>
+              )}
             </div>
           </div>
 
           {/* Completed Cycles */}
           <div>
             <h3 className="font-medium text-foreground mb-3">Completed History</h3>
-            <GradientCard className="p-3 text-center">
-              <p className="text-sm text-muted-foreground">No completed cycles yet</p>
-            </GradientCard>
+            {cycles.filter(c => c.status === 'completed').length > 0 ? (
+              <div className="space-y-2">
+                {cycles.filter(c => c.status === 'completed').map((cycle) => (
+                  <GradientCard key={cycle.id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-medium text-foreground">{cycle.peptideName}</h4>
+                        <p className="text-xs text-muted-foreground">{cycle.startDate}</p>
+                      </div>
+                      <StatusBadge status="completed" />
+                    </div>
+                  </GradientCard>
+                ))}
+              </div>
+            ) : (
+              <GradientCard className="p-3 text-center">
+                <p className="text-sm text-muted-foreground">No completed cycles yet</p>
+              </GradientCard>
+            )}
           </div>
         </div>
       </DialogContent>

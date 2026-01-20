@@ -10,10 +10,14 @@ import { DoseTrackerModal } from '@/components/modals/DoseTrackerModal';
 import { CycleManagementModal } from '@/components/modals/CycleManagementModal';
 import { PeptideDetailModal } from '@/components/modals/PeptideDetailModal';
 import { Peptide } from '@/data/peptides';
+import { useStorageInit } from '@/hooks/useStorageInit';
 
 type TabId = 'home' | 'stack' | 'peptides' | 'dosage' | 'education';
 
 const Index = () => {
+  // Initialize storage and notifications
+  useStorageInit();
+
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [bodyCompositionOpen, setBodyCompositionOpen] = useState(false);
   const [doseTrackerOpen, setDoseTrackerOpen] = useState(false);
