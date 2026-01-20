@@ -20,28 +20,27 @@ interface PeptideDetailModalProps {
 }
 
 export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetailModalProps) {
-  if (!peptide) return null;
-
-  const cycleSuggestion = getCycleSuggestion(peptide.id);
+  const cycleSuggestion = peptide ? getCycleSuggestion(peptide.id) : null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!peptide} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-background border-border">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
-              <DialogTitle className="text-foreground">{peptide.name}</DialogTitle>
-              <p className="text-sm text-muted-foreground">({peptide.shortName})</p>
+              <DialogTitle className="text-foreground">{peptide?.name}</DialogTitle>
+              <p className="text-sm text-muted-foreground">({peptide?.shortName})</p>
             </div>
-            <CategoryBadge category={peptide.category} showCount={false} />
+            {peptide && <CategoryBadge category={peptide.category} showCount={false} />}
           </div>
         </DialogHeader>
 
-        <div className="space-y-4">
+        {peptide && (
+          <div className="space-y-4">
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center p-3 rounded-lg bg-card border border-border">
-              <Star size={18} className="mx-auto text-yellow-500 fill-yellow-500 mb-1" />
+              <Star size={18} className="mx-auto text-warning fill-warning mb-1" />
               <p className="text-lg font-bold text-foreground">{peptide.longevityScore}/10</p>
               <p className="text-xs text-muted-foreground">Longevity Score</p>
             </div>
@@ -155,14 +154,14 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
 
               {/* Warnings */}
               {cycleSuggestion.warnings.length > 0 && (
-                <div className="mt-3 p-2 rounded bg-yellow-500/10 border border-yellow-500/30">
+                <div className="mt-3 p-2 rounded bg-warning/10 border border-warning/30">
                   <div className="flex items-center gap-1 mb-1">
-                    <AlertTriangle size={12} className="text-yellow-500" />
-                    <span className="text-xs font-medium text-yellow-400">Important</span>
+                    <AlertTriangle size={12} className="text-warning" />
+                    <span className="text-xs font-medium text-warning">Important</span>
                   </div>
                   <ul className="space-y-0.5">
                     {cycleSuggestion.warnings.map((warning, i) => (
-                      <li key={i} className="text-xs text-yellow-200/80">• {warning}</li>
+                      <li key={i} className="text-xs text-warning/80">• {warning}</li>
                     ))}
                   </ul>
                 </div>
@@ -220,15 +219,15 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
           </GradientCard>
 
           {/* Risks */}
-          <div className="p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10">
+          <div className="p-4 rounded-xl border border-warning/30 bg-warning/10">
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle size={16} className="text-yellow-500" />
-              <h3 className="font-medium text-yellow-400">Risks & Considerations</h3>
+              <AlertTriangle size={16} className="text-warning" />
+              <h3 className="font-medium text-warning">Risks & Considerations</h3>
             </div>
             <ul className="space-y-1">
               {peptide.risks.map((risk, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-yellow-200/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0" />
+                <li key={i} className="flex items-center gap-2 text-sm text-warning/80">
+                  <span className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
                   {risk}
                 </li>
               ))}
@@ -313,7 +312,8 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
             <h3 className="font-medium text-foreground mb-2">Personal Notes</h3>
             <p className="text-sm text-muted-foreground italic">No notes added yet. Tap to add your observations.</p>
           </GradientCard>
-        </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
