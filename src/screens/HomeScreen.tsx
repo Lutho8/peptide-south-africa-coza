@@ -11,6 +11,8 @@ interface HomeScreenProps {
   onOpenBodyComposition: () => void;
   onOpenDoseTracker: () => void;
   onOpenCycles: () => void;
+  onOpenBloodwork: () => void;
+  onOpenInventory: () => void;
   onNavigatePeptides: () => void;
   onNavigateStack: () => void;
 }
@@ -19,6 +21,8 @@ export function HomeScreen({
   onOpenBodyComposition,
   onOpenDoseTracker,
   onOpenCycles,
+  onOpenBloodwork,
+  onOpenInventory,
   onNavigatePeptides,
   onNavigateStack
 }: HomeScreenProps) {
@@ -53,6 +57,8 @@ export function HomeScreen({
         onBodyStats={onOpenBodyComposition}
         onCycles={onOpenCycles}
         onPeptides={onNavigatePeptides}
+        onBloodwork={onOpenBloodwork}
+        onInventory={onOpenInventory}
       />
 
       {/* Stack Categories */}
