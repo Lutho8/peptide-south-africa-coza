@@ -4,11 +4,13 @@ import {
   getDoseSchedules, 
   getCycles,
   getUserProfile,
+  updateBodyCompositionHistory,
   BodyComposition,
   DoseLog,
   DoseSchedule,
   Cycle,
-  UserProfile
+  UserProfile,
+  STORAGE_KEYS
 } from './storage';
 
 interface ExportData {
@@ -150,29 +152,29 @@ export function importFromJSON(file: File): Promise<void> {
           throw new Error('Invalid backup file format');
         }
         
-        // Import body composition
+        // Import body composition - use correct storage key
         if (data.bodyComposition.length > 0) {
-          localStorage.setItem('bodyCompositionHistory', JSON.stringify(data.bodyComposition));
+          localStorage.setItem(STORAGE_KEYS.BODY_COMPOSITION, JSON.stringify(data.bodyComposition));
         }
         
-        // Import dose logs
+        // Import dose logs - use correct storage key
         if (data.doseLogs && data.doseLogs.length > 0) {
-          localStorage.setItem('doseLogs', JSON.stringify(data.doseLogs));
+          localStorage.setItem(STORAGE_KEYS.DOSE_LOGS, JSON.stringify(data.doseLogs));
         }
         
-        // Import schedules
+        // Import schedules - use correct storage key
         if (data.doseSchedules && data.doseSchedules.length > 0) {
-          localStorage.setItem('doseSchedules', JSON.stringify(data.doseSchedules));
+          localStorage.setItem(STORAGE_KEYS.DOSE_SCHEDULES, JSON.stringify(data.doseSchedules));
         }
         
-        // Import cycles
+        // Import cycles - use correct storage key
         if (data.cycles.length > 0) {
-          localStorage.setItem('cycles', JSON.stringify(data.cycles));
+          localStorage.setItem(STORAGE_KEYS.CYCLES, JSON.stringify(data.cycles));
         }
         
-        // Import user profile
+        // Import user profile - use correct storage key
         if (data.userProfile) {
-          localStorage.setItem('userProfile', JSON.stringify(data.userProfile));
+          localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(data.userProfile));
         }
         
         resolve();
