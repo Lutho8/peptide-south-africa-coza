@@ -3,11 +3,15 @@ import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Peptide } from '@/data/peptides';
+import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Star, FlaskConical, ShoppingCart, AlertTriangle, 
-  Clock, Syringe, ExternalLink, Layers, FileText
+  Clock, Syringe, ExternalLink, Layers, FileText, 
+  Calendar, Activity, Users
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PeptideDetailModalProps {
   peptide: Peptide | null;
@@ -17,6 +21,8 @@ interface PeptideDetailModalProps {
 
 export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetailModalProps) {
   if (!peptide) return null;
+
+  const cycleSuggestion = getCycleSuggestion(peptide.id);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,6 +88,87 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
               ))}
             </ul>
           </GradientCard>
+
+          {/* Cycle Suggestions */}
+          {cycleSuggestion && (
+            <GradientCard>
+              <div className="flex items-center gap-2 mb-3">
+                <Calendar size={16} className="text-primary" />
+                <h3 className="font-medium text-foreground">Recommended Cycles</h3>
+              </div>
+              <Tabs defaultValue="intermediate" className="w-full">
+                <TabsList className="grid w-full grid-cols-4 bg-muted/50 mb-3">
+                  <TabsTrigger value="beginner" className="text-xs">Beginner</TabsTrigger>
+                  <TabsTrigger value="intermediate" className="text-xs">Inter</TabsTrigger>
+                  <TabsTrigger value="advanced" className="text-xs">Adv</TabsTrigger>
+                  <TabsTrigger value="athlete" className="text-xs">Athlete</TabsTrigger>
+                </TabsList>
+                {cycleSuggestion.protocols.map((protocol) => (
+                  <TabsContent key={protocol.level} value={protocol.level} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-muted-foreground">Dose</p>
+                        <p className="text-foreground font-medium">{protocol.dose}</p>
+                      </div>
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-muted-foreground">Frequency</p>
+                        <p className="text-foreground font-medium">{protocol.frequency}</p>
+                      </div>
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-muted-foreground">Cycle Length</p>
+                        <p className="text-foreground font-medium">{protocol.cycleDuration} days</p>
+                      </div>
+                      <div className="p-2 rounded bg-muted/50">
+                        <p className="text-muted-foreground">Break</p>
+                        <p className="text-foreground font-medium">{protocol.breakDuration} days</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground italic">{protocol.notes}</p>
+                    {protocol.bloodworkBefore.length > 0 && (
+                      <div className="flex items-start gap-2 text-xs">
+                        <Activity size={12} className="text-primary mt-0.5" />
+                        <div>
+                          <span className="text-muted-foreground">Bloodwork before: </span>
+                          <span className="text-foreground">{protocol.bloodworkBefore.join(', ').toUpperCase()}</span>
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+                ))}
+              </Tabs>
+
+              {/* Stack Suggestions */}
+              {cycleSuggestion.stackSuggestions.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users size={14} className="text-primary" />
+                    <h4 className="text-sm font-medium text-foreground">Recommended Stacks</h4>
+                  </div>
+                  {cycleSuggestion.stackSuggestions.map((stack, i) => (
+                    <div key={i} className="p-2 rounded bg-muted/30 mb-2">
+                      <p className="text-xs text-foreground font-medium">{stack.rationale}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{stack.synergy}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Warnings */}
+              {cycleSuggestion.warnings.length > 0 && (
+                <div className="mt-3 p-2 rounded bg-yellow-500/10 border border-yellow-500/30">
+                  <div className="flex items-center gap-1 mb-1">
+                    <AlertTriangle size={12} className="text-yellow-500" />
+                    <span className="text-xs font-medium text-yellow-400">Important</span>
+                  </div>
+                  <ul className="space-y-0.5">
+                    {cycleSuggestion.warnings.map((warning, i) => (
+                      <li key={i} className="text-xs text-yellow-200/80">• {warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </GradientCard>
+          )}
 
           {/* Expected Results Timeline */}
           <GradientCard>
