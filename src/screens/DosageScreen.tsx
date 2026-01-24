@@ -1,12 +1,30 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { peptides, getCategoryLabel } from '@/data/peptides';
-import { AlertTriangle, Calculator, Droplets, Syringe, ChevronDown, ChevronUp, Clock, Calendar } from 'lucide-react';
+import { AlertTriangle, Calculator, Droplets, Syringe, ChevronDown, ChevronUp, Clock, Calendar, Bell, BellOff, Save, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { 
+  getCalculatorSettings, 
+  saveCalculatorSettings, 
+  getScheduledReminders, 
+  saveScheduledReminder, 
+  deleteScheduledReminder,
+  ScheduledReminder,
+  getNotificationSettings 
+} from '@/services/storage';
+import { 
+  requestNotificationPermission, 
+  getNotificationPermission, 
+  scheduleNotification,
+  cancelAllNotifications
+} from '@/services/notifications';
 
 // Syringe types with units per ml
 const SYRINGE_TYPES = [
@@ -55,7 +73,7 @@ function generateSchedule(frequency: string, halfLifeHours: number | null): { ti
     schedule.push({ time: '06:00', note: 'Morning dose' });
     schedule.push({ time: '18:00', note: 'Evening dose' });
   } else if (freqLower.includes('weekly')) {
-    schedule.push({ time: '08:00 (Same day each week)', note: 'Weekly dose' });
+    schedule.push({ time: '08:00', note: 'Weekly dose (same day each week)' });
   } else {
     schedule.push({ time: '08:00', note: 'Standard dose time' });
   }
@@ -64,16 +82,32 @@ function generateSchedule(frequency: string, halfLifeHours: number | null): { ti
 }
 
 export function DosageScreen() {
-  const [vialSize, setVialSize] = useState('5');
-  const [bacWater, setBacWater] = useState('2');
-  const [targetDose, setTargetDose] = useState('250');
-  const [syringeType, setSyringeType] = useState<SyringeType>('u40'); // Default to U-40 as per user's syringe
-  const [experienceLevel, setExperienceLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'athlete'>('intermediate');
+  // Load saved settings on mount
+  const savedSettings = getCalculatorSettings();
+  
+  const [vialSize, setVialSize] = useState(savedSettings.lastVialSize || '5');
+  const [bacWater, setBacWater] = useState(savedSettings.lastBacWater || '2');
+  const [targetDose, setTargetDose] = useState(savedSettings.lastTargetDose || '250');
+  const [syringeType, setSyringeType] = useState<SyringeType>(savedSettings.syringeType || 'u40');
+  const [experienceLevel, setExperienceLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'athlete'>(
+    savedSettings.experienceLevel || 'intermediate'
+  );
   const [expandedPeptide, setExpandedPeptide] = useState<string | null>(null);
-  const [selectedSchedulePeptide, setSelectedSchedulePeptide] = useState<string>('');
+  const [selectedSchedulePeptide, setSelectedSchedulePeptide] = useState<string>(savedSettings.lastSelectedPeptide || '');
+  const [reminders, setReminders] = useState<ScheduledReminder[]>([]);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
+
+  // Load reminders and notification status on mount
+  useEffect(() => {
+    setReminders(getScheduledReminders());
+    const permission = getNotificationPermission();
+    const settings = getNotificationSettings();
+    setNotificationsEnabled(permission === 'granted' && settings.enabled);
+  }, []);
 
   // Get selected syringe config
-  const selectedSyringe = SYRINGE_TYPES.find(s => s.id === syringeType) || SYRINGE_TYPES[0];
+  const selectedSyringe = SYRINGE_TYPES.find(s => s.id === syringeType) || SYRINGE_TYPES[1];
 
   // Parse inputs with validation
   const vialMg = Math.max(0, parseFloat(vialSize) || 0);
@@ -110,6 +144,70 @@ export function DosageScreen() {
     return generateSchedule(schedulePeptide.frequency, halfLifeHours);
   }, [schedulePeptide]);
 
+  // Check if reminder exists for this peptide and time
+  const hasReminder = (peptideId: string, time: string) => {
+    return reminders.some(r => r.peptideId === peptideId && r.time === time && r.enabled);
+  };
+
+  // Handle saving settings
+  const handleSaveSettings = () => {
+    saveCalculatorSettings({
+      syringeType,
+      experienceLevel,
+      lastVialSize: vialSize,
+      lastBacWater: bacWater,
+      lastTargetDose: targetDose,
+      lastSelectedPeptide: selectedSchedulePeptide,
+    });
+    setSettingsSaved(true);
+    toast.success('Settings saved!');
+    setTimeout(() => setSettingsSaved(false), 2000);
+  };
+
+  // Handle enabling notifications
+  const handleEnableNotifications = async () => {
+    const permission = await requestNotificationPermission();
+    if (permission === 'granted') {
+      setNotificationsEnabled(true);
+      toast.success('Dose reminders enabled!');
+      // Schedule existing reminders
+      reminders.filter(r => r.enabled).forEach(r => {
+        scheduleNotification(r.id, r.peptideName, r.dose, r.time);
+      });
+    } else {
+      toast.error('Notification permission denied');
+    }
+  };
+
+  // Handle adding/removing reminder
+  const toggleReminder = (peptideId: string, peptideName: string, dose: string, time: string) => {
+    const existingReminder = reminders.find(r => r.peptideId === peptideId && r.time === time);
+    
+    if (existingReminder) {
+      deleteScheduledReminder(existingReminder.id);
+      setReminders(prev => prev.filter(r => r.id !== existingReminder.id));
+      toast.info(`Reminder removed for ${peptideName} at ${time}`);
+    } else {
+      const newReminder: ScheduledReminder = {
+        id: `reminder-${peptideId}-${time}-${Date.now()}`,
+        peptideId,
+        peptideName,
+        dose,
+        time,
+        days: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+        enabled: true,
+        createdAt: new Date().toISOString(),
+      };
+      saveScheduledReminder(newReminder);
+      setReminders(prev => [...prev, newReminder]);
+      
+      if (notificationsEnabled) {
+        scheduleNotification(newReminder.id, peptideName, dose, time);
+      }
+      toast.success(`Reminder set for ${peptideName} at ${time}`);
+    }
+  };
+
   const experienceLevels = [
     { id: 'beginner' as const, label: 'Beginner' },
     { id: 'intermediate' as const, label: 'Intermediate' },
@@ -119,7 +217,39 @@ export function DosageScreen() {
 
   return (
     <div className="pb-24 space-y-4 sm:space-y-6 fade-in">
-      <h1 className="text-xl sm:text-2xl font-bold text-foreground">Dosage Calculator</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Dosage Calculator</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSaveSettings}
+          className={cn(
+            "gap-1.5 transition-all",
+            settingsSaved && "bg-green-500/20 border-green-500/50 text-green-400"
+          )}
+        >
+          {settingsSaved ? <Check size={14} /> : <Save size={14} />}
+          {settingsSaved ? 'Saved!' : 'Save'}
+        </Button>
+      </div>
+
+      {/* Notification Permission Banner */}
+      {!notificationsEnabled && (
+        <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Bell size={18} className="text-primary flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Enable Dose Reminders</p>
+                <p className="text-xs text-muted-foreground">Get notified at your scheduled dose times</p>
+              </div>
+            </div>
+            <Button size="sm" onClick={handleEnableNotifications}>
+              Enable
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Safety Warning */}
       <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 sm:p-4">
@@ -182,7 +312,7 @@ export function DosageScreen() {
                 {SYRINGE_TYPES.map((syringe) => (
                   <SelectItem key={syringe.id} value={syringe.id}>
                     <span className="font-medium">{syringe.label}</span>
-                    <span className="text-muted-foreground ml-1 text-xs">({syringe.unitsPerMl} units/ml)</span>
+                    <span className="text-muted-foreground ml-1 text-xs">({syringe.unitsPerMl} u/ml)</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -279,22 +409,43 @@ export function DosageScreen() {
                 </div>
               </div>
 
-              {/* Schedule */}
+              {/* Schedule with reminder toggles */}
               <div>
                 <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                   <Calendar size={12} />
                   Recommended Schedule
+                  {notificationsEnabled && <span className="text-primary ml-1">(tap bell to set reminder)</span>}
                 </p>
                 <div className="space-y-2">
                   {schedule.map((item, idx) => (
                     <div 
                       key={idx} 
-                      className="flex items-center gap-3 p-2 rounded-lg bg-primary/10 border border-primary/20"
+                      className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20"
                     >
-                      <div className="w-16 sm:w-20 text-center">
-                        <span className="text-primary font-bold text-sm sm:text-base">{item.time.split(' ')[0]}</span>
+                      <div className="w-14 sm:w-16 text-center">
+                        <span className="text-primary font-bold text-sm">{item.time.split(' ')[0]}</span>
                       </div>
                       <div className="flex-1 text-xs sm:text-sm text-foreground">{item.note}</div>
+                      <button
+                        onClick={() => toggleReminder(
+                          schedulePeptide.id,
+                          schedulePeptide.name,
+                          schedulePeptide.dosing[experienceLevel],
+                          item.time.split(' ')[0]
+                        )}
+                        className={cn(
+                          "p-1.5 rounded-lg transition-all touch-manipulation",
+                          hasReminder(schedulePeptide.id, item.time.split(' ')[0])
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                        )}
+                      >
+                        {hasReminder(schedulePeptide.id, item.time.split(' ')[0]) ? (
+                          <Bell size={14} />
+                        ) : (
+                          <BellOff size={14} />
+                        )}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -308,6 +459,41 @@ export function DosageScreen() {
           )}
         </div>
       </GradientCard>
+
+      {/* Active Reminders Summary */}
+      {reminders.filter(r => r.enabled).length > 0 && (
+        <GradientCard>
+          <div className="flex items-center gap-2 mb-3">
+            <Bell size={16} className="text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Active Reminders</h3>
+            <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+              {reminders.filter(r => r.enabled).length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {reminders.filter(r => r.enabled).map((reminder) => (
+              <div 
+                key={reminder.id} 
+                className="flex items-center justify-between p-2 rounded bg-muted/50 text-xs"
+              >
+                <div>
+                  <span className="font-medium text-foreground">{reminder.peptideName}</span>
+                  <span className="text-muted-foreground ml-2">{reminder.dose}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-primary font-medium">{reminder.time}</span>
+                  <button
+                    onClick={() => toggleReminder(reminder.peptideId, reminder.peptideName, reminder.dose, reminder.time)}
+                    className="p-1 rounded hover:bg-muted"
+                  >
+                    <BellOff size={12} className="text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </GradientCard>
+      )}
 
       {/* Experience Level Selector */}
       <div>
