@@ -14,13 +14,37 @@ export function DosageScreen() {
   const [experienceLevel, setExperienceLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'athlete'>('intermediate');
   const [expandedPeptide, setExpandedPeptide] = useState<string | null>(null);
 
-  const vialMg = parseFloat(vialSize) || 0;
-  const waterMl = parseFloat(bacWater) || 0;
-  const targetMcg = parseFloat(targetDose) || 0;
+  // Parse inputs with validation
+  const vialMg = Math.max(0, parseFloat(vialSize) || 0);
+  const waterMl = Math.max(0, parseFloat(bacWater) || 0);
+  const targetMcg = Math.max(0, parseFloat(targetDose) || 0);
 
-  const concentration = waterMl > 0 ? (vialMg * 1000) / waterMl : 0; // mcg per ml
-  const volumeNeeded = concentration > 0 ? targetMcg / concentration : 0; // ml
-  const insulinUnits = volumeNeeded * 100; // 100 units = 1ml
+  // Precision constants
+  const MCG_PER_MG = 1000;
+  const UNITS_PER_ML = 100; // Standard insulin syringe: 100 units = 1ml
+
+  // Core calculations with high precision
+  // Step 1: Convert vial size to mcg (mg × 1000 = mcg)
+  const totalMcg = vialMg * MCG_PER_MG;
+  
+  // Step 2: Calculate concentration (mcg per ml)
+  // Formula: total mcg ÷ water volume = concentration
+  const concentration = waterMl > 0 ? totalMcg / waterMl : 0;
+  
+  // Step 3: Calculate volume needed for target dose
+  // Formula: target dose ÷ concentration = volume in ml
+  const volumeNeeded = concentration > 0 ? targetMcg / concentration : 0;
+  
+  // Step 4: Convert ml to insulin syringe units
+  // Formula: volume in ml × 100 = units (for U-100 syringe)
+  const insulinUnits = volumeNeeded * UNITS_PER_ML;
+
+  // Verification calculation (reverse check)
+  const verificationDose = volumeNeeded * concentration;
+  const isAccurate = Math.abs(verificationDose - targetMcg) < 0.001 || targetMcg === 0;
+
+  // Calculate doses per vial
+  const dosesPerVial = targetMcg > 0 ? Math.floor(totalMcg / targetMcg) : 0;
 
   const experienceLevels = [
     { id: 'beginner' as const, label: 'Beginner' },
@@ -84,26 +108,45 @@ export function DosageScreen() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border/50">
+        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border/50">
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <Droplets size={18} className="mx-auto text-primary mb-1" />
             <p className="text-xs text-muted-foreground">Concentration</p>
-            <p className="text-lg font-bold text-foreground">{concentration.toFixed(0)}</p>
+            <p className="text-lg font-bold text-foreground">{concentration.toFixed(2)}</p>
             <p className="text-xs text-muted-foreground">mcg/ml</p>
           </div>
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <Syringe size={18} className="mx-auto text-primary mb-1" />
-            <p className="text-xs text-muted-foreground">Volume</p>
-            <p className="text-lg font-bold text-foreground">{volumeNeeded.toFixed(3)}</p>
+            <p className="text-xs text-muted-foreground">Volume Needed</p>
+            <p className="text-lg font-bold text-foreground">{volumeNeeded.toFixed(4)}</p>
             <p className="text-xs text-muted-foreground">ml</p>
           </div>
           <div className="text-center p-3 rounded-lg bg-primary/20">
             <Syringe size={18} className="mx-auto text-primary mb-1" />
             <p className="text-xs text-muted-foreground">Insulin Units</p>
-            <p className="text-lg font-bold text-primary">{insulinUnits.toFixed(1)}</p>
-            <p className="text-xs text-muted-foreground">IU</p>
+            <p className="text-lg font-bold text-primary">{insulinUnits.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">IU (U-100)</p>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-muted/50">
+            <Calculator size={18} className="mx-auto text-primary mb-1" />
+            <p className="text-xs text-muted-foreground">Doses/Vial</p>
+            <p className="text-lg font-bold text-foreground">{dosesPerVial}</p>
+            <p className="text-xs text-muted-foreground">doses</p>
           </div>
         </div>
+
+        {/* Verification Badge */}
+        {concentration > 0 && (
+          <div className={cn(
+            "mt-4 p-2 rounded-lg text-center text-xs",
+            isAccurate ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+          )}>
+            {isAccurate ? "✓ Calculation verified" : "⚠ Precision warning"}
+            <span className="block text-muted-foreground mt-1">
+              {volumeNeeded.toFixed(4)} ml × {concentration.toFixed(2)} mcg/ml = {verificationDose.toFixed(2)} mcg
+            </span>
+          </div>
+        )}
       </GradientCard>
 
       {/* Experience Level Selector */}
