@@ -1,18 +1,79 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { peptides, getCategoryLabel } from '@/data/peptides';
-import { AlertTriangle, Calculator, Droplets, Syringe, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, Calculator, Droplets, Syringe, ChevronDown, ChevronUp, Clock, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+
+// Syringe types with units per ml
+const SYRINGE_TYPES = [
+  { id: 'u100', label: 'U-100', unitsPerMl: 100, description: 'Standard insulin syringe' },
+  { id: 'u40', label: 'U-40', unitsPerMl: 40, description: 'Pet/veterinary syringe' },
+  { id: 'u50', label: 'U-50', unitsPerMl: 50, description: 'Intermediate syringe' },
+] as const;
+
+type SyringeType = typeof SYRINGE_TYPES[number]['id'];
+
+// Parse half-life string to hours for calculations
+function parseHalfLifeToHours(halfLife: string | undefined): number | null {
+  if (!halfLife) return null;
+  
+  const lower = halfLife.toLowerCase();
+  const match = lower.match(/(\d+(?:\.\d+)?)\s*(?:-\s*\d+(?:\.\d+)?)?\s*(hour|hr|minute|min|day|week)/);
+  
+  if (!match) return null;
+  
+  const value = parseFloat(match[1]);
+  const unit = match[2];
+  
+  if (unit.startsWith('min')) return value / 60;
+  if (unit.startsWith('hour') || unit.startsWith('hr')) return value;
+  if (unit.startsWith('day')) return value * 24;
+  if (unit.startsWith('week')) return value * 24 * 7;
+  
+  return null;
+}
+
+// Generate injection schedule based on frequency
+function generateSchedule(frequency: string, halfLifeHours: number | null): { time: string; note: string }[] {
+  const schedule: { time: string; note: string }[] = [];
+  const freqLower = frequency.toLowerCase();
+  
+  if (freqLower.includes('before bed') || freqLower.includes('daily')) {
+    schedule.push({ time: '21:00', note: 'Evening dose (before bed)' });
+    if (freqLower.includes('2x')) {
+      schedule.push({ time: '06:00', note: 'Morning dose (fasted)' });
+    }
+  } else if (freqLower.includes('3x')) {
+    schedule.push({ time: '06:00', note: 'Morning dose' });
+    schedule.push({ time: '14:00', note: 'Afternoon dose' });
+    schedule.push({ time: '21:00', note: 'Evening dose' });
+  } else if (freqLower.includes('2x')) {
+    schedule.push({ time: '06:00', note: 'Morning dose' });
+    schedule.push({ time: '18:00', note: 'Evening dose' });
+  } else if (freqLower.includes('weekly')) {
+    schedule.push({ time: '08:00 (Same day each week)', note: 'Weekly dose' });
+  } else {
+    schedule.push({ time: '08:00', note: 'Standard dose time' });
+  }
+  
+  return schedule;
+}
 
 export function DosageScreen() {
   const [vialSize, setVialSize] = useState('5');
   const [bacWater, setBacWater] = useState('2');
   const [targetDose, setTargetDose] = useState('250');
+  const [syringeType, setSyringeType] = useState<SyringeType>('u40'); // Default to U-40 as per user's syringe
   const [experienceLevel, setExperienceLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'athlete'>('intermediate');
   const [expandedPeptide, setExpandedPeptide] = useState<string | null>(null);
+  const [selectedSchedulePeptide, setSelectedSchedulePeptide] = useState<string>('');
+
+  // Get selected syringe config
+  const selectedSyringe = SYRINGE_TYPES.find(s => s.id === syringeType) || SYRINGE_TYPES[0];
 
   // Parse inputs with validation
   const vialMg = Math.max(0, parseFloat(vialSize) || 0);
@@ -21,30 +82,33 @@ export function DosageScreen() {
 
   // Precision constants
   const MCG_PER_MG = 1000;
-  const UNITS_PER_ML = 100; // Standard insulin syringe: 100 units = 1ml
 
   // Core calculations with high precision
-  // Step 1: Convert vial size to mcg (mg × 1000 = mcg)
   const totalMcg = vialMg * MCG_PER_MG;
-  
-  // Step 2: Calculate concentration (mcg per ml)
-  // Formula: total mcg ÷ water volume = concentration
   const concentration = waterMl > 0 ? totalMcg / waterMl : 0;
-  
-  // Step 3: Calculate volume needed for target dose
-  // Formula: target dose ÷ concentration = volume in ml
   const volumeNeeded = concentration > 0 ? targetMcg / concentration : 0;
   
-  // Step 4: Convert ml to insulin syringe units
-  // Formula: volume in ml × 100 = units (for U-100 syringe)
-  const insulinUnits = volumeNeeded * UNITS_PER_ML;
+  // Calculate syringe units based on selected syringe type
+  const syringeUnits = volumeNeeded * selectedSyringe.unitsPerMl;
 
-  // Verification calculation (reverse check)
+  // Verification calculation
   const verificationDose = volumeNeeded * concentration;
   const isAccurate = Math.abs(verificationDose - targetMcg) < 0.001 || targetMcg === 0;
 
   // Calculate doses per vial
   const dosesPerVial = targetMcg > 0 ? Math.floor(totalMcg / targetMcg) : 0;
+
+  // Get schedule for selected peptide
+  const schedulePeptide = useMemo(() => 
+    peptides.find(p => p.id === selectedSchedulePeptide), 
+    [selectedSchedulePeptide]
+  );
+  
+  const schedule = useMemo(() => {
+    if (!schedulePeptide) return [];
+    const halfLifeHours = parseHalfLifeToHours(schedulePeptide.halfLife);
+    return generateSchedule(schedulePeptide.frequency, halfLifeHours);
+  }, [schedulePeptide]);
 
   const experienceLevels = [
     { id: 'beginner' as const, label: 'Beginner' },
@@ -54,18 +118,17 @@ export function DosageScreen() {
   ];
 
   return (
-    <div className="pb-24 space-y-6 fade-in">
-      <h1 className="text-2xl font-bold text-foreground">Dosage Calculator</h1>
+    <div className="pb-24 space-y-4 sm:space-y-6 fade-in">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground">Dosage Calculator</h1>
 
       {/* Safety Warning */}
-      <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
-        <div className="flex items-start gap-3">
-          <AlertTriangle size={20} className="text-yellow-500 flex-shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 sm:p-4">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <AlertTriangle size={18} className="text-yellow-500 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-medium text-yellow-400">Safety First</h3>
+            <h3 className="font-medium text-yellow-400 text-sm sm:text-base">Safety First</h3>
             <p className="text-xs text-yellow-200/80 mt-1">
-              Always verify calculations independently. Start with the lowest recommended dose. 
-              These calculations are for reference only - consult professionals.
+              Always verify calculations independently. Start with the lowest recommended dose.
             </p>
           </div>
         </div>
@@ -74,94 +137,191 @@ export function DosageScreen() {
       {/* Reconstitution Calculator */}
       <GradientCard variant="primary">
         <div className="flex items-center gap-2 mb-4">
-          <Calculator size={20} className="text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Reconstitution Calculator</h2>
+          <Calculator size={18} className="text-primary" />
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">Reconstitution Calculator</h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="space-y-2">
-            <Label className="text-sm text-muted-foreground">Vial Size (mg)</Label>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm text-muted-foreground">Vial Size (mg)</Label>
             <Input
               type="number"
+              inputMode="decimal"
               value={vialSize}
               onChange={(e) => setVialSize(e.target.value)}
-              className="bg-muted border-border"
+              className="bg-muted border-border h-10"
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-sm text-muted-foreground">BAC Water (ml)</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm text-muted-foreground">BAC Water (ml)</Label>
             <Input
               type="number"
+              inputMode="decimal"
               value={bacWater}
               onChange={(e) => setBacWater(e.target.value)}
-              className="bg-muted border-border"
+              className="bg-muted border-border h-10"
             />
           </div>
-          <div className="col-span-2 space-y-2">
-            <Label className="text-sm text-muted-foreground">Target Dose (mcg)</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm text-muted-foreground">Target Dose (mcg)</Label>
             <Input
               type="number"
+              inputMode="decimal"
               value={targetDose}
               onChange={(e) => setTargetDose(e.target.value)}
-              className="bg-muted border-border"
+              className="bg-muted border-border h-10"
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm text-muted-foreground">Syringe Type</Label>
+            <Select value={syringeType} onValueChange={(v) => setSyringeType(v as SyringeType)}>
+              <SelectTrigger className="bg-muted border-border h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border z-50">
+                {SYRINGE_TYPES.map((syringe) => (
+                  <SelectItem key={syringe.id} value={syringe.id}>
+                    <span className="font-medium">{syringe.label}</span>
+                    <span className="text-muted-foreground ml-1 text-xs">({syringe.unitsPerMl} units/ml)</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border/50">
-          <div className="text-center p-3 rounded-lg bg-muted/50">
-            <Droplets size={18} className="mx-auto text-primary mb-1" />
-            <p className="text-xs text-muted-foreground">Concentration</p>
-            <p className="text-lg font-bold text-foreground">{concentration.toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground">mcg/ml</p>
+        {/* Syringe info banner */}
+        <div className="mb-4 p-2 rounded-lg bg-primary/10 text-xs text-center">
+          <span className="text-primary font-medium">{selectedSyringe.label}</span>
+          <span className="text-muted-foreground"> - {selectedSyringe.description} ({selectedSyringe.unitsPerMl} units = 1ml)</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-4 border-t border-border/50">
+          <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
+            <Droplets size={16} className="mx-auto text-primary mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Concentration</p>
+            <p className="text-base sm:text-lg font-bold text-foreground">{concentration.toFixed(2)}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">mcg/ml</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-muted/50">
-            <Syringe size={18} className="mx-auto text-primary mb-1" />
-            <p className="text-xs text-muted-foreground">Volume Needed</p>
-            <p className="text-lg font-bold text-foreground">{volumeNeeded.toFixed(4)}</p>
-            <p className="text-xs text-muted-foreground">ml</p>
+          <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
+            <Syringe size={16} className="mx-auto text-primary mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Volume</p>
+            <p className="text-base sm:text-lg font-bold text-foreground">{volumeNeeded.toFixed(4)}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">ml</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-primary/20">
-            <Syringe size={18} className="mx-auto text-primary mb-1" />
-            <p className="text-xs text-muted-foreground">Insulin Units</p>
-            <p className="text-lg font-bold text-primary">{insulinUnits.toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground">IU (U-100)</p>
+          <div className="text-center p-2 sm:p-3 rounded-lg bg-primary/20">
+            <Syringe size={16} className="mx-auto text-primary mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">{selectedSyringe.label} Units</p>
+            <p className="text-base sm:text-lg font-bold text-primary">{syringeUnits.toFixed(2)}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">units</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-muted/50">
-            <Calculator size={18} className="mx-auto text-primary mb-1" />
-            <p className="text-xs text-muted-foreground">Doses/Vial</p>
-            <p className="text-lg font-bold text-foreground">{dosesPerVial}</p>
-            <p className="text-xs text-muted-foreground">doses</p>
+          <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
+            <Calculator size={16} className="mx-auto text-primary mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Doses/Vial</p>
+            <p className="text-base sm:text-lg font-bold text-foreground">{dosesPerVial}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">doses</p>
           </div>
         </div>
 
         {/* Verification Badge */}
         {concentration > 0 && (
           <div className={cn(
-            "mt-4 p-2 rounded-lg text-center text-xs",
+            "mt-3 sm:mt-4 p-2 rounded-lg text-center text-xs",
             isAccurate ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
           )}>
             {isAccurate ? "✓ Calculation verified" : "⚠ Precision warning"}
-            <span className="block text-muted-foreground mt-1">
+            <span className="block text-muted-foreground mt-1 text-[10px] sm:text-xs">
               {volumeNeeded.toFixed(4)} ml × {concentration.toFixed(2)} mcg/ml = {verificationDose.toFixed(2)} mcg
             </span>
           </div>
         )}
       </GradientCard>
 
+      {/* Dosing Schedule Calculator */}
+      <GradientCard>
+        <div className="flex items-center gap-2 mb-4">
+          <Clock size={18} className="text-primary" />
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">Dosing Schedule</h2>
+        </div>
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm text-muted-foreground">Select Peptide</Label>
+            <Select value={selectedSchedulePeptide} onValueChange={setSelectedSchedulePeptide}>
+              <SelectTrigger className="bg-muted border-border">
+                <SelectValue placeholder="Choose a peptide..." />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border z-50 max-h-60">
+                {peptides.map((peptide) => (
+                  <SelectItem key={peptide.id} value={peptide.id}>
+                    {peptide.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {schedulePeptide && (
+            <div className="space-y-3 pt-3 border-t border-border/50">
+              {/* Peptide info */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2 rounded bg-muted/50">
+                  <p className="text-muted-foreground">Frequency</p>
+                  <p className="text-foreground font-medium">{schedulePeptide.frequency}</p>
+                </div>
+                <div className="p-2 rounded bg-muted/50">
+                  <p className="text-muted-foreground">Half-life</p>
+                  <p className="text-foreground font-medium">{schedulePeptide.halfLife || 'N/A'}</p>
+                </div>
+                <div className="col-span-2 p-2 rounded bg-muted/50">
+                  <p className="text-muted-foreground">Recommended Dose ({experienceLevel})</p>
+                  <p className="text-primary font-medium">{schedulePeptide.dosing[experienceLevel]}</p>
+                </div>
+              </div>
+
+              {/* Schedule */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                  <Calendar size={12} />
+                  Recommended Schedule
+                </p>
+                <div className="space-y-2">
+                  {schedule.map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-center gap-3 p-2 rounded-lg bg-primary/10 border border-primary/20"
+                    >
+                      <div className="w-16 sm:w-20 text-center">
+                        <span className="text-primary font-bold text-sm sm:text-base">{item.time.split(' ')[0]}</span>
+                      </div>
+                      <div className="flex-1 text-xs sm:text-sm text-foreground">{item.note}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Administration tip */}
+              <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
+                <span className="font-medium text-foreground">Administration:</span> {schedulePeptide.administration}
+              </div>
+            </div>
+          )}
+        </div>
+      </GradientCard>
+
       {/* Experience Level Selector */}
       <div>
-        <h3 className="text-sm font-medium text-muted-foreground mb-3">Experience Level</h3>
-        <div className="flex gap-2">
+        <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 sm:mb-3">Experience Level</h3>
+        <div className="grid grid-cols-4 gap-1 sm:gap-2">
           {experienceLevels.map((level) => (
             <button
               key={level.id}
               onClick={() => setExperienceLevel(level.id)}
               className={cn(
-                "flex-1 py-2 rounded-lg text-sm font-medium transition-all",
+                "py-2 px-1 rounded-lg text-xs sm:text-sm font-medium transition-all touch-manipulation",
                 experienceLevel === level.id
                   ? "bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground hover:bg-muted"
+                  : "bg-card text-muted-foreground hover:bg-muted active:scale-95"
               )}
             >
               {level.label}
@@ -172,7 +332,7 @@ export function DosageScreen() {
 
       {/* Peptide Dosage Reference */}
       <div>
-        <h3 className="text-lg font-semibold text-foreground mb-3">Dosage Reference</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 sm:mb-3">Dosage Reference</h3>
         <div className="space-y-2">
           {peptides.map((peptide) => (
             <Collapsible 
@@ -180,15 +340,15 @@ export function DosageScreen() {
               open={expandedPeptide === peptide.id}
               onOpenChange={(open) => setExpandedPeptide(open ? peptide.id : null)}
             >
-              <GradientCard className="p-3">
-                <CollapsibleTrigger className="w-full">
+              <GradientCard className="p-2 sm:p-3">
+                <CollapsibleTrigger className="w-full touch-manipulation">
                   <div className="flex items-center justify-between">
                     <div className="text-left">
-                      <h4 className="font-medium text-foreground">{peptide.name}</h4>
-                      <p className="text-xs text-muted-foreground">{getCategoryLabel(peptide.category)}</p>
+                      <h4 className="font-medium text-foreground text-sm sm:text-base">{peptide.name}</h4>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">{getCategoryLabel(peptide.category)}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-primary font-medium">
+                      <span className="text-xs sm:text-sm text-primary font-medium">
                         {peptide.dosing[experienceLevel]}
                       </span>
                       {expandedPeptide === peptide.id ? (
@@ -238,7 +398,7 @@ export function DosageScreen() {
 
       {/* Storage Info */}
       <GradientCard>
-        <h3 className="font-medium text-foreground mb-2">Storage & Handling</h3>
+        <h3 className="font-medium text-foreground mb-2 text-sm sm:text-base">Storage & Handling</h3>
         <ul className="text-xs text-muted-foreground space-y-1">
           <li>• Store unreconstituted peptides frozen (-20°C) or refrigerated (2-8°C)</li>
           <li>• After reconstitution, refrigerate and use within 4-6 weeks</li>
