@@ -6,6 +6,8 @@ const STORAGE_KEYS = {
   CYCLES: 'peptide_app_cycles',
   NOTIFICATION_SETTINGS: 'peptide_app_notifications',
   USER_PROFILE: 'peptide_app_user_profile',
+  CALCULATOR_SETTINGS: 'peptide_app_calculator_settings',
+  SCHEDULED_REMINDERS: 'peptide_app_scheduled_reminders',
 } as const;
 
 // Generic storage functions
@@ -174,6 +176,81 @@ export function getNotificationSettings(): NotificationSettings {
 
 export function saveNotificationSettings(settings: NotificationSettings): void {
   setStoredData(STORAGE_KEYS.NOTIFICATION_SETTINGS, settings);
+}
+
+// Calculator Settings Storage
+export interface CalculatorSettings {
+  syringeType: 'u100' | 'u40' | 'u50';
+  experienceLevel: 'beginner' | 'intermediate' | 'advanced' | 'athlete';
+  lastVialSize: string;
+  lastBacWater: string;
+  lastTargetDose: string;
+  lastSelectedPeptide: string;
+  savedAt: string;
+}
+
+const defaultCalculatorSettings: CalculatorSettings = {
+  syringeType: 'u40',
+  experienceLevel: 'intermediate',
+  lastVialSize: '5',
+  lastBacWater: '2',
+  lastTargetDose: '250',
+  lastSelectedPeptide: '',
+  savedAt: '',
+};
+
+export function getCalculatorSettings(): CalculatorSettings {
+  return getStoredData(STORAGE_KEYS.CALCULATOR_SETTINGS, defaultCalculatorSettings);
+}
+
+export function saveCalculatorSettings(settings: Partial<CalculatorSettings>): void {
+  const current = getCalculatorSettings();
+  setStoredData(STORAGE_KEYS.CALCULATOR_SETTINGS, {
+    ...current,
+    ...settings,
+    savedAt: new Date().toISOString(),
+  });
+}
+
+// Scheduled Reminders Storage
+export interface ScheduledReminder {
+  id: string;
+  peptideId: string;
+  peptideName: string;
+  dose: string;
+  time: string;
+  days: ('mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun')[];
+  enabled: boolean;
+  createdAt: string;
+}
+
+export function getScheduledReminders(): ScheduledReminder[] {
+  return getStoredData(STORAGE_KEYS.SCHEDULED_REMINDERS, []);
+}
+
+export function saveScheduledReminder(reminder: ScheduledReminder): void {
+  const reminders = getScheduledReminders();
+  const existingIndex = reminders.findIndex(r => r.id === reminder.id);
+  if (existingIndex >= 0) {
+    reminders[existingIndex] = reminder;
+  } else {
+    reminders.push(reminder);
+  }
+  setStoredData(STORAGE_KEYS.SCHEDULED_REMINDERS, reminders);
+}
+
+export function deleteScheduledReminder(reminderId: string): void {
+  const reminders = getScheduledReminders();
+  setStoredData(STORAGE_KEYS.SCHEDULED_REMINDERS, reminders.filter(r => r.id !== reminderId));
+}
+
+export function toggleReminderEnabled(reminderId: string): void {
+  const reminders = getScheduledReminders();
+  const reminder = reminders.find(r => r.id === reminderId);
+  if (reminder) {
+    reminder.enabled = !reminder.enabled;
+    setStoredData(STORAGE_KEYS.SCHEDULED_REMINDERS, reminders);
+  }
 }
 
 // Initialize storage with defaults if empty
