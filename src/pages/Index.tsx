@@ -10,10 +10,8 @@ import { SettingsScreen } from '@/screens/SettingsScreen';
 import { BodyCompositionModal } from '@/components/modals/BodyCompositionModal';
 import { DoseTrackerModal } from '@/components/modals/DoseTrackerModal';
 import { CycleManagementModal } from '@/components/modals/CycleManagementModal';
-import { PeptideDetailModal } from '@/components/modals/PeptideDetailModal';
 import { BloodworkModal } from '@/components/modals/BloodworkModal';
 import { InventoryModal } from '@/components/modals/InventoryModal';
-import { Peptide } from '@/data/peptides';
 import { useStorageInit } from '@/hooks/useStorageInit';
 import { Settings } from 'lucide-react';
 
@@ -29,13 +27,6 @@ const Index = () => {
   const [cycleManagementOpen, setCycleManagementOpen] = useState(false);
   const [bloodworkOpen, setBloodworkOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
-  const [selectedPeptide, setSelectedPeptide] = useState<Peptide | null>(null);
-  const [peptideDetailOpen, setPeptideDetailOpen] = useState(false);
-
-  const handleViewPeptide = (peptide: Peptide) => {
-    setSelectedPeptide(peptide);
-    setPeptideDetailOpen(true);
-  };
 
   const handleLogoClick = () => {
     setShowSettings(false);
@@ -100,7 +91,6 @@ const Index = () => {
       <CycleManagementModal open={cycleManagementOpen} onOpenChange={setCycleManagementOpen} />
       <BloodworkModal open={bloodworkOpen} onOpenChange={setBloodworkOpen} />
       <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />
-      <PeptideDetailModal peptide={selectedPeptide} open={peptideDetailOpen} onOpenChange={setPeptideDetailOpen} />
     </div>
   );
 };
