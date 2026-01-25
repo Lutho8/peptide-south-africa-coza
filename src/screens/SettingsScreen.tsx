@@ -2,7 +2,11 @@ import { useState, useRef } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Button } from '@/components/ui/button';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
+import { RenphoConnection } from '@/components/settings/RenphoConnection';
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal';
+import { AuthModal } from '@/components/auth/AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCloudSync } from '@/hooks/useCloudSync';
 import { 
   exportAsJSON, 
   exportBodyCompositionCSV, 
@@ -14,7 +18,8 @@ import { getUserProfile } from '@/services/storage';
 import { useToast } from '@/hooks/use-toast';
 import { 
   User, Bell, Download, Upload, Database, FileJson, FileSpreadsheet,
-  Shield, Info, ExternalLink, ChevronRight, Settings2, Trash2
+  Shield, Info, ExternalLink, ChevronRight, Settings2, Trash2,
+  Cloud, CloudOff, RefreshCw, LogOut, LogIn, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,9 +29,13 @@ interface SettingsScreenProps {
 
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profile, setProfile] = useState(getUserProfile());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  const { user, signOut, isLoading: authLoading } = useAuth();
+  const { isSyncing, lastSyncAt, syncAll, isAuthenticated } = useCloudSync();
 
   const handleExportJSON = () => {
     try {
@@ -111,6 +120,14 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     setProfile(getUserProfile());
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been signed out.",
+    });
+  };
+
   return (
     <div className="pb-24 space-y-6 fade-in">
       {/* Header */}
@@ -122,6 +139,82 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           <h1 className="text-2xl font-bold text-foreground">Settings</h1>
           <p className="text-sm text-muted-foreground">Manage your preferences and data</p>
         </div>
+      </div>
+
+      {/* Cloud Sync Section */}
+      <div>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Cloud Sync</h2>
+        <GradientCard className="p-4">
+          {authLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : user ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Cloud size={20} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {lastSyncAt ? `Last sync: ${lastSyncAt.toLocaleString()}` : 'Not synced yet'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={syncAll}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? (
+                    <Loader2 size={14} className="mr-1 animate-spin" />
+                  ) : (
+                    <RefreshCw size={14} className="mr-1" />
+                  )}
+                  Sync Now
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <LogOut size={14} className="mr-1" />
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <CloudOff size={20} className="text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Not signed in</p>
+                  <p className="text-xs text-muted-foreground">Sign in to sync across devices</p>
+                </div>
+              </div>
+              <Button size="sm" onClick={() => setAuthModalOpen(true)}>
+                <LogIn size={14} className="mr-1" />
+                Sign In
+              </Button>
+            </div>
+          )}
+        </GradientCard>
+      </div>
+
+      {/* Renpho Integration */}
+      <div>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Connected Devices</h2>
+        <RenphoConnection />
       </div>
 
       {/* Profile Section */}
@@ -178,7 +271,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               className="w-full justify-start gap-3 h-auto py-2"
               onClick={() => handleExportCSV('body')}
             >
-              <FileSpreadsheet size={18} className="text-green-500" />
+              <FileSpreadsheet size={18} className="text-primary" />
               <div className="text-left">
                 <p className="font-medium text-foreground">Body Composition (CSV)</p>
                 <p className="text-xs text-muted-foreground">Export measurements for analysis</p>
@@ -192,7 +285,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               className="w-full justify-start gap-3 h-auto py-2"
               onClick={() => handleExportCSV('doses')}
             >
-              <FileSpreadsheet size={18} className="text-blue-500" />
+              <FileSpreadsheet size={18} className="text-primary" />
               <div className="text-left">
                 <p className="font-medium text-foreground">Dose Logs (CSV)</p>
                 <p className="text-xs text-muted-foreground">Export dose tracking history</p>
@@ -206,7 +299,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               className="w-full justify-start gap-3 h-auto py-2"
               onClick={() => handleExportCSV('cycles')}
             >
-              <FileSpreadsheet size={18} className="text-violet-500" />
+              <FileSpreadsheet size={18} className="text-primary" />
               <div className="text-left">
                 <p className="font-medium text-foreground">Cycles (CSV)</p>
                 <p className="text-xs text-muted-foreground">Export cycle history</p>
@@ -243,11 +336,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
       {/* Danger Zone */}
       <div>
-        <h2 className="text-sm font-medium text-red-400 mb-3 uppercase tracking-wide">Danger Zone</h2>
-        <GradientCard className="p-3 border border-red-500/20">
+        <h2 className="text-sm font-medium text-destructive mb-3 uppercase tracking-wide">Danger Zone</h2>
+        <GradientCard className="p-3 border border-destructive/20">
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-3 h-auto py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+            className="w-full justify-start gap-3 h-auto py-2 text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={handleClearAllData}
           >
             <Trash2 size={18} />
@@ -282,14 +375,18 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       {/* Version */}
       <div className="text-center text-xs text-muted-foreground">
         <p>Peptide Protocol Manager v1.0.0</p>
-        <p className="mt-1">Data stored locally on your device</p>
+        <p className="mt-1">{user ? 'Data synced to cloud' : 'Data stored locally on your device'}</p>
       </div>
 
-      {/* Profile Edit Modal */}
+      {/* Modals */}
       <ProfileEditModal 
         open={profileModalOpen}
         onOpenChange={setProfileModalOpen}
         onProfileUpdate={handleProfileUpdate}
+      />
+      <AuthModal 
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
       />
     </div>
   );
