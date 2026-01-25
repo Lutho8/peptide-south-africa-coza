@@ -56,8 +56,8 @@ export function useRenphoSync() {
     return connected;
   }, [user]);
 
-  // Connect Renpho account
-  const connectRenpho = useCallback(async (email: string, passwordHash: string) => {
+  // Connect Renpho account (now accepts plain password)
+  const connectRenpho = useCallback(async (email: string, password: string) => {
     if (!user) {
       toast.error('Please sign in first');
       return false;
@@ -67,12 +67,20 @@ export function useRenphoSync() {
 
     try {
       // Call edge function to validate and store credentials
+      // Password will be hashed server-side
       const { data, error } = await supabase.functions.invoke('renpho-sync', {
-        body: { action: 'connect', email, passwordHash },
+        body: { action: 'connect', email, password },
       });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error || 'Connection failed');
+      if (error) {
+        // Try to extract meaningful error from the response
+        const errorMessage = error.message || 'Connection failed';
+        throw new Error(errorMessage);
+      }
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Connection failed');
+      }
 
       setState(prev => ({ 
         ...prev, 
