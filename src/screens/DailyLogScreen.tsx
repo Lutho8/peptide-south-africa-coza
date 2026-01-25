@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { DoseSummary } from '@/components/doses/DoseSummary';
+import { QuickAddReminderButton } from '@/components/doses/QuickAddReminderButton';
 import { z } from 'zod';
 
 const doseEntrySchema = z.object({
@@ -423,14 +424,27 @@ export function DailyLogScreen() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddDose}>
-              <Plus size={16} className="mr-1" />
-              Add Dose
-            </Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <div className="flex-1">
+              {formData.peptideId && formData.dose && formData.time && (
+                <QuickAddReminderButton
+                  peptideId={formData.peptideId}
+                  peptideName={peptides.find(p => p.id === formData.peptideId)?.shortName || formData.peptideId}
+                  dose={formData.dose}
+                  unit={formData.unit}
+                  time={formData.time}
+                />
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddDose}>
+                <Plus size={16} className="mr-1" />
+                Add Dose
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
