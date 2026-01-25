@@ -14,7 +14,198 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      body_composition: {
+        Row: {
+          bmi: number | null
+          bmr: number | null
+          body_fat: number | null
+          body_water: number | null
+          bone_mass: number | null
+          created_at: string
+          date: string
+          fat_free_weight: number | null
+          id: string
+          metabolic_age: number | null
+          muscle_mass: number | null
+          protein: number | null
+          skeletal_muscle: number | null
+          source: string | null
+          subcutaneous_fat: number | null
+          user_id: string
+          visceral_fat: number | null
+          weight: number
+        }
+        Insert: {
+          bmi?: number | null
+          bmr?: number | null
+          body_fat?: number | null
+          body_water?: number | null
+          bone_mass?: number | null
+          created_at?: string
+          date: string
+          fat_free_weight?: number | null
+          id?: string
+          metabolic_age?: number | null
+          muscle_mass?: number | null
+          protein?: number | null
+          skeletal_muscle?: number | null
+          source?: string | null
+          subcutaneous_fat?: number | null
+          user_id: string
+          visceral_fat?: number | null
+          weight: number
+        }
+        Update: {
+          bmi?: number | null
+          bmr?: number | null
+          body_fat?: number | null
+          body_water?: number | null
+          bone_mass?: number | null
+          created_at?: string
+          date?: string
+          fat_free_weight?: number | null
+          id?: string
+          metabolic_age?: number | null
+          muscle_mass?: number | null
+          protein?: number | null
+          skeletal_muscle?: number | null
+          source?: string | null
+          subcutaneous_fat?: number | null
+          user_id?: string
+          visceral_fat?: number | null
+          weight?: number
+        }
+        Relationships: []
+      }
+      calculator_settings: {
+        Row: {
+          created_at: string
+          experience_level: string
+          id: string
+          last_bac_water: string | null
+          last_selected_peptide: string | null
+          last_target_dose: string | null
+          last_vial_size: string | null
+          syringe_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          experience_level?: string
+          id?: string
+          last_bac_water?: string | null
+          last_selected_peptide?: string | null
+          last_target_dose?: string | null
+          last_vial_size?: string | null
+          syringe_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          experience_level?: string
+          id?: string
+          last_bac_water?: string | null
+          last_selected_peptide?: string | null
+          last_target_dose?: string | null
+          last_vial_size?: string | null
+          syringe_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dose_reminders: {
+        Row: {
+          created_at: string
+          days: string[]
+          dose: string
+          enabled: boolean
+          id: string
+          peptide_id: string
+          peptide_name: string
+          time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days?: string[]
+          dose: string
+          enabled?: boolean
+          id?: string
+          peptide_id: string
+          peptide_name: string
+          time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days?: string[]
+          dose?: string
+          enabled?: boolean
+          id?: string
+          peptide_id?: string
+          peptide_name?: string
+          time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      renpho_credentials: {
+        Row: {
+          created_at: string
+          email_encrypted: string
+          id: string
+          last_sync_at: string | null
+          password_hash_encrypted: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_encrypted: string
+          id?: string
+          last_sync_at?: string | null
+          password_hash_encrypted: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_encrypted?: string
+          id?: string
+          last_sync_at?: string | null
+          password_hash_encrypted?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
