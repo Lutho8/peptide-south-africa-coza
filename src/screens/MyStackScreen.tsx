@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { userProfile, activeStack, stackOptimizations, activeCycles } from '@/data/userData';
-import { peptides, getCategoryLabel } from '@/data/peptides';
-import { User, ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink } from 'lucide-react';
+import { userProfile, stackOptimizations, activeCycles } from '@/data/userData';
+import { peptides } from '@/data/peptides';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { EditStackModal, StackItem } from '@/components/modals/EditStackModal';
+import { getActiveStack, saveActiveStack, getUserProfile } from '@/services/storage';
 
 interface StackItemProps {
   peptide: typeof peptides[0];
@@ -15,7 +17,7 @@ interface StackItemProps {
   frequency: string;
 }
 
-function StackItem({ peptide, dose, frequency }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -99,25 +101,39 @@ function StackItem({ peptide, dose, frequency }: StackItemProps) {
 }
 
 export function MyStackScreen() {
+  const [activeStack, setActiveStack] = useState<StackItem[]>([]);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [profile, setProfile] = useState(userProfile);
+
+  useEffect(() => {
+    setActiveStack(getActiveStack());
+    setProfile(getUserProfile());
+  }, []);
+
+  const handleSaveStack = (newStack: StackItem[]) => {
+    setActiveStack(newStack);
+    saveActiveStack(newStack);
+  };
+
   return (
     <div className="pb-24 space-y-6 fade-in">
       {/* User Profile Header */}
       <GradientCard variant="primary">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center text-primary-foreground font-bold text-xl">
-            {userProfile.name.split(' ').map(n => n[0]).join('')}
+            {profile.name.split(' ').map(n => n[0]).join('')}
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-foreground">{userProfile.name}</h2>
+            <h2 className="text-xl font-bold text-foreground">{profile.name}</h2>
             <p className="text-sm text-muted-foreground">
-              {userProfile.age} years • {userProfile.height}cm • {userProfile.weight}kg
+              {profile.age} years • {profile.height}cm • {profile.weight}kg
             </p>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                {userProfile.activityLevel.charAt(0).toUpperCase() + userProfile.activityLevel.slice(1)}
+                {profile.activityLevel.charAt(0).toUpperCase() + profile.activityLevel.slice(1)}
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                {userProfile.experience.charAt(0).toUpperCase() + userProfile.experience.slice(1)}
+                {profile.experience.charAt(0).toUpperCase() + profile.experience.slice(1)}
               </span>
             </div>
           </div>
@@ -128,21 +144,41 @@ export function MyStackScreen() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-foreground">Active Stack</h3>
-          <span className="text-sm text-primary font-medium">{activeStack.length} peptides</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-primary font-medium">{activeStack.length} peptides</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditModalOpen(true)}
+              className="gap-1"
+            >
+              <Edit2 size={14} />
+              Edit
+            </Button>
+          </div>
         </div>
 
-        {activeStack.map((item) => {
-          const peptide = peptides.find(p => p.id === item.peptideId);
-          if (!peptide) return null;
-          return (
-            <StackItem
-              key={peptide.id}
-              peptide={peptide}
-              dose={item.dose}
-              frequency={item.frequency}
-            />
-          );
-        })}
+        {activeStack.length === 0 ? (
+          <GradientCard className="text-center py-8">
+            <p className="text-muted-foreground mb-3">No peptides in your stack yet.</p>
+            <Button onClick={() => setEditModalOpen(true)}>
+              Add Your First Peptide
+            </Button>
+          </GradientCard>
+        ) : (
+          activeStack.map((item) => {
+            const peptide = peptides.find(p => p.id === item.peptideId);
+            if (!peptide) return null;
+            return (
+              <StackItemCard
+                key={peptide.id}
+                peptide={peptide}
+                dose={item.dose}
+                frequency={item.frequency}
+              />
+            );
+          })
+        )}
       </div>
 
       {/* AI Stack Optimization */}
@@ -158,7 +194,7 @@ export function MyStackScreen() {
               <div className="flex items-start gap-3">
                 <div className={cn(
                   "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
-                  opt.priority === 'high' ? 'bg-red-500' : 
+                  opt.priority === 'high' ? 'bg-destructive' : 
                   opt.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
                 )} />
                 <div>
@@ -203,6 +239,14 @@ export function MyStackScreen() {
           research purposes. Consult healthcare professionals before use. Monitor bloodwork regularly.
         </p>
       </div>
+
+      {/* Edit Stack Modal */}
+      <EditStackModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        currentStack={activeStack}
+        onSave={handleSaveStack}
+      />
     </div>
   );
 }

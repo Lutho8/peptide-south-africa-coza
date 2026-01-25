@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { AppHeader } from '@/components/layout/AppHeader';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { MyStackScreen } from '@/screens/MyStackScreen';
 import { PeptidesScreen } from '@/screens/PeptidesScreen';
@@ -36,6 +37,11 @@ const Index = () => {
     setPeptideDetailOpen(true);
   };
 
+  const handleLogoClick = () => {
+    setShowSettings(false);
+    setActiveTab('home');
+  };
+
   const renderScreen = () => {
     if (showSettings) {
       return <SettingsScreen onBack={() => setShowSettings(false)} />;
@@ -69,6 +75,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* App Logo Header */}
+      <AppHeader onLogoClick={handleLogoClick} />
+
       {/* Settings Button */}
       <button
         onClick={() => setShowSettings(!showSettings)}
@@ -77,7 +86,7 @@ const Index = () => {
         <Settings size={20} />
       </button>
 
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg mx-auto px-4 py-6 pt-20">
         {renderScreen()}
       </main>
 

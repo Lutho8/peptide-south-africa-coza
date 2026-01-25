@@ -174,8 +174,13 @@ export function DosageScreen() {
       reminders.filter(r => r.enabled).forEach(r => {
         scheduleNotification(r.id, r.peptideName, r.dose, r.time);
       });
+    } else if (permission === 'denied') {
+      toast.error(
+        'Notifications blocked by browser. To enable, click the lock icon in your address bar → Site settings → Allow notifications.',
+        { duration: 8000 }
+      );
     } else {
-      toast.error('Notification permission denied');
+      toast.error('Notification permission was not granted. Please try again.');
     }
   };
 
