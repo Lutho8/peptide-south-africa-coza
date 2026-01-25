@@ -49,12 +49,13 @@ export const peptides: Peptide[] = [
     molecularWeight: '3108 Da',
     halfLife: '2 hours',
     longevityScore: 8,
-    mechanism: 'Modulates immune response by enhancing T-cell function, dendritic cell maturation, and cytokine production. Restores immune homeostasis.',
+    mechanism: 'A 28-amino acid immunomodulating polypeptide that stimulates both innate and adaptive immune responses. Activates Toll-like receptors and downstream signaling pathways. Restores immune homeostasis and enhances T-cell function, dendritic cell maturation, and cytokine production.',
     benefits: [
-      'Enhanced immune function',
+      'Enhanced immune function via TLR activation',
       'Improved vaccine response',
-      'Anti-viral properties',
-      'Reduced inflammation'
+      'Anti-viral properties (HIV, hepatitis)',
+      'Reduced inflammation',
+      'Synergistic with chemotherapy for anti-tumor response'
     ],
     athleteBenefits: [
       'Faster recovery from illness',
@@ -76,7 +77,7 @@ export const peptides: Peptide[] = [
     expectedResults: {
       week1_2: 'Improved energy, reduced minor illness duration',
       week3_4: 'Notable immune resilience, better recovery',
-      week5_8: 'Significant immune optimization',
+      week5_8: 'Significant immune optimization, enhanced CD8+ T-cell response',
       longTerm: 'Sustained immune function improvement'
     },
     janoshikTested: true,
@@ -88,7 +89,8 @@ export const peptides: Peptide[] = [
       price: 45,
       stock: 'in-stock'
     },
-    references: ['PMID: 28917894', 'PMID: 29376476']
+    references: ['PMID: 28106477', 'PMID: 36812669'],
+    contraindications: ['Organ transplant recipients', 'Autoimmune conditions requiring immunosuppression']
   },
   {
     id: 'epitalon',
@@ -98,12 +100,13 @@ export const peptides: Peptide[] = [
     molecularWeight: '390.35 Da',
     halfLife: '10-15 minutes',
     longevityScore: 10,
-    mechanism: 'Activates telomerase, the enzyme responsible for lengthening telomeres. Regulates melatonin production and circadian rhythm.',
+    mechanism: 'A naturally occurring tetrapeptide that induces telomerase enzyme activity by upregulating hTERT mRNA expression. Promotes dose-dependent telomere length extension in normal human epithelial and fibroblast cells. Regulates melatonin production and circadian rhythm.',
     benefits: [
-      'Telomere lengthening',
+      'Telomere lengthening via hTERT upregulation',
       'Improved sleep quality',
       'Enhanced melatonin production',
-      'Anti-aging effects'
+      'Anti-aging effects at cellular level',
+      'Telomerase activation for longevity'
     ],
     athleteBenefits: [
       'Better recovery through improved sleep',
@@ -120,13 +123,13 @@ export const peptides: Peptide[] = [
       advanced: '10mg daily for 20 days',
       athlete: '10mg daily for 10 days'
     },
-    frequency: 'Daily (10-day cycle)',
+    frequency: 'Daily (10-day cycle, 2-3 cycles per year)',
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Improved sleep onset, vivid dreams',
       week3_4: 'Deeper sleep, better recovery',
       week5_8: 'Enhanced energy and vitality',
-      longTerm: 'Cellular rejuvenation, anti-aging benefits'
+      longTerm: 'Cellular rejuvenation, telomere maintenance'
     },
     janoshikTested: true,
     janoshikPurity: 98.7,
@@ -137,7 +140,7 @@ export const peptides: Peptide[] = [
       price: 85,
       stock: 'in-stock'
     },
-    references: ['PMID: 12374906', 'PMID: 16388879']
+    references: ['PMID: 40908429', 'PMID: 16388879']
   },
   {
     id: 'semax',
@@ -147,17 +150,19 @@ export const peptides: Peptide[] = [
     molecularWeight: '813.93 Da',
     halfLife: '10-15 minutes',
     longevityScore: 7,
-    mechanism: 'ACTH analog that modulates BDNF, enhances neuroplasticity, and provides neuroprotection through melanocortin receptor activation.',
+    mechanism: 'A synthetic heptapeptide comprising the ACTH (4-7) fragment with a C-terminal Pro-Gly-Pro tripeptide. Targets µ-opioid receptors, regulates USP18 and deubiquitination of FTO protein. Inhibits pyroptosis and decreases oxidative stress in neuronal cells. Modulates BDNF and enhances neuroplasticity.',
     benefits: [
       'Enhanced cognitive function',
       'Improved memory and learning',
-      'Neuroprotection',
-      'Reduced anxiety'
+      'Neuroprotection via µ-opioid receptor modulation',
+      'Reduced anxiety and oxidative stress',
+      'Promotes functional recovery after neurological injury'
     ],
     athleteBenefits: [
       'Better focus during training',
       'Improved mind-muscle connection',
-      'Enhanced reaction time'
+      'Enhanced reaction time',
+      'Neuroprotective during high-stress training'
     ],
     risks: [
       'Nasal irritation',
@@ -175,7 +180,7 @@ export const peptides: Peptide[] = [
       week1_2: 'Increased mental clarity, focus',
       week3_4: 'Improved memory consolidation',
       week5_8: 'Enhanced cognitive performance',
-      longTerm: 'Sustained neuroprotection'
+      longTerm: 'Sustained neuroprotection, reduced neuroinflammation'
     },
     janoshikTested: true,
     janoshikPurity: 99.5,
@@ -186,7 +191,7 @@ export const peptides: Peptide[] = [
       price: 55,
       stock: 'in-stock'
     },
-    references: ['PMID: 19429082', 'PMID: 17459469']
+    references: ['PMID: 40692165', 'PMID: 17459469']
   },
   {
     id: 'ss31',
@@ -196,17 +201,20 @@ export const peptides: Peptide[] = [
     molecularWeight: '639.88 Da',
     halfLife: '2-4 hours',
     longevityScore: 9,
-    mechanism: 'Targets mitochondrial cardiolipin, stabilizing electron transport chain and reducing ROS production. Enhances ATP synthesis.',
+    mechanism: 'A mitochondria-targeted tetrapeptide that binds with high affinity to cardiolipin on the inner mitochondrial membrane. Inhibits cytochrome c peroxidase activity, preventing cardiolipin peroxidation and protecting mitochondrial cristae structure. Accelerates ATP recovery and reduces oxidative damage. Translationally upregulates frataxin protein levels in a dose-dependent manner.',
     benefits: [
-      'Mitochondrial optimization',
-      'Enhanced energy production',
-      'Reduced oxidative stress',
-      'Cellular rejuvenation'
+      'Mitochondrial cristae protection',
+      'Enhanced ATP production and recovery',
+      'Reduced oxidative stress via cardiolipin binding',
+      'Cellular rejuvenation',
+      'Improved aconitase and respiratory chain activity',
+      'Restored mitochondrial morphology'
     ],
     athleteBenefits: [
       'Improved endurance capacity',
-      'Faster ATP regeneration',
-      'Enhanced recovery between sets'
+      'Faster ATP regeneration after exertion',
+      'Enhanced recovery between sets',
+      'Better mitochondrial membrane potential'
     ],
     risks: [
       'Injection site reactions',
@@ -222,9 +230,9 @@ export const peptides: Peptide[] = [
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Subtle energy improvements',
-      week3_4: 'Noticeable endurance gains',
+      week3_4: 'Noticeable endurance gains, improved NAD+/NADH ratio',
       week5_8: 'Significant performance enhancement',
-      longTerm: 'Mitochondrial biogenesis'
+      longTerm: 'Mitochondrial biogenesis, sustained cristae protection'
     },
     janoshikTested: true,
     janoshikPurity: 98.9,
@@ -235,7 +243,7 @@ export const peptides: Peptide[] = [
       price: 120,
       stock: 'low-stock'
     },
-    references: ['PMID: 24336218', 'PMID: 27208394']
+    references: ['PMID: 23813215', 'DOI: 10.1038/s41598-017-10320-2']
   },
   {
     id: 'retatrutide',
@@ -245,36 +253,39 @@ export const peptides: Peptide[] = [
     molecularWeight: '4112 Da',
     halfLife: '6 days',
     longevityScore: 8,
-    mechanism: 'Triple agonist targeting GLP-1, GIP, and glucagon receptors. Promotes satiety, enhances insulin sensitivity, and increases energy expenditure.',
+    mechanism: 'A novel unimolecular triple agonist of the glucose-dependent insulinotropic polypeptide (GIP), glucagon-like peptide 1 (GLP-1), and glucagon (GCG) receptors. Promotes satiety, enhances insulin sensitivity, increases energy expenditure via glucagon receptor activation, and significantly reduces liver fat.',
     benefits: [
-      'Significant fat loss',
+      'Significant fat loss (up to 24.2% at 48 weeks)',
       'Improved metabolic health',
-      'Enhanced insulin sensitivity',
-      'Appetite regulation'
+      'Enhanced insulin sensitivity and lipid metabolism',
+      'Appetite regulation',
+      '86% relative reduction in liver fat (MASLD)',
+      'Normal liver fat achieved in 85%+ of participants'
     ],
     athleteBenefits: [
       'Body recomposition',
       'Improved energy partitioning',
-      'Better nutrient utilization'
+      'Better nutrient utilization',
+      'Enhanced metabolic flexibility'
     ],
     risks: [
-      'GI side effects initially',
+      'GI side effects initially (nausea, diarrhea)',
       'Possible muscle loss without resistance training',
       'Requires gradual dose titration'
     ],
     dosing: {
-      beginner: '0.5mg weekly',
-      intermediate: '1mg weekly',
-      advanced: '2mg weekly',
-      athlete: '2mg weekly'
+      beginner: '1mg weekly',
+      intermediate: '4mg weekly',
+      advanced: '8-12mg weekly',
+      athlete: '4-8mg weekly'
     },
-    frequency: 'Weekly',
+    frequency: 'Once weekly',
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Reduced appetite, possible GI adjustment',
       week3_4: 'Noticeable weight loss begins',
-      week5_8: 'Significant fat reduction',
-      longTerm: 'Metabolic optimization, sustained weight management'
+      week5_8: 'Significant fat reduction, liver fat normalization',
+      longTerm: 'Metabolic optimization, up to 24% weight reduction at 48 weeks'
     },
     janoshikTested: true,
     janoshikPurity: 99.1,
@@ -285,7 +296,7 @@ export const peptides: Peptide[] = [
       price: 195,
       stock: 'in-stock'
     },
-    references: ['NCT04881760', 'PMID: 37385275']
+    references: ['DOI: 10.1038/s41591-024-03018-2', 'DOI: 10.1038/s41421-024-00700-0']
   },
   {
     id: 'bpc157',
@@ -295,27 +306,30 @@ export const peptides: Peptide[] = [
     molecularWeight: '1419.53 Da',
     halfLife: '24 hours',
     longevityScore: 8,
-    mechanism: 'Gastric pentadecapeptide that promotes angiogenesis, modulates nitric oxide, and accelerates tissue repair through multiple growth factor pathways.',
+    mechanism: 'Gastric pentadecapeptide that promotes angiogenesis, modulates nitric oxide pathways, and accelerates tissue repair through multiple growth factor pathways. Demonstrates potential benefits in tendon and muscle repair in preclinical studies.',
     benefits: [
       'Accelerated wound healing',
       'Tendon and ligament repair',
-      'Gut healing',
-      'Anti-inflammatory effects'
+      'Gut healing and cytoprotection',
+      'Anti-inflammatory effects',
+      'Potential muscle repair support'
     ],
     athleteBenefits: [
       'Faster injury recovery',
       'Joint and connective tissue support',
-      'Reduced inflammation from training'
+      'Reduced inflammation from training',
+      'Local injection near injury site enhances effects'
     ],
     risks: [
-      'Limited human clinical data',
-      'Possible interaction with blood thinners'
+      'Limited human clinical trial data',
+      'Possible interaction with blood thinners',
+      'Case series data only - no controlled human trials'
     ],
     dosing: {
       beginner: '250mcg daily',
       intermediate: '500mcg daily',
       advanced: '500mcg 2x daily',
-      athlete: '500mcg daily'
+      athlete: '500mcg daily (systemic) or local injection'
     },
     frequency: 'Daily',
     administration: 'Subcutaneous injection (near injury site if applicable)',
@@ -334,7 +348,7 @@ export const peptides: Peptide[] = [
       price: 42,
       stock: 'in-stock'
     },
-    references: ['PMID: 27282919', 'PMID: 30915550']
+    references: ['PMID: 41476424', 'PMID: 30915550']
   },
   {
     id: 'tb500',
@@ -344,9 +358,10 @@ export const peptides: Peptide[] = [
     molecularWeight: '4963 Da',
     halfLife: '7-14 days',
     longevityScore: 7,
-    mechanism: 'Synthetic fraction of Thymosin Beta-4. Promotes cell migration, angiogenesis, and reduces inflammation through actin-binding properties.',
+    mechanism: 'Synthetic derivative of Thymosin Beta-4 (TB-4). Promotes angiogenesis, cell migration, and tissue repair through actin-binding properties. Demonstrated tissue repair benefits in preclinical models.',
     benefits: [
       'Systemic healing support',
+      'Promotes angiogenesis',
       'Reduced inflammation',
       'Improved flexibility',
       'Hair growth promotion'
@@ -354,11 +369,12 @@ export const peptides: Peptide[] = [
     athleteBenefits: [
       'Full-body recovery support',
       'Joint mobility improvement',
-      'Synergistic with BPC-157'
+      'Synergistic with BPC-157 for comprehensive healing'
     ],
     risks: [
       'Possible fatigue initially',
-      'Limited human trials'
+      'Limited human orthopaedic data',
+      'Banned in competitive sports'
     ],
     dosing: {
       beginner: '2.5mg 2x/week',
@@ -370,7 +386,7 @@ export const peptides: Peptide[] = [
     administration: 'Subcutaneous or intramuscular injection',
     expectedResults: {
       week1_2: 'General well-being improvement',
-      week3_4: 'Reduced chronic inflammation',
+      week3_4: 'Reduced chronic inflammation, enhanced angiogenesis',
       week5_8: 'Enhanced tissue repair',
       longTerm: 'Sustained healing benefits'
     },
@@ -383,7 +399,7 @@ export const peptides: Peptide[] = [
       price: 65,
       stock: 'in-stock'
     },
-    references: ['PMID: 20831796', 'PMID: 25290457']
+    references: ['PMID: 41476424', 'PMID: 25290457']
   },
   {
     id: 'ipamorelin',
@@ -393,17 +409,19 @@ export const peptides: Peptide[] = [
     molecularWeight: '711.85 Da',
     halfLife: '2 hours',
     longevityScore: 8,
-    mechanism: 'Selective growth hormone secretagogue that stimulates GH release via ghrelin receptor without affecting cortisol or prolactin levels.',
+    mechanism: 'A highly selective pentapeptide growth hormone secretagogue that mimics GHRP-6 but with superior selectivity. Stimulates GH release via ghrelin receptor pathway without releasing ACTH, cortisol, or prolactin even at high doses.',
     benefits: [
-      'Increased GH release',
+      'Increased GH release (selective)',
       'Improved body composition',
       'Enhanced recovery',
-      'Better sleep quality'
+      'Better sleep quality',
+      'No cortisol or prolactin elevation'
     ],
     athleteBenefits: [
       'Muscle growth support',
       'Fat loss enhancement',
-      'Faster recovery between sessions'
+      'Faster recovery between sessions',
+      'Improved muscle tension (with CJC-1295)'
     ],
     risks: [
       'Water retention possible',
@@ -414,7 +432,7 @@ export const peptides: Peptide[] = [
       beginner: '100mcg before bed',
       intermediate: '200mcg before bed',
       advanced: '300mcg before bed',
-      athlete: '200mcg before bed'
+      athlete: '200mcg before bed (combine with CJC-1295)'
     },
     frequency: 'Daily (before bed)',
     administration: 'Subcutaneous injection',
@@ -422,7 +440,7 @@ export const peptides: Peptide[] = [
       week1_2: 'Improved sleep, recovery',
       week3_4: 'Fat loss begins, muscle fullness',
       week5_8: 'Noticeable body recomposition',
-      longTerm: 'Sustained GH optimization'
+      longTerm: 'Sustained GH optimization without hormonal disruption'
     },
     janoshikTested: true,
     janoshikPurity: 99.4,
@@ -433,7 +451,7 @@ export const peptides: Peptide[] = [
       price: 38,
       stock: 'in-stock'
     },
-    references: ['PMID: 10372583', 'PMID: 9849822']
+    references: ['PMID: 9849822', 'PMID: 41476424']
   },
   {
     id: 'cjc1295',
@@ -441,18 +459,19 @@ export const peptides: Peptide[] = [
     shortName: 'CJC',
     category: 'gh-secretagogue',
     molecularWeight: '3367.97 Da',
-    halfLife: '30 minutes',
+    halfLife: '30 minutes (no DAC) / 5.8-8.1 days (with DAC)',
     longevityScore: 8,
-    mechanism: 'Modified GHRH analog that stimulates pulsatile GH release. Synergistic with GHRP peptides for enhanced GH secretion.',
+    mechanism: 'A long-acting GHRH analog that produces dose-dependent increases in mean plasma GH concentrations (2-10 fold for 6+ days) and IGF-I levels (1.5-3 fold for 9-11 days). After multiple doses, IGF-I remains elevated for up to 28 days. Synergistic with GHRP peptides.',
     benefits: [
-      'Enhanced GH pulse amplitude',
-      'Improved IGF-1 levels',
+      'Enhanced GH pulse amplitude (2-10x)',
+      'Sustained IGF-1 elevation (9-11 days per injection)',
       'Body composition improvement',
-      'Anti-aging effects'
+      'Anti-aging effects',
+      'Cumulative effect with repeated dosing'
     ],
     athleteBenefits: [
-      'Synergistic with Ipamorelin',
-      'Enhanced recovery',
+      'Synergistic with Ipamorelin for enhanced GH secretion',
+      'Enhanced recovery and muscle tension',
       'Improved performance markers'
     ],
     risks: [
@@ -461,18 +480,18 @@ export const peptides: Peptide[] = [
       'Requires fasted administration'
     ],
     dosing: {
-      beginner: '100mcg before bed',
-      intermediate: '200mcg before bed',
+      beginner: '100mcg before bed (30µg/kg)',
+      intermediate: '200mcg before bed (60µg/kg)',
       advanced: '200mcg 2x daily',
-      athlete: '200mcg before bed'
+      athlete: '200mcg before bed with Ipamorelin'
     },
     frequency: 'Daily (before bed)',
     administration: 'Subcutaneous injection',
     expectedResults: {
-      week1_2: 'Enhanced sleep quality',
-      week3_4: 'Improved recovery and energy',
+      week1_2: 'Enhanced sleep quality, GH elevation',
+      week3_4: 'Improved recovery and energy, IGF-1 sustained',
       week5_8: 'Body composition changes',
-      longTerm: 'Sustained GH optimization'
+      longTerm: 'Sustained GH optimization, cumulative IGF-1 benefits'
     },
     janoshikTested: true,
     janoshikPurity: 99.0,
@@ -483,7 +502,7 @@ export const peptides: Peptide[] = [
       price: 42,
       stock: 'in-stock'
     },
-    references: ['PMID: 16352683', 'PMID: 17018654']
+    references: ['PMID: 16352683', 'PMID: 41476424']
   },
   {
     id: 'ghkcu',
@@ -493,21 +512,24 @@ export const peptides: Peptide[] = [
     molecularWeight: '403.92 Da',
     halfLife: '4-6 hours',
     longevityScore: 9,
-    mechanism: 'Copper peptide complex that activates regenerative genes, promotes collagen synthesis, and provides potent antioxidant effects.',
+    mechanism: 'Copper peptide complex that activates regenerative genes, promotes collagen synthesis, and provides potent antioxidant and anti-inflammatory effects. Shows promise in wound healing and tissue regeneration in preclinical studies.',
     benefits: [
       'Skin rejuvenation',
       'Wound healing',
       'Anti-aging gene activation',
-      'Collagen synthesis'
+      'Collagen synthesis',
+      'Anti-inflammatory properties'
     ],
     athleteBenefits: [
       'Connective tissue support',
       'Skin health optimization',
-      'Systemic regeneration'
+      'Systemic regeneration',
+      'Recovery support'
     ],
     risks: [
       'Copper toxicity at high doses',
-      'Skin discoloration possible'
+      'Skin discoloration possible',
+      'No clinical musculoskeletal data yet'
     ],
     dosing: {
       beginner: '1mg daily',
@@ -519,7 +541,7 @@ export const peptides: Peptide[] = [
     administration: 'Subcutaneous injection or topical',
     expectedResults: {
       week1_2: 'Improved skin quality',
-      week3_4: 'Enhanced healing markers',
+      week3_4: 'Enhanced healing markers, reduced inflammation',
       week5_8: 'Visible anti-aging effects',
       longTerm: 'Sustained regenerative benefits'
     },
@@ -532,7 +554,7 @@ export const peptides: Peptide[] = [
       price: 58,
       stock: 'in-stock'
     },
-    references: ['PMID: 28822553', 'PMID: 30681787']
+    references: ['PMID: 41476424', 'PMID: 30681787']
   },
   {
     id: 'motsc',
