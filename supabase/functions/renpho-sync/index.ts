@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.0";
-import { encode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
+import md5 from "https://esm.sh/md5@2.3.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,13 +10,8 @@ const corsHeaders = {
 const RENPHO_API_BASE = 'https://renpho.qnclouds.com';
 
 // Hash password using MD5 (Renpho uses MD5 hashed passwords)
-async function hashPasswordMD5(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('MD5', data);
-  const hashArray = new Uint8Array(hashBuffer);
-  const hashHex = new TextDecoder().decode(encode(hashArray));
-  return hashHex;
+function hashPasswordMD5(password: string): string {
+  return md5(password);
 }
 
 // Common headers for Renpho API requests
