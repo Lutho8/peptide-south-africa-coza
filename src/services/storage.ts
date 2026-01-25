@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   USER_PROFILE: 'peptide_app_user_profile',
   CALCULATOR_SETTINGS: 'peptide_app_calculator_settings',
   SCHEDULED_REMINDERS: 'peptide_app_scheduled_reminders',
+  ACTIVE_STACK: 'peptide_app_active_stack',
 } as const;
 
 // Generic storage functions
@@ -41,7 +42,7 @@ export function removeStoredData(key: string): void {
 }
 
 // Body Composition Storage
-import { BodyComposition as BodyCompType, bodyCompositionHistory as defaultBodyComp, DoseSchedule as DoseScheduleType, Cycle as CycleType, todaysDoses as defaultDoses, activeCycles as defaultCycles, UserProfile as UserProfileType, userProfile as defaultUserProfile } from '@/data/userData';
+import { BodyComposition as BodyCompType, bodyCompositionHistory as defaultBodyComp, DoseSchedule as DoseScheduleType, Cycle as CycleType, todaysDoses as defaultDoses, activeCycles as defaultCycles, UserProfile as UserProfileType, userProfile as defaultUserProfile, activeStack as defaultActiveStack } from '@/data/userData';
 
 export type BodyComposition = BodyCompType;
 export type DoseSchedule = DoseScheduleType;
@@ -264,6 +265,24 @@ export function initializeStorage(): void {
   if (!localStorage.getItem(STORAGE_KEYS.CYCLES)) {
     setStoredData(STORAGE_KEYS.CYCLES, defaultCycles);
   }
+  if (!localStorage.getItem(STORAGE_KEYS.ACTIVE_STACK)) {
+    setStoredData(STORAGE_KEYS.ACTIVE_STACK, defaultActiveStack);
+  }
+}
+
+// Active Stack Storage
+export interface ActiveStackItem {
+  peptideId: string;
+  dose: string;
+  frequency: string;
+}
+
+export function getActiveStack(): ActiveStackItem[] {
+  return getStoredData(STORAGE_KEYS.ACTIVE_STACK, defaultActiveStack);
+}
+
+export function saveActiveStack(stack: ActiveStackItem[]): void {
+  setStoredData(STORAGE_KEYS.ACTIVE_STACK, stack);
 }
 
 export { STORAGE_KEYS };
