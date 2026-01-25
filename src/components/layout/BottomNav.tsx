@@ -1,7 +1,7 @@
-import { Home, Layers, Database, Calculator, BookOpen } from 'lucide-react';
+import { Home, Layers, CalendarDays, Calculator, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type TabId = 'home' | 'stack' | 'peptides' | 'dosage' | 'education';
+type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'research';
 
 interface BottomNavProps {
   activeTab: TabId;
@@ -11,9 +11,9 @@ interface BottomNavProps {
 const tabs = [
   { id: 'home' as const, icon: Home, label: 'Home' },
   { id: 'stack' as const, icon: Layers, label: 'My Stack' },
-  { id: 'peptides' as const, icon: Database, label: 'Peptides' },
+  { id: 'daily-log' as const, icon: CalendarDays, label: 'Daily Log' },
   { id: 'dosage' as const, icon: Calculator, label: 'Dosage' },
-  { id: 'education' as const, icon: BookOpen, label: 'Education' },
+  { id: 'research' as const, icon: BookOpen, label: 'Research' },
 ];
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
