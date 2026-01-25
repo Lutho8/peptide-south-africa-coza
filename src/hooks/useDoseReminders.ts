@@ -150,6 +150,42 @@ export function useDoseReminders() {
     }
   }, [user, reminders]);
 
+  // Bulk add reminders (for cycle import)
+  const bulkAddReminders = useCallback(async (newReminders: Omit<DoseReminder, 'id' | 'user_id'>[]) => {
+    const remindersWithIds: DoseReminder[] = newReminders.map(r => ({
+      ...r,
+      id: crypto.randomUUID(),
+    }));
+
+    try {
+      if (user) {
+        const insertData = remindersWithIds.map(r => ({
+          id: r.id,
+          user_id: user.id,
+          peptide_id: r.peptide_id,
+          peptide_name: r.peptide_name,
+          dose: r.dose,
+          time: r.time,
+          days: r.days,
+          enabled: r.enabled,
+        }));
+
+        const { error } = await supabase.from('dose_reminders').insert(insertData);
+        if (error) throw error;
+      }
+
+      const updated = [...reminders, ...remindersWithIds];
+      setReminders(updated);
+      saveLocalReminders(updated);
+
+      toast.success(`${remindersWithIds.length} reminder${remindersWithIds.length > 1 ? 's' : ''} created`);
+      return remindersWithIds;
+    } catch (error) {
+      console.error('Error bulk adding reminders:', error);
+      throw error;
+    }
+  }, [user, reminders]);
+
   const updateReminder = useCallback(async (id: string, updates: Partial<DoseReminder>) => {
     try {
       if (user) {
@@ -248,6 +284,7 @@ export function useDoseReminders() {
     isLoading,
     isCloudEnabled: !!user,
     addReminder,
+    bulkAddReminders,
     updateReminder,
     toggleReminder,
     deleteReminder,

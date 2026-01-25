@@ -4,6 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { 
   isNotificationSupported, 
   requestNotificationPermission, 
@@ -16,17 +17,25 @@ import {
   saveNotificationSettings,
   NotificationSettings as NotificationSettingsType 
 } from '@/services/storage';
+import { 
+  getServiceWorkerStatus, 
+  isPushSupported 
+} from '@/services/pushScheduler';
 import { ReminderManager } from '@/components/reminders/ReminderManager';
-import { Bell, BellOff, BellRing, Volume2, VolumeX, Clock } from 'lucide-react';
+import { Bell, BellOff, BellRing, Volume2, VolumeX, Clock, Smartphone, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function NotificationSettings() {
   const [settings, setSettings] = useState<NotificationSettingsType>(getNotificationSettings());
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [swStatus, setSwStatus] = useState<'active' | 'installing' | 'waiting' | 'none'>('none');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setPermission(getNotificationPermission());
+    
+    // Check service worker status
+    getServiceWorkerStatus().then(setSwStatus);
   }, []);
 
   const handleEnableNotifications = async () => {
@@ -206,12 +215,30 @@ export function NotificationSettings() {
               onClick={() => {
                 new Notification('Test Reminder', {
                   body: 'This is how your dose reminders will appear!',
-                  icon: '/favicon.ico'
+                  icon: '/favicon.png'
                 });
               }}
             >
               Send Test Notification
             </Button>
+
+            {/* Background Notification Status */}
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-3">
+                <Smartphone size={18} className="text-muted-foreground" />
+                <Label className="text-sm text-foreground">Background Notifications</Label>
+              </div>
+              {isPushSupported() && swStatus === 'active' ? (
+                <Badge variant="outline" className="gap-1 text-primary border-primary/30">
+                  <Check size={12} />
+                  Active
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-muted-foreground">
+                  {swStatus === 'installing' ? 'Installing...' : 'Not Available'}
+                </Badge>
+              )}
+            </div>
           </>
         )}
       </div>

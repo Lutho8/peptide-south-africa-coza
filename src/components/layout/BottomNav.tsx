@@ -1,11 +1,13 @@
 import { Home, Layers, CalendarDays, Calculator, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'research';
 
 interface BottomNavProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
+  pendingReminders?: number;
 }
 
 const tabs = [
@@ -16,39 +18,54 @@ const tabs = [
   { id: 'research' as const, icon: BookOpen, label: 'Research' },
 ];
 
-export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+export function BottomNav({ activeTab, onTabChange, pendingReminders = 0 }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-lg">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-lg safe-area-bottom">
       <div className="flex items-center justify-around py-2 px-1 max-w-lg mx-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
+          const showBadge = tab.id === 'home' && pendingReminders > 0;
           
           return (
-            <button
+            <motion.button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
+              whileTap={{ scale: 0.95 }}
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px]",
+                "relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors min-w-[60px] min-h-[44px]",
                 isActive 
                   ? "text-primary bg-primary/10" 
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground active:bg-muted/50"
               )}
             >
-              <Icon 
-                size={22} 
-                className={cn(
-                  "transition-transform duration-200",
-                  isActive && "scale-110"
-                )} 
-              />
+              <div className="relative">
+                <Icon 
+                  size={22} 
+                  className={cn(
+                    "transition-transform duration-200",
+                    isActive && "scale-110"
+                  )} 
+                />
+                {showBadge && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {pendingReminders > 9 ? '9+' : pendingReminders}
+                  </span>
+                )}
+              </div>
               <span className={cn(
                 "text-[10px] font-medium transition-all",
                 isActive && "text-primary"
               )}>
                 {tab.label}
               </span>
-            </button>
+              {isActive && (
+                <motion.div 
+                  layoutId="activeTab"
+                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
+                />
+              )}
+            </motion.button>
           );
         })}
       </div>

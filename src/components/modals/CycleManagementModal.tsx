@@ -11,9 +11,11 @@ import {
   updateCycle,
   Cycle 
 } from '@/services/storage';
-import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { BulkReminderModal } from './BulkReminderModal';
+import { useDoseReminders } from '@/hooks/useDoseReminders';
 
 interface CycleManagementModalProps {
   open: boolean;
@@ -22,10 +24,12 @@ interface CycleManagementModalProps {
 
 export function CycleManagementModal({ open, onOpenChange }: CycleManagementModalProps) {
   const [showAddCycle, setShowAddCycle] = useState(false);
+  const [showBulkReminder, setShowBulkReminder] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [newCycle, setNewCycle] = useState<Partial<Cycle>>({});
   const { toast } = useToast();
+  const { bulkAddReminders } = useDoseReminders();
 
   useEffect(() => {
     if (open) {
@@ -181,6 +185,18 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
               <span className="text-muted-foreground">Completed</span>
             </div>
           </div>
+
+          {/* Generate Reminders Button */}
+          {cycles.filter(c => c.status === 'active').length > 0 && (
+            <Button
+              variant="outline"
+              className="w-full gap-2 border-primary/50 text-primary hover:bg-primary/10"
+              onClick={() => setShowBulkReminder(true)}
+            >
+              <Bell size={16} />
+              Generate Reminders from Cycles
+            </Button>
+          )}
 
           {/* Add Cycle Button */}
           <Button
@@ -352,6 +368,27 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
             )}
           </div>
         </div>
+
+        {/* Bulk Reminder Modal */}
+        <BulkReminderModal
+          open={showBulkReminder}
+          onOpenChange={setShowBulkReminder}
+          cycles={cycles}
+          onConfirm={async (reminders) => {
+            await bulkAddReminders(reminders.map(r => ({
+              peptide_id: r.peptideId,
+              peptide_name: r.peptideName,
+              dose: r.dose,
+              time: r.time,
+              days: r.days,
+              enabled: r.enabled,
+            })));
+            toast({
+              title: 'Reminders created',
+              description: `${reminders.length} dose reminder${reminders.length > 1 ? 's' : ''} generated from your cycles.`,
+            });
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
