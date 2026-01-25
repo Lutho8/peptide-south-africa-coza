@@ -22,7 +22,7 @@ export function RenphoConnection() {
   
   const [showConnect, setShowConnect] = useState(false);
   const [email, setEmail] = useState('');
-  const [passwordHash, setPasswordHash] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -31,13 +31,13 @@ export function RenphoConnection() {
   }, [user, checkConnection]);
 
   const handleConnect = async () => {
-    if (!email || !passwordHash) return;
+    if (!email || !password) return;
     
-    const success = await connectRenpho(email, passwordHash);
+    const success = await connectRenpho(email, password);
     if (success) {
       setShowConnect(false);
       setEmail('');
-      setPasswordHash('');
+      setPassword('');
     }
   };
 
@@ -113,8 +113,7 @@ export function RenphoConnection() {
           <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
             <Info size={14} className="flex-shrink-0 mt-0.5" />
             <p>
-              Enter your Renpho app email and password hash. Your password hash can be found using 
-              browser dev tools when signing into the Renpho web app.
+              Enter your Renpho app login credentials. These are the same email and password you use to sign in to the Renpho app.
             </p>
           </div>
           
@@ -130,12 +129,12 @@ export function RenphoConnection() {
           </div>
           
           <div className="space-y-2">
-            <Label className="text-xs">Password Hash</Label>
+            <Label className="text-xs">Password</Label>
             <Input
               type="password"
-              placeholder="Your encrypted password hash"
-              value={passwordHash}
-              onChange={(e) => setPasswordHash(e.target.value)}
+              placeholder="Your Renpho password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="bg-muted border-border"
             />
           </div>
@@ -144,7 +143,7 @@ export function RenphoConnection() {
             <Button 
               size="sm" 
               onClick={handleConnect}
-              disabled={isSyncing || !email || !passwordHash}
+              disabled={isSyncing || !email || !password}
               className="flex-1"
             >
               {isSyncing ? (
