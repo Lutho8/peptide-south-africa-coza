@@ -116,6 +116,48 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_doses: {
+        Row: {
+          created_at: string
+          date: string
+          dose: number
+          id: string
+          notes: string | null
+          peptide_id: string
+          peptide_name: string
+          time: string
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          dose: number
+          id?: string
+          notes?: string | null
+          peptide_id: string
+          peptide_name: string
+          time: string
+          unit: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          dose?: number
+          id?: string
+          notes?: string | null
+          peptide_id?: string
+          peptide_name?: string
+          time?: string
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dose_reminders: {
         Row: {
           created_at: string
