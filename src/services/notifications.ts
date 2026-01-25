@@ -1,4 +1,4 @@
-import { getNotificationSettings, saveNotificationSettings, getDoseSchedules } from './storage';
+import { getNotificationSettings, saveNotificationSettings } from './storage';
 
 // Check if notifications are supported
 export function isNotificationSupported(): boolean {
@@ -141,7 +141,7 @@ export function cancelAllNotifications(): void {
   scheduledNotifications.clear();
 }
 
-// Schedule all today's doses
+// Schedule all today's doses from cloud-synced reminders
 export function scheduleAllTodaysDoses(): void {
   const settings = getNotificationSettings();
   
@@ -149,19 +149,42 @@ export function scheduleAllTodaysDoses(): void {
     return;
   }
 
-  const schedules = getDoseSchedules();
-  
-  schedules.forEach((schedule) => {
-    // Only schedule if this schedule has notifications enabled
-    if (settings.scheduleIds.length === 0 || settings.scheduleIds.includes(schedule.id)) {
+  // Try to load from localStorage (the useDoseReminders hook keeps this synced)
+  try {
+    const stored = localStorage.getItem('peptide-dose-reminders');
+    if (!stored) return;
+    
+    const reminders = JSON.parse(stored) as Array<{
+      id: string;
+      peptide_name: string;
+      dose: string;
+      time: string;
+      days: string[];
+      enabled: boolean;
+    }>;
+    
+    const today = new Date();
+    const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const currentDay = dayNames[today.getDay()];
+    
+    reminders.forEach((reminder) => {
+      if (!reminder.enabled) return;
+      
+      // Check if today is a scheduled day (empty means every day)
+      if (reminder.days.length > 0 && !reminder.days.includes(currentDay)) {
+        return;
+      }
+      
       scheduleNotification(
-        schedule.id,
-        schedule.peptideName,
-        schedule.dose,
-        schedule.time
+        reminder.id,
+        reminder.peptide_name,
+        reminder.dose,
+        reminder.time
       );
-    }
-  });
+    });
+  } catch (error) {
+    console.error('Error scheduling notifications:', error);
+  }
 }
 
 // Enable notifications for a schedule

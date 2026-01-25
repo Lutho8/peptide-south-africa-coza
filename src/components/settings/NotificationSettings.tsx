@@ -16,6 +16,7 @@ import {
   saveNotificationSettings,
   NotificationSettings as NotificationSettingsType 
 } from '@/services/storage';
+import { ReminderManager } from '@/components/reminders/ReminderManager';
 import { Bell, BellOff, BellRing, Volume2, VolumeX, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -214,6 +215,13 @@ export function NotificationSettings() {
           </>
         )}
       </div>
+
+      {/* Scheduled Reminders List */}
+      {settings.enabled && permission === 'granted' && (
+        <div className="mt-4">
+          <ReminderManager />
+        </div>
+      )}
     </GradientCard>
   );
 }
