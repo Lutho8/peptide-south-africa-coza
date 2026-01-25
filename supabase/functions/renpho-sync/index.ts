@@ -59,21 +59,26 @@ serve(async (req: Request) => {
       console.log('Attempting to connect Renpho account for user:', userId);
       
       // Hash the password using MD5 (Renpho expects MD5 hashed passwords)
-      const passwordHash = await hashPasswordMD5(password);
+      const passwordHash = hashPasswordMD5(password);
       console.log('Password hashed successfully');
       
-      // Validate credentials with Renpho API
-      const authUrl = `${RENPHO_API_BASE}/api/v3/users/sign_in.json?app_id=Renpho`;
-      console.log('Calling Renpho auth API:', authUrl);
+      // Validate credentials with Renpho API - using query params as per working implementations
+      const authParams = new URLSearchParams({
+        app_id: 'Renpho',
+        email: email,
+        password: passwordHash,
+        secure_flag: '1',
+      });
+      const authUrl = `${RENPHO_API_BASE}/api/v3/users/sign_in.json?${authParams.toString()}`;
+      console.log('Calling Renpho auth API');
       
       const authResponse = await fetch(authUrl, {
         method: 'POST',
-        headers: renphoHeaders,
-        body: new URLSearchParams({
-          secure_flag: '1',
-          email: email,
-          password: passwordHash,
-        }),
+        headers: {
+          'User-Agent': 'okhttp/3.6.0',
+          'Accept': 'application/json',
+          'Accept-Language': 'en-US',
+        },
       });
 
       const authText = await authResponse.text();
@@ -143,15 +148,20 @@ serve(async (req: Request) => {
         );
       }
 
-      // Authenticate with Renpho
-      const authResponse = await fetch(`${RENPHO_API_BASE}/api/v3/users/sign_in.json?app_id=Renpho`, {
+      // Authenticate with Renpho - using query params
+      const syncAuthParams = new URLSearchParams({
+        app_id: 'Renpho',
+        email: creds.email_encrypted,
+        password: creds.password_hash_encrypted,
+        secure_flag: '1',
+      });
+      const authResponse = await fetch(`${RENPHO_API_BASE}/api/v3/users/sign_in.json?${syncAuthParams.toString()}`, {
         method: 'POST',
-        headers: renphoHeaders,
-        body: new URLSearchParams({
-          secure_flag: '1',
-          email: creds.email_encrypted,
-          password: creds.password_hash_encrypted,
-        }),
+        headers: {
+          'User-Agent': 'okhttp/3.6.0',
+          'Accept': 'application/json',
+          'Accept-Language': 'en-US',
+        },
       });
 
       const authText = await authResponse.text();
