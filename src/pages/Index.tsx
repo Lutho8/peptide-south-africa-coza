@@ -3,9 +3,9 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { MyStackScreen } from '@/screens/MyStackScreen';
-import { PeptidesScreen } from '@/screens/PeptidesScreen';
+import { DailyLogScreen } from '@/screens/DailyLogScreen';
 import { DosageScreen } from '@/screens/DosageScreen';
-import { EducationScreen } from '@/screens/EducationScreen';
+import { ResearchLibraryScreen } from '@/screens/ResearchLibraryScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { BodyCompositionModal } from '@/components/modals/BodyCompositionModal';
 import { DoseTrackerModal } from '@/components/modals/DoseTrackerModal';
@@ -17,7 +17,7 @@ import { Peptide } from '@/data/peptides';
 import { useStorageInit } from '@/hooks/useStorageInit';
 import { Settings } from 'lucide-react';
 
-type TabId = 'home' | 'stack' | 'peptides' | 'dosage' | 'education';
+type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'research';
 
 const Index = () => {
   useStorageInit();
@@ -56,18 +56,18 @@ const Index = () => {
             onOpenCycles={() => setCycleManagementOpen(true)}
             onOpenBloodwork={() => setBloodworkOpen(true)}
             onOpenInventory={() => setInventoryOpen(true)}
-            onNavigatePeptides={() => setActiveTab('peptides')}
+            onNavigatePeptides={() => setActiveTab('daily-log')}
             onNavigateStack={() => setActiveTab('stack')}
           />
         );
       case 'stack':
         return <MyStackScreen />;
-      case 'peptides':
-        return <PeptidesScreen onViewPeptide={handleViewPeptide} />;
+      case 'daily-log':
+        return <DailyLogScreen />;
       case 'dosage':
         return <DosageScreen />;
-      case 'education':
-        return <EducationScreen />;
+      case 'research':
+        return <ResearchLibraryScreen />;
       default:
         return null;
     }
