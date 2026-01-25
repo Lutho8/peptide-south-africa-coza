@@ -67,6 +67,10 @@ export function BodyCompositionCharts({ history }: BodyCompositionChartsProps) {
     date: entry.date.slice(5), // Format as MM-DD
   }));
 
+  // Count sources
+  const manualCount = history.filter(e => !e.source || e.source === 'manual').length;
+  const renphoCount = history.filter(e => e.source === 'renpho').length;
+
   if (chartData.length < 2) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -77,6 +81,18 @@ export function BodyCompositionCharts({ history }: BodyCompositionChartsProps) {
 
   return (
     <div className="space-y-4">
+      {/* Source badges */}
+      <div className="flex items-center justify-center gap-3">
+        <span className="text-[10px] px-2 py-1 rounded font-medium uppercase bg-violet-500/20 text-violet-400">
+          {manualCount} Manual
+        </span>
+        {renphoCount > 0 && (
+          <span className="text-[10px] px-2 py-1 rounded font-medium uppercase bg-cyan-500/20 text-cyan-400">
+            {renphoCount} Renpho
+          </span>
+        )}
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3 bg-muted/50">
           <TabsTrigger value="weight" className="gap-1 text-xs">

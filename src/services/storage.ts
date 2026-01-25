@@ -44,7 +44,9 @@ export function removeStoredData(key: string): void {
 // Body Composition Storage
 import { BodyComposition as BodyCompType, bodyCompositionHistory as defaultBodyComp, DoseSchedule as DoseScheduleType, Cycle as CycleType, todaysDoses as defaultDoses, activeCycles as defaultCycles, UserProfile as UserProfileType, userProfile as defaultUserProfile, activeStack as defaultActiveStack } from '@/data/userData';
 
-export type BodyComposition = BodyCompType;
+export interface BodyComposition extends BodyCompType {
+  source?: 'manual' | 'renpho';
+}
 export type DoseSchedule = DoseScheduleType;
 export type Cycle = CycleType;
 export type UserProfile = UserProfileType;
