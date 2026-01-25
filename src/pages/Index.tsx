@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { format } from 'date-fns';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { HomeScreen } from '@/screens/HomeScreen';
@@ -12,13 +13,16 @@ import { DoseTrackerModal } from '@/components/modals/DoseTrackerModal';
 import { CycleManagementModal } from '@/components/modals/CycleManagementModal';
 import { BloodworkModal } from '@/components/modals/BloodworkModal';
 import { InventoryModal } from '@/components/modals/InventoryModal';
+import { NotificationActionModal } from '@/components/modals/NotificationActionModal';
 import { useStorageInit } from '@/hooks/useStorageInit';
+import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { Settings } from 'lucide-react';
 
 type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'research';
 
 const Index = () => {
   useStorageInit();
+  const { addDose } = useDailyDoses();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [showSettings, setShowSettings] = useState(false);
@@ -27,6 +31,24 @@ const Index = () => {
   const [cycleManagementOpen, setCycleManagementOpen] = useState(false);
   const [bloodworkOpen, setBloodworkOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+
+  // Handle marking dose as taken from notification
+  const handleMarkDoseAsTaken = useCallback((peptideName: string, dose: string, time: string) => {
+    // Parse dose value and unit from the dose string (e.g., "250mcg")
+    const doseMatch = dose.match(/^([\d.]+)(\w+)$/);
+    const doseValue = doseMatch ? parseFloat(doseMatch[1]) : 0;
+    const unit = (doseMatch ? doseMatch[2] : 'mcg') as 'mcg' | 'mg' | 'IU';
+    
+    addDose({
+      date: format(new Date(), 'yyyy-MM-dd'),
+      peptide_id: peptideName.toLowerCase().replace(/\s+/g, '-'),
+      peptide_name: peptideName,
+      dose: doseValue,
+      unit: unit,
+      time: time,
+      notes: 'Logged from notification',
+    });
+  }, [addDose]);
 
   const handleLogoClick = () => {
     setShowSettings(false);
@@ -49,6 +71,7 @@ const Index = () => {
             onOpenInventory={() => setInventoryOpen(true)}
             onNavigatePeptides={() => setActiveTab('daily-log')}
             onNavigateStack={() => setActiveTab('stack')}
+            onOpenSettings={() => setShowSettings(true)}
           />
         );
       case 'stack':
@@ -91,6 +114,7 @@ const Index = () => {
       <CycleManagementModal open={cycleManagementOpen} onOpenChange={setCycleManagementOpen} />
       <BloodworkModal open={bloodworkOpen} onOpenChange={setBloodworkOpen} />
       <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />
+      <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
     </div>
   );
 };

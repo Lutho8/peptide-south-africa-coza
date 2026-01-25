@@ -57,13 +57,37 @@ export function showNotification(
   return notification;
 }
 
-// Show dose reminder notification
-export function showDoseReminder(peptideName: string, dose: string, time: string): Notification | null {
-  return showNotification(`💉 Time for ${peptideName}`, {
-    body: `Scheduled dose: ${dose} at ${time}`,
+// Show dose reminder notification with action buttons
+export function showDoseReminder(
+  peptideName: string, 
+  dose: string, 
+  time: string,
+  reminderId?: string
+): Notification | null {
+  if (!isNotificationSupported() || Notification.permission !== 'granted') {
+    return null;
+  }
+
+  const notification = new Notification(`💉 Time for ${peptideName}`, {
+    body: `Scheduled dose: ${dose} at ${time}\nClick to mark as taken or snooze`,
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
     tag: `dose-${peptideName}-${time}`,
     requireInteraction: true,
+    data: { reminderId, peptideName, dose, time },
   });
+
+  notification.onclick = () => {
+    window.focus();
+    // Dispatch custom event for the app to handle
+    const event = new CustomEvent('doseNotificationClick', {
+      detail: { reminderId, peptideName, dose, time }
+    });
+    window.dispatchEvent(event);
+    notification.close();
+  };
+
+  return notification;
 }
 
 // Scheduled notification tracking
@@ -75,6 +99,34 @@ interface ScheduledNotification {
 }
 
 const scheduledNotifications: Map<string, ScheduledNotification> = new Map();
+
+// Snooze a notification for a specified number of minutes
+export function snoozeNotification(
+  reminderId: string,
+  peptideName: string,
+  dose: string,
+  minutes: number = 10
+): void {
+  const snoozeTime = new Date();
+  snoozeTime.setMinutes(snoozeTime.getMinutes() + minutes);
+  const newTimeString = `${snoozeTime.getHours().toString().padStart(2, '0')}:${snoozeTime.getMinutes().toString().padStart(2, '0')}`;
+  
+  // Schedule a new notification for the snoozed time
+  const delay = minutes * 60 * 1000;
+  const snoozeId = `snooze-${reminderId}-${Date.now()}`;
+  
+  const timeoutId = window.setTimeout(() => {
+    showDoseReminder(peptideName, dose, newTimeString, reminderId);
+    scheduledNotifications.delete(snoozeId);
+  }, delay);
+
+  scheduledNotifications.set(snoozeId, {
+    id: snoozeId,
+    timeoutId,
+    scheduleId: reminderId,
+    scheduledFor: snoozeTime,
+  });
+}
 
 // Schedule a notification for a specific time today
 export function scheduleNotification(
@@ -110,7 +162,7 @@ export function scheduleNotification(
   cancelNotification(notificationId);
 
   const timeoutId = window.setTimeout(() => {
-    showDoseReminder(peptideName, dose, timeString);
+    showDoseReminder(peptideName, dose, timeString, scheduleId);
     scheduledNotifications.delete(notificationId);
   }, delay);
 

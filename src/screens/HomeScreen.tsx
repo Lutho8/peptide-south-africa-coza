@@ -1,11 +1,13 @@
 import { NewsTicker } from '@/components/home/NewsTicker';
 import { BodyCompositionCard } from '@/components/home/BodyCompositionCard';
 import { TodaysDoses } from '@/components/home/TodaysDoses';
+import { TodaysReminders } from '@/components/home/TodaysReminders';
 import { ActiveStackPreview } from '@/components/home/ActiveStackPreview';
 import { QuickActions } from '@/components/home/QuickActions';
 import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
 import { userProfile } from '@/data/userData';
+import { useDoseReminders } from '@/hooks/useDoseReminders';
 
 interface HomeScreenProps {
   onOpenBodyComposition: () => void;
@@ -15,6 +17,7 @@ interface HomeScreenProps {
   onOpenInventory: () => void;
   onNavigatePeptides: () => void;
   onNavigateStack: () => void;
+  onOpenSettings: () => void;
 }
 
 export function HomeScreen({
@@ -24,8 +27,10 @@ export function HomeScreen({
   onOpenBloodwork,
   onOpenInventory,
   onNavigatePeptides,
-  onNavigateStack
+  onNavigateStack,
+  onOpenSettings
 }: HomeScreenProps) {
+  const { reminders } = useDoseReminders();
   return (
     <div className="pb-24 space-y-6 fade-in">
       {/* Header */}
@@ -47,6 +52,9 @@ export function HomeScreen({
 
       {/* Today's Doses Summary */}
       <TodaysDoses onViewTracker={onOpenDoseTracker} />
+
+      {/* Today's Reminders Preview */}
+      <TodaysReminders reminders={reminders} onViewSettings={onOpenSettings} />
 
       {/* Active Protocol Preview */}
       <ActiveStackPreview onViewStack={onNavigateStack} />
