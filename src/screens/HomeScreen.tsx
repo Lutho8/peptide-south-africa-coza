@@ -2,6 +2,7 @@ import { NewsTicker } from '@/components/home/NewsTicker';
 import { BodyCompositionCard } from '@/components/home/BodyCompositionCard';
 import { TodaysDoses } from '@/components/home/TodaysDoses';
 import { TodaysReminders } from '@/components/home/TodaysReminders';
+import { WeeklyAdherenceReport } from '@/components/home/WeeklyAdherenceReport';
 import { ActiveStackPreview } from '@/components/home/ActiveStackPreview';
 import { QuickActions } from '@/components/home/QuickActions';
 import { StackCategories } from '@/components/home/StackCategories';
@@ -65,6 +66,9 @@ export function HomeScreen({
           window.dispatchEvent(event);
         }}
       />
+
+      {/* Weekly Adherence Report */}
+      <WeeklyAdherenceReport onViewSettings={onOpenSettings} />
 
       {/* Active Protocol Preview */}
       <ActiveStackPreview onViewStack={onNavigateStack} />
