@@ -54,7 +54,17 @@ export function HomeScreen({
       <TodaysDoses onViewTracker={onOpenDoseTracker} />
 
       {/* Today's Reminders Preview */}
-      <TodaysReminders reminders={reminders} onViewSettings={onOpenSettings} />
+      <TodaysReminders 
+        reminders={reminders} 
+        onViewSettings={onOpenSettings}
+        onMarkAsTaken={(peptideName, dose, time) => {
+          // Dispatch event to trigger dose logging via NotificationActionModal
+          const event = new CustomEvent('doseNotificationClick', {
+            detail: { peptideName, dose, time }
+          });
+          window.dispatchEvent(event);
+        }}
+      />
 
       {/* Active Protocol Preview */}
       <ActiveStackPreview onViewStack={onNavigateStack} />
