@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { NewsTicker } from '@/components/home/NewsTicker';
 import { BodyCompositionCard } from '@/components/home/BodyCompositionCard';
 import { TodaysDoses } from '@/components/home/TodaysDoses';
@@ -9,6 +10,7 @@ import { ActiveStackPreview } from '@/components/home/ActiveStackPreview';
 import { QuickActions } from '@/components/home/QuickActions';
 import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
+import { BookCallSection } from '@/components/booking/BookCallSection';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -22,6 +24,30 @@ interface HomeScreenProps {
   onNavigateStack: () => void;
   onOpenSettings: () => void;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+};
 
 export function HomeScreen({
   onOpenBodyComposition,
@@ -49,67 +75,106 @@ export function HomeScreen({
     .slice(0, 2);
 
   return (
-    <div className="pb-24 space-y-6 fade-in">
+    <motion.div 
+      className="pb-24 space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div 
+        className="flex items-center justify-between"
+        variants={itemVariants}
+      >
         <div>
           <h1 className="text-2xl font-bold text-foreground">Welcome back,</h1>
           <p className="text-lg text-primary font-medium">{displayName}</p>
         </div>
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-lg">
+        <motion.div 
+          className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-lg luxury-shimmer"
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          whileTap={{ scale: 0.95 }}
+        >
           {initials}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* News Ticker */}
-      <NewsTicker />
+      <motion.div variants={itemVariants}>
+        <NewsTicker />
+      </motion.div>
 
       {/* Body Composition Dashboard */}
-      <BodyCompositionCard onViewDetails={onOpenBodyComposition} />
+      <motion.div variants={itemVariants}>
+        <BodyCompositionCard onViewDetails={onOpenBodyComposition} />
+      </motion.div>
 
       {/* Today's Doses Summary */}
-      <TodaysDoses onViewTracker={onOpenDoseTracker} />
+      <motion.div variants={itemVariants}>
+        <TodaysDoses onViewTracker={onOpenDoseTracker} />
+      </motion.div>
 
       {/* Today's Reminders Preview */}
-      <TodaysReminders 
-        reminders={reminders} 
-        onViewSettings={onOpenSettings}
-        onMarkAsTaken={(peptideName, dose, time) => {
-          // Dispatch event to trigger dose logging via NotificationActionModal
-          const event = new CustomEvent('doseNotificationClick', {
-            detail: { peptideName, dose, time }
-          });
-          window.dispatchEvent(event);
-        }}
-      />
+      <motion.div variants={itemVariants}>
+        <TodaysReminders 
+          reminders={reminders} 
+          onViewSettings={onOpenSettings}
+          onMarkAsTaken={(peptideName, dose, time) => {
+            // Dispatch event to trigger dose logging via NotificationActionModal
+            const event = new CustomEvent('doseNotificationClick', {
+              detail: { peptideName, dose, time }
+            });
+            window.dispatchEvent(event);
+          }}
+        />
+      </motion.div>
 
       {/* Weekly Adherence Report */}
-      <WeeklyAdherenceReport onViewSettings={onOpenSettings} />
+      <motion.div variants={itemVariants}>
+        <WeeklyAdherenceReport onViewSettings={onOpenSettings} />
+      </motion.div>
 
       {/* Missed Doses Quick-Log */}
-      <MissedDosesCard />
+      <motion.div variants={itemVariants}>
+        <MissedDosesCard />
+      </motion.div>
 
       {/* Achievements & Badges */}
-      <AchievementsBadges />
+      <motion.div variants={itemVariants}>
+        <AchievementsBadges />
+      </motion.div>
 
       {/* Active Protocol Preview */}
-      <ActiveStackPreview onViewStack={onNavigateStack} />
+      <motion.div variants={itemVariants}>
+        <ActiveStackPreview onViewStack={onNavigateStack} />
+      </motion.div>
 
       {/* Quick Actions Grid */}
-      <QuickActions
-        onDoseTracker={onOpenDoseTracker}
-        onBodyStats={onOpenBodyComposition}
-        onCycles={onOpenCycles}
-        onPeptides={onNavigatePeptides}
-        onBloodwork={onOpenBloodwork}
-        onInventory={onOpenInventory}
-      />
+      <motion.div variants={itemVariants}>
+        <QuickActions
+          onDoseTracker={onOpenDoseTracker}
+          onBodyStats={onOpenBodyComposition}
+          onCycles={onOpenCycles}
+          onPeptides={onNavigatePeptides}
+          onBloodwork={onOpenBloodwork}
+          onInventory={onOpenInventory}
+        />
+      </motion.div>
 
       {/* Stack Categories */}
-      <StackCategories />
+      <motion.div variants={itemVariants}>
+        <StackCategories />
+      </motion.div>
+
+      {/* Book a Call Section */}
+      <motion.div variants={itemVariants}>
+        <BookCallSection />
+      </motion.div>
 
       {/* Safety Disclaimer */}
-      <SafetyDisclaimer />
-    </div>
+      <motion.div variants={itemVariants}>
+        <SafetyDisclaimer />
+      </motion.div>
+    </motion.div>
   );
 }
