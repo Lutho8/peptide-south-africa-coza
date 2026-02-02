@@ -4,12 +4,13 @@ import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { userProfile, stackOptimizations, activeCycles } from '@/data/userData';
 import { peptides } from '@/data/peptides';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { EditStackModal, StackItem } from '@/components/modals/EditStackModal';
 import { getActiveStack, saveActiveStack, getUserProfile } from '@/services/storage';
+import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
 
 interface StackItemProps {
   peptide: typeof peptides[0];
@@ -117,10 +118,11 @@ export function MyStackScreen() {
 
   return (
     <div className="pb-24 space-y-6 fade-in">
-      {/* User Profile Header */}
-      <GradientCard variant="primary">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center text-primary-foreground font-bold text-xl">
+      {/* User Profile Header - Luxury */}
+      <GradientCard className="relative overflow-hidden premium-border">
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-primary/5 pointer-events-none" />
+        <div className="relative flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary via-accent/50 to-primary/80 flex items-center justify-center text-background font-bold text-xl shadow-lg shadow-accent/20 luxury-shimmer">
             {profile.name.split(' ').map(n => n[0]).join('')}
           </div>
           <div className="flex-1">
@@ -128,11 +130,11 @@ export function MyStackScreen() {
             <p className="text-sm text-muted-foreground">
               {profile.age} years • {profile.height}cm • {profile.weight}kg
             </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-accent/20 text-accent border border-accent/30">
                 {profile.activityLevel.charAt(0).toUpperCase() + profile.activityLevel.slice(1)}
               </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/20">
                 {profile.experience.charAt(0).toUpperCase() + profile.experience.slice(1)}
               </span>
             </div>
@@ -181,21 +183,47 @@ export function MyStackScreen() {
         )}
       </div>
 
-      {/* AI Stack Optimization */}
+      {/* AI Stack Optimizer */}
+      {activeStack.length > 0 && (
+        <AIAgentPanel
+          mode="optimize"
+          currentStack={activeStack.map(item => {
+            const peptide = peptides.find(p => p.id === item.peptideId);
+            return peptide?.name || item.peptideId;
+          })}
+          userWeight={profile.weight}
+          userGoals={profile.goals}
+          experienceLevel={profile.experience}
+        />
+      )}
+
+      {/* AI Personalized Recommendations */}
+      <AIAgentPanel
+        mode="recommend"
+        currentStack={activeStack.map(item => {
+          const peptide = peptides.find(p => p.id === item.peptideId);
+          return peptide?.name || item.peptideId;
+        })}
+        userWeight={profile.weight}
+        userGoals={profile.goals}
+        experienceLevel={profile.experience}
+      />
+
+      {/* Stack Optimization Suggestions */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles size={18} className="text-primary" />
-          <h3 className="text-lg font-semibold text-foreground">Stack Optimization</h3>
+          <Sparkles size={18} className="text-accent" />
+          <h3 className="text-lg font-semibold text-foreground">Quick Optimizations</h3>
         </div>
 
         <div className="space-y-2">
           {stackOptimizations.map((opt, index) => (
-            <GradientCard key={index} className="p-3">
+            <GradientCard key={index} className="p-3 premium-border">
               <div className="flex items-start gap-3">
                 <div className={cn(
                   "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
                   opt.priority === 'high' ? 'bg-destructive' : 
-                  opt.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                  opt.priority === 'medium' ? 'bg-warning' : 'bg-longevity'
                 )} />
                 <div>
                   <h4 className="text-sm font-medium text-foreground">{opt.title}</h4>

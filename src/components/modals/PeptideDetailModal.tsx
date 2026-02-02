@@ -9,9 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Star, FlaskConical, ShoppingCart, AlertTriangle, 
   Clock, Syringe, ExternalLink, Layers, FileText, 
-  Calendar, Activity, Users
+  Calendar, Activity, Users, Brain
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
 
 interface PeptideDetailModalProps {
   peptide: Peptide | null;
@@ -56,10 +57,17 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
             </div>
           </div>
 
+          {/* AI Research Agent */}
+          <AIAgentPanel
+            mode="research"
+            peptideId={peptide.id}
+            peptideName={peptide.name}
+          />
+
           {/* Mechanism */}
-          <GradientCard>
+          <GradientCard className="premium-border">
             <h3 className="font-medium text-foreground mb-2">Mechanism of Action</h3>
-            <p className="text-sm text-muted-foreground">{peptide.mechanism}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{peptide.mechanism}</p>
           </GradientCard>
 
           {/* Benefits */}
