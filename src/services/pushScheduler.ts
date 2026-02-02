@@ -1,7 +1,7 @@
 // IndexedDB-based push notification scheduler for service worker
 
 const DB_NAME = 'peptide-reminders-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'scheduled-reminders';
 
 export interface ScheduledReminder {
@@ -13,7 +13,11 @@ export interface ScheduledReminder {
   days: string[];
   enabled: boolean;
   nextFireTime?: number; // Unix timestamp
+  isSnooze?: boolean;
 }
+
+// Service worker registration reference
+let swRegistration: ServiceWorkerRegistration | null = null;
 
 // Open IndexedDB
 function openDB(): Promise<IDBDatabase> {
@@ -25,9 +29,18 @@ function openDB(): Promise<IDBDatabase> {
     
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      
+      // Create reminders store
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
         store.createIndex('nextFireTime', 'nextFireTime', { unique: false });
+        store.createIndex('enabled', 'enabled', { unique: false });
+      }
+      
+      // Create fired notifications store
+      if (!db.objectStoreNames.contains('fired-notifications')) {
+        const firedStore = db.createObjectStore('fired-notifications', { keyPath: 'id' });
+        firedStore.createIndex('firedAt', 'firedAt', { unique: false });
       }
     };
   });
@@ -46,8 +59,8 @@ function calculateNextFireTime(time: string, days: string[]): number {
     checkDate.setDate(checkDate.getDate() + i);
     checkDate.setHours(hours, minutes, 0, 0);
     
-    // Skip if in the past today
-    if (i === 0 && checkDate <= now) continue;
+    // Skip if in the past (with 1 min buffer)
+    if (checkDate.getTime() <= now.getTime() + 60000) continue;
     
     const dayName = dayNames[checkDate.getDay()];
     
@@ -57,11 +70,11 @@ function calculateNextFireTime(time: string, days: string[]): number {
     }
   }
   
-  // Fallback to tomorrow same time
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(hours, minutes, 0, 0);
-  return tomorrow.getTime();
+  // Fallback to next week same time
+  const nextWeek = new Date(now);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  nextWeek.setHours(hours, minutes, 0, 0);
+  return nextWeek.getTime();
 }
 
 // Save reminder to IndexedDB
@@ -79,7 +92,11 @@ export async function saveReminderToIndexedDB(reminder: ScheduledReminder): Prom
     const request = store.put(reminderWithFireTime);
     
     request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
+    request.onsuccess = () => {
+      // Notify service worker of the update
+      notifyServiceWorker('SYNC_REMINDERS');
+      resolve();
+    };
   });
 }
 
@@ -99,7 +116,11 @@ export async function bulkSaveReminders(reminders: ScheduledReminder[]): Promise
       store.put(reminderWithFireTime);
     }
     
-    transaction.oncomplete = () => resolve();
+    transaction.oncomplete = () => {
+      // Notify service worker of the update
+      notifyServiceWorker('SYNC_REMINDERS');
+      resolve();
+    };
     transaction.onerror = () => reject(transaction.error);
   });
 }
@@ -114,7 +135,10 @@ export async function deleteReminderFromIndexedDB(id: string): Promise<void> {
     const request = store.delete(id);
     
     request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
+    request.onsuccess = () => {
+      notifyServiceWorker('SYNC_REMINDERS');
+      resolve();
+    };
   });
 }
 
@@ -132,16 +156,58 @@ export async function getAllRemindersFromIndexedDB(): Promise<ScheduledReminder[
   });
 }
 
+// Clear all reminders from IndexedDB (useful for re-sync)
+export async function clearAllRemindersFromIndexedDB(): Promise<void> {
+  const db = await openDB();
+  
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.clear();
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
+
 // Sync reminders from localStorage to IndexedDB
 export async function syncRemindersToIndexedDB(): Promise<void> {
   try {
     const stored = localStorage.getItem('peptide-dose-reminders');
     if (!stored) return;
     
-    const reminders = JSON.parse(stored) as ScheduledReminder[];
-    await bulkSaveReminders(reminders);
+    const reminders = JSON.parse(stored) as Array<{
+      id: string;
+      peptide_id: string;
+      peptide_name: string;
+      dose: string;
+      time: string;
+      days: string[];
+      enabled: boolean;
+    }>;
+    
+    // Map to ScheduledReminder format
+    const scheduledReminders: ScheduledReminder[] = reminders.map(r => ({
+      id: r.id,
+      peptideId: r.peptide_id,
+      peptideName: r.peptide_name,
+      dose: r.dose,
+      time: r.time,
+      days: r.days || [],
+      enabled: r.enabled,
+    }));
+    
+    await bulkSaveReminders(scheduledReminders);
+    console.log(`Synced ${scheduledReminders.length} reminders to IndexedDB`);
   } catch (error) {
     console.error('Error syncing reminders to IndexedDB:', error);
+  }
+}
+
+// Notify service worker of changes
+function notifyServiceWorker(type: string, data?: unknown): void {
+  if (swRegistration?.active) {
+    swRegistration.active.postMessage({ type, data });
   }
 }
 
@@ -157,12 +223,34 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       scope: '/'
     });
     
+    swRegistration = registration;
+    
+    // Wait for the service worker to be ready
+    await navigator.serviceWorker.ready;
+    
     // Sync reminders to IndexedDB
     await syncRemindersToIndexedDB();
     
     // Tell service worker to start checking
-    if (registration.active) {
-      registration.active.postMessage({ type: 'SCHEDULE_CHECK' });
+    notifyServiceWorker('START_CHECKING');
+    
+    // Try to register for periodic background sync (if supported)
+    if ('periodicSync' in registration) {
+      try {
+        const status = await navigator.permissions.query({
+          name: 'periodic-background-sync' as PermissionName,
+        });
+        
+        if (status.state === 'granted') {
+          await (registration as unknown as { periodicSync: { register: (tag: string, options: { minInterval: number }) => Promise<void> } })
+            .periodicSync.register('check-reminders', {
+              minInterval: 60 * 1000, // 1 minute minimum
+            });
+          console.log('Periodic background sync registered');
+        }
+      } catch (error) {
+        console.log('Periodic background sync not available:', error);
+      }
     }
     
     // Listen for messages from service worker
@@ -208,4 +296,26 @@ export async function getServiceWorkerStatus(): Promise<'active' | 'installing' 
   if (registration.installing) return 'installing';
   if (registration.waiting) return 'waiting';
   return 'none';
+}
+
+// Force sync reminders and trigger check
+export async function forceSyncAndCheck(): Promise<void> {
+  await syncRemindersToIndexedDB();
+  notifyServiceWorker('CHECK_REMINDERS');
+}
+
+// Schedule a snooze notification
+export function scheduleSnooze(reminderData: {
+  reminderId: string;
+  peptideId: string;
+  peptideName: string;
+  dose: string;
+  time: string;
+}, minutes: number = 10): void {
+  notifyServiceWorker('SCHEDULE_SNOOZE', { reminderData, minutes });
+}
+
+// Get the current service worker registration
+export function getServiceWorkerRegistration(): ServiceWorkerRegistration | null {
+  return swRegistration;
 }
