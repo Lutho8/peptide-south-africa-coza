@@ -1,7 +1,10 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Button } from '@/components/ui/button';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
+import { NotificationSoundSettings } from '@/components/settings/NotificationSoundSettings';
+import { LanguageSettings } from '@/components/settings/LanguageSettings';
 import { RenphoConnection } from '@/components/settings/RenphoConnection';
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -28,6 +31,7 @@ interface SettingsScreenProps {
 }
 
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
+  const { t } = useTranslation();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profile, setProfile] = useState(getUserProfile());
@@ -136,9 +140,15 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           <Settings2 size={24} className="text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-sm text-muted-foreground">Manage your preferences and data</p>
+          <h1 className="text-2xl font-bold text-foreground">{t('settings.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('settings.subtitle')}</p>
         </div>
+      </div>
+
+      {/* Language Section */}
+      <div>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">{t('settings.language')}</h2>
+        <LanguageSettings />
       </div>
 
       {/* Cloud Sync Section */}
@@ -243,8 +253,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
       {/* Notifications Section */}
       <div>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Notifications</h2>
-        <NotificationSettings />
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">{t('settings.notifications')}</h2>
+        <div className="space-y-4">
+          <NotificationSettings />
+          <NotificationSoundSettings />
+        </div>
       </div>
 
       {/* Data Export Section */}
