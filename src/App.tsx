@@ -7,6 +7,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
+// Initialize i18n
+import '@/i18n';
+
 const queryClient = new QueryClient();
 
 const App = () => (
