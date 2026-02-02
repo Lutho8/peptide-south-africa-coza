@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { NotificationSoundSettings } from '@/components/settings/NotificationSoundSettings';
 import { LanguageSettings } from '@/components/settings/LanguageSettings';
-import { RenphoConnection } from '@/components/settings/RenphoConnection';
+import { BluetoothScaleConnection } from '@/components/settings/BluetoothScaleConnection';
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
@@ -221,10 +221,10 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         </GradientCard>
       </div>
 
-      {/* Renpho Integration */}
+      {/* Bluetooth Scale */}
       <div>
         <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">{t('settings.connectedDevices')}</h2>
-        <RenphoConnection />
+        <BluetoothScaleConnection />
       </div>
 
       {/* Profile Section */}
