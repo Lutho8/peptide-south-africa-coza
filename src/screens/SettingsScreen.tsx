@@ -169,7 +169,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                   <div>
                     <p className="font-medium text-foreground">{user.email}</p>
                     <p className="text-xs text-muted-foreground">
-                      {lastSyncAt ? `Last sync: ${lastSyncAt.toLocaleString()}` : 'Not synced yet'}
+                      {lastSyncAt ? `${t('settings.lastSync')}: ${lastSyncAt.toLocaleString()}` : t('settings.notSynced')}
                     </p>
                   </div>
                 </div>
@@ -188,7 +188,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                   ) : (
                     <RefreshCw size={14} className="mr-1" />
                   )}
-                  Sync Now
+                  {t('settings.syncNow')}
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -197,7 +197,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                   className="text-destructive hover:text-destructive"
                 >
                   <LogOut size={14} className="mr-1" />
-                  Sign Out
+                  {t('settings.signOut')}
                 </Button>
               </div>
             </div>
@@ -208,13 +208,13 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                   <CloudOff size={20} className="text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Not signed in</p>
-                  <p className="text-xs text-muted-foreground">Sign in to sync across devices</p>
+                  <p className="font-medium text-foreground">{t('settings.notSignedIn')}</p>
+                  <p className="text-xs text-muted-foreground">{t('settings.signInToSync')}</p>
                 </div>
               </div>
               <Button size="sm" onClick={() => setAuthModalOpen(true)}>
                 <LogIn size={14} className="mr-1" />
-                Sign In
+                {t('settings.signIn')}
               </Button>
             </div>
           )}

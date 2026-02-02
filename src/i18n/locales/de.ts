@@ -213,6 +213,20 @@ export default {
     dedicatedDesc: 'Nutzen Sie die App 90 Tage lang',
   },
   
+  // Renpho
+  renpho: {
+    title: 'Renpho Waage-Sync',
+    signInToConnect: 'Melden Sie sich an, um Ihr Renpho-Konto zu verbinden',
+    connected: 'Verbunden',
+    notConnected: 'Nicht verbunden',
+    never: 'Nie',
+    connect: 'Verbinden',
+    credentialsInfo: 'Geben Sie Ihre Renpho-App-Anmeldedaten ein. Dies sind dieselben E-Mail und Passwort, die Sie für die Anmeldung in der Renpho-App verwenden.',
+    email: 'Renpho E-Mail',
+    password: 'Passwort',
+    passwordPlaceholder: 'Ihr Renpho-Passwort',
+  },
+
   // Toast messages
   toast: {
     reminderCreated: 'Erinnerung erstellt',
