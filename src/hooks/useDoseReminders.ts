@@ -9,6 +9,12 @@ import {
   isNotificationSupported 
 } from '@/services/notifications';
 import { getNotificationSettings } from '@/services/storage';
+import { 
+  bulkSaveReminders, 
+  deleteReminderFromIndexedDB,
+  saveReminderToIndexedDB,
+  type ScheduledReminder 
+} from '@/services/pushScheduler';
 
 export interface DoseReminder {
   id: string;
@@ -34,6 +40,28 @@ function loadLocalReminders(): DoseReminder[] {
 
 function saveLocalReminders(reminders: DoseReminder[]) {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(reminders));
+  
+  // Also sync to IndexedDB for service worker
+  syncToIndexedDB(reminders);
+}
+
+// Sync reminders to IndexedDB for service worker background notifications
+async function syncToIndexedDB(reminders: DoseReminder[]) {
+  try {
+    const scheduledReminders: ScheduledReminder[] = reminders.map(r => ({
+      id: r.id,
+      peptideId: r.peptide_id,
+      peptideName: r.peptide_name,
+      dose: r.dose,
+      time: r.time,
+      days: r.days || [],
+      enabled: r.enabled,
+    }));
+    
+    await bulkSaveReminders(scheduledReminders);
+  } catch (error) {
+    console.error('Error syncing to IndexedDB:', error);
+  }
 }
 
 export function useDoseReminders() {
@@ -267,6 +295,9 @@ export function useDoseReminders() {
         const notificationId = `${id}-${reminder.time}-${today.toDateString()}`;
         cancelNotification(notificationId);
       }
+
+      // Also delete from IndexedDB for service worker
+      await deleteReminderFromIndexedDB(id);
 
       const updated = reminders.filter(r => r.id !== id);
       setReminders(updated);

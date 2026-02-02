@@ -19,17 +19,20 @@ import {
 } from '@/services/storage';
 import { 
   getServiceWorkerStatus, 
-  isPushSupported 
+  isPushSupported,
+  forceSyncAndCheck
 } from '@/services/pushScheduler';
 import { ReminderManager } from '@/components/reminders/ReminderManager';
-import { Bell, BellOff, BellRing, Volume2, VolumeX, Clock, Smartphone, Check } from 'lucide-react';
+import { Bell, BellOff, BellRing, Volume2, VolumeX, Clock, Smartphone, Check, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export function NotificationSettings() {
   const [settings, setSettings] = useState<NotificationSettingsType>(getNotificationSettings());
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [swStatus, setSwStatus] = useState<'active' | 'installing' | 'waiting' | 'none'>('none');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     setPermission(getNotificationPermission());
@@ -226,7 +229,12 @@ export function NotificationSettings() {
             <div className="flex items-center justify-between pt-2">
               <div className="flex items-center gap-3">
                 <Smartphone size={18} className="text-muted-foreground" />
-                <Label className="text-sm text-foreground">Background Notifications</Label>
+                <div>
+                  <Label className="text-sm text-foreground">Background Notifications</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Works even when app is closed
+                  </p>
+                </div>
               </div>
               {isPushSupported() && swStatus === 'active' ? (
                 <Badge variant="outline" className="gap-1 text-primary border-primary/30">
@@ -239,6 +247,30 @@ export function NotificationSettings() {
                 </Badge>
               )}
             </div>
+
+            {/* Force Sync Button */}
+            {isPushSupported() && swStatus === 'active' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full gap-2"
+                disabled={isSyncing}
+                onClick={async () => {
+                  setIsSyncing(true);
+                  try {
+                    await forceSyncAndCheck();
+                    toast.success('Reminders synced to background service');
+                  } catch {
+                    toast.error('Failed to sync reminders');
+                  } finally {
+                    setIsSyncing(false);
+                  }
+                }}
+              >
+                <RefreshCw size={14} className={cn(isSyncing && 'animate-spin')} />
+                {isSyncing ? 'Syncing...' : 'Force Sync Reminders'}
+              </Button>
+            )}
           </>
         )}
       </div>
