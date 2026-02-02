@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,7 @@ import { Scale, RefreshCw, Link2, Unlink, Loader2, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function RenphoConnection() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { 
     isConnected, 
@@ -47,8 +49,8 @@ export function RenphoConnection() {
         <div className="flex items-center gap-3">
           <Scale size={20} className="text-muted-foreground" />
           <div>
-            <p className="font-medium text-foreground">Renpho Scale Sync</p>
-            <p className="text-xs text-muted-foreground">Sign in to connect your Renpho account</p>
+            <p className="font-medium text-foreground">{t('renpho.title')}</p>
+            <p className="text-xs text-muted-foreground">{t('renpho.signInToConnect')}</p>
           </div>
         </div>
       </GradientCard>
@@ -61,11 +63,11 @@ export function RenphoConnection() {
         <div className="flex items-center gap-3">
           <Scale size={20} className={cn("transition-colors", isConnected ? "text-primary" : "text-muted-foreground")} />
           <div>
-            <p className="font-medium text-foreground">Renpho Scale Sync</p>
+            <p className="font-medium text-foreground">{t('renpho.title')}</p>
             <p className="text-xs text-muted-foreground">
               {isConnected 
-                ? `Connected • Last sync: ${lastSyncAt ? lastSyncAt.toLocaleDateString() : 'Never'}`
-                : 'Not connected'
+                ? `${t('renpho.connected')} • ${t('settings.lastSync')}: ${lastSyncAt ? lastSyncAt.toLocaleDateString() : t('renpho.never')}`
+                : t('renpho.notConnected')
               }
             </p>
           </div>
@@ -102,7 +104,7 @@ export function RenphoConnection() {
               onClick={() => setShowConnect(!showConnect)}
             >
               <Link2 size={14} className="mr-1" />
-              Connect
+              {t('renpho.connect')}
             </Button>
           )}
         </div>
@@ -112,13 +114,11 @@ export function RenphoConnection() {
         <div className="space-y-3 pt-3 border-t border-border/50">
           <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
             <Info size={14} className="flex-shrink-0 mt-0.5" />
-            <p>
-              Enter your Renpho app login credentials. These are the same email and password you use to sign in to the Renpho app.
-            </p>
+            <p>{t('renpho.credentialsInfo')}</p>
           </div>
           
           <div className="space-y-2">
-            <Label className="text-xs">Renpho Email</Label>
+            <Label className="text-xs">{t('renpho.email')}</Label>
             <Input
               type="email"
               placeholder="your@email.com"
@@ -129,10 +129,10 @@ export function RenphoConnection() {
           </div>
           
           <div className="space-y-2">
-            <Label className="text-xs">Password</Label>
+            <Label className="text-xs">{t('renpho.password')}</Label>
             <Input
               type="password"
-              placeholder="Your Renpho password"
+              placeholder={t('renpho.passwordPlaceholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="bg-muted border-border"
@@ -149,14 +149,14 @@ export function RenphoConnection() {
               {isSyncing ? (
                 <Loader2 size={14} className="animate-spin mr-1" />
               ) : null}
-              Connect
+              {t('renpho.connect')}
             </Button>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setShowConnect(false)}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
           </div>
         </div>

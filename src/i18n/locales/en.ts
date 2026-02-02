@@ -45,6 +45,7 @@ export default {
     signOut: 'Sign Out',
     notSignedIn: 'Not signed in',
     signInPrompt: 'Sign in to sync across devices',
+    signInToSync: 'Sign in to sync across devices',
     signIn: 'Sign In',
     connectedDevices: 'Connected Devices',
     profile: 'Profile',
@@ -212,6 +213,20 @@ export default {
     dedicatedDesc: 'Use the app for 90 days',
   },
   
+  // Renpho
+  renpho: {
+    title: 'Renpho Scale Sync',
+    signInToConnect: 'Sign in to connect your Renpho account',
+    connected: 'Connected',
+    notConnected: 'Not connected',
+    never: 'Never',
+    connect: 'Connect',
+    credentialsInfo: 'Enter your Renpho app login credentials. These are the same email and password you use to sign in to the Renpho app.',
+    email: 'Renpho Email',
+    password: 'Password',
+    passwordPlaceholder: 'Your Renpho password',
+  },
+
   // Toast messages
   toast: {
     reminderCreated: 'Reminder created',
