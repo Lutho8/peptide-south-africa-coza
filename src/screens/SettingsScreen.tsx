@@ -153,7 +153,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
       {/* Cloud Sync Section */}
       <div>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Cloud Sync</h2>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">{t('settings.cloudSync')}</h2>
         <GradientCard className="p-4">
           {authLoading ? (
             <div className="flex items-center justify-center py-4">
@@ -223,13 +223,13 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
       {/* Renpho Integration */}
       <div>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Connected Devices</h2>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">{t('settings.connectedDevices')}</h2>
         <RenphoConnection />
       </div>
 
       {/* Profile Section */}
       <div>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Profile</h2>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">{t('settings.profile')}</h2>
         <GradientCard 
           className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
           onClick={() => setProfileModalOpen(true)}
