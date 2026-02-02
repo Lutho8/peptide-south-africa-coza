@@ -3,12 +3,14 @@ import { BodyCompositionCard } from '@/components/home/BodyCompositionCard';
 import { TodaysDoses } from '@/components/home/TodaysDoses';
 import { TodaysReminders } from '@/components/home/TodaysReminders';
 import { WeeklyAdherenceReport } from '@/components/home/WeeklyAdherenceReport';
+import { MissedDosesCard } from '@/components/home/MissedDosesCard';
+import { AchievementsBadges } from '@/components/home/AchievementsBadges';
 import { ActiveStackPreview } from '@/components/home/ActiveStackPreview';
 import { QuickActions } from '@/components/home/QuickActions';
 import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
-import { userProfile } from '@/data/userData';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HomeScreenProps {
   onOpenBodyComposition: () => void;
@@ -32,16 +34,30 @@ export function HomeScreen({
   onOpenSettings
 }: HomeScreenProps) {
   const { reminders } = useDoseReminders();
+  const { user } = useAuth();
+  
+  // Get display name from user metadata or fallback to email
+  const displayName = user?.user_metadata?.display_name 
+    || user?.email?.split('@')[0] 
+    || 'Guest';
+  
+  const initials = displayName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <div className="pb-24 space-y-6 fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Welcome back,</h1>
-          <p className="text-lg text-primary font-medium">{userProfile.name}</p>
+          <p className="text-lg text-primary font-medium">{displayName}</p>
         </div>
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center text-primary-foreground font-bold text-lg">
-          {userProfile.name.split(' ').map(n => n[0]).join('')}
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-lg">
+          {initials}
         </div>
       </div>
 
@@ -69,6 +85,12 @@ export function HomeScreen({
 
       {/* Weekly Adherence Report */}
       <WeeklyAdherenceReport onViewSettings={onOpenSettings} />
+
+      {/* Missed Doses Quick-Log */}
+      <MissedDosesCard />
+
+      {/* Achievements & Badges */}
+      <AchievementsBadges />
 
       {/* Active Protocol Preview */}
       <ActiveStackPreview onViewStack={onNavigateStack} />

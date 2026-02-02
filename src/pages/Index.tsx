@@ -14,18 +14,30 @@ import { CycleManagementModal } from '@/components/modals/CycleManagementModal';
 import { BloodworkModal } from '@/components/modals/BloodworkModal';
 import { InventoryModal } from '@/components/modals/InventoryModal';
 import { NotificationActionModal } from '@/components/modals/NotificationActionModal';
+import { AuthModal } from '@/components/auth/AuthModal';
 import { useStorageInit } from '@/hooks/useStorageInit';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
-import { Settings } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Settings, User, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'research';
 
 const Index = () => {
   useStorageInit();
   const { addDose } = useDailyDoses();
+  const { user, signOut, isLoading } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [showSettings, setShowSettings] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [bodyCompositionOpen, setBodyCompositionOpen] = useState(false);
   const [doseTrackerOpen, setDoseTrackerOpen] = useState(false);
   const [cycleManagementOpen, setCycleManagementOpen] = useState(false);
@@ -92,6 +104,39 @@ const Index = () => {
       {/* App Logo Header */}
       <AppHeader onLogoClick={handleLogoClick} />
 
+      {/* User Auth Button */}
+      <div className="fixed top-4 right-16 z-50">
+        {isLoading ? null : user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-full bg-card border-border">
+                <User size={18} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <div className="px-2 py-1.5">
+                <p className="text-sm font-medium truncate">{user.user_metadata?.display_name || 'User'}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => signOut()} className="text-destructive">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setAuthModalOpen(true)}
+            className="bg-card border-border"
+          >
+            Sign In
+          </Button>
+        )}
+      </div>
+
       {/* Settings Button */}
       <button
         onClick={() => setShowSettings(!showSettings)}
@@ -115,6 +160,7 @@ const Index = () => {
       <BloodworkModal open={bloodworkOpen} onOpenChange={setBloodworkOpen} />
       <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />
       <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>
   );
 };
