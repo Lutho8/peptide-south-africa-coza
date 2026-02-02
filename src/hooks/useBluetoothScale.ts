@@ -4,11 +4,50 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-// Common Bluetooth scale service UUIDs
+// Standard Bluetooth SIG Weight Scale Service UUIDs
 const WEIGHT_SCALE_SERVICE = '0000181d-0000-1000-8000-00805f9b34fb';
 const BODY_COMPOSITION_SERVICE = '0000181b-0000-1000-8000-00805f9b34fb';
 const WEIGHT_MEASUREMENT_CHAR = '00002a9d-0000-1000-8000-00805f9b34fb';
 const BODY_COMPOSITION_CHAR = '00002a9c-0000-1000-8000-00805f9b34fb';
+
+// Xiaomi Mi Scale 2 / Mi Body Composition Scale
+const XIAOMI_SCALE_SERVICE = '0000181d-0000-1000-8000-00805f9b34fb';
+const XIAOMI_BODY_COMPOSITION_SERVICE = '00001530-0000-3512-2118-0009af100700';
+const XIAOMI_SCALE_CHAR = '00002a9d-0000-1000-8000-00805f9b34fb';
+
+// Eufy Smart Scale
+const EUFY_SCALE_SERVICE = '0000fff0-0000-1000-8000-00805f9b34fb';
+const EUFY_SCALE_CHAR = '0000fff4-0000-1000-8000-00805f9b34fb';
+
+// Renpho Smart Scale
+const RENPHO_SCALE_SERVICE = '0000fff0-0000-1000-8000-00805f9b34fb';
+const RENPHO_SCALE_CHAR = '0000fff1-0000-1000-8000-00805f9b34fb';
+
+// Withings / Nokia Body+ Scale
+const WITHINGS_SCALE_SERVICE = '0000180a-0000-1000-8000-00805f9b34fb';
+
+// Fitbit Aria
+const FITBIT_ARIA_SERVICE = 'adabfb00-6e7d-4601-bda2-bffaa68956ba';
+
+// 1byone / Etekcity / Generic scales using User Data Service
+const USER_DATA_SERVICE = '0000181c-0000-1000-8000-00805f9b34fb';
+
+// Yunmai scale
+const YUNMAI_SERVICE = '0000ffe0-0000-1000-8000-00805f9b34fb';
+const YUNMAI_CHAR = '0000ffe4-0000-1000-8000-00805f9b34fb';
+
+// All supported services for device discovery
+const ALL_SCALE_SERVICES = [
+  WEIGHT_SCALE_SERVICE,
+  BODY_COMPOSITION_SERVICE,
+  XIAOMI_BODY_COMPOSITION_SERVICE,
+  EUFY_SCALE_SERVICE,
+  RENPHO_SCALE_SERVICE,
+  WITHINGS_SCALE_SERVICE,
+  FITBIT_ARIA_SERVICE,
+  USER_DATA_SERVICE,
+  YUNMAI_SERVICE,
+];
 
 interface BluetoothScaleState {
   isConnecting: boolean;
@@ -205,12 +244,11 @@ export function useBluetoothScale() {
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
+      // Use acceptAllDevices with optional services for broader compatibility
+      // This allows connecting to scales that use non-standard service UUIDs
       const bluetoothDevice = await navigator.bluetooth!.requestDevice({
-        filters: [
-          { services: [WEIGHT_SCALE_SERVICE] },
-          { services: [BODY_COMPOSITION_SERVICE] },
-        ],
-        optionalServices: [WEIGHT_SCALE_SERVICE, BODY_COMPOSITION_SERVICE],
+        acceptAllDevices: true,
+        optionalServices: ALL_SCALE_SERVICES,
       });
 
       if (!bluetoothDevice.gatt) {
@@ -219,18 +257,38 @@ export function useBluetoothScale() {
 
       const server = await bluetoothDevice.gatt.connect();
       
-      // Try to get body composition service first, fall back to weight scale
-      let service: BluetoothRemoteGATTService;
-      let characteristic: BluetoothRemoteGATTCharacteristic;
+      // Try multiple services in order of preference
+      let service: BluetoothRemoteGATTService | null = null;
+      let characteristic: BluetoothRemoteGATTCharacteristic | null = null;
       let isBodyComposition = false;
+      let scaleType = 'generic';
 
-      try {
-        service = await server.getPrimaryService(BODY_COMPOSITION_SERVICE);
-        characteristic = await service.getCharacteristic(BODY_COMPOSITION_CHAR);
-        isBodyComposition = true;
-      } catch {
-        service = await server.getPrimaryService(WEIGHT_SCALE_SERVICE);
-        characteristic = await service.getCharacteristic(WEIGHT_MEASUREMENT_CHAR);
+      // Service/characteristic pairs to try, in order of preference
+      const serviceAttempts = [
+        { service: BODY_COMPOSITION_SERVICE, char: BODY_COMPOSITION_CHAR, type: 'body-composition', isBody: true },
+        { service: WEIGHT_SCALE_SERVICE, char: WEIGHT_MEASUREMENT_CHAR, type: 'weight-scale', isBody: false },
+        { service: XIAOMI_BODY_COMPOSITION_SERVICE, char: XIAOMI_SCALE_CHAR, type: 'xiaomi', isBody: true },
+        { service: EUFY_SCALE_SERVICE, char: EUFY_SCALE_CHAR, type: 'eufy', isBody: false },
+        { service: RENPHO_SCALE_SERVICE, char: RENPHO_SCALE_CHAR, type: 'renpho', isBody: false },
+        { service: YUNMAI_SERVICE, char: YUNMAI_CHAR, type: 'yunmai', isBody: false },
+      ];
+
+      for (const attempt of serviceAttempts) {
+        try {
+          service = await server.getPrimaryService(attempt.service);
+          characteristic = await service.getCharacteristic(attempt.char);
+          isBodyComposition = attempt.isBody;
+          scaleType = attempt.type;
+          console.log(`Connected via ${scaleType} service`);
+          break;
+        } catch {
+          // Try next service
+          continue;
+        }
+      }
+
+      if (!service || !characteristic) {
+        throw new Error('No compatible scale service found. Please ensure your scale is turned on and in pairing mode.');
       }
 
       // Listen for measurements
