@@ -68,6 +68,8 @@ export default {
         metabolic: "hsl(var(--metabolic))",
         healing: "hsl(var(--healing))",
         gh: "hsl(var(--gh-secretagogue))",
+        // Luxury accents
+        gold: "hsl(var(--gold))",
       },
       borderRadius: {
         lg: "var(--radius)",

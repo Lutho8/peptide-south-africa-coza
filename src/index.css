@@ -4,91 +4,100 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    /* Midnight Sapphire Luxury Theme */
+    --background: 222 65% 6%;
+    --foreground: 220 20% 95%;
 
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 98%;
+    --card: 222 50% 10%;
+    --card-foreground: 220 20% 95%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 60% 8%;
+    --popover-foreground: 220 20% 95%;
 
-    --primary: 187 92% 53%;
-    --primary-foreground: 222 47% 11%;
+    /* Platinum/Silver primary accent */
+    --primary: 220 15% 75%;
+    --primary-foreground: 222 65% 6%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 222 45% 14%;
+    --secondary-foreground: 220 20% 95%;
 
-    --muted: 217 33% 25%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 222 40% 18%;
+    --muted-foreground: 220 15% 55%;
 
-    --accent: 187 92% 53%;
-    --accent-foreground: 222 47% 11%;
+    /* Royal sapphire blue accent */
+    --accent: 217 89% 61%;
+    --accent-foreground: 220 20% 95%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 220 20% 95%;
 
-    --warning: 45 93% 47%;
-    --warning-foreground: 222 47% 11%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 65% 6%;
 
-    --border: 217 33% 25%;
-    --input: 217 33% 25%;
-    --ring: 187 92% 53%;
+    --border: 222 30% 20%;
+    --input: 222 35% 16%;
+    --ring: 217 89% 61%;
 
     --radius: 0.75rem;
 
-    /* Category Colors */
-    --immune: 243 75% 59%;
-    --longevity: 160 84% 39%;
-    --cognitive: 187 92% 43%;
-    --metabolic: 0 84% 60%;
-    --healing: 25 95% 53%;
-    --gh-secretagogue: 258 90% 66%;
+    /* Category Colors - Refined for luxury */
+    --immune: 243 70% 65%;
+    --longevity: 160 75% 45%;
+    --cognitive: 200 80% 55%;
+    --metabolic: 0 70% 55%;
+    --healing: 30 85% 55%;
+    --gh-secretagogue: 265 80% 65%;
 
-    /* Gradient definitions */
-    --gradient-card: linear-gradient(135deg, hsl(217 33% 17%) 0%, hsl(222 47% 14%) 100%);
-    --gradient-primary: linear-gradient(135deg, hsl(187 92% 53%) 0%, hsl(187 92% 43%) 100%);
-    --gradient-immune: linear-gradient(135deg, hsl(243 75% 59%) 0%, hsl(243 75% 49%) 100%);
-    --gradient-longevity: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(160 84% 29%) 100%);
-    --gradient-cognitive: linear-gradient(135deg, hsl(187 92% 43%) 0%, hsl(187 92% 33%) 100%);
-    --gradient-metabolic: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(0 84% 50%) 100%);
-    --gradient-healing: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(25 95% 43%) 100%);
-    --gradient-gh: linear-gradient(135deg, hsl(258 90% 66%) 0%, hsl(258 90% 56%) 100%);
+    /* Luxury gradient definitions */
+    --gradient-card: linear-gradient(145deg, hsl(222 50% 10%) 0%, hsl(222 60% 7%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(220 15% 75%) 0%, hsl(220 20% 60%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(217 89% 61%) 0%, hsl(230 85% 50%) 100%);
+    --gradient-immune: linear-gradient(135deg, hsl(243 70% 65%) 0%, hsl(250 75% 55%) 100%);
+    --gradient-longevity: linear-gradient(135deg, hsl(160 75% 45%) 0%, hsl(155 80% 35%) 100%);
+    --gradient-cognitive: linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(210 85% 45%) 100%);
+    --gradient-metabolic: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(350 75% 45%) 100%);
+    --gradient-healing: linear-gradient(135deg, hsl(30 85% 55%) 0%, hsl(25 90% 45%) 100%);
+    --gradient-gh: linear-gradient(135deg, hsl(265 80% 65%) 0%, hsl(275 85% 55%) 100%);
 
-    /* Glass effect */
-    --glass-bg: hsla(217, 33%, 17%, 0.8);
-    --glass-border: hsla(187, 92%, 53%, 0.2);
+    /* Premium glass effects */
+    --glass-bg: hsla(222, 50%, 10%, 0.85);
+    --glass-border: hsla(220, 15%, 75%, 0.15);
+    --glass-glow: hsla(217, 89%, 61%, 0.1);
 
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 187 92% 53%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 25%;
-    --sidebar-ring: 187 92% 53%;
+    /* Luxury gold accent for premium elements */
+    --gold: 43 74% 49%;
+    --gold-glow: hsla(43, 74%, 49%, 0.3);
+
+    --sidebar-background: 222 65% 6%;
+    --sidebar-foreground: 220 20% 95%;
+    --sidebar-primary: 220 15% 75%;
+    --sidebar-primary-foreground: 222 65% 6%;
+    --sidebar-accent: 222 50% 10%;
+    --sidebar-accent-foreground: 220 20% 95%;
+    --sidebar-border: 222 30% 20%;
+    --sidebar-ring: 217 89% 61%;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 187 92% 53%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 25%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 187 92% 53%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 25%;
-    --input: 217 33% 25%;
-    --ring: 187 92% 53%;
+    --background: 222 65% 6%;
+    --foreground: 220 20% 95%;
+    --card: 222 50% 10%;
+    --card-foreground: 220 20% 95%;
+    --popover: 222 60% 8%;
+    --popover-foreground: 220 20% 95%;
+    --primary: 220 15% 75%;
+    --primary-foreground: 222 65% 6%;
+    --secondary: 222 45% 14%;
+    --secondary-foreground: 220 20% 95%;
+    --muted: 222 40% 18%;
+    --muted-foreground: 220 15% 55%;
+    --accent: 217 89% 61%;
+    --accent-foreground: 220 20% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 220 20% 95%;
+    --border: 222 30% 20%;
+    --input: 222 35% 16%;
+    --ring: 217 89% 61%;
   }
 }
 
@@ -106,13 +115,71 @@
 @layer components {
   .gradient-card {
     background: var(--gradient-card);
-    @apply border border-border/50 backdrop-blur-sm;
+    @apply border border-border/50 backdrop-blur-xl shadow-xl;
   }
 
   .glass-card {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    @apply backdrop-blur-md;
+    box-shadow: 0 8px 32px var(--glass-glow);
+    @apply backdrop-blur-xl;
+  }
+
+  /* Luxury shimmer effect */
+  .luxury-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .luxury-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsla(220, 15%, 75%, 0.1),
+      transparent
+    );
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Premium border glow */
+  .premium-border {
+    position: relative;
+  }
+
+  .premium-border::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      hsla(220, 15%, 75%, 0.3),
+      hsla(217, 89%, 61%, 0.2),
+      hsla(220, 15%, 75%, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Gold accent for premium elements */
+  .gold-accent {
+    color: hsl(var(--gold));
+    text-shadow: 0 0 20px var(--gold-glow);
+  }
+
+  .gold-border {
+    border-color: hsl(var(--gold) / 0.5);
+    box-shadow: 0 0 20px var(--gold-glow);
   }
 
   .category-immune {
