@@ -6,9 +6,11 @@ interface ResearchToolsProps {
   onCompareClick?: () => void;
   onQuizClick?: () => void;
   onSearchClick?: () => void;
+  onStackClick?: () => void;
+  onCalculatorClick?: () => void;
 }
 
-export function ResearchTools({ onCompareClick, onQuizClick, onSearchClick }: ResearchToolsProps) {
+export function ResearchTools({ onCompareClick, onQuizClick, onSearchClick, onStackClick, onCalculatorClick }: ResearchToolsProps) {
   const tools = [
     {
       icon: Search,
@@ -29,14 +31,14 @@ export function ResearchTools({ onCompareClick, onQuizClick, onSearchClick }: Re
       title: 'Stack Builder',
       description: 'Create optimized peptide combinations based on your research goals.',
       color: 'from-purple-500 to-pink-500',
-      onClick: undefined,
+      onClick: onStackClick,
     },
     {
       icon: Calculator,
       title: 'Calculator',
       description: 'Reconstitution and dosing calculator with multiple syringe types.',
       color: 'from-green-500 to-emerald-500',
-      onClick: undefined,
+      onClick: onCalculatorClick,
     },
     {
       icon: HelpCircle,

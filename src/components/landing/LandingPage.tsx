@@ -9,6 +9,8 @@ import { LandingFooter } from './LandingFooter';
 import { PeptideQuiz } from './PeptideQuiz';
 import { PeptideCompare } from './PeptideCompare';
 import { PeptideSearch } from './PeptideSearch';
+import { StackBuilder } from './StackBuilder';
+import { ReconstitutionCalculator } from './ReconstitutionCalculator';
 import { AuthModal } from '@/components/auth/AuthModal';
 
 export function LandingPage() {
@@ -16,6 +18,8 @@ export function LandingPage() {
   const [quizOpen, setQuizOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [stackBuilderOpen, setStackBuilderOpen] = useState(false);
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
 
   const handleSignInClick = () => {
     setAuthModalOpen(true);
@@ -34,6 +38,8 @@ export function LandingPage() {
           onCompareClick={() => setCompareOpen(true)}
           onQuizClick={() => setQuizOpen(true)}
           onSearchClick={() => setSearchOpen(true)}
+          onStackClick={() => setStackBuilderOpen(true)}
+          onCalculatorClick={() => setCalculatorOpen(true)}
         />
         <FeaturedPeptides />
         <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
@@ -46,6 +52,8 @@ export function LandingPage() {
       <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />
       <PeptideCompare open={compareOpen} onClose={() => setCompareOpen(false)} />
       <PeptideSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <StackBuilder open={stackBuilderOpen} onClose={() => setStackBuilderOpen(false)} />
+      <ReconstitutionCalculator open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />
     </div>
   );
 }
