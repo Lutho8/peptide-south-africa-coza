@@ -6,3 +6,6 @@ export { FeaturedPeptides } from './FeaturedPeptides';
 export { PeptideCategories } from './PeptideCategories';
 export { CTASection } from './CTASection';
 export { LandingFooter } from './LandingFooter';
+export { PeptideQuiz } from './PeptideQuiz';
+export { PeptideCompare } from './PeptideCompare';
+export { PeptideSearch } from './PeptideSearch';
