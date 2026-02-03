@@ -9,3 +9,5 @@ export { LandingFooter } from './LandingFooter';
 export { PeptideQuiz } from './PeptideQuiz';
 export { PeptideCompare } from './PeptideCompare';
 export { PeptideSearch } from './PeptideSearch';
+export { StackBuilder } from './StackBuilder';
+export { ReconstitutionCalculator } from './ReconstitutionCalculator';
