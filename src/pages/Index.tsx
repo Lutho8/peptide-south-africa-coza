@@ -15,10 +15,11 @@ import { BloodworkModal } from '@/components/modals/BloodworkModal';
 import { InventoryModal } from '@/components/modals/InventoryModal';
 import { NotificationActionModal } from '@/components/modals/NotificationActionModal';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { LandingPage } from '@/components/landing';
 import { useStorageInit } from '@/hooks/useStorageInit';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
-import { Settings, User, LogOut } from 'lucide-react';
+import { Settings, User, LogOut, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -99,6 +100,21 @@ const Index = () => {
     }
   };
 
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show landing page for unauthenticated users
+  if (!user) {
+    return <LandingPage />;
+  }
+
+  // Show PeptidePro dashboard for authenticated users
   return (
     <div className="min-h-screen bg-background">
       {/* App Logo Header */}
@@ -106,35 +122,24 @@ const Index = () => {
 
       {/* User Auth Button */}
       <div className="fixed top-4 right-16 z-50">
-        {isLoading ? null : user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="rounded-full bg-card border-border">
-                <User size={18} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <div className="px-2 py-1.5">
-                <p className="text-sm font-medium truncate">{user.user_metadata?.display_name || 'User'}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()} className="text-destructive">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setAuthModalOpen(true)}
-            className="bg-card border-border"
-          >
-            Sign In
-          </Button>
-        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="rounded-full bg-card border-border">
+              <User size={18} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <div className="px-2 py-1.5">
+              <p className="text-sm font-medium truncate">{user.user_metadata?.display_name || 'User'}</p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => signOut()} className="text-destructive">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Settings Button */}
