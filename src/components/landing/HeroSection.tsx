@@ -1,25 +1,22 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, FlaskConical, Award, BookOpen } from 'lucide-react';
+import { HeroCategoryBadges } from './HeroCategoryBadges';
+import { PeptideCategory } from '@/data/peptides';
 
 const stats = [
   { label: 'Peptides', value: '97+', icon: FlaskConical },
   { label: 'FDA Approved', value: '12', icon: Award },
-  { label: 'Categories', value: '8', icon: TrendingUp },
+  { label: 'Categories', value: '9', icon: TrendingUp },
   { label: 'Citations', value: '500+', icon: BookOpen },
 ];
 
-const trendingPeptides = [
-  'BPC-157',
-  'Semaglutide',
-  'TB-500',
-  'Tirzepatide',
-  'CJC-1295',
-  'Ipamorelin',
-];
+interface HeroSectionProps {
+  onCategoryClick?: (category: PeptideCategory) => void;
+}
 
-export function HeroSection() {
+export function HeroSection({ onCategoryClick }: HeroSectionProps) {
   return (
-    <section className="relative overflow-hidden py-20 lg:py-32">
+    <section className="relative overflow-hidden py-16 lg:py-24">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/10 rounded-full blur-3xl opacity-30" />
@@ -49,7 +46,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
           >
             {stats.map((stat, index) => (
               <div
@@ -63,27 +60,8 @@ export function HeroSection() {
             ))}
           </motion.div>
 
-          {/* Trending Peptides */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <p className="text-sm text-muted-foreground mb-4">Trending Research</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {trendingPeptides.map((peptide, index) => (
-                <motion.span
-                  key={peptide}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                  className="px-4 py-2 rounded-full bg-secondary/50 border border-border/50 text-sm font-medium hover:bg-accent/20 hover:border-accent/50 cursor-pointer transition-all"
-                >
-                  {peptide}
-                </motion.span>
-              ))}
-            </div>
-          </motion.div>
+          {/* Dynamic Category Badges */}
+          <HeroCategoryBadges onCategoryClick={onCategoryClick} />
         </div>
       </div>
     </section>
