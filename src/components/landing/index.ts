@@ -1,9 +1,11 @@
 export { LandingPage } from './LandingPage';
 export { LandingHeader } from './LandingHeader';
 export { HeroSection } from './HeroSection';
+export { HeroCategoryBadges } from './HeroCategoryBadges';
 export { ResearchTools } from './ResearchTools';
 export { FeaturedPeptides } from './FeaturedPeptides';
 export { PeptideCategories } from './PeptideCategories';
+export { BlogSection } from './BlogSection';
 export { CTASection } from './CTASection';
 export { LandingFooter } from './LandingFooter';
 export { PeptideQuiz } from './PeptideQuiz';
@@ -11,3 +13,4 @@ export { PeptideCompare } from './PeptideCompare';
 export { PeptideSearch } from './PeptideSearch';
 export { StackBuilder } from './StackBuilder';
 export { ReconstitutionCalculator } from './ReconstitutionCalculator';
+export { MembersPaywall } from './MembersPaywall';

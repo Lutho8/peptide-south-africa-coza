@@ -1,4 +1,19 @@
-export type PeptideCategory = 'immune' | 'longevity' | 'cognitive' | 'metabolic' | 'healing' | 'gh-secretagogue';
+export type PeptideCategory = 'immune' | 'longevity' | 'cognitive' | 'metabolic' | 'healing' | 'gh-secretagogue' | 'weight-loss' | 'anti-aging' | 'skin-hair' | 'hormonal' | 'bioregulators';
+
+// Category configuration with counts matching peptibase.dev
+export const categoryConfig: Record<PeptideCategory, { label: string; count: number; color: string; bgColor: string }> = {
+  'weight-loss': { label: 'Weight Loss', count: 15, color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+  'gh-secretagogue': { label: 'Growth Hormone', count: 9, color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
+  'healing': { label: 'Healing', count: 5, color: 'text-red-400', bgColor: 'bg-red-500/10' },
+  'anti-aging': { label: 'Anti-Aging', count: 5, color: 'text-green-400', bgColor: 'bg-green-500/10' },
+  'cognitive': { label: 'Cognitive', count: 7, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+  'immune': { label: 'Immune', count: 5, color: 'text-indigo-400', bgColor: 'bg-indigo-500/10' },
+  'skin-hair': { label: 'Skin & Hair', count: 7, color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
+  'hormonal': { label: 'Hormonal', count: 23, color: 'text-orange-400', bgColor: 'bg-orange-500/10' },
+  'bioregulators': { label: 'Bioregulators', count: 12, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+  'longevity': { label: 'Longevity', count: 8, color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
+  'metabolic': { label: 'Metabolic', count: 6, color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
+};
 
 export interface Peptide {
   id: string;
@@ -608,15 +623,20 @@ export const peptides: Peptide[] = [
 ];
 
 export const getCategoryColor = (category: PeptideCategory): string => {
-  const colors: Record<PeptideCategory, string> = {
+  const colors: Partial<Record<PeptideCategory, string>> = {
     'immune': 'bg-immune',
     'longevity': 'bg-longevity',
     'cognitive': 'bg-cognitive',
     'metabolic': 'bg-metabolic',
     'healing': 'bg-healing',
-    'gh-secretagogue': 'bg-gh'
+    'gh-secretagogue': 'bg-gh',
+    'weight-loss': 'bg-metabolic',
+    'anti-aging': 'bg-longevity',
+    'skin-hair': 'bg-healing',
+    'hormonal': 'bg-gh',
+    'bioregulators': 'bg-immune',
   };
-  return colors[category];
+  return colors[category] || 'bg-secondary';
 };
 
 export const getCategoryGradient = (category: PeptideCategory): string => {
@@ -626,19 +646,23 @@ export const getCategoryGradient = (category: PeptideCategory): string => {
     'cognitive': 'category-cognitive',
     'metabolic': 'category-metabolic',
     'healing': 'category-healing',
-    'gh-secretagogue': 'category-gh'
+    'gh-secretagogue': 'category-gh',
+    'weight-loss': 'category-metabolic',
+    'anti-aging': 'category-longevity',
+    'skin-hair': 'category-healing',
+    'hormonal': 'category-gh',
+    'bioregulators': 'category-immune',
   };
-  return gradients[category];
+  return gradients[category] || 'category-immune';
 };
 
 export const getCategoryLabel = (category: PeptideCategory): string => {
-  const labels: Record<PeptideCategory, string> = {
-    'immune': 'Immune',
-    'longevity': 'Longevity',
-    'cognitive': 'Cognitive',
-    'metabolic': 'Metabolic',
-    'healing': 'Healing',
-    'gh-secretagogue': 'GH-Secretagogue'
-  };
-  return labels[category];
+  return categoryConfig[category]?.label || category;
+};
+
+export const getAllCategories = () => {
+  return Object.entries(categoryConfig).map(([key, value]) => ({
+    id: key as PeptideCategory,
+    ...value
+  }));
 };

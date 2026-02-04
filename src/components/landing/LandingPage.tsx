@@ -4,6 +4,7 @@ import { HeroSection } from './HeroSection';
 import { ResearchTools } from './ResearchTools';
 import { FeaturedPeptides } from './FeaturedPeptides';
 import { PeptideCategories } from './PeptideCategories';
+import { BlogSection } from './BlogSection';
 import { CTASection } from './CTASection';
 import { LandingFooter } from './LandingFooter';
 import { PeptideQuiz } from './PeptideQuiz';
@@ -11,29 +12,50 @@ import { PeptideCompare } from './PeptideCompare';
 import { PeptideSearch } from './PeptideSearch';
 import { StackBuilder } from './StackBuilder';
 import { ReconstitutionCalculator } from './ReconstitutionCalculator';
+import { MembersPaywall } from './MembersPaywall';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { PeptideCategory } from '@/data/peptides';
 
 export function LandingPage() {
+  const { user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [membersPaywallOpen, setMembersPaywallOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [stackBuilderOpen, setStackBuilderOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
 
+  // TODO: Check if user has active membership via PayPal subscription
+  const hasMembership = false;
+
   const handleSignInClick = () => {
     setAuthModalOpen(true);
+  };
+
+  const handleMembersClick = () => {
+    setMembersPaywallOpen(true);
+  };
+
+  const handleCategoryClick = (category: PeptideCategory) => {
+    setSearchOpen(true);
+  };
+
+  const handleAccessDashboard = () => {
+    // This would redirect to dashboard - handled by parent component
+    window.location.reload();
   };
 
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader 
-        onSignInClick={handleSignInClick} 
+        onSignInClick={handleMembersClick} 
         onSearch={() => setSearchOpen(true)}
       />
       
       <main>
-        <HeroSection />
+        <HeroSection onCategoryClick={handleCategoryClick} />
         <ResearchTools 
           onCompareClick={() => setCompareOpen(true)}
           onQuizClick={() => setQuizOpen(true)}
@@ -43,12 +65,24 @@ export function LandingPage() {
         />
         <FeaturedPeptides />
         <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
-        <CTASection onSignInClick={handleSignInClick} />
+        <BlogSection />
+        <CTASection onSignInClick={handleMembersClick} />
       </main>
 
       <LandingFooter />
 
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      <MembersPaywall 
+        open={membersPaywallOpen} 
+        onOpenChange={setMembersPaywallOpen}
+        onSignInClick={() => {
+          setMembersPaywallOpen(false);
+          setAuthModalOpen(true);
+        }}
+        isAuthenticated={!!user}
+        hasMembership={hasMembership}
+        onAccessDashboard={handleAccessDashboard}
+      />
       <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />
       <PeptideCompare open={compareOpen} onClose={() => setCompareOpen(false)} />
       <PeptideSearch open={searchOpen} onClose={() => setSearchOpen(false)} />

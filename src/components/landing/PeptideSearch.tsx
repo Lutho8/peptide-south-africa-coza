@@ -20,22 +20,32 @@ interface PeptideSearchProps {
   onClose: () => void;
 }
 
-const categoryLabels: Record<PeptideCategory, string> = {
+const categoryLabels: Partial<Record<PeptideCategory, string>> = {
   immune: 'Immune Support',
   longevity: 'Longevity',
   cognitive: 'Cognitive',
   metabolic: 'Metabolic',
   healing: 'Healing & Recovery',
   'gh-secretagogue': 'GH Secretagogue',
+  'weight-loss': 'Weight Loss',
+  'anti-aging': 'Anti-Aging',
+  'skin-hair': 'Skin & Hair',
+  'hormonal': 'Hormonal',
+  'bioregulators': 'Bioregulators',
 };
 
-const categoryColors: Record<PeptideCategory, string> = {
+const categoryColors: Partial<Record<PeptideCategory, string>> = {
   immune: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
   longevity: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
   cognitive: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   metabolic: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
   healing: 'bg-red-500/20 text-red-400 border-red-500/30',
   'gh-secretagogue': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  'weight-loss': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  'anti-aging': 'bg-green-500/20 text-green-400 border-green-500/30',
+  'skin-hair': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+  'hormonal': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  'bioregulators': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
 };
 
 export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
