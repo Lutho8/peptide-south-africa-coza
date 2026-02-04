@@ -1,4 +1,5 @@
-import { Waves, Twitter, Mail, Linkedin } from 'lucide-react';
+import { Twitter, Mail, Linkedin } from 'lucide-react';
+import logoIcon from '@/assets/logo-icon.png';
 
 const footerLinks = {
   Database: ['All Peptides', 'Categories', 'FDA Approved', 'Research Phase'],
@@ -23,9 +24,7 @@ export function LandingFooter() {
               className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
               aria-label="Back to top"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Waves size={16} className="text-primary-foreground" />
-              </div>
+              <img src={logoIcon} alt="Ride The Tide" className="w-8 h-8 rounded-lg" />
               <span className="text-lg font-bold">Ride The Tide</span>
             </button>
             <p className="text-sm text-muted-foreground mb-4">
