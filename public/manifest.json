@@ -1,11 +1,11 @@
 {
-  "name": "Peptide Protocol Tracker",
-  "short_name": "Peptide Tracker",
+  "name": "Ride The Tide - Peptide Tracker",
+  "short_name": "Ride The Tide",
   "description": "Track peptide protocols, doses, and body composition for optimized health",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F172A",
-  "theme_color": "#22D3EE",
+  "background_color": "#FAFBFC",
+  "theme_color": "#3B82F6",
   "orientation": "portrait",
   "categories": ["health", "fitness", "medical"],
   "icons": [

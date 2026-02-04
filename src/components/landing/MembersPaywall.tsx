@@ -130,7 +130,7 @@ export function MembersPaywall({
               Welcome Back, Member!
             </DialogTitle>
             <DialogDescription className="text-center">
-              Your PeptidePro membership is active
+              Your Ride The Tide membership is active
             </DialogDescription>
           </DialogHeader>
           <div className="text-center py-6">
@@ -162,8 +162,8 @@ export function MembersPaywall({
       <DialogContent className="max-w-4xl bg-background border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl flex items-center justify-center gap-2">
-            <Crown className="w-6 h-6 text-yellow-500" />
-            Unlock PeptidePro
+            <Crown className="w-6 h-6 text-primary" />
+            Unlock Ride The Tide
           </DialogTitle>
         </DialogHeader>
 

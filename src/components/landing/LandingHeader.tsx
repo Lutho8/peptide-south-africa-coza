@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Search, Menu, X, Waves } from 'lucide-react';
+import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import logoIcon from '@/assets/logo-icon.png';
 
 interface LandingHeaderProps {
   onSignInClick: () => void;
@@ -40,9 +41,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             aria-label="Go to Home"
           >
-            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-              <Waves size={22} className="text-primary-foreground" />
-            </div>
+            <img src={logoIcon} alt="Ride The Tide" className="w-10 h-10 rounded-xl shadow-lg" />
             <span className="text-xl font-bold text-foreground">
               Ride The Tide
             </span>
