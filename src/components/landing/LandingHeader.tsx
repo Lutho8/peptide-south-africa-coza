@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, Waves } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -26,30 +26,27 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
     onSearch?.(searchQuery);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-card/95 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-card/95 backdrop-blur-xl shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="relative w-10 h-10">
-              <svg viewBox="0 0 40 40" className="w-full h-full">
-                <defs>
-                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" />
-                    <stop offset="100%" stopColor="hsl(var(--accent))" />
-                  </linearGradient>
-                </defs>
-                <circle cx="20" cy="20" r="18" fill="url(#logoGradient)" opacity="0.2" />
-                <circle cx="20" cy="20" r="12" fill="url(#logoGradient)" opacity="0.4" />
-                <circle cx="20" cy="20" r="6" fill="url(#logoGradient)" />
-                <path d="M20 8 L20 32 M8 20 L32 20" stroke="hsl(var(--primary))" strokeWidth="2" opacity="0.3" />
-              </svg>
+          {/* Logo - Clickable to go home */}
+          <button 
+            onClick={scrollToTop}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            aria-label="Go to Home"
+          >
+            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+              <Waves size={22} className="text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Peptibase
+            <span className="text-xl font-bold text-foreground">
+              Ride The Tide
             </span>
-          </div>
+          </button>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-6">
@@ -57,7 +54,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
               <a
                 key={link.label}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
               </a>
@@ -73,7 +70,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
                 placeholder="Search peptides..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-background/50 border-border/50"
+                className="pl-10 bg-muted/50 border-border"
               />
             </div>
           </form>
@@ -82,7 +79,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
           <div className="flex items-center gap-2">
             <Button
               onClick={onSignInClick}
-              className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 transition-opacity"
+              className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:shadow-lg hover:opacity-95 transition-all"
             >
               Members
             </Button>
@@ -108,7 +105,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
                   placeholder="Search peptides..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-background/50"
+                  className="pl-10 bg-muted/50"
                 />
               </div>
             </form>
@@ -117,7 +114,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
                 <a
                   key={link.label}
                   href={link.href}
-                  className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"
+                  className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
