@@ -1,17 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Crown, Shield, Zap, BarChart3, Bell, Download, Users, Lock } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Check, Crown, Shield, Zap, BarChart3, Bell, Download, Users, Lock, Loader2, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useMembership } from '@/hooks/useMembership';
+import { useToast } from '@/hooks/use-toast';
+
+// PayPal Plan ID - Replace with your actual PayPal subscription plan ID
+// Create this at: https://developer.paypal.com/dashboard/applications/sandbox
+const PAYPAL_PLAN_ID = 'P-PEPTIDEPRO-MONTHLY-EUR';
+const PAYPAL_CLIENT_ID = 'YOUR_PAYPAL_CLIENT_ID'; // Replace with your PayPal Client ID
 
 interface MembersPaywallProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSignInClick: () => void;
   isAuthenticated: boolean;
-  hasMembership: boolean;
   onAccessDashboard: () => void;
 }
 
@@ -40,18 +46,78 @@ export function MembersPaywall({
   onOpenChange, 
   onSignInClick, 
   isAuthenticated, 
-  hasMembership,
   onAccessDashboard 
 }: MembersPaywallProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const { membership, hasMembership, isLoading, activateMembership } = useMembership();
+  const { toast } = useToast();
+
+  // Handle PayPal redirect callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const subscriptionId = urlParams.get('subscription_id');
+    const payerId = urlParams.get('PayerID');
+    
+    if (subscriptionId && payerId && isAuthenticated) {
+      handlePayPalSuccess(subscriptionId, payerId);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [isAuthenticated]);
+
+  const handlePayPalSuccess = async (subscriptionId: string, payerId: string) => {
+    setIsProcessing(true);
+    try {
+      await activateMembership(subscriptionId, payerId, PAYPAL_PLAN_ID);
+      toast({
+        title: "Welcome to PeptidePro!",
+        description: "Your membership is now active.",
+      });
+      onAccessDashboard();
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Activation Failed",
+        description: "Please contact support if this persists.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handlePayPalClick = () => {
     setIsProcessing(true);
-    // PayPal integration - opens PayPal checkout
-    // For now, redirect to PayPal subscription link
-    window.open('https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-XXXXXX', '_blank');
+    // Construct PayPal subscription URL
+    // In production, you would use PayPal's JavaScript SDK for a better experience
+    const returnUrl = encodeURIComponent(window.location.origin + '/?membership=success');
+    const cancelUrl = encodeURIComponent(window.location.origin + '/?membership=cancelled');
+    
+    // This is a placeholder URL - replace with your actual PayPal subscription link
+    // To get this, create a subscription plan in PayPal Developer Dashboard
+    const paypalUrl = `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${PAYPAL_PLAN_ID}&return_url=${returnUrl}&cancel_url=${cancelUrl}`;
+    
+    window.open(paypalUrl, '_blank');
     setIsProcessing(false);
+    
+    toast({
+      title: "PayPal Opened",
+      description: "Complete your subscription in the PayPal window, then return here.",
+    });
   };
+
+  // Loading state
+  if (isLoading && isAuthenticated) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md bg-background border-border">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   // If user has membership, show access button
   if (isAuthenticated && hasMembership) {
@@ -63,10 +129,18 @@ export function MembersPaywall({
               <Crown className="w-5 h-5 text-yellow-500" />
               Welcome Back, Member!
             </DialogTitle>
+            <DialogDescription className="text-center">
+              Your PeptidePro membership is active
+            </DialogDescription>
           </DialogHeader>
           <div className="text-center py-6">
+            <div className="mb-4 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+              <p className="text-sm text-green-400">
+                ✓ Membership Active {membership?.expires_at && `until ${new Date(membership.expires_at).toLocaleDateString()}`}
+              </p>
+            </div>
             <p className="text-muted-foreground mb-6">
-              Your PeptidePro membership is active. Access your personalized dashboard.
+              Access your personalized peptide tracking dashboard.
             </p>
             <Button 
               onClick={() => {

@@ -11,10 +11,9 @@ const blogPosts = [
     excerpt: 'A comprehensive comparison of the two most popular weight loss peptides, their mechanisms, dosing protocols, and clinical outcomes.',
     category: 'Weight Loss',
     author: 'Dr. Research Team',
-    date: '2024-12-15',
+    date: '2025-01-15',
     readTime: '12 min read',
     featured: true,
-    image: '/api/placeholder/600/400',
   },
   {
     id: 2,
@@ -22,9 +21,8 @@ const blogPosts = [
     excerpt: 'Explore the synergistic effects of combining these two powerful healing peptides for accelerated tissue repair and recovery.',
     category: 'Healing',
     author: 'Peptide Research Lab',
-    date: '2024-12-10',
+    date: '2025-01-10',
     readTime: '8 min read',
-    featured: false,
   },
   {
     id: 3,
@@ -32,19 +30,17 @@ const blogPosts = [
     excerpt: 'Deep dive into Ipamorelin, CJC-1295, and other GH-releasing peptides - mechanisms, benefits, and optimal protocols.',
     category: 'Growth Hormone',
     author: 'Dr. Research Team',
-    date: '2024-12-05',
+    date: '2025-01-05',
     readTime: '15 min read',
-    featured: false,
   },
   {
     id: 4,
     title: 'Telomere Extension with Epitalon: The Science',
     excerpt: 'Review of clinical evidence for Epitalon\'s telomerase activation and its implications for longevity research.',
-    category: 'Longevity',
+    category: 'Anti-Aging',
     author: 'Longevity Institute',
-    date: '2024-11-28',
+    date: '2024-12-28',
     readTime: '10 min read',
-    featured: false,
   },
   {
     id: 5,
@@ -52,9 +48,8 @@ const blogPosts = [
     excerpt: 'Step-by-step instructions for properly reconstituting peptides, storage guidelines, and common mistakes to avoid.',
     category: 'Education',
     author: 'Peptide Research Lab',
-    date: '2024-11-20',
+    date: '2024-12-20',
     readTime: '6 min read',
-    featured: false,
   },
   {
     id: 6,
@@ -62,9 +57,62 @@ const blogPosts = [
     excerpt: 'Exploring nootropic peptides for focus, memory, and neuroprotection - what the research shows.',
     category: 'Cognitive',
     author: 'Neuro Research Team',
-    date: '2024-11-15',
+    date: '2024-12-15',
     readTime: '9 min read',
-    featured: false,
+  },
+  {
+    id: 7,
+    title: 'Thymosin Alpha-1: Immune System Optimization',
+    excerpt: 'How this naturally occurring thymic peptide modulates immune function and supports overall health.',
+    category: 'Immune',
+    author: 'Immunology Insights',
+    date: '2024-12-10',
+    readTime: '7 min read',
+  },
+  {
+    id: 8,
+    title: 'Melanotan II Research: Beyond Tanning',
+    excerpt: 'Understanding melanocortin receptor agonists, their mechanisms, and the full spectrum of MT-2 effects.',
+    category: 'Skin & Hair',
+    author: 'Dermatology Research',
+    date: '2024-12-05',
+    readTime: '8 min read',
+  },
+  {
+    id: 9,
+    title: 'GHK-Cu: The Copper Peptide Revolution',
+    excerpt: 'How this tripeptide-copper complex promotes collagen synthesis, wound healing, and anti-aging effects.',
+    category: 'Skin & Hair',
+    author: 'Aesthetic Science',
+    date: '2024-11-28',
+    readTime: '6 min read',
+  },
+  {
+    id: 10,
+    title: 'DSIP: Delta Sleep Inducing Peptide Research',
+    excerpt: 'Exploring the neuropeptide that promotes natural sleep patterns and recovery enhancement.',
+    category: 'Cognitive',
+    author: 'Sleep Research Lab',
+    date: '2024-11-20',
+    readTime: '7 min read',
+  },
+  {
+    id: 11,
+    title: 'Peptide Stacking: Synergy and Safety Protocols',
+    excerpt: 'How to combine peptides effectively, understanding half-lives, timing, and avoiding negative interactions.',
+    category: 'Education',
+    author: 'Stack Protocols',
+    date: '2024-11-15',
+    readTime: '14 min read',
+  },
+  {
+    id: 12,
+    title: 'PT-141 (Bremelanotide): Mechanism and Research',
+    excerpt: 'Understanding the melanocortin-based peptide for libido and its unique central nervous system effects.',
+    category: 'Hormonal',
+    author: 'Hormonal Research',
+    date: '2024-11-10',
+    readTime: '8 min read',
   },
 ];
 
@@ -73,9 +121,12 @@ const getCategoryColor = (category: string) => {
     'Weight Loss': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     'Healing': 'bg-red-500/20 text-red-400 border-red-500/30',
     'Growth Hormone': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    'Longevity': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    'Anti-Aging': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
     'Education': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     'Cognitive': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+    'Immune': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+    'Skin & Hair': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+    'Hormonal': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   };
   return colors[category] || 'bg-secondary text-secondary-foreground';
 };
@@ -151,7 +202,7 @@ export function BlogSection() {
 
         {/* Regular Posts Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {regularPosts.slice(0, 5).map((post, index) => (
+          {regularPosts.slice(0, 6).map((post, index) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, y: 20 }}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
 import { ResearchTools } from './ResearchTools';
@@ -15,10 +15,12 @@ import { ReconstitutionCalculator } from './ReconstitutionCalculator';
 import { MembersPaywall } from './MembersPaywall';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMembership } from '@/hooks/useMembership';
 import { PeptideCategory } from '@/data/peptides';
 
 export function LandingPage() {
   const { user } = useAuth();
+  const { hasMembership } = useMembership();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [membersPaywallOpen, setMembersPaywallOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
@@ -27,8 +29,13 @@ export function LandingPage() {
   const [stackBuilderOpen, setStackBuilderOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
 
-  // TODO: Check if user has active membership via PayPal subscription
-  const hasMembership = false;
+  // Check URL for membership callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('membership') === 'success') {
+      setMembersPaywallOpen(true);
+    }
+  }, []);
 
   const handleSignInClick = () => {
     setAuthModalOpen(true);
@@ -80,7 +87,6 @@ export function LandingPage() {
           setAuthModalOpen(true);
         }}
         isAuthenticated={!!user}
-        hasMembership={hasMembership}
         onAccessDashboard={handleAccessDashboard}
       />
       <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />
