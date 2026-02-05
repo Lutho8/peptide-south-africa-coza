@@ -286,7 +286,73 @@
      .animate-logo-fast {
        animation: none !important;
      }
-   }
+    }
+    
+    /* Gradient flow animation for text */
+    .animate-gradient-flow {
+      background-size: 200% auto;
+      animation: gradientFlow 3s ease infinite;
+    }
+    
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* Floating wave animation */
+    .animate-wave-float {
+      animation: waveFloat 3s ease-in-out infinite;
+    }
+    
+    @keyframes waveFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-15px) rotate(3deg); }
+    }
+    
+    /* 3D card flip animation */
+    .animate-card-flip {
+      animation: cardFlipIn 0.5s ease-out forwards;
+      transform-style: preserve-3d;
+    }
+    
+    @keyframes cardFlipIn {
+      from { transform: perspective(1000px) rotateY(-90deg); opacity: 0; }
+      to { transform: perspective(1000px) rotateY(0); opacity: 1; }
+    }
+    
+    /* Check pop animation */
+    .animate-check-pop {
+      animation: checkPop 0.4s ease-out forwards;
+    }
+    
+    @keyframes checkPop {
+      0% { transform: scale(0); opacity: 0; }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Premium shimmer sweep */
+    .animate-premium-shimmer {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .animate-premium-shimmer::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.1), transparent);
+      animation: premiumShimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes premiumShimmer {
+      from { left: -100%; }
+      to { left: 100%; }
+    }
 }
 
 @layer utilities {
