@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { DoseSummary } from '@/components/doses/DoseSummary';
 import { QuickAddReminderButton } from '@/components/doses/QuickAddReminderButton';
+import { InsulinNeedleGuide } from '@/components/doses/InsulinNeedleGuide';
 import { z } from 'zod';
 
 const doseEntrySchema = z.object({
@@ -422,6 +423,14 @@ export function DailyLogScreen() {
                 maxLength={200}
               />
             </div>
+
+            {/* Insulin Needle Dosage Guide */}
+            {formData.dose && parseFloat(formData.dose) > 0 && (
+              <InsulinNeedleGuide 
+                dose={parseFloat(formData.dose) || 0}
+                unit={formData.unit}
+              />
+            )}
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
