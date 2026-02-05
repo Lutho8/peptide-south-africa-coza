@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { peptides, Peptide, PeptideCategory } from '@/data/peptides';
 import { cn } from '@/lib/utils';
+import { PeptideDetailModal } from '@/components/modals/PeptideDetailModal';
 
 interface PeptideSearchProps {
   open: boolean;
@@ -52,6 +53,8 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
   const [query, setQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<PeptideCategory[]>([]);
   const [sortBy, setSortBy] = useState<'name' | 'score'>('name');
+  const [selectedPeptide, setSelectedPeptide] = useState<Peptide | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   const filteredPeptides = useMemo(() => {
     let results = [...peptides];
@@ -227,7 +230,13 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2, delay: index * 0.02 }}
                   >
-                    <Card className="p-4 h-full hover:border-accent/50 transition-colors cursor-pointer">
+                    <Card 
+                      className="p-4 h-full hover:border-accent/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedPeptide(peptide);
+                        setDetailModalOpen(true);
+                      }}
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h3 className="font-bold">{peptide.shortName}</h3>
@@ -277,6 +286,12 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
             )}
           </div>
         </ScrollArea>
+
+        <PeptideDetailModal
+          peptide={selectedPeptide}
+          open={detailModalOpen}
+          onOpenChange={setDetailModalOpen}
+        />
       </div>
     </motion.div>
   );
