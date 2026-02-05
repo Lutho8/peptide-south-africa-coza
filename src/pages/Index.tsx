@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -19,7 +20,7 @@ import { LandingPage } from '@/components/landing';
 import { useStorageInit } from '@/hooks/useStorageInit';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
-import { Settings, User, LogOut, Loader2 } from 'lucide-react';
+import { Settings, User, LogOut, Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -39,6 +40,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [showSettings, setShowSettings] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [showLandingPage, setShowLandingPage] = useState(false);
   const [bodyCompositionOpen, setBodyCompositionOpen] = useState(false);
   const [doseTrackerOpen, setDoseTrackerOpen] = useState(false);
   const [cycleManagementOpen, setCycleManagementOpen] = useState(false);
@@ -65,6 +67,16 @@ const Index = () => {
 
   const handleLogoClick = () => {
     setShowSettings(false);
+    // For authenticated users, toggle to landing page
+    if (user) {
+      setShowLandingPage(true);
+    } else {
+      setActiveTab('home');
+    }
+  };
+  
+  const handleBackToDashboard = () => {
+    setShowLandingPage(false);
     setActiveTab('home');
   };
 
@@ -113,6 +125,30 @@ const Index = () => {
   if (!user) {
     return <LandingPage />;
   }
+  
+  // Show landing page for authenticated users who want to browse public content
+  if (showLandingPage) {
+    return (
+      <div className="relative">
+        <LandingPage />
+        {/* Floating Back to Dashboard Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        >
+          <Button
+            onClick={handleBackToDashboard}
+            className="gap-2 bg-primary text-primary-foreground shadow-lg hover:shadow-xl px-6 py-3 rounded-full"
+            size="lg"
+          >
+            <ArrowLeft size={18} />
+            Back to Dashboard
+          </Button>
+        </motion.div>
+      </div>
+    );
+   }
 
   // Show PeptidePro dashboard for authenticated users
   return (

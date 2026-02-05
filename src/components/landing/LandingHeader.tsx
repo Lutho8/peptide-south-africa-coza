@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import logoIcon from '@/assets/logo-icon.png';
+import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LandingHeaderProps {
   onSignInClick: () => void;
@@ -12,6 +13,7 @@ interface LandingHeaderProps {
 export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   const navLinks = [
     { label: 'Browse', href: '#browse' },
@@ -36,16 +38,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo - Clickable to go home */}
-          <button 
-            onClick={scrollToTop}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-            aria-label="Go to Home"
-          >
-            <img src={logoIcon} alt="Ride The Tide" className="w-10 h-10 rounded-xl shadow-lg" />
-            <span className="text-xl font-bold text-foreground">
-              Ride The Tide
-            </span>
-          </button>
+          <AnimatedLogo size="md" showText={true} onClick={scrollToTop} />
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-6">
@@ -76,12 +69,21 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
 
           {/* CTA Button */}
           <div className="flex items-center gap-2">
-            <Button
-              onClick={onSignInClick}
-              className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:shadow-lg hover:opacity-95 transition-all"
-            >
-              Members
-            </Button>
+            {user ? (
+              <Button
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10"
+              >
+                My Dashboard
+              </Button>
+            ) : (
+              <Button
+                onClick={onSignInClick}
+                className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:shadow-lg hover:opacity-95 transition-all"
+              >
+                Members
+              </Button>
+            )}
 
             {/* Mobile Menu Toggle */}
             <button

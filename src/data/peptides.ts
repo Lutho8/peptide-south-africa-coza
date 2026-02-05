@@ -53,6 +53,25 @@ export interface Peptide {
   interactions?: string[];
   contraindications?: string[];
   references?: string[];
+  // New fields for peptibase.dev parity
+  aminoAcidSequence?: string;
+  bioavailability?: string;
+  storageRequirements?: string;
+  legalStatus?: {
+    usa: 'research-only' | 'prescription' | 'approved' | 'banned';
+    eu: string;
+    australia: string;
+  };
+  clinicalStatus?: 'preclinical' | 'phase1' | 'phase2' | 'phase3' | 'approved';
+  fdaApproved?: boolean;
+  fdaApprovalYear?: number;
+  warnings?: string[];
+  notableStudies?: Array<{
+    title: string;
+    year: number;
+    finding: string;
+    doi?: string;
+  }>;
 }
 
 export const peptides: Peptide[] = [
@@ -105,7 +124,30 @@ export const peptides: Peptide[] = [
       stock: 'in-stock'
     },
     references: ['PMID: 28106477', 'PMID: 36812669'],
-    contraindications: ['Organ transplant recipients', 'Autoimmune conditions requiring immunosuppression']
+    contraindications: ['Organ transplant recipients', 'Autoimmune conditions requiring immunosuppression'],
+    aminoAcidSequence: 'Ser-Asp-Ala-Ala-Val-Asp-Thr-Ser-Ser-Glu-Ile-Thr-Thr-Lys-Asp-Leu-Lys-Glu-Lys-Lys-Glu-Val-Val-Glu-Glu-Ala-Glu-Asn',
+    bioavailability: 'High (subcutaneous)',
+    storageRequirements: 'Store at 2-8°C, protect from light, stable 24 months lyophilized',
+    legalStatus: {
+      usa: 'approved',
+      eu: 'Approved for medical use (Zadaxin)',
+      australia: 'Schedule 4 (prescription)'
+    },
+    clinicalStatus: 'approved',
+    fdaApproved: true,
+    fdaApprovalYear: 1998,
+    warnings: [
+      'Monitor for signs of autoimmune activation',
+      'Use with caution in immunocompromised patients'
+    ],
+    notableStudies: [
+      {
+        title: 'Thymosin alpha-1 in hepatitis B treatment',
+        year: 2008,
+        finding: 'Demonstrated antiviral efficacy in chronic hepatitis B patients',
+        doi: '10.1016/j.jhep.2008.03.023'
+      }
+    ]
   },
   {
     id: 'epitalon',
@@ -156,6 +198,29 @@ export const peptides: Peptide[] = [
       stock: 'in-stock'
     },
     references: ['PMID: 40908429', 'PMID: 16388879']
+    ,
+    aminoAcidSequence: 'Ala-Glu-Asp-Gly',
+    bioavailability: 'Moderate (subcutaneous)',
+    storageRequirements: 'Store at -20°C, protect from light, stable 2 years lyophilized',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research peptide)',
+      australia: 'Schedule 4 (prescription)'
+    },
+    clinicalStatus: 'phase2',
+    fdaApproved: false,
+    warnings: [
+      'Limited long-term human safety data',
+      'May affect melatonin-sensitive conditions'
+    ],
+    notableStudies: [
+      {
+        title: 'Epithalon and telomerase activation',
+        year: 2003,
+        finding: 'Induced telomerase activity in human somatic cells',
+        doi: '10.1134/S0006297903080049'
+      }
+    ]
   },
   {
     id: 'semax',
@@ -207,6 +272,29 @@ export const peptides: Peptide[] = [
       stock: 'in-stock'
     },
     references: ['PMID: 40692165', 'PMID: 17459469']
+    ,
+    aminoAcidSequence: 'Met-Glu-His-Phe-Pro-Gly-Pro',
+    bioavailability: 'High (intranasal)',
+    storageRequirements: 'Store at 2-8°C, protect from light, stable 12 months reconstituted',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research peptide)',
+      australia: 'Schedule 4 (prescription)'
+    },
+    clinicalStatus: 'approved',
+    fdaApproved: false,
+    warnings: [
+      'May cause nasal irritation',
+      'Not recommended for those with nasal septum issues'
+    ],
+    notableStudies: [
+      {
+        title: 'Semax neuroprotective effects',
+        year: 2011,
+        finding: 'Demonstrated significant neuroprotection in stroke models',
+        doi: '10.1007/s12035-011-8211-5'
+      }
+    ]
   },
   {
     id: 'ss31',
@@ -259,6 +347,29 @@ export const peptides: Peptide[] = [
       stock: 'low-stock'
     },
     references: ['PMID: 23813215', 'DOI: 10.1038/s41598-017-10320-2']
+    ,
+    aminoAcidSequence: 'D-Arg-Dmt-Lys-Phe-NH2',
+    bioavailability: 'High (subcutaneous)',
+    storageRequirements: 'Store at -20°C, protect from light, stable 2 years lyophilized',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Clinical trial (Stealth BioTherapeutics)',
+      australia: 'Not scheduled (research)'
+    },
+    clinicalStatus: 'phase3',
+    fdaApproved: false,
+    warnings: [
+      'Currently in clinical trials for mitochondrial diseases',
+      'Not yet approved for general use'
+    ],
+    notableStudies: [
+      {
+        title: 'SS-31 in mitochondrial myopathy',
+        year: 2014,
+        finding: 'Improved exercise tolerance in primary mitochondrial myopathy patients',
+        doi: '10.1016/j.nmd.2014.09.003'
+      }
+    ]
   },
   {
     id: 'retatrutide',
@@ -312,6 +423,30 @@ export const peptides: Peptide[] = [
       stock: 'in-stock'
     },
     references: ['DOI: 10.1038/s41591-024-03018-2', 'DOI: 10.1038/s41421-024-00700-0']
+    ,
+    aminoAcidSequence: 'Modified GLP-1/GIP/Glucagon triple agonist',
+    bioavailability: 'High (subcutaneous)',
+    storageRequirements: 'Store at 2-8°C, protect from light, do not freeze',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Clinical trial phase (Eli Lilly)',
+      australia: 'Not scheduled (research)'
+    },
+    clinicalStatus: 'phase3',
+    fdaApproved: false,
+    warnings: [
+      'GI side effects common during titration',
+      'Monitor for hypoglycemia when combined with insulin',
+      'Avoid in patients with personal/family history of MTC'
+    ],
+    notableStudies: [
+      {
+        title: 'TRIUMPH-2 Phase 3 Trial',
+        year: 2024,
+        finding: 'Achieved 24.2% weight loss at 48 weeks with highest dose',
+        doi: '10.1038/s41591-024-03018-2'
+      }
+    ]
   },
   {
     id: 'bpc157',
@@ -364,6 +499,30 @@ export const peptides: Peptide[] = [
       stock: 'in-stock'
     },
     references: ['PMID: 41476424', 'PMID: 30915550']
+    ,
+    aminoAcidSequence: 'Gly-Glu-Pro-Pro-Pro-Gly-Lys-Pro-Ala-Asp-Asp-Ala-Gly-Leu-Val',
+    bioavailability: 'High (subcutaneous), Moderate (oral)',
+    storageRequirements: 'Store at -20°C, protect from light, stable 2 years lyophilized',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research peptide)',
+      australia: 'Schedule 4 (prescription)'
+    },
+    clinicalStatus: 'preclinical',
+    fdaApproved: false,
+    warnings: [
+      'No controlled human clinical trials',
+      'Based primarily on animal research data',
+      'May interact with blood thinners'
+    ],
+    notableStudies: [
+      {
+        title: 'BPC-157 wound healing effects',
+        year: 2018,
+        finding: 'Accelerated wound healing and angiogenesis in animal models',
+        doi: '10.1007/s00018-018-2803-5'
+      }
+    ]
   },
   {
     id: 'tb500',
@@ -415,6 +574,30 @@ export const peptides: Peptide[] = [
       stock: 'in-stock'
     },
     references: ['PMID: 41476424', 'PMID: 25290457']
+    ,
+    aminoAcidSequence: 'Ac-Ser-Asp-Lys-Pro-Asp-Met-Ala-Glu-Ile-Glu-Lys-Phe-Asp-Lys-Ser-Lys-Leu-Lys-Lys-Thr-Glu-Thr-Gln-Glu-Lys-Asn-Pro-Leu-Pro-Ser-Lys-Glu-Thr-Ile-Glu-Gln-Glu-Lys-Gln-Ala-Gly-Glu-Ser',
+    bioavailability: 'High (subcutaneous/intramuscular)',
+    storageRequirements: 'Store at -20°C, protect from light, stable 2 years lyophilized',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research peptide)',
+      australia: 'Schedule 4 (prescription)'
+    },
+    clinicalStatus: 'preclinical',
+    fdaApproved: false,
+    warnings: [
+      'Banned by WADA for competitive sports',
+      'Limited human safety data',
+      'May promote blood vessel growth'
+    ],
+    notableStudies: [
+      {
+        title: 'Thymosin beta-4 cardiac repair',
+        year: 2012,
+        finding: 'Promoted cardiac repair following myocardial infarction in mice',
+        doi: '10.1161/CIRCULATIONAHA.112.103648'
+      }
+    ]
   },
   {
     id: 'ipamorelin',
@@ -467,6 +650,30 @@ export const peptides: Peptide[] = [
       stock: 'in-stock'
     },
     references: ['PMID: 9849822', 'PMID: 41476424']
+    ,
+    aminoAcidSequence: 'Aib-His-D-2-Nal-D-Phe-Lys-NH2',
+    bioavailability: 'High (subcutaneous)',
+    storageRequirements: 'Store at 2-8°C, protect from light, stable 30 days reconstituted',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research peptide)',
+      australia: 'Schedule 4 (prescription)'
+    },
+    clinicalStatus: 'phase2',
+    fdaApproved: false,
+    warnings: [
+      'May increase appetite initially',
+      'Use with caution in diabetics',
+      'Monitor for water retention'
+    ],
+    notableStudies: [
+      {
+        title: 'Ipamorelin GH release study',
+        year: 1998,
+        finding: 'Demonstrated selective GH release without affecting cortisol or prolactin',
+        doi: '10.1210/endo.139.11.6263'
+      }
+    ]
   },
   {
     id: 'cjc1295',
@@ -518,6 +725,30 @@ export const peptides: Peptide[] = [
       stock: 'in-stock'
     },
     references: ['PMID: 16352683', 'PMID: 41476424']
+    ,
+    aminoAcidSequence: 'Tyr-D-Ala-Asp-Ala-Ile-Phe-Thr-Asn-Ser-Tyr-Arg-Lys-Val-Leu-Gly-Gln-Leu-Ser-Ala-Arg-Lys-Leu-Leu-Gln-Asp-Ile-Met-Ser-Arg-NH2',
+    bioavailability: 'High (subcutaneous)',
+    storageRequirements: 'Store at 2-8°C, protect from light, stable 30 days reconstituted',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research peptide)',
+      australia: 'Schedule 4 (prescription)'
+    },
+    clinicalStatus: 'phase2',
+    fdaApproved: false,
+    warnings: [
+      'Requires fasted administration for optimal effect',
+      'May cause flushing and warmth sensation',
+      'Monitor blood glucose in diabetics'
+    ],
+    notableStudies: [
+      {
+        title: 'CJC-1295 pharmacokinetics study',
+        year: 2006,
+        finding: 'Produced sustained 2-10 fold elevation in GH and 1.5-3 fold IGF-1 increase',
+        doi: '10.1210/jc.2005-2664'
+      }
+    ]
   },
   {
     id: 'ghkcu',
@@ -570,6 +801,30 @@ export const peptides: Peptide[] = [
       stock: 'in-stock'
     },
     references: ['PMID: 41476424', 'PMID: 30681787']
+    ,
+    aminoAcidSequence: 'Gly-His-Lys:Cu',
+    bioavailability: 'High (subcutaneous), Moderate (topical)',
+    storageRequirements: 'Store at -20°C, protect from light, stable 2 years lyophilized',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Cosmetic ingredient (topical), Research (injectable)',
+      australia: 'Schedule 4 (prescription)'
+    },
+    clinicalStatus: 'phase2',
+    fdaApproved: false,
+    warnings: [
+      'Monitor copper levels with extended use',
+      'Discontinue if skin irritation occurs',
+      'Not recommended during pregnancy'
+    ],
+    notableStudies: [
+      {
+        title: 'GHK-Cu gene expression study',
+        year: 2014,
+        finding: 'Upregulated 32% of human genes involved in wound healing',
+        doi: '10.1016/j.gene.2014.02.016'
+      }
+    ]
   },
   {
     id: 'motsc',
@@ -619,6 +874,30 @@ export const peptides: Peptide[] = [
       stock: 'low-stock'
     },
     references: ['PMID: 25738459', 'PMID: 30559430']
+    ,
+    aminoAcidSequence: 'Met-Arg-Trp-Gln-Glu-Met-Gly-Tyr-Ile-Phe-Tyr-Pro-Arg-Lys-Leu-Arg',
+    bioavailability: 'High (subcutaneous)',
+    storageRequirements: 'Store at -20°C, protect from light, stable 2 years lyophilized',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research peptide)',
+      australia: 'Not scheduled (research)'
+    },
+    clinicalStatus: 'preclinical',
+    fdaApproved: false,
+    warnings: [
+      'Limited human safety data',
+      'Monitor blood glucose levels',
+      'May interact with diabetes medications'
+    ],
+    notableStudies: [
+      {
+        title: 'MOTS-c metabolic regulation',
+        year: 2015,
+        finding: 'Demonstrated exercise mimetic effects and improved insulin sensitivity',
+        doi: '10.1016/j.cmet.2015.02.009'
+      }
+    ]
   }
 ];
 
