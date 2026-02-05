@@ -1,259 +1,286 @@
 
 
-# Animated Logo GIF & Dynamic UI Enhancement Plan
+# Navigation, Peptide Content & Animated Logo Enhancement Plan
 
 ## Overview
-This plan implements an animated GIF logo that loops continuously, serves as both the site logo and favicon, and triggers navigation home on click. Additionally, it enhances the Hero section and Membership modal with dynamic, intuitive elements to increase user engagement and time on site.
+This plan addresses three key requirements:
+1. **Member Navigation to Hero**: Allow authenticated members to return to the public landing page/hero section
+2. **Peptide Content Enhancement**: Populate peptide data to match the depth found on peptibase.dev/compare
+3. **Animated Logo GIF**: Create a continuously spinning animated logo that serves as both site logo and favicon
 
 ---
 
-## Part 1: Animated Logo GIF Creation & Implementation
+## Part 1: Member Navigation to Hero Section
 
-### 1.1 Generate Animated GIF Logo
-Use AI image generation to create an animated GIF version of the existing wave logo:
-- Generate a spinning/rotating wave animation
-- Looping GIF (seamless 360-degree rotation)
-- Size optimized for both logo display (40x40, 32x32) and favicon (16x16, 32x32)
+### Current Problem
+Currently, authenticated members are locked into the dashboard view (`Index.tsx` lines 113-115) with no way to access the public landing page. The logo click only resets to the dashboard home tab.
 
-**Files to create:**
-- `public/logo-animated.gif` - Main animated logo GIF
-
-### 1.2 Update Favicon to Animated GIF
-Modern browsers support animated GIF favicons:
-
-**File to update: `index.html`**
-- Change favicon references to use the animated GIF
-- Update apple-touch-icon for iOS devices
-
-### 1.3 Update PWA Manifest
-**File to update: `public/manifest.json`**
-- Update icon references to include animated version where supported
-
-### 1.4 Create AnimatedLogo Component
-Create a reusable component that uses the animated GIF:
-
-**File to create: `src/components/ui/AnimatedLogo.tsx`**
-- Props: `size` (sm/md/lg), `onClick`, `showText`, `className`
-- Displays the animated GIF
-- Adds hover glow effect and click acceleration animation
-- On click: triggers visual feedback (scale pulse) then navigates home
-
-### 1.5 Update Header Components
-Replace static logo images with AnimatedLogo component:
+### Solution
+Add a "View Public Site" navigation option and update logo behavior for members.
 
 **Files to update:**
-- `src/components/landing/LandingHeader.tsx` - Replace static `<img>` with AnimatedLogo
-- `src/components/layout/AppHeader.tsx` - Replace static `<img>` with AnimatedLogo
+- `src/pages/Index.tsx`
+  - Add state `showLandingPage` to toggle between dashboard and landing page
+  - Modify `handleLogoClick` to show landing page for members
+  - Add a floating "Back to Dashboard" button when viewing landing page as member
+- `src/components/layout/AppHeader.tsx`
+  - Add visual indicator for members that clicking returns to public view
+- `src/components/landing/LandingHeader.tsx`
+  - Add "My Dashboard" link for authenticated users
+
+### Implementation Details
+```text
++---------------------------+
+|  Index.tsx State Machine  |
++---------------------------+
+       |
+       v
+[isLoading?] --yes--> Show Loader
+       |
+       no
+       v
+[!user?] --yes--> Show LandingPage (public)
+       |
+       no (member)
+       v
+[showLandingPage?] --yes--> Show LandingPage + "Back to Dashboard" FAB
+       |
+       no
+       v
+Show Dashboard (current behavior)
+```
 
 ---
 
-## Part 2: Enhanced Hero Section (Dynamic & Intuitive)
+## Part 2: Peptide Content Population (peptibase.dev Parity)
 
-### 2.1 Animated Background Elements
-Add floating particles and animated gradients:
-- Floating wave particles that move gently
-- Animated gradient orbs that shift position slowly
-- Parallax effect on background elements during scroll
+### Current State
+The existing `src/data/peptides.ts` contains 15 peptides with comprehensive data including:
+- Molecular weight, half-life, longevity score
+- Mechanism of action (detailed, research-grade)
+- Benefits (general + athlete-specific)
+- Dosing protocols (4 tiers: beginner, intermediate, advanced, athlete)
+- Expected results timeline (4 phases)
+- Janoshik testing verification
+- Supplier information
+- Research references (PubMed IDs)
 
-### 2.2 Interactive Stats Cards with Count-Up Animation
-Enhance the stats grid for engagement:
-- **Counter animation**: Numbers count up from 0 to final value when visible
-- **Staggered entrance**: Cards animate in sequentially with spring physics
-- **3D hover effect**: Cards tilt on hover with perspective transforms
-- **Glow effect**: Accent border glow on hover
+### Gap Analysis vs. peptibase.dev/compare
+The peptibase.dev comparison page shows additional fields that should be added:
 
-### 2.3 Typewriter Effect for Welcome Text
-- "Welcome to" appears first, then "Ride The Tide" types in character by character
-- Flowing gradient animation through the brand name
-- Subtle pulse animation on completion
+| Field | Current Status | Action Required |
+|-------|---------------|-----------------|
+| Legal Status | Missing | Add field |
+| Amino Acid Sequence | Missing | Add field |
+| Bioavailability | Missing | Add field |
+| Storage Requirements | Missing | Add field |
+| Clinical Trial Status | Missing | Add field |
+| FDA Approval Status | Implicit only | Add explicit field |
+| Synergy Ratings | Partial (in stackingMatrix.ts) | Integrate into UI |
+| Precautions/Warnings | Partial (in risks) | Enhance |
 
-### 2.4 Enhanced Category Badges
-Make badges more interactive:
-- **Floating animation**: Gentle up/down float with random offsets per badge
-- **Ripple effect**: Visual ripple expands from badge on click
-- **Count pulse**: The number badge pulses briefly on hover
-- **Magnetic hover**: Badges subtly attract toward cursor
+### Solution
 
-**Files to update:**
-- `src/components/landing/HeroSection.tsx`
-- `src/components/landing/HeroCategoryBadges.tsx`
+**File to update: `src/data/peptides.ts`**
+Extend the `Peptide` interface with new optional fields:
 
----
-
-## Part 3: Enhanced Membership Section (Dynamic Flow)
-
-### 3.1 Feature Cards Animation
-Add engaging reveal animations:
-- **3D flip reveal**: Cards flip in from hidden state on modal open
-- **Staggered timing**: Each card animates with slight delay (0.1s each)
-- **Icon animations**: Icons bounce/pulse when card appears
-- **Hover depth**: Cards lift and show shadow on hover
-
-### 3.2 Pricing Card Enhancements
-Premium feel for the main pricing card:
-- **Shimmer effect**: Subtle light sweep across the card
-- **Price count-up**: Number animates from €0 to €9.99
-- **Badge pulse**: "Most Popular" badge pulses gently
-- **Premium border**: Animated gradient border glow
-
-### 3.3 Benefits List Animation
-Engaging checklist reveal:
-- **Pop-in checkmarks**: Green checks animate in with scale bounce
-- **Staggered reveal**: Benefits appear one by one
-- **Hover highlight**: Row highlights on hover
-
-### 3.4 Button Interactions
-Enhanced call-to-action:
-- **Wave animation**: PayPal button has subtle wave effect on hover
-- **Loading spinner**: Use animated logo as loading indicator
-- **Success pulse**: Green glow pulse on successful actions
-
-**File to update:**
-- `src/components/landing/MembersPaywall.tsx`
-
----
-
-## Part 4: New CSS Animations & Tailwind Config
-
-### 4.1 New Keyframe Animations
-
-**File to update: `src/index.css`**
-```css
-/* Count-up animation for numbers */
-@keyframes count-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Floating wave particles */
-@keyframes wave-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(3deg); }
-}
-
-/* Gradient flow through text */
-@keyframes gradient-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* 3D card flip */
-@keyframes card-flip-in {
-  from { transform: perspective(1000px) rotateY(-90deg); opacity: 0; }
-  to { transform: perspective(1000px) rotateY(0); opacity: 1; }
-}
-
-/* Ripple effect */
-@keyframes ripple {
-  from { transform: scale(0); opacity: 0.5; }
-  to { transform: scale(2.5); opacity: 0; }
-}
-
-/* Logo click pulse */
-@keyframes logo-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-/* Premium shimmer sweep */
-@keyframes premium-shimmer {
-  from { left: -100%; }
-  to { left: 100%; }
-}
-
-/* Checkmark pop-in */
-@keyframes check-pop {
-  0% { transform: scale(0); opacity: 0; }
-  70% { transform: scale(1.2); }
-  100% { transform: scale(1); opacity: 1; }
+```typescript
+export interface Peptide {
+  // ...existing fields...
+  
+  // New fields for peptibase.dev parity
+  aminoAcidSequence?: string;
+  bioavailability?: string;
+  storageRequirements?: string;
+  legalStatus?: {
+    usa: 'research-only' | 'prescription' | 'approved' | 'banned';
+    eu: string;
+    australia: string;
+  };
+  clinicalStatus?: 'preclinical' | 'phase1' | 'phase2' | 'phase3' | 'approved';
+  fdaApproved?: boolean;
+  fdaApprovalYear?: number;
+  warnings?: string[];
+  notableStudies?: Array<{
+    title: string;
+    year: number;
+    finding: string;
+    doi?: string;
+  }>;
 }
 ```
 
-### 4.2 New Tailwind Animation Classes
+**Files to update for display:**
+- `src/components/modals/PeptideDetailModal.tsx`
+  - Add new sections for Legal Status, Clinical Trials, Amino Acid Sequence
+  - Add "Notable Studies" expandable section
+  - Add storage requirements info card
+- `src/components/landing/PeptideCompare.tsx`
+  - Add new comparison rows for the additional fields
+  - Match peptibase.dev table structure
 
-**File to update: `tailwind.config.ts`**
-Add new animation utilities:
-- `animate-count-up`
-- `animate-wave-float`
-- `animate-gradient-flow`
-- `animate-card-flip`
-- `animate-ripple`
-- `animate-logo-pulse`
-- `animate-check-pop`
-
----
-
-## Part 5: Custom React Hooks for Animations
-
-### 5.1 useCountUp Hook
-**File to create: `src/hooks/useCountUp.ts`**
-- Animates numbers from 0 to target value
-- Uses requestAnimationFrame for smooth animation
-- Triggers when element is in viewport (Intersection Observer)
-
-### 5.2 useTypewriter Hook
-**File to create: `src/hooks/useTypewriter.ts`**
-- Types out text character by character
-- Configurable speed and delay
-- Cursor blink effect option
-
-### 5.3 useInViewAnimation Hook
-**File to create: `src/hooks/useInViewAnimation.ts`**
-- Detects when element enters viewport
-- Triggers animation classes once visible
-- Supports threshold configuration
-
----
-
-## Implementation Summary
-
-| File | Action | Description |
-|------|--------|-------------|
-| `public/logo-animated.gif` | Create | Animated spinning wave logo GIF |
-| `index.html` | Update | Use animated GIF as favicon |
-| `public/manifest.json` | Update | Update PWA icon references |
-| `src/components/ui/AnimatedLogo.tsx` | Create | Reusable animated logo component |
-| `src/components/landing/LandingHeader.tsx` | Update | Use AnimatedLogo component |
-| `src/components/layout/AppHeader.tsx` | Update | Use AnimatedLogo component |
-| `src/components/landing/HeroSection.tsx` | Update | Add dynamic background, count-up stats, typewriter |
-| `src/components/landing/HeroCategoryBadges.tsx` | Update | Add floating, ripple, magnetic effects |
-| `src/components/landing/MembersPaywall.tsx` | Update | Add 3D flips, shimmer, animated benefits |
-| `src/index.css` | Update | Add new keyframe animations |
-| `tailwind.config.ts` | Update | Add new animation utilities |
-| `src/hooks/useCountUp.ts` | Create | Number animation hook |
-| `src/hooks/useTypewriter.ts` | Create | Text typing animation hook |
-| `src/hooks/useInViewAnimation.ts` | Create | Viewport detection hook |
+**Sample data enhancement for GHK-Cu:**
+```typescript
+{
+  id: 'ghkcu',
+  name: 'GHK-Cu',
+  // ...existing fields...
+  
+  // New fields
+  aminoAcidSequence: 'Gly-His-Lys-Cu',
+  bioavailability: 'High (subcutaneous), Moderate (topical)',
+  storageRequirements: 'Store at -20 degrees C, protect from light, stable 2 years lyophilized',
+  legalStatus: {
+    usa: 'research-only',
+    eu: 'Cosmetic ingredient (topical), Research (injectable)',
+    australia: 'Schedule 4 (prescription)'
+  },
+  clinicalStatus: 'phase2',
+  fdaApproved: false,
+  warnings: [
+    'Monitor copper levels with extended use',
+    'Discontinue if skin irritation occurs',
+    'Not recommended during pregnancy'
+  ],
+  notableStudies: [
+    {
+      title: 'GHK-Cu effects on gene expression in human fibroblasts',
+      year: 2014,
+      finding: 'Upregulated 32% of human genes involved in wound healing',
+      doi: '10.1016/j.gene.2014.02.016'
+    }
+  ]
+}
+```
 
 ---
 
-## User Experience Flow
+## Part 3: Animated Logo GIF with Spinning Effect
 
-1. **Page Load**: Animated GIF logo spins continuously in header and as favicon
-2. **Hero Entrance**: Welcome text types in, stats count up from zero, categories float in
-3. **Scrolling**: Background particles parallax, badges float gently
-4. **Logo Click**: Logo pulses with glow, navigates to home
-5. **Members Modal**: Feature cards flip in 3D, price counts up, benefits pop in with checkmarks
-6. **Interactions**: Ripple effects, magnetic hovers, premium shimmer effects
+### Current State
+- Static PNG logo at `src/assets/logo-icon.png` (wave/tide design)
+- Favicon uses static `public/favicon.png`
+- No animated logo component exists
+
+### Solution Overview
+Create an animated spinning logo that:
+1. Continuously rotates with a slow "tide" motion (360 degrees per 8 seconds)
+2. Spins faster with a glow effect when clicked
+3. Serves as both site logo and animated favicon
+4. Is accessible and respects reduced motion preferences
+
+### Implementation Approach
+Use Framer Motion for the component animation (smoother than CSS-only, already in project).
+
+**Files to create:**
+- `src/components/ui/AnimatedLogo.tsx` - Reusable animated logo component
+- `public/logo-animated.gif` - Generated animated GIF for favicon (using AI image generation)
+
+**Files to update:**
+- `index.html` - Update favicon references
+- `public/manifest.json` - Update PWA icons
+- `src/components/landing/LandingHeader.tsx` - Replace static logo with AnimatedLogo
+- `src/components/layout/AppHeader.tsx` - Replace static logo with AnimatedLogo
+
+### AnimatedLogo Component Design
+
+```typescript
+interface AnimatedLogoProps {
+  size?: 'sm' | 'md' | 'lg';      // 24px, 40px, 56px
+  showText?: boolean;              // Show "Ride The Tide" text
+  onClick?: () => void;            // Navigation handler
+  className?: string;
+}
+```
+
+Features:
+- **Continuous rotation**: Slow 360 degree spin (8 second duration, infinite loop)
+- **Click acceleration**: When clicked, spin speed increases to 0.5 seconds for one full rotation
+- **Glow effect**: Subtle accent-colored glow on hover and click
+- **Reduced motion**: Respects `prefers-reduced-motion` media query
+- **Accessibility**: Proper aria-labels and keyboard navigation
+
+### Animation CSS (to add to index.css)
+
+```css
+@keyframes logo-spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes logo-spin-fast {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-logo-slow {
+  animation: logo-spin-slow 8s linear infinite;
+}
+
+.animate-logo-fast {
+  animation: logo-spin-fast 0.5s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-logo-slow,
+  .animate-logo-fast {
+    animation: none;
+  }
+}
+```
+
+### Animated GIF Favicon
+Generate an animated GIF version of the wave logo using AI image generation:
+- 64x64 pixel size (favicon compatible)
+- Smooth 360 degree rotation
+- Seamless loop
+- Optimized file size (<100KB)
 
 ---
 
-## Technical Notes
+## Technical Summary
 
-### Animated GIF Generation
-- Will use AI image generation (Nano banana model) to create the animated GIF from the existing static wave logo
-- Animation: smooth 360-degree rotation, seamless loop
-- Optimized file size for fast loading
+### Files to Create
+| File | Purpose |
+|------|---------|
+| `src/components/ui/AnimatedLogo.tsx` | Reusable spinning logo component |
+| `public/logo-animated.gif` | Animated favicon/logo GIF |
 
-### Performance Considerations
-- CSS animations preferred over JavaScript where possible
-- `will-change` property for GPU acceleration
-- Intersection Observer for lazy animation triggering
-- Debounced hover effects to prevent jank
+### Files to Update
+| File | Changes |
+|------|---------|
+| `src/pages/Index.tsx` | Add `showLandingPage` state for member navigation |
+| `src/components/layout/AppHeader.tsx` | Use AnimatedLogo, add "View Public Site" logic |
+| `src/components/landing/LandingHeader.tsx` | Use AnimatedLogo, add "My Dashboard" for members |
+| `src/data/peptides.ts` | Extend Peptide interface with new fields |
+| `src/components/modals/PeptideDetailModal.tsx` | Display new peptide data fields |
+| `src/components/landing/PeptideCompare.tsx` | Add new comparison rows |
+| `index.html` | Update favicon to animated GIF |
+| `public/manifest.json` | Update PWA icon references |
+| `src/index.css` | Add logo animation keyframes |
 
-### Accessibility
-- Respects `prefers-reduced-motion` media query
-- All animations are decorative, no information loss without them
-- Appropriate aria-labels maintained
+### User Experience Flow
+
+**For Members:**
+1. Member logs in → Sees dashboard
+2. Clicks animated logo → Navigates to public landing page (hero visible)
+3. Floating "Back to Dashboard" button available
+4. Can browse public content while authenticated
+5. "My Dashboard" link in header returns to member area
+
+**For Logo Animation:**
+1. Page loads → Logo begins slow continuous spin
+2. User hovers → Subtle glow appears
+3. User clicks → Logo spins fast (1 rotation), glow intensifies, then navigates
+4. Animation respects user's motion preferences
+
+---
+
+## Performance & Accessibility Notes
+
+- Use `will-change: transform` for GPU acceleration on logo
+- Lazy load the animated GIF favicon after initial page paint
+- Provide static fallback for browsers not supporting animated favicons
+- All animations are decorative - no information loss without them
+- Proper focus states and keyboard navigation maintained
 
