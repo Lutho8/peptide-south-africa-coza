@@ -1,15 +1,19 @@
 import { GradientCard } from '@/components/ui/GradientCard';
-import { activeStack } from '@/data/userData';
+import { getActiveStack } from '@/services/storage';
 import { peptides, getCategoryGradient } from '@/data/peptides';
 import { Layers, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 
 interface ActiveStackPreviewProps {
   onViewStack: () => void;
 }
 
 export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
-  const stackPeptides = activeStack.map(item => {
+  // Use storage service for user-specific stack data
+  const userStack = useMemo(() => getActiveStack(), []);
+  
+  const stackPeptides = userStack.map(item => {
     const peptide = peptides.find(p => p.id === item.peptideId);
     return peptide;
   }).filter(Boolean);
@@ -23,7 +27,7 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
           </div>
           <div>
             <h3 className="font-semibold text-foreground">Active Protocol</h3>
-            <p className="text-sm text-muted-foreground">{activeStack.length} peptides</p>
+            <p className="text-sm text-muted-foreground">{userStack.length} peptides</p>
           </div>
         </div>
         <ChevronRight size={20} className="text-muted-foreground" />
