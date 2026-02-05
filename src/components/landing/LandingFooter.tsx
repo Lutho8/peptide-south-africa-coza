@@ -1,11 +1,32 @@
+import { Link } from 'react-router-dom';
 import { Twitter, Mail, Linkedin } from 'lucide-react';
 import logoIcon from '@/assets/logo-icon.png';
 
 const footerLinks = {
-  Database: ['All Peptides', 'Categories', 'FDA Approved', 'Research Phase'],
-  Tools: ['Compare', 'Stack Builder', 'Calculator', 'Quiz'],
-  Resources: ['Research Library', 'Blog', 'Documentation', 'API'],
-  Legal: ['Privacy Policy', 'Terms of Service', 'Disclaimer', 'Contact'],
+  Database: [
+    { label: 'All Peptides', href: '#peptides' },
+    { label: 'Categories', href: '#categories' },
+    { label: 'FDA Approved', href: '#' },
+    { label: 'Research Phase', href: '#' },
+  ],
+  Tools: [
+    { label: 'Compare', href: '#compare' },
+    { label: 'Stack Builder', href: '#stack' },
+    { label: 'Calculator', href: '#calculator' },
+    { label: 'Quiz', href: '#quiz' },
+  ],
+  Resources: [
+    { label: 'Research Library', href: '#' },
+    { label: 'Blog', href: '#blog' },
+    { label: 'Documentation', href: '#' },
+    { label: 'API', href: '#' },
+  ],
+  Legal: [
+    { label: 'Privacy Policy', href: '/privacy', isRoute: true },
+    { label: 'Terms of Service', href: '/terms', isRoute: true },
+    { label: 'Disclaimer', href: '/disclaimer', isRoute: true },
+    { label: 'Contact', href: 'mailto:contact@ridethetide.app' },
+  ],
 };
 
 export function LandingFooter() {
@@ -37,7 +58,7 @@ export function LandingFooter() {
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                 <Linkedin size={20} />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <a href="mailto:contact@ridethetide.app" className="text-muted-foreground hover:text-primary transition-colors">
                 <Mail size={20} />
               </a>
             </div>
@@ -49,13 +70,22 @@ export function LandingFooter() {
               <h4 className="font-semibold mb-4 text-foreground">{title}</h4>
               <ul className="space-y-2">
                 {links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {link}
-                    </a>
+                  <li key={link.label}>
+                    {link.isRoute ? (
+                      <Link
+                        to={link.href}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -74,7 +104,11 @@ export function LandingFooter() {
           </div>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
             <p>© {new Date().getFullYear()} Ride The Tide. All rights reserved.</p>
-            <p>For research and educational purposes only.</p>
+            <div className="flex gap-4">
+              <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
+              <Link to="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>
+            </div>
           </div>
         </div>
       </div>
