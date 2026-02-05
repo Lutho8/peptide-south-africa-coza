@@ -89,11 +89,27 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+         "logo-spin-slow": {
+           from: { transform: "rotate(0deg)" },
+           to: { transform: "rotate(360deg)" },
+         },
+         "logo-spin-fast": {
+           from: { transform: "rotate(0deg)" },
+           to: { transform: "rotate(360deg)" },
+         },
+         "logo-pulse": {
+           "0%": { transform: "scale(1)" },
+           "50%": { transform: "scale(1.1)" },
+           "100%": { transform: "scale(1)" },
+         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s linear infinite",
+         "logo-slow": "logo-spin-slow 8s linear infinite",
+         "logo-fast": "logo-spin-fast 0.5s ease-in-out",
+         "logo-pulse": "logo-pulse 0.3s ease-in-out",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

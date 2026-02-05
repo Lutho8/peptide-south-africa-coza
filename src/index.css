@@ -271,6 +271,22 @@
       transform: translateY(0);
     }
   }
+ 
+   /* Animated logo styles */
+   .logo-glow {
+     box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
+   }
+   
+   .logo-container {
+     will-change: transform;
+   }
+   
+   @media (prefers-reduced-motion: reduce) {
+     .animate-logo-slow,
+     .animate-logo-fast {
+       animation: none !important;
+     }
+   }
 }
 
 @layer utilities {

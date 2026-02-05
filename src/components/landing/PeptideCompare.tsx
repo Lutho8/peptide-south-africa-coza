@@ -195,6 +195,53 @@ export function PeptideCompare({ open, onClose }: PeptideCompareProps) {
                         ))}
                       </tr>
                       <tr className="border-b border-border/50">
+                        <td className="p-3 text-muted-foreground">Clinical Status</td>
+                        {selectedPeptides.map((p) => (
+                          <td key={p.id} className="p-3">
+                            <span className={cn(
+                              'text-xs px-2 py-1 rounded-full',
+                              p.clinicalStatus === 'approved' && 'bg-green-500/20 text-green-400',
+                              p.clinicalStatus === 'phase3' && 'bg-blue-500/20 text-blue-400',
+                              p.clinicalStatus === 'phase2' && 'bg-yellow-500/20 text-yellow-400',
+                              p.clinicalStatus === 'phase1' && 'bg-orange-500/20 text-orange-400',
+                              p.clinicalStatus === 'preclinical' && 'bg-red-500/20 text-red-400'
+                            )}>
+                              {p.clinicalStatus ? p.clinicalStatus.replace('phase', 'Phase ') : 'N/A'}
+                            </span>
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="p-3 text-muted-foreground">Legal (USA)</td>
+                        {selectedPeptides.map((p) => (
+                          <td key={p.id} className="p-3">
+                            <span className={cn(
+                              'text-xs px-2 py-1 rounded-full',
+                              p.legalStatus?.usa === 'approved' && 'bg-green-500/20 text-green-400',
+                              p.legalStatus?.usa === 'prescription' && 'bg-blue-500/20 text-blue-400',
+                              p.legalStatus?.usa === 'research-only' && 'bg-yellow-500/20 text-yellow-400',
+                              p.legalStatus?.usa === 'banned' && 'bg-red-500/20 text-red-400'
+                            )}>
+                              {p.legalStatus?.usa?.replace('-', ' ') || 'N/A'}
+                            </span>
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="p-3 text-muted-foreground">Bioavailability</td>
+                        {selectedPeptides.map((p) => (
+                          <td key={p.id} className="p-3 text-sm">
+                            {p.bioavailability || 'N/A'}
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="p-3 text-muted-foreground">Mol. Weight</td>
+                        {selectedPeptides.map((p) => (
+                          <td key={p.id} className="p-3 text-sm">{p.molecularWeight || 'N/A'}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-b border-border/50">
                         <td className="p-3 text-muted-foreground">Administration</td>
                         {selectedPeptides.map((p) => (
                           <td key={p.id} className="p-3 text-sm">{p.administration}</td>

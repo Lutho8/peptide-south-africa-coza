@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Star, FlaskConical, ShoppingCart, AlertTriangle, 
   Clock, Syringe, ExternalLink, Layers, FileText, 
-  Calendar, Activity, Users, Brain
+  Calendar, Activity, Users, Brain, Scale, TestTube, Shield, Thermometer, BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
@@ -57,12 +57,151 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
             </div>
           </div>
 
+          {/* Legal & Clinical Status */}
+          {(peptide.legalStatus || peptide.clinicalStatus) && (
+            <GradientCard>
+              <div className="flex items-center gap-2 mb-3">
+                <Shield size={16} className="text-primary" />
+                <h3 className="font-medium text-foreground">Legal & Clinical Status</h3>
+              </div>
+              <div className="space-y-3">
+                {peptide.clinicalStatus && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Clinical Stage</span>
+                    <span className={cn(
+                      'text-xs px-2 py-1 rounded-full font-medium',
+                      peptide.clinicalStatus === 'approved' && 'bg-green-500/20 text-green-400',
+                      peptide.clinicalStatus === 'phase3' && 'bg-blue-500/20 text-blue-400',
+                      peptide.clinicalStatus === 'phase2' && 'bg-yellow-500/20 text-yellow-400',
+                      peptide.clinicalStatus === 'phase1' && 'bg-orange-500/20 text-orange-400',
+                      peptide.clinicalStatus === 'preclinical' && 'bg-red-500/20 text-red-400'
+                    )}>
+                      {peptide.clinicalStatus === 'approved' ? 'FDA Approved' : peptide.clinicalStatus.replace('phase', 'Phase ')}
+                    </span>
+                  </div>
+                )}
+                {peptide.fdaApproved && peptide.fdaApprovalYear && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">FDA Approval</span>
+                    <span className="text-sm text-green-400 font-medium">Approved ({peptide.fdaApprovalYear})</span>
+                  </div>
+                )}
+                {peptide.legalStatus && (
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    <div className="p-2 rounded bg-muted/50 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">USA</p>
+                      <p className={cn(
+                        'text-xs font-medium',
+                        peptide.legalStatus.usa === 'approved' && 'text-green-400',
+                        peptide.legalStatus.usa === 'prescription' && 'text-blue-400',
+                        peptide.legalStatus.usa === 'research-only' && 'text-yellow-400',
+                        peptide.legalStatus.usa === 'banned' && 'text-red-400'
+                      )}>
+                        {peptide.legalStatus.usa.replace('-', ' ')}
+                      </p>
+                    </div>
+                    <div className="p-2 rounded bg-muted/50 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">EU</p>
+                      <p className="text-xs text-foreground">{peptide.legalStatus.eu.slice(0, 15)}{peptide.legalStatus.eu.length > 15 ? '...' : ''}</p>
+                    </div>
+                    <div className="p-2 rounded bg-muted/50 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Australia</p>
+                      <p className="text-xs text-foreground">{peptide.legalStatus.australia.slice(0, 12)}{peptide.legalStatus.australia.length > 12 ? '...' : ''}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </GradientCard>
+          )}
+
+          {/* Amino Acid Sequence */}
+          {peptide.aminoAcidSequence && (
+            <GradientCard>
+              <div className="flex items-center gap-2 mb-2">
+                <TestTube size={16} className="text-primary" />
+                <h3 className="font-medium text-foreground">Amino Acid Sequence</h3>
+              </div>
+              <p className="text-xs font-mono text-muted-foreground bg-muted/50 p-2 rounded break-all">
+                {peptide.aminoAcidSequence}
+              </p>
+            </GradientCard>
+          )}
+
+          {/* Storage & Bioavailability */}
+          {(peptide.storageRequirements || peptide.bioavailability) && (
+            <div className="grid grid-cols-2 gap-3">
+              {peptide.bioavailability && (
+                <div className="p-3 rounded-lg bg-card border border-border">
+                  <Scale size={14} className="text-primary mb-1" />
+                  <p className="text-xs text-muted-foreground">Bioavailability</p>
+                  <p className="text-sm text-foreground">{peptide.bioavailability}</p>
+                </div>
+              )}
+              {peptide.storageRequirements && (
+                <div className="p-3 rounded-lg bg-card border border-border">
+                  <Thermometer size={14} className="text-primary mb-1" />
+                  <p className="text-xs text-muted-foreground">Storage</p>
+                  <p className="text-sm text-foreground">{peptide.storageRequirements.slice(0, 40)}...</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* AI Research Agent */}
           <AIAgentPanel
             mode="research"
             peptideId={peptide.id}
             peptideName={peptide.name}
           />
+
+          {/* Notable Studies */}
+          {peptide.notableStudies && peptide.notableStudies.length > 0 && (
+            <GradientCard>
+              <div className="flex items-center gap-2 mb-3">
+                <BookOpen size={16} className="text-primary" />
+                <h3 className="font-medium text-foreground">Notable Studies</h3>
+              </div>
+              <div className="space-y-3">
+                {peptide.notableStudies.map((study, i) => (
+                  <div key={i} className="p-3 rounded bg-muted/50 border border-border/50">
+                    <p className="text-sm font-medium text-foreground mb-1">{study.title}</p>
+                    <p className="text-xs text-muted-foreground mb-2">{study.finding}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Year: {study.year}</span>
+                      {study.doi && (
+                        <a
+                          href={`https://doi.org/${study.doi}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline flex items-center gap-1"
+                        >
+                          DOI <ExternalLink size={10} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </GradientCard>
+          )}
+
+          {/* Warnings */}
+          {peptide.warnings && peptide.warnings.length > 0 && (
+            <div className="p-4 rounded-xl border border-orange-500/30 bg-orange-500/10">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle size={16} className="text-orange-400" />
+                <h3 className="font-medium text-orange-400">Important Warnings</h3>
+              </div>
+              <ul className="space-y-1">
+                {peptide.warnings.map((warning, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-orange-400/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />
+                    {warning}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Mechanism */}
           <GradientCard className="premium-border">
