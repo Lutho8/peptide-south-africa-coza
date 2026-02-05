@@ -7,9 +7,12 @@ import {
   getScheduledReminders,
   getBodyCompositionHistory,
   updateBodyCompositionHistory,
+  getActiveStack,
+  saveActiveStack,
   BodyComposition,
   ScheduledReminder,
   CalculatorSettings,
+  ActiveStackItem,
 } from '@/services/storage';
 import { toast } from 'sonner';
 
@@ -136,6 +139,38 @@ export function useCloudSync() {
     }
   }, [user]);
 
+  // Sync active stack to cloud
+  const syncActiveStack = useCallback(async () => {
+    if (!user) return;
+
+    const localStack = getActiveStack();
+    
+    try {
+      // Delete all existing stack items for this user
+      await supabase
+        .from('user_stacks')
+        .delete()
+        .eq('user_id', user.id);
+
+      // Insert current stack items
+      if (localStack.length > 0) {
+        const { error } = await supabase
+          .from('user_stacks')
+          .insert(localStack.map(item => ({
+            user_id: user.id,
+            peptide_id: item.peptideId,
+            dose: item.dose,
+            frequency: item.frequency,
+          })));
+
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.error('Error syncing active stack:', err);
+      throw err;
+    }
+  }, [user]);
+
   // Load data from cloud
   const loadFromCloud = useCallback(async () => {
     if (!user) return;
@@ -185,6 +220,21 @@ export function useCloudSync() {
         }));
         updateBodyCompositionHistory(history);
       }
+
+      // Load active stack
+      const { data: stackData } = await supabase
+        .from('user_stacks')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (stackData && stackData.length > 0) {
+        const stack: ActiveStackItem[] = stackData.map(item => ({
+          peptideId: item.peptide_id,
+          dose: item.dose,
+          frequency: item.frequency,
+        }));
+        saveActiveStack(stack);
+      }
     } catch (err) {
       console.error('Error loading from cloud:', err);
     }
@@ -201,6 +251,7 @@ export function useCloudSync() {
         syncCalculatorSettings(),
         syncReminders(),
         syncBodyComposition(),
+        syncActiveStack(),
       ]);
 
       setSyncState({
@@ -219,7 +270,7 @@ export function useCloudSync() {
       }));
       toast.error('Sync failed: ' + message);
     }
-  }, [user, syncCalculatorSettings, syncReminders, syncBodyComposition]);
+  }, [user, syncCalculatorSettings, syncReminders, syncBodyComposition, syncActiveStack]);
 
   // Load from cloud on first login
   useEffect(() => {
@@ -234,6 +285,7 @@ export function useCloudSync() {
     syncCalculatorSettings,
     syncReminders,
     syncBodyComposition,
+    syncActiveStack,
     loadFromCloud,
     isAuthenticated: !!user,
   };
