@@ -3,9 +3,7 @@ import { TrendingUp, FlaskConical, Award, BookOpen } from 'lucide-react';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
 import { useCountUp } from '@/hooks/useCountUp';
-import { useTypewriter } from '@/hooks/useTypewriter';
 import { useInViewAnimation } from '@/hooks/useInViewAnimation';
-import { useEffect, useState } from 'react';
 
 const stats = [
   { label: 'Peptides', value: 97, suffix: '+', icon: FlaskConical },
@@ -70,19 +68,6 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onCategoryClick }: HeroSectionProps) {
-  const [showBrandName, setShowBrandName] = useState(false);
-  const { displayText: welcomeText, isComplete: welcomeComplete } = useTypewriter({
-    text: 'Welcome to',
-    speed: 80,
-    delay: 300,
-    onComplete: () => setShowBrandName(true),
-  });
-
-  const { displayText: brandText, isTyping: brandTyping, cursor } = useTypewriter({
-    text: 'Ride The Tide',
-    speed: 100,
-    delay: 0,
-  });
 
   // Generate floating particles
   const particles = Array.from({ length: 15 }, (_, i) => ({
@@ -134,32 +119,21 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
-          {/* Main Heading with Typewriter Effect */}
+          {/* Main Heading - Static */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 min-h-[1.5em]">
-              <span className="text-foreground">{welcomeText}</span>
-              {welcomeComplete && ' '}
-              {showBrandName && (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow"
-                >
-                  {brandText}
-                  {brandTyping && (
-                    <span className="text-primary animate-pulse">{cursor}</span>
-                  )}
-                </motion.span>
-              )}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
+                Ride The Tide Babyy!!
+              </span>
             </h1>
             <motion.p 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.5, duration: 0.6 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
               className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
             >
               Your research-grade peptide database with 97+ peptides. 
