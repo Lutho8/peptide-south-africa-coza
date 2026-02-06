@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useDoseReminders, DoseReminder } from '@/hooks/useDoseReminders';
 import { peptides } from '@/data/peptides';
-import { Bell, BellOff, Plus, Trash2, Clock, Loader2 } from 'lucide-react';
+import { Bell, BellOff, Plus, Trash2, Clock, Loader2, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const DAYS = [
@@ -186,7 +186,7 @@ function AddReminderModal({ open, onOpenChange, onAdd }: AddReminderModalProps) 
 }
 
 export function ReminderManager() {
-  const { reminders, isLoading, toggleReminder, deleteReminder, addReminder } = useDoseReminders();
+  const { reminders, isLoading, toggleReminder, deleteReminder, addReminder, updateReminder } = useDoseReminders();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   if (isLoading) {
@@ -261,6 +261,22 @@ export function ReminderManager() {
                       <span>Daily</span>
                     </>
                   )}
+                </div>
+                <div className="flex items-center gap-1 mt-1">
+                  <button
+                    onClick={() => updateReminder(reminder.id, { 
+                      email_notification_enabled: !reminder.email_notification_enabled 
+                    })}
+                    className={cn(
+                      "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors",
+                      reminder.email_notification_enabled
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    <Mail size={10} />
+                    {reminder.email_notification_enabled ? 'Email On' : 'Email Off'}
+                  </button>
                 </div>
               </div>
 

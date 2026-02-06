@@ -25,6 +25,7 @@ export interface DoseReminder {
   days: string[];
   enabled: boolean;
   user_id?: string;
+  email_notification_enabled?: boolean;
 }
 
 const LOCAL_STORAGE_KEY = 'peptide-dose-reminders';
@@ -90,6 +91,7 @@ export function useDoseReminders() {
           days: r.days || [],
           enabled: r.enabled,
           user_id: r.user_id,
+          email_notification_enabled: r.email_notification_enabled ?? false,
         }));
 
         setReminders(mappedReminders);
@@ -226,6 +228,7 @@ export function useDoseReminders() {
             time: updates.time,
             days: updates.days,
             enabled: updates.enabled,
+            email_notification_enabled: updates.email_notification_enabled,
           })
           .eq('id', id);
 
