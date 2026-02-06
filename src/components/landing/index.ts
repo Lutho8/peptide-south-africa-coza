@@ -14,3 +14,4 @@ export { PeptideSearch } from './PeptideSearch';
 export { StackBuilder } from './StackBuilder';
 export { ReconstitutionCalculator } from './ReconstitutionCalculator';
 export { MembersPaywall } from './MembersPaywall';
+export { VendorShowcase } from './VendorShowcase';
