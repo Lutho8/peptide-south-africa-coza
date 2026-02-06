@@ -51,7 +51,7 @@ const syringeConfigs: Record<SyringeType, SyringeConfig> = {
   },
 };
 
-// Visual syringe component
+// Visual syringe component with animated fill
 function SyringeVisual({ 
   syringeType, 
   unitsToDraw,
@@ -80,44 +80,100 @@ function SyringeVisual({
         {config.name}
       </div>
       
-      {/* Visual Syringe */}
-      <div className="relative w-8 h-24 mb-2">
-        {/* Syringe body */}
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-muted/50 rounded-sm border border-border">
-          {/* Fill level */}
-          <motion.div 
-            className={cn("absolute bottom-0 left-0 right-0 rounded-b-sm", 
-              isActive ? "bg-primary/40" : "bg-muted-foreground/20"
-            )}
-            initial={{ height: 0 }}
-            animate={{ height: `${fillPercent}%` }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          />
-          
-          {/* Tick marks */}
-          {[0.25, 0.5, 0.75].map((pos) => (
+      {/* Visual Syringe - Enhanced */}
+      <div className="relative w-10 h-32 mb-2">
+        {/* Plunger rod */}
+        <motion.div 
+          className="absolute left-1/2 -translate-x-1/2 w-1 bg-muted-foreground/40 rounded-full"
+          style={{ top: 0 }}
+          initial={{ height: '100%' }}
+          animate={{ height: `${Math.max(100 - fillPercent, 15)}%` }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        />
+        
+        {/* Plunger handle */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-3 bg-muted-foreground/30 rounded-sm border border-border" />
+        
+        {/* Syringe barrel */}
+        <div className="absolute inset-x-0 bottom-4 h-24 bg-background rounded-sm border-2 border-muted-foreground/30 overflow-hidden">
+          {/* Graduation marks */}
+          {[0.2, 0.4, 0.6, 0.8].map((pos) => (
             <div 
               key={pos}
-              className="absolute left-0 right-0 border-t border-border/50"
+              className="absolute left-0 w-2 border-t border-muted-foreground/40"
               style={{ bottom: `${pos * 100}%` }}
             />
           ))}
+          {[0.1, 0.3, 0.5, 0.7, 0.9].map((pos) => (
+            <div 
+              key={pos}
+              className="absolute left-0 w-1 border-t border-muted-foreground/20"
+              style={{ bottom: `${pos * 100}%` }}
+            />
+          ))}
+          
+          {/* Liquid fill with animated wave */}
+          <motion.div 
+            className={cn(
+              "absolute bottom-0 left-0 right-0 rounded-b-sm overflow-hidden",
+              isActive ? "bg-primary/30" : "bg-muted-foreground/15"
+            )}
+            initial={{ height: 0 }}
+            animate={{ height: `${fillPercent}%` }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            {/* Animated wave on top of liquid */}
+            {isActive && fillPercent > 5 && (
+              <motion.div
+                className="absolute top-0 left-0 right-0 h-1.5"
+                style={{
+                  background: `linear-gradient(90deg, transparent, hsl(var(--primary) / 0.4), transparent)`,
+                  borderRadius: '50%',
+                }}
+                animate={{
+                  x: [-2, 2, -2],
+                  scaleY: [1, 1.5, 1],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            )}
+          </motion.div>
+
+          {/* Fill line indicator */}
+          {isActive && fillPercent > 0 && fillPercent < 100 && (
+            <motion.div
+              className="absolute left-0 right-0 border-t-2 border-primary border-dashed"
+              initial={{ bottom: 0 }}
+              animate={{ bottom: `${fillPercent}%` }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
+          )}
         </div>
         
-        {/* Plunger */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-muted border border-border rounded-sm" />
+        {/* Needle hub */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-3 h-2 bg-muted-foreground/40 rounded-sm" />
         
         {/* Needle */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-muted-foreground rounded-full transform translate-y-3" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-2 bg-muted-foreground/60" />
       </div>
       
       {/* Units to draw */}
-      <div className={cn(
-        "text-lg font-bold",
-        isActive ? "text-primary" : "text-muted-foreground"
-      )}>
+      <motion.div 
+        className={cn(
+          "text-lg font-bold",
+          isActive ? "text-primary" : "text-muted-foreground"
+        )}
+        key={roundedUnits}
+        initial={{ scale: 1.2, opacity: 0.7 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         {roundedUnits} units
-      </div>
+      </motion.div>
       <div className="text-[10px] text-muted-foreground text-center">
         ({(unitsToDraw / config.unitsPerMl).toFixed(3)} mL)
       </div>
