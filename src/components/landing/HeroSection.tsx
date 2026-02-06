@@ -6,9 +6,9 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { useInViewAnimation } from '@/hooks/useInViewAnimation';
 
 const stats = [
-  { label: 'Peptides', value: 97, suffix: '+', icon: FlaskConical },
-  { label: 'FDA Approved', value: 12, suffix: '', icon: Award },
-  { label: 'Categories', value: 9, suffix: '', icon: TrendingUp },
+  { label: 'Peptides', value: 98, suffix: '+', icon: FlaskConical },
+  { label: 'FDA Approved', value: 31, suffix: '', icon: Award },
+  { label: 'Categories', value: 11, suffix: '', icon: TrendingUp },
   { label: 'Citations', value: 500, suffix: '+', icon: BookOpen },
 ];
 
