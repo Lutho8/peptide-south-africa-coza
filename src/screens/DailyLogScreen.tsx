@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, Syringe, Trash2, Calendar, Cloud, CloudOff, Loader2, BarChart3 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Syringe, Trash2, Calendar, Cloud, CloudOff, Loader2, BarChart3, Pencil, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
@@ -17,6 +17,7 @@ import { QuickAddReminderButton } from '@/components/doses/QuickAddReminderButto
 import { InsulinNeedleGuide } from '@/components/doses/InsulinNeedleGuide';
 import { UnitToggle } from '@/components/doses/UnitToggle';
 import { DoseLoggedAnimation } from '@/components/doses/DoseLoggedAnimation';
+import { EditDoseModal } from '@/components/doses/EditDoseModal';
 import { z } from 'zod';
 
 const doseEntrySchema = z.object({
@@ -27,15 +28,19 @@ const doseEntrySchema = z.object({
   notes: z.string().max(200, 'Notes must be less than 200 characters').optional(),
 });
 
+type SortOrder = 'asc' | 'desc';
+
 export function DailyLogScreen() {
   const { toast } = useToast();
-  const { doses, isLoading, isSyncing, isCloudEnabled, addDose, deleteDose, getDosesForDate } = useDailyDoses();
+  const { doses, isLoading, isSyncing, isCloudEnabled, addDose, updateDose, deleteDose, getDosesForDate } = useDailyDoses();
   
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [showDoseLoggedAnimation, setShowDoseLoggedAnimation] = useState(false);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [editingDose, setEditingDose] = useState<typeof doses[0] | null>(null);
   const [formData, setFormData] = useState({
     peptideId: '',
     dose: '',
@@ -53,8 +58,12 @@ export function DailyLogScreen() {
   const emptyDays = Array(startDayOfWeek).fill(null);
 
   const selectedDateDoses = useMemo(() => {
-    return getDosesForDate(selectedDate);
-  }, [selectedDate, getDosesForDate]);
+    const dayDoses = getDosesForDate(selectedDate);
+    return [...dayDoses].sort((a, b) => {
+      const cmp = a.time.localeCompare(b.time);
+      return sortOrder === 'asc' ? cmp : -cmp;
+    });
+  }, [selectedDate, getDosesForDate, sortOrder]);
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -136,6 +145,23 @@ export function DailyLogScreen() {
         description: 'Failed to delete dose',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleEditSave = async (doseId: string, updates: { time?: string; notes?: string }) => {
+    try {
+      await updateDose(doseId, updates);
+      toast({
+        title: 'Dose updated',
+        description: 'Changes saved successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update dose',
+        variant: 'destructive',
+      });
+      throw error;
     }
   };
 
@@ -292,14 +318,27 @@ export function DailyLogScreen() {
               <h3 className="font-semibold text-foreground">
                 {format(selectedDate, 'EEEE, MMMM d, yyyy')}
               </h3>
-              <Button
-                size="sm"
-                onClick={() => setIsAddModalOpen(true)}
-                className="gap-1"
-              >
-                <Plus size={16} />
-                Add Dose
-              </Button>
+              <div className="flex items-center gap-2">
+                {selectedDateDoses.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1 text-xs"
+                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  >
+                    <ArrowUpDown size={14} />
+                    {sortOrder === 'asc' ? 'Earliest' : 'Latest'}
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="gap-1"
+                >
+                  <Plus size={16} />
+                  Add Dose
+                </Button>
+              </div>
             </div>
 
             {selectedDateDoses.length === 0 ? (
@@ -332,6 +371,13 @@ export function DailyLogScreen() {
                         {dose.notes && <span className="ml-2">• {dose.notes}</span>}
                       </div>
                     </div>
+                    <button
+                      onClick={() => setEditingDose(dose)}
+                      className="p-2 text-muted-foreground hover:text-primary transition-colors"
+                      title="Edit dose"
+                    >
+                      <Pencil size={16} />
+                    </button>
                     <button
                       onClick={() => handleDeleteDose(dose.id)}
                       className="p-2 text-muted-foreground hover:text-destructive transition-colors"
@@ -457,6 +503,14 @@ export function DailyLogScreen() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Dose Modal */}
+      <EditDoseModal
+        dose={editingDose}
+        open={!!editingDose}
+        onOpenChange={(open) => { if (!open) setEditingDose(null); }}
+        onSave={handleEditSave}
+      />
 
       {/* Success Animation Overlay */}
       <DoseLoggedAnimation

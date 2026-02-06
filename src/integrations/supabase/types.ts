@@ -163,6 +163,7 @@ export type Database = {
           created_at: string
           days: string[]
           dose: string
+          email_notification_enabled: boolean
           enabled: boolean
           id: string
           peptide_id: string
@@ -175,6 +176,7 @@ export type Database = {
           created_at?: string
           days?: string[]
           dose: string
+          email_notification_enabled?: boolean
           enabled?: boolean
           id?: string
           peptide_id: string
@@ -187,6 +189,7 @@ export type Database = {
           created_at?: string
           days?: string[]
           dose?: string
+          email_notification_enabled?: boolean
           enabled?: boolean
           id?: string
           peptide_id?: string
@@ -201,18 +204,21 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          email_reminders_enabled: boolean
           id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           display_name?: string | null
+          email_reminders_enabled?: boolean
           id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           display_name?: string | null
+          email_reminders_enabled?: boolean
           id?: string
           updated_at?: string
         }
