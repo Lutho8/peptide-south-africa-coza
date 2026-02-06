@@ -378,9 +378,48 @@
     padding-top: env(safe-area-inset-top, 0);
   }
 
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left, 0);
+  }
+
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right, 0);
+  }
+
   /* Touch-friendly sizing */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  /* Prevent text selection on interactive elements */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Smooth momentum scrolling */
+  .scroll-smooth-touch {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* Global mobile optimizations */
+@media (max-width: 768px) {
+  html {
+    /* Prevent iOS bounce effect */
+    overscroll-behavior: none;
+  }
+
+  /* Ensure all interactive elements meet 44px touch target */
+  button, a, [role="button"], input, select, textarea {
+    min-height: 44px;
+  }
+
+  /* Improve tap highlight */
+  * {
+    -webkit-tap-highlight-color: hsl(var(--primary) / 0.1);
   }
 }
