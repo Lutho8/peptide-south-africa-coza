@@ -13,6 +13,7 @@ import { PeptideSearch } from './PeptideSearch';
 import { StackBuilder } from './StackBuilder';
 import { ReconstitutionCalculator } from './ReconstitutionCalculator';
 import { MembersPaywall } from './MembersPaywall';
+import { VendorShowcase } from './VendorShowcase';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
@@ -71,6 +72,7 @@ export function LandingPage() {
           onCalculatorClick={() => setCalculatorOpen(true)}
         />
         <FeaturedPeptides />
+        <VendorShowcase onSignInClick={handleMembersClick} />
         <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
         <BlogSection />
         <CTASection onSignInClick={handleMembersClick} />
