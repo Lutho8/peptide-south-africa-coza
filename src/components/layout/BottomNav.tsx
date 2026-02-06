@@ -20,8 +20,8 @@ const tabs = [
 
 export function BottomNav({ activeTab, onTabChange, pendingReminders = 0 }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-lg safe-area-bottom">
-      <div className="flex items-center justify-around py-2 px-1 max-w-lg mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-lg no-select" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="flex items-center justify-around py-1.5 px-1 max-w-lg mx-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -31,9 +31,9 @@ export function BottomNav({ activeTab, onTabChange, pendingReminders = 0 }: Bott
             <motion.button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.92 }}
               className={cn(
-                "relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors min-w-[60px] min-h-[44px]",
+                "relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors min-w-[60px] touch-target",
                 isActive 
                   ? "text-primary bg-primary/10" 
                   : "text-muted-foreground hover:text-foreground active:bg-muted/50"
@@ -54,7 +54,7 @@ export function BottomNav({ activeTab, onTabChange, pendingReminders = 0 }: Bott
                 )}
               </div>
               <span className={cn(
-                "text-[10px] font-medium transition-all",
+                "text-[10px] font-medium transition-all leading-tight",
                 isActive && "text-primary"
               )}>
                 {tab.label}
@@ -62,7 +62,7 @@ export function BottomNav({ activeTab, onTabChange, pendingReminders = 0 }: Bott
               {isActive && (
                 <motion.div 
                   layoutId="activeTab"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
+                  className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
                 />
               )}
             </motion.button>

@@ -1,22 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { AppHeader } from '@/components/layout/AppHeader';
-import { HomeScreen } from '@/screens/HomeScreen';
-import { MyStackScreen } from '@/screens/MyStackScreen';
-import { DailyLogScreen } from '@/screens/DailyLogScreen';
-import { DosageScreen } from '@/screens/DosageScreen';
-import { ResearchLibraryScreen } from '@/screens/ResearchLibraryScreen';
-import { SettingsScreen } from '@/screens/SettingsScreen';
-import { BodyCompositionModal } from '@/components/modals/BodyCompositionModal';
-import { DoseTrackerModal } from '@/components/modals/DoseTrackerModal';
-import { CycleManagementModal } from '@/components/modals/CycleManagementModal';
-import { BloodworkModal } from '@/components/modals/BloodworkModal';
-import { InventoryModal } from '@/components/modals/InventoryModal';
-import { NotificationActionModal } from '@/components/modals/NotificationActionModal';
-import { AuthModal } from '@/components/auth/AuthModal';
-import { LandingPage } from '@/components/landing';
 import { useStorageInit } from '@/hooks/useStorageInit';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +16,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+// Lazy load screens for code splitting
+const HomeScreen = lazy(() => import('@/screens/HomeScreen').then(m => ({ default: m.HomeScreen })));
+const MyStackScreen = lazy(() => import('@/screens/MyStackScreen').then(m => ({ default: m.MyStackScreen })));
+const DailyLogScreen = lazy(() => import('@/screens/DailyLogScreen').then(m => ({ default: m.DailyLogScreen })));
+const DosageScreen = lazy(() => import('@/screens/DosageScreen').then(m => ({ default: m.DosageScreen })));
+const ResearchLibraryScreen = lazy(() => import('@/screens/ResearchLibraryScreen').then(m => ({ default: m.ResearchLibraryScreen })));
+const SettingsScreen = lazy(() => import('@/screens/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
+const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m => ({ default: m.LandingPage })));
+
+// Lazy load modals
+const BodyCompositionModal = lazy(() => import('@/components/modals/BodyCompositionModal').then(m => ({ default: m.BodyCompositionModal })));
+const DoseTrackerModal = lazy(() => import('@/components/modals/DoseTrackerModal').then(m => ({ default: m.DoseTrackerModal })));
+const CycleManagementModal = lazy(() => import('@/components/modals/CycleManagementModal').then(m => ({ default: m.CycleManagementModal })));
+const BloodworkModal = lazy(() => import('@/components/modals/BloodworkModal').then(m => ({ default: m.BloodworkModal })));
+const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').then(m => ({ default: m.InventoryModal })));
+const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
+const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
+
+const ScreenLoader = () => (
+  <div className="flex items-center justify-center py-20">
+    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+  </div>
+);
 
 type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'research';
 
@@ -49,9 +59,7 @@ const Index = () => {
   const [bloodworkOpen, setBloodworkOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
 
-  // Handle marking dose as taken from notification
   const handleMarkDoseAsTaken = useCallback((peptideName: string, dose: string, time: string) => {
-    // Parse dose value and unit from the dose string (e.g., "250mcg")
     const doseMatch = dose.match(/^([\d.]+)(\w+)$/);
     const doseValue = doseMatch ? parseFloat(doseMatch[1]) : 0;
     const unit = (doseMatch ? doseMatch[2] : 'mcg') as 'mcg' | 'mg' | 'IU';
@@ -69,7 +77,6 @@ const Index = () => {
 
   const handleLogoClick = () => {
     setShowSettings(false);
-    // For authenticated users, toggle to landing page
     if (user) {
       setShowLandingPage(true);
     } else {
@@ -84,12 +91,16 @@ const Index = () => {
 
   const renderScreen = () => {
     if (showSettings) {
-      return <SettingsScreen onBack={() => setShowSettings(false)} />;
+      return (
+        <Suspense fallback={<ScreenLoader />}>
+          <SettingsScreen onBack={() => setShowSettings(false)} />
+        </Suspense>
+      );
     }
 
-    switch (activeTab) {
-      case 'home':
-        return (
+    return (
+      <Suspense fallback={<ScreenLoader />}>
+        {activeTab === 'home' && (
           <HomeScreen
             onOpenBodyComposition={() => setBodyCompositionOpen(true)}
             onOpenDoseTracker={() => setDoseTrackerOpen(true)}
@@ -100,21 +111,16 @@ const Index = () => {
             onNavigateStack={() => setActiveTab('stack')}
             onOpenSettings={() => setShowSettings(true)}
           />
-        );
-      case 'stack':
-        return <MyStackScreen />;
-      case 'daily-log':
-        return <DailyLogScreen />;
-      case 'dosage':
-        return <DosageScreen />;
-      case 'research':
-        return <ResearchLibraryScreen />;
-      default:
-        return null;
-    }
+        )}
+        {activeTab === 'stack' && <MyStackScreen />}
+        {activeTab === 'daily-log' && <DailyLogScreen />}
+        {activeTab === 'dosage' && <DosageScreen />}
+        {activeTab === 'research' && <ResearchLibraryScreen />}
+      </Suspense>
+    );
   };
 
-  // Show loading state while checking auth or access
+  // Loading state
   if (isLoading || (user && accessLoading)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -123,36 +129,41 @@ const Index = () => {
     );
   }
 
-  // Show landing page for unauthenticated users
+  // Landing page for unauthenticated users
   if (!user) {
-    return <LandingPage />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+        <LandingPage />
+      </Suspense>
+    );
   }
   
-  // Show landing page for authenticated users who want to browse public content
+  // Landing page for authenticated users browsing public content
   if (showLandingPage) {
     return (
-      <div className="relative">
-        <LandingPage />
-        {/* Floating Back to Dashboard Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
-        >
-          <Button
-            onClick={handleBackToDashboard}
-            className="gap-2 bg-primary text-primary-foreground shadow-lg hover:shadow-xl px-6 py-3 rounded-full"
-            size="lg"
+      <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+        <div className="relative">
+          <LandingPage />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
           >
-            <ArrowLeft size={18} />
-            Back to Dashboard
-          </Button>
-        </motion.div>
-      </div>
+            <Button
+              onClick={handleBackToDashboard}
+              className="gap-2 bg-primary text-primary-foreground shadow-lg hover:shadow-xl px-6 py-3 rounded-full touch-target"
+              size="lg"
+            >
+              <ArrowLeft size={18} />
+              Back to Dashboard
+            </Button>
+          </motion.div>
+        </div>
+      </Suspense>
     );
-   }
+  }
 
-  // Show paywall for authenticated users without active membership (not admin)
+  // Paywall for users without membership
   if (!hasAccess) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
@@ -179,7 +190,7 @@ const Index = () => {
           </div>
           <div className="space-y-3">
             <Button
-              className="w-full bg-[#0070ba] hover:bg-[#003087] text-white"
+              className="w-full bg-[#0070ba] hover:bg-[#003087] text-white touch-target"
               onClick={() => {
                 const returnUrl = encodeURIComponent(window.location.origin + '/?membership=success');
                 const cancelUrl = encodeURIComponent(window.location.origin + '/?membership=cancelled');
@@ -192,7 +203,7 @@ const Index = () => {
               </svg>
               Subscribe with PayPal
             </Button>
-            <Button variant="ghost" className="w-full" onClick={() => signOut()}>
+            <Button variant="ghost" className="w-full touch-target" onClick={() => signOut()}>
               <LogOut size={16} className="mr-2" />
               Sign Out
             </Button>
@@ -202,17 +213,16 @@ const Index = () => {
     );
   }
 
-  // Show PeptidePro dashboard for authenticated users with access
+  // Main dashboard
   return (
     <div className="min-h-screen bg-background">
-      {/* App Logo Header */}
       <AppHeader onLogoClick={handleLogoClick} />
 
       {/* User Auth Button */}
       <div className="fixed top-4 right-16 z-50">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="rounded-full bg-card border-border">
+            <Button variant="outline" size="icon" className="rounded-full bg-card border-border touch-target">
               <User size={18} />
             </Button>
           </DropdownMenuTrigger>
@@ -222,7 +232,7 @@ const Index = () => {
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()} className="text-destructive">
+            <DropdownMenuItem onClick={() => signOut()} className="text-destructive touch-target">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </DropdownMenuItem>
@@ -233,12 +243,12 @@ const Index = () => {
       {/* Settings Button */}
       <button
         onClick={() => setShowSettings(!showSettings)}
-        className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+        className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary transition-colors touch-target"
       >
         <Settings size={20} />
       </button>
 
-      <main className="max-w-lg mx-auto px-4 py-6 pt-20">
+      <main className="max-w-lg mx-auto px-4 py-6 pt-20 scroll-smooth-touch">
         {renderScreen()}
       </main>
 
@@ -246,14 +256,16 @@ const Index = () => {
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       )}
 
-      {/* Modals */}
-      <BodyCompositionModal open={bodyCompositionOpen} onOpenChange={setBodyCompositionOpen} />
-      <DoseTrackerModal open={doseTrackerOpen} onOpenChange={setDoseTrackerOpen} />
-      <CycleManagementModal open={cycleManagementOpen} onOpenChange={setCycleManagementOpen} />
-      <BloodworkModal open={bloodworkOpen} onOpenChange={setBloodworkOpen} />
-      <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />
-      <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      {/* Modals - lazy loaded */}
+      <Suspense fallback={null}>
+        {bodyCompositionOpen && <BodyCompositionModal open={bodyCompositionOpen} onOpenChange={setBodyCompositionOpen} />}
+        {doseTrackerOpen && <DoseTrackerModal open={doseTrackerOpen} onOpenChange={setDoseTrackerOpen} />}
+        {cycleManagementOpen && <CycleManagementModal open={cycleManagementOpen} onOpenChange={setCycleManagementOpen} />}
+        {bloodworkOpen && <BloodworkModal open={bloodworkOpen} onOpenChange={setBloodworkOpen} />}
+        {inventoryOpen && <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />}
+        <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
+        {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
+      </Suspense>
     </div>
   );
 };
