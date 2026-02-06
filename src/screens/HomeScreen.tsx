@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { NewsTicker } from '@/components/home/NewsTicker';
 import { BodyCompositionCard } from '@/components/home/BodyCompositionCard';
@@ -12,7 +13,9 @@ import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
 import { BookCallSection } from '@/components/booking/BookCallSection';
 import { VendorListCard } from '@/components/home/VendorListCard';
+import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
+import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface HomeScreenProps {
@@ -60,8 +63,13 @@ export function HomeScreen({
   onNavigateStack,
   onOpenSettings
 }: HomeScreenProps) {
-  const { reminders } = useDoseReminders();
+  const { reminders, refreshReminders } = useDoseReminders();
+  const { refreshDoses } = useDailyDoses();
   const { user } = useAuth();
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refreshDoses(), refreshReminders()]);
+  }, [refreshDoses, refreshReminders]);
   
   // Get display name from user metadata or fallback to email
   const displayName = user?.user_metadata?.display_name 
@@ -76,12 +84,13 @@ export function HomeScreen({
     .slice(0, 2);
 
   return (
-    <motion.div 
-      className="pb-24 space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
+    <PullToRefresh onRefresh={handleRefresh}>
+      <motion.div 
+        className="pb-24 space-y-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+      >
       {/* Header */}
       <motion.div 
         className="flex items-center justify-between"
@@ -181,6 +190,7 @@ export function HomeScreen({
       <motion.div variants={itemVariants}>
         <SafetyDisclaimer />
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </PullToRefresh>
   );
 }
