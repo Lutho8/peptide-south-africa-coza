@@ -44,7 +44,6 @@ function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
 
   return (
     <motion.div
-      ref={ref as any}
       initial={{ opacity: 0, y: 30, rotateX: -15 }}
       animate={{ opacity: 1, y: 0, rotateX: 0 }}
       transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
@@ -57,7 +56,7 @@ function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
       style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
     >
       <stat.icon className="w-6 h-6 mx-auto mb-2 text-accent group-hover:scale-110 transition-transform" />
-      <div className="text-2xl md:text-3xl font-bold text-foreground">{formattedValue}</div>
+      <div ref={ref as React.RefCallback<HTMLDivElement>} className="text-2xl md:text-3xl font-bold text-foreground">{formattedValue}</div>
       <div className="text-sm text-muted-foreground">{stat.label}</div>
     </motion.div>
   );
