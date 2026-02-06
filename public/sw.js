@@ -1,6 +1,6 @@
 // Peptide Tracker Service Worker - PWA + Background Notifications
 
-const CACHE_NAME = 'peptide-tracker-v3';
+const CACHE_NAME = 'peptide-tracker-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -74,10 +74,10 @@ self.addEventListener('fetch', (event) => {
 
   // For static assets - cache first, network fallback
   if (
-    event.request.destination === 'image' ||
+    (event.request.destination === 'image' ||
     event.request.destination === 'font' ||
-    event.request.destination === 'style' ||
-    event.request.destination === 'script'
+    event.request.destination === 'style') &&
+    !url.pathname.includes('node_modules')
   ) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
