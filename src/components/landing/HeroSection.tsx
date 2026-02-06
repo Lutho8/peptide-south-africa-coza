@@ -127,7 +127,7 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
-                Ride The Tide Babyy!!
+                Welcome to Ride The Tide
               </span>
             </h1>
             <motion.p 
