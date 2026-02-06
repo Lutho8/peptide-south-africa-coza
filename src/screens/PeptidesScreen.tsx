@@ -3,7 +3,7 @@ import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { peptides, Peptide, PeptideCategory, getCategoryLabel } from '@/data/peptides';
-import { Search, Filter, Star, Check, FlaskConical } from 'lucide-react';
+import { Search, Filter, Star, Check, FlaskConical, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -11,7 +11,7 @@ interface PeptidesScreenProps {
   onViewPeptide: (peptide: Peptide) => void;
 }
 
-type FilterTab = 'all' | 'janoshik' | 'in-stock' | 'longevity' | 'new';
+type FilterTab = 'all' | 'fda-approved' | 'janoshik' | 'in-stock' | 'longevity' | 'new';
 
 export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,6 +20,7 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
 
   const filterTabs: { id: FilterTab; label: string }[] = [
     { id: 'all', label: 'All' },
+    { id: 'fda-approved', label: 'FDA Approved' },
     { id: 'janoshik', label: 'Janoshik Tested' },
     { id: 'in-stock', label: 'In Stock' },
     { id: 'longevity', label: 'Top Longevity' },
@@ -36,6 +37,8 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
       if (!matchesSearch) return false;
 
       switch (activeFilter) {
+        case 'fda-approved':
+          return p.fdaApproved === true;
         case 'janoshik':
           return p.janoshikTested;
         case 'in-stock':
@@ -130,6 +133,12 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
                 <CategoryBadge category={peptide.category} showCount={false} size="sm" />
               </div>
               <div className="flex flex-col items-end gap-1">
+                {peptide.fdaApproved && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
+                    <ShieldCheck size={12} />
+                    <span>FDA Approved</span>
+                  </div>
+                )}
                 {peptide.janoshikTested && (
                   <div className="flex items-center gap-1 text-xs text-primary">
                     <FlaskConical size={12} />
