@@ -219,15 +219,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
   
   try {
-    // Unregister any existing service workers first to clear stale caches
-    const existingRegistrations = await navigator.serviceWorker.getRegistrations();
-    for (const reg of existingRegistrations) {
-      await reg.unregister();
-    }
-    // Clear all caches
-    const cacheNames = await caches.keys();
-    await Promise.all(cacheNames.map(name => caches.delete(name)));
-    
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',
       updateViaCache: 'none',
