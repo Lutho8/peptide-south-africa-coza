@@ -136,7 +136,7 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
               transition={{ delay: 0.3, duration: 0.6 }}
               className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
             >
-              Your research-grade peptide database with 97+ peptides. 
+              Your research-grade peptide database with 98+ peptides. 
               Comprehensive research, mechanisms, clinical data, and scientific literature.
             </motion.p>
           </motion.div>
