@@ -64,6 +64,7 @@ export function LandingPage() {
       
       <main>
         <HeroSection onCategoryClick={handleCategoryClick} />
+        <VendorShowcase onSignInClick={handleMembersClick} />
         <ResearchTools 
           onCompareClick={() => setCompareOpen(true)}
           onQuizClick={() => setQuizOpen(true)}
@@ -72,7 +73,6 @@ export function LandingPage() {
           onCalculatorClick={() => setCalculatorOpen(true)}
         />
         <FeaturedPeptides />
-        <VendorShowcase onSignInClick={handleMembersClick} />
         <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
         <BlogSection />
         <CTASection onSignInClick={handleMembersClick} />
