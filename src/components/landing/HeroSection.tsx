@@ -3,7 +3,7 @@ import { TrendingUp, FlaskConical, Award, BookOpen } from 'lucide-react';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
 import { useCountUp } from '@/hooks/useCountUp';
-import { useInViewAnimation } from '@/hooks/useInViewAnimation';
+
 
 const stats = [
   { label: 'Peptides', value: 98, suffix: '+', icon: FlaskConical },
@@ -35,11 +35,12 @@ function FloatingParticle({ delay, duration, x, y }: { delay: number; duration: 
 
 // Stats card with count-up animation
 function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
-  const { formattedValue, ref } = useCountUp({
+  const { formattedValue } = useCountUp({
     end: stat.value,
     duration: 2000,
     delay: index * 150,
     suffix: stat.suffix,
+    enableScrollTrigger: false,
   });
 
   return (
@@ -56,7 +57,7 @@ function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
       style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
     >
       <stat.icon className="w-6 h-6 mx-auto mb-2 text-accent group-hover:scale-110 transition-transform" />
-      <div ref={ref as React.RefCallback<HTMLDivElement>} className="text-2xl md:text-3xl font-bold text-foreground">{formattedValue}</div>
+      <div className="text-2xl md:text-3xl font-bold text-foreground">{formattedValue}</div>
       <div className="text-sm text-muted-foreground">{stat.label}</div>
     </motion.div>
   );

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import { peptides } from '@/data/peptides';
 import { GradientCard } from '@/components/ui/GradientCard';
@@ -15,6 +15,8 @@ import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { DoseSummary } from '@/components/doses/DoseSummary';
 import { QuickAddReminderButton } from '@/components/doses/QuickAddReminderButton';
 import { InsulinNeedleGuide } from '@/components/doses/InsulinNeedleGuide';
+import { UnitToggle } from '@/components/doses/UnitToggle';
+import { DoseLoggedAnimation } from '@/components/doses/DoseLoggedAnimation';
 import { z } from 'zod';
 
 const doseEntrySchema = z.object({
@@ -33,6 +35,7 @@ export function DailyLogScreen() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [showDoseLoggedAnimation, setShowDoseLoggedAnimation] = useState(false);
   const [formData, setFormData] = useState({
     peptideId: '',
     dose: '',
@@ -91,6 +94,12 @@ export function DailyLogScreen() {
         time: formData.time,
         notes: formData.notes || undefined,
       });
+
+      // Trigger haptic + animation
+      setShowDoseLoggedAnimation(true);
+      if (navigator.vibrate) {
+        navigator.vibrate([30, 50, 30]);
+      }
 
       toast({
         title: 'Dose logged',
@@ -385,19 +394,10 @@ export function DailyLogScreen() {
 
               <div className="space-y-2">
                 <Label>Unit</Label>
-                <Select
+                <UnitToggle
                   value={formData.unit}
-                  onValueChange={(val: 'mcg' | 'mg' | 'IU') => setFormData(prev => ({ ...prev, unit: val }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border z-50">
-                    <SelectItem value="mcg">mcg</SelectItem>
-                    <SelectItem value="mg">mg</SelectItem>
-                    <SelectItem value="IU">IU</SelectItem>
-                  </SelectContent>
-                </Select>
+                  onChange={(val) => setFormData(prev => ({ ...prev, unit: val }))}
+                />
               </div>
             </div>
 
@@ -457,6 +457,12 @@ export function DailyLogScreen() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Success Animation Overlay */}
+      <DoseLoggedAnimation
+        show={showDoseLoggedAnimation}
+        onComplete={useCallback(() => setShowDoseLoggedAnimation(false), [])}
+      />
     </div>
   );
 }

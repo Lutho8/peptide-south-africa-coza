@@ -24,7 +24,7 @@ export function useCountUp({
   const [count, setCount] = useState(start);
   const [isComplete, setIsComplete] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const elementRef = useRef<HTMLElement | null>(null);
+  const [node, setNode] = useState<HTMLElement | null>(null);
   const frameRef = useRef<number>();
 
   const animate = useCallback(() => {
@@ -45,7 +45,6 @@ export function useCountUp({
       }
 
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const easeProgress = 1 - Math.pow(1 - progress, 3);
       const currentValue = startValue + (endValue - startValue) * easeProgress;
 
@@ -61,8 +60,8 @@ export function useCountUp({
     frameRef.current = requestAnimationFrame(updateCount);
   }, [start, end, duration, delay, decimals, hasStarted]);
 
-  const setRef = useCallback((node: HTMLElement | null) => {
-    elementRef.current = node;
+  const setRef = useCallback((el: HTMLElement | null) => {
+    setNode(el);
   }, []);
 
   useEffect(() => {
@@ -71,7 +70,7 @@ export function useCountUp({
       return;
     }
 
-    if (!elementRef.current) return;
+    if (!node) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -82,7 +81,7 @@ export function useCountUp({
       { threshold: 0.1 }
     );
 
-    observer.observe(elementRef.current);
+    observer.observe(node);
 
     return () => {
       observer.disconnect();
@@ -90,7 +89,7 @@ export function useCountUp({
         cancelAnimationFrame(frameRef.current);
       }
     };
-  }, [animate, enableScrollTrigger, delay, hasStarted]);
+  }, [node, animate, enableScrollTrigger, delay, hasStarted]);
 
   const formattedValue = `${prefix}${count}${suffix}`;
 
