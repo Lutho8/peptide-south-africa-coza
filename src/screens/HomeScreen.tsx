@@ -11,6 +11,7 @@ import { QuickActions } from '@/components/home/QuickActions';
 import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
 import { BookCallSection } from '@/components/booking/BookCallSection';
+import { VendorListCard } from '@/components/home/VendorListCard';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -164,6 +165,11 @@ export function HomeScreen({
       {/* Stack Categories */}
       <motion.div variants={itemVariants}>
         <StackCategories />
+      </motion.div>
+
+      {/* Verified Vendors */}
+      <motion.div variants={itemVariants}>
+        <VendorListCard />
       </motion.div>
 
       {/* Book a Call Section */}
