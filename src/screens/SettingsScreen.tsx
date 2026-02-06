@@ -4,7 +4,7 @@ import { GradientCard } from '@/components/ui/GradientCard';
 import { Button } from '@/components/ui/button';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { NotificationSoundSettings } from '@/components/settings/NotificationSoundSettings';
-import { LanguageSettings } from '@/components/settings/LanguageSettings';
+
 import { BluetoothScaleConnection } from '@/components/settings/BluetoothScaleConnection';
 import { MembershipManagement } from '@/components/settings/MembershipManagement';
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal';
@@ -179,11 +179,8 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         </div>
       )}
 
-      {/* Language Section */}
-      <div>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">{t('settings.language')}</h2>
-        <LanguageSettings />
-      </div>
+
+
 
       {/* Cloud Sync Section */}
       <div>
