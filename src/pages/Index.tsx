@@ -7,6 +7,9 @@ import { useStorageInit } from '@/hooks/useStorageInit';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
+import { useScreenTransition } from '@/hooks/useScreenTransition';
+import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
+import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { Settings, User, LogOut, Loader2, ArrowLeft, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,11 +38,9 @@ const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').t
 const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
 
-const ScreenLoader = () => (
-  <div className="flex items-center justify-center py-20">
-    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-  </div>
-);
+const ScreenLoaderHome = () => <HomeSkeleton />;
+const ScreenLoaderList = () => <ListSkeleton />;
+const ScreenLoaderCards = () => <CardSkeleton />;
 
 type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'research';
 
@@ -48,6 +49,7 @@ const Index = () => {
   const { addDose } = useDailyDoses();
   const { user, signOut, isLoading } = useAuth();
   const { hasAccess, isLoading: accessLoading } = useAccessControl();
+  const { getDirection, getTransitionVariants } = useScreenTransition();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [showSettings, setShowSettings] = useState(false);
@@ -89,17 +91,29 @@ const Index = () => {
     setActiveTab('home');
   };
 
+  const screenKey = showSettings ? 'settings' : activeTab;
+  const direction = getDirection(screenKey);
+  const variants = getTransitionVariants(direction);
+
   const renderScreen = () => {
     if (showSettings) {
       return (
-        <Suspense fallback={<ScreenLoader />}>
+        <Suspense fallback={<ScreenLoaderList />}>
           <SettingsScreen onBack={() => setShowSettings(false)} />
         </Suspense>
       );
     }
 
+    const fallbacks: Record<TabId, JSX.Element> = {
+      home: <ScreenLoaderHome />,
+      stack: <ScreenLoaderList />,
+      'daily-log': <ScreenLoaderList />,
+      dosage: <ScreenLoaderCards />,
+      research: <ScreenLoaderList />,
+    };
+
     return (
-      <Suspense fallback={<ScreenLoader />}>
+      <Suspense fallback={fallbacks[activeTab]}>
         {activeTab === 'home' && (
           <HomeScreen
             onOpenBodyComposition={() => setBodyCompositionOpen(true)}
@@ -249,12 +263,24 @@ const Index = () => {
       </button>
 
       <main className="max-w-lg mx-auto px-4 py-6 pt-20 scroll-smooth-touch">
-        {renderScreen()}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={screenKey}
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            {renderScreen()}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {!showSettings && (
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       )}
+
+      <InstallBanner />
 
       {/* Modals - lazy loaded */}
       <Suspense fallback={null}>
