@@ -179,6 +179,31 @@ export function useDailyDoses() {
     }
   }, [user, doses]);
 
+  const updateDose = useCallback(async (doseId: string, updates: Partial<Pick<DailyDoseEntry, 'time' | 'notes'>>) => {
+    try {
+      if (user) {
+        const { error } = await supabase
+          .from('daily_doses')
+          .update({
+            ...(updates.time !== undefined && { time: updates.time }),
+            ...(updates.notes !== undefined && { notes: updates.notes || null }),
+          })
+          .eq('id', doseId);
+
+        if (error) throw error;
+      }
+
+      const updatedDoses = doses.map(d =>
+        d.id === doseId ? { ...d, ...updates } : d
+      );
+      setDoses(updatedDoses);
+      saveLocalDoses(updatedDoses);
+    } catch (error) {
+      console.error('Error updating dose:', error);
+      throw error;
+    }
+  }, [user, doses]);
+
   const deleteDose = useCallback(async (doseId: string) => {
     try {
       if (user) {
@@ -190,7 +215,6 @@ export function useDailyDoses() {
         if (error) throw error;
       }
 
-      // Update local state and localStorage
       const updatedDoses = doses.filter(d => d.id !== doseId);
       setDoses(updatedDoses);
       saveLocalDoses(updatedDoses);
@@ -217,6 +241,7 @@ export function useDailyDoses() {
     isSyncing,
     isCloudEnabled: !!user,
     addDose,
+    updateDose,
     deleteDose,
     getDosesForDate,
     getDosesForDateRange,
