@@ -12,10 +12,37 @@ interface PeptidesScreenProps {
 }
 
 type FilterTab = 'all' | 'fda-approved' | 'janoshik' | 'in-stock' | 'longevity' | 'new';
+type ResearchStatus = 'all' | 'approved' | 'phase3' | 'phase2' | 'phase1' | 'preclinical';
+
+const researchStatusLabel: Record<ResearchStatus, string> = {
+  all: 'All',
+  approved: 'FDA Approved',
+  phase3: 'Clinical Trials',
+  phase2: 'Preclinical',
+  phase1: 'Preclinical',
+  preclinical: 'Research',
+};
+
+const researchStatusTabs: { id: ResearchStatus; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'approved', label: 'FDA Approved' },
+  { id: 'phase3', label: 'Clinical Trials' },
+  { id: 'preclinical', label: 'Preclinical' },
+];
+
+function getResearchBadge(peptide: Peptide) {
+  if (peptide.fdaApproved) return { label: 'FDA Approved', className: 'bg-green-500/20 text-green-400' };
+  if (peptide.clinicalStatus === 'phase3' || peptide.clinicalStatus === 'phase2' || peptide.clinicalStatus === 'phase1')
+    return { label: 'Clinical Trials', className: 'bg-blue-500/20 text-blue-400' };
+  if (peptide.clinicalStatus === 'preclinical')
+    return { label: 'Preclinical', className: 'bg-yellow-500/20 text-yellow-400' };
+  return { label: 'Research', className: 'bg-muted text-muted-foreground' };
+}
 
 export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
+  const [researchFilter, setResearchFilter] = useState<ResearchStatus>('all');
   const [sortBy, setSortBy] = useState<'longevity' | 'name' | 'price'>('longevity');
 
   const filterTabs: { id: FilterTab; label: string }[] = [
@@ -36,18 +63,32 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
       
       if (!matchesSearch) return false;
 
+      // Category filter
+      let matchesCategory = true;
       switch (activeFilter) {
         case 'fda-approved':
-          return p.fdaApproved === true;
+          matchesCategory = p.fdaApproved === true;
+          break;
         case 'janoshik':
-          return p.janoshikTested;
+          matchesCategory = p.janoshikTested;
+          break;
         case 'in-stock':
-          return p.supplier.stock === 'in-stock';
+          matchesCategory = p.supplier.stock === 'in-stock';
+          break;
         case 'longevity':
-          return p.longevityScore >= 8;
-        default:
-          return true;
+          matchesCategory = p.longevityScore >= 8;
+          break;
       }
+      if (!matchesCategory) return false;
+
+      // Research status filter
+      if (researchFilter !== 'all') {
+        if (researchFilter === 'approved') return p.fdaApproved === true;
+        if (researchFilter === 'phase3') return p.clinicalStatus === 'phase3' || p.clinicalStatus === 'phase2' || p.clinicalStatus === 'phase1';
+        if (researchFilter === 'preclinical') return p.clinicalStatus === 'preclinical';
+      }
+
+      return true;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -95,6 +136,27 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
         ))}
       </div>
 
+      {/* Research Status Filter */}
+      <div>
+        <span className="text-xs text-muted-foreground mb-1.5 block">Research Status</span>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+          {researchStatusTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setResearchFilter(tab.id)}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
+                researchFilter === tab.id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:bg-muted"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Sort Options */}
       <div className="flex items-center gap-2">
         <Filter size={14} className="text-muted-foreground" />
@@ -133,12 +195,15 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
                 <CategoryBadge category={peptide.category} showCount={false} size="sm" />
               </div>
               <div className="flex flex-col items-end gap-1">
-                {peptide.fdaApproved && (
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
-                    <ShieldCheck size={12} />
-                    <span>FDA Approved</span>
-                  </div>
-                )}
+                {(() => {
+                  const badge = getResearchBadge(peptide);
+                  return (
+                    <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium", badge.className)}>
+                      {peptide.fdaApproved && <ShieldCheck size={12} />}
+                      <span>{badge.label}</span>
+                    </div>
+                  );
+                })()}
                 {peptide.janoshikTested && (
                   <div className="flex items-center gap-1 text-xs text-primary">
                     <FlaskConical size={12} />
