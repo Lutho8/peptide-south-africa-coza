@@ -101,7 +101,7 @@ export function useDailyDoses() {
       const newDoses = localDoses.filter(d => !existingIds.has(d.id));
 
       if (newDoses.length > 0) {
-        const { error } = await supabase.from('daily_doses').insert(
+        const { error } = await supabase.from('daily_doses').upsert(
           newDoses.map(d => ({
             id: d.id,
             user_id: user.id,
@@ -112,7 +112,8 @@ export function useDailyDoses() {
             unit: d.unit,
             time: d.time,
             notes: d.notes || null,
-          }))
+          })),
+          { onConflict: 'id' }
         );
 
         if (error) throw error;
