@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
 import { ResearchTools } from './ResearchTools';
@@ -7,17 +7,19 @@ import { PeptideCategories } from './PeptideCategories';
 import { BlogSection } from './BlogSection';
 import { CTASection } from './CTASection';
 import { LandingFooter } from './LandingFooter';
-import { PeptideQuiz } from './PeptideQuiz';
-import { PeptideCompare } from './PeptideCompare';
-import { PeptideSearch } from './PeptideSearch';
-import { StackBuilder } from './StackBuilder';
-import { ReconstitutionCalculator } from './ReconstitutionCalculator';
-import { MembersPaywall } from './MembersPaywall';
 import { VendorShowcase } from './VendorShowcase';
-import { AuthModal } from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
 import { PeptideCategory } from '@/data/peptides';
+
+// Lazy load modals - only loaded when opened
+const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
+const MembersPaywall = lazy(() => import('./MembersPaywall').then(m => ({ default: m.MembersPaywall })));
+const PeptideQuiz = lazy(() => import('./PeptideQuiz').then(m => ({ default: m.PeptideQuiz })));
+const PeptideCompare = lazy(() => import('./PeptideCompare').then(m => ({ default: m.PeptideCompare })));
+const PeptideSearch = lazy(() => import('./PeptideSearch').then(m => ({ default: m.PeptideSearch })));
+const StackBuilder = lazy(() => import('./StackBuilder').then(m => ({ default: m.StackBuilder })));
+const ReconstitutionCalculator = lazy(() => import('./ReconstitutionCalculator').then(m => ({ default: m.ReconstitutionCalculator })));
 
 export function LandingPage() {
   const { user } = useAuth();
@@ -80,22 +82,26 @@ export function LandingPage() {
 
       <LandingFooter />
 
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
-      <MembersPaywall 
-        open={membersPaywallOpen} 
-        onOpenChange={setMembersPaywallOpen}
-        onSignInClick={() => {
-          setMembersPaywallOpen(false);
-          setAuthModalOpen(true);
-        }}
-        isAuthenticated={!!user}
-        onAccessDashboard={handleAccessDashboard}
-      />
-      <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />
-      <PeptideCompare open={compareOpen} onClose={() => setCompareOpen(false)} />
-      <PeptideSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <StackBuilder open={stackBuilderOpen} onClose={() => setStackBuilderOpen(false)} />
-      <ReconstitutionCalculator open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />
+      <Suspense fallback={null}>
+        {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
+        {membersPaywallOpen && (
+          <MembersPaywall 
+            open={membersPaywallOpen} 
+            onOpenChange={setMembersPaywallOpen}
+            onSignInClick={() => {
+              setMembersPaywallOpen(false);
+              setAuthModalOpen(true);
+            }}
+            isAuthenticated={!!user}
+            onAccessDashboard={handleAccessDashboard}
+          />
+        )}
+        {quizOpen && <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />}
+        {compareOpen && <PeptideCompare open={compareOpen} onClose={() => setCompareOpen(false)} />}
+        {searchOpen && <PeptideSearch open={searchOpen} onClose={() => setSearchOpen(false)} />}
+        {stackBuilderOpen && <StackBuilder open={stackBuilderOpen} onClose={() => setStackBuilderOpen(false)} />}
+        {calculatorOpen && <ReconstitutionCalculator open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />}
+      </Suspense>
     </div>
   );
 }
