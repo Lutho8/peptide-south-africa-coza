@@ -50,6 +50,8 @@ export function DailyLogScreen() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  const handleDoseAnimationComplete = useCallback(() => setShowDoseLoggedAnimation(false), []);
+
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -515,7 +517,7 @@ export function DailyLogScreen() {
       {/* Success Animation Overlay */}
       <DoseLoggedAnimation
         show={showDoseLoggedAnimation}
-        onComplete={useCallback(() => setShowDoseLoggedAnimation(false), [])}
+        onComplete={handleDoseAnimationComplete}
       />
     </div>
   );

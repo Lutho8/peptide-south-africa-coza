@@ -31,13 +31,11 @@ export function DoseSummary({ doses, currentDate }: DoseSummaryProps) {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
 
-  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
-  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   const getStatsForPeriod = useMemo(() => {
     const start = view === 'week' ? weekStart : monthStart;
     const end = view === 'week' ? weekEnd : monthEnd;
-    const daysInPeriod = view === 'week' ? weekDays : monthDays;
+    const daysInPeriod = eachDayOfInterval({ start, end });
 
     const periodDoses = doses.filter(d => {
       const doseDate = new Date(d.date);
@@ -87,7 +85,7 @@ export function DoseSummary({ doses, currentDate }: DoseSummaryProps) {
       totalDaysInPeriod: daysInPeriod.length,
       peptideStats: stats.sort((a, b) => b.totalDoses - a.totalDoses),
     };
-  }, [doses, view, weekStart, weekEnd, monthStart, monthEnd]);
+  }, [doses, view, weekStart.getTime(), weekEnd.getTime(), monthStart.getTime(), monthEnd.getTime()]);
 
   const getCategoryColor = (peptideId: string) => {
     const peptide = peptides.find(p => p.id === peptideId);
