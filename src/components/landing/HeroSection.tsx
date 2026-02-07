@@ -12,11 +12,11 @@ const stats = [
   { label: 'Citations', value: 500, suffix: '+', icon: BookOpen },
 ];
 
-// Floating particle component
+// Floating particle component - reduced for mobile perf
 function FloatingParticle({ delay, duration, x, y }: { delay: number; duration: number; x: number; y: number }) {
   return (
     <motion.div
-      className="absolute w-2 h-2 rounded-full bg-primary/20"
+      className="absolute w-2 h-2 rounded-full bg-primary/20 will-change-transform"
       initial={{ opacity: 0, x, y }}
       animate={{
         opacity: [0, 0.6, 0],
@@ -69,8 +69,10 @@ interface HeroSectionProps {
 
 export function HeroSection({ onCategoryClick }: HeroSectionProps) {
 
-  // Generate floating particles
-  const particles = Array.from({ length: 15 }, (_, i) => ({
+  // Reduced particles on mobile for performance
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const particleCount = isMobile ? 5 : 15;
+  const particles = Array.from({ length: particleCount }, (_, i) => ({
     id: i,
     delay: i * 0.5,
     duration: 4 + Math.random() * 3,

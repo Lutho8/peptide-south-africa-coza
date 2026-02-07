@@ -10,6 +10,7 @@ import { useAccessControl } from '@/hooks/useAccessControl';
 import { useScreenTransition } from '@/hooks/useScreenTransition';
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Settings, User, LogOut, Loader2, ArrowLeft, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -98,9 +99,11 @@ const Index = () => {
   const renderScreen = () => {
     if (showSettings) {
       return (
-        <Suspense fallback={<ScreenLoaderList />}>
-          <SettingsScreen onBack={() => setShowSettings(false)} />
-        </Suspense>
+        <ErrorBoundary fallbackTitle="Settings failed to load">
+          <Suspense fallback={<ScreenLoaderList />}>
+            <SettingsScreen onBack={() => setShowSettings(false)} />
+          </Suspense>
+        </ErrorBoundary>
       );
     }
 
@@ -112,25 +115,35 @@ const Index = () => {
       research: <ScreenLoaderList />,
     };
 
+    const screenNames: Record<TabId, string> = {
+      home: 'Dashboard',
+      stack: 'My Stack',
+      'daily-log': 'Daily Log',
+      dosage: 'Dosage Calculator',
+      research: 'Research Library',
+    };
+
     return (
-      <Suspense fallback={fallbacks[activeTab]}>
-        {activeTab === 'home' && (
-          <HomeScreen
-            onOpenBodyComposition={() => setBodyCompositionOpen(true)}
-            onOpenDoseTracker={() => setDoseTrackerOpen(true)}
-            onOpenCycles={() => setCycleManagementOpen(true)}
-            onOpenBloodwork={() => setBloodworkOpen(true)}
-            onOpenInventory={() => setInventoryOpen(true)}
-            onNavigatePeptides={() => setActiveTab('daily-log')}
-            onNavigateStack={() => setActiveTab('stack')}
-            onOpenSettings={() => setShowSettings(true)}
-          />
-        )}
-        {activeTab === 'stack' && <MyStackScreen />}
-        {activeTab === 'daily-log' && <DailyLogScreen />}
-        {activeTab === 'dosage' && <DosageScreen />}
-        {activeTab === 'research' && <ResearchLibraryScreen />}
-      </Suspense>
+      <ErrorBoundary fallbackTitle={`${screenNames[activeTab]} failed to load`}>
+        <Suspense fallback={fallbacks[activeTab]}>
+          {activeTab === 'home' && (
+            <HomeScreen
+              onOpenBodyComposition={() => setBodyCompositionOpen(true)}
+              onOpenDoseTracker={() => setDoseTrackerOpen(true)}
+              onOpenCycles={() => setCycleManagementOpen(true)}
+              onOpenBloodwork={() => setBloodworkOpen(true)}
+              onOpenInventory={() => setInventoryOpen(true)}
+              onNavigatePeptides={() => setActiveTab('daily-log')}
+              onNavigateStack={() => setActiveTab('stack')}
+              onOpenSettings={() => setShowSettings(true)}
+            />
+          )}
+          {activeTab === 'stack' && <MyStackScreen />}
+          {activeTab === 'daily-log' && <DailyLogScreen />}
+          {activeTab === 'dosage' && <DosageScreen />}
+          {activeTab === 'research' && <ResearchLibraryScreen />}
+        </Suspense>
+      </ErrorBoundary>
     );
   };
 
