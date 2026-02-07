@@ -188,14 +188,15 @@ export function DailyLogScreen() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center py-20 min-h-[50vh]">
         <Loader2 className="animate-spin text-primary" size={32} />
+        <p className="text-sm text-muted-foreground mt-3">Loading your doses...</p>
       </div>
     );
   }
 
   return (
-    <div className="pb-24 space-y-4 fade-in">
+    <div className="pb-24 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Calendar className="text-primary" size={28} />
