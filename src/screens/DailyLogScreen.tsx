@@ -397,12 +397,12 @@ export function DailyLogScreen() {
 
       {/* Add Dose Modal */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Log Dose for {format(selectedDate, 'MMM d, yyyy')}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-1">
             <div className="space-y-2">
               <Label>Peptide</Label>
               <Select
@@ -482,7 +482,7 @@ export function DailyLogScreen() {
             )}
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
+          <DialogFooter className="flex-col sm:flex-row gap-2 flex-shrink-0 border-t pt-4">
             <div className="flex-1">
               {formData.peptideId && formData.dose && formData.time && (
                 <QuickAddReminderButton
