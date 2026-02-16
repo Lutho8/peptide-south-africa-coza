@@ -56,16 +56,16 @@ interface StackTemplate {
 }
 
 const stackTemplates: StackTemplate[] = [
-  { id: 'wolverine', name: 'Wolverine Stack', description: 'The legendary healing combo for injury recovery', icon: Heart, peptideIds: ['bpc-157', 'tb-500'] },
-  { id: 'glow', name: 'Glow Protocol', description: 'Skin rejuvenation and anti-aging blend', icon: Sparkles, peptideIds: ['bpc-157', 'tb-500', 'ghk-cu'] },
-  { id: 'klow', name: 'KLOW Blend', description: 'Advanced healing with gut health support', icon: FlaskConical, peptideIds: ['bpc-157', 'tb-500', 'ghk-cu', 'kpv'] },
-  { id: 'gh-opt', name: 'GH Optimization Stack', description: 'Maximize natural growth hormone release', icon: Zap, peptideIds: ['ipamorelin', 'cjc-1295'] },
-  { id: 'cognitive', name: 'Cognitive Enhancement', description: 'Boost focus, memory, and mental clarity', icon: Brain, peptideIds: ['semax', 'selank'] },
-  { id: 'longevity', name: 'Longevity Stack', description: 'Support cellular health and slow aging', icon: Shield, peptideIds: ['epithalon', 'ghk-cu', 'thymosin-alpha-1'] },
-  { id: 'sleep', name: 'Sleep & Recovery', description: 'Enhance sleep quality and overnight recovery', icon: Moon, peptideIds: ['dsip', 'ipamorelin', 'ghrp-2'] },
-  { id: 'weight-loss', name: 'Weight Loss Stack', description: 'Support metabolic health and fat reduction', icon: Dumbbell, peptideIds: ['semaglutide', 'aod-9604'] },
-  { id: 'recomp', name: 'Body Recomposition', description: 'Build muscle while reducing body fat', icon: Dumbbell, peptideIds: ['ipamorelin', 'cjc-1295', 'bpc-157'] },
-  { id: 'immune', name: 'Immune Support', description: 'Strengthen immune function and resilience', icon: Shield, peptideIds: ['thymosin-alpha-1', 'bpc-157'] },
+  { id: 'wolverine', name: 'Wolverine Stack', description: 'The legendary healing combo for injury recovery', icon: Heart, peptideIds: ['bpc157', 'tb500'] },
+  { id: 'glow', name: 'Glow Protocol', description: 'Skin rejuvenation and anti-aging blend', icon: Sparkles, peptideIds: ['bpc157', 'tb500', 'ghkcu'] },
+  { id: 'klow', name: 'KLOW Blend', description: 'Advanced healing with gut health support', icon: FlaskConical, peptideIds: ['bpc157', 'tb500', 'ghkcu'] },
+  { id: 'gh-opt', name: 'GH Optimization Stack', description: 'Maximize natural growth hormone release', icon: Zap, peptideIds: ['ipamorelin', 'cjc1295'] },
+  { id: 'cognitive', name: 'Cognitive Enhancement', description: 'Boost focus, memory, and mental clarity', icon: Brain, peptideIds: ['semax', 'ss31'] },
+  { id: 'longevity', name: 'Longevity Stack', description: 'Support cellular health and slow aging', icon: Shield, peptideIds: ['epitalon', 'ghkcu', 'ta1'] },
+  { id: 'sleep', name: 'Sleep & Recovery', description: 'Enhance sleep quality and overnight recovery', icon: Moon, peptideIds: ['ipamorelin', 'cjc1295', 'bpc157'] },
+  { id: 'weight-loss', name: 'Weight Loss Stack', description: 'Support metabolic health and fat reduction', icon: Dumbbell, peptideIds: ['retatrutide', 'motsc'] },
+  { id: 'recomp', name: 'Body Recomposition', description: 'Build muscle while reducing body fat', icon: Dumbbell, peptideIds: ['ipamorelin', 'cjc1295', 'bpc157'] },
+  { id: 'immune', name: 'Immune Support', description: 'Strengthen immune function and resilience', icon: Shield, peptideIds: ['ta1', 'bpc157'] },
 ];
 
 interface StackInteraction {
