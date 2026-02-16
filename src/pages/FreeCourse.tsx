@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Rocket, ArrowRight, GraduationCap, Clock, Gift, Zap, ChevronDown, BookOpen, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,22 +17,42 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { getStoredData, setStoredData } from '@/services/storage';
+
+const COURSE_LESSONS_KEY = 'peptide_app_course_lessons';
+const COURSE_QUIZZES_KEY = 'peptide_app_course_quizzes';
 
 export default function FreeCourse() {
   const navigate = useNavigate();
-  const [started, setStarted] = useState(false);
-  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
-  const [completedQuizzes, setCompletedQuizzes] = useState<Set<string>>(new Set());
+  const [started, setStarted] = useState(() => {
+    const lessons = getStoredData<string[]>(COURSE_LESSONS_KEY, []);
+    const quizzes = getStoredData<string[]>(COURSE_QUIZZES_KEY, []);
+    return lessons.length > 0 || quizzes.length > 0;
+  });
+  const [completedLessons, setCompletedLessons] = useState<Set<string>>(() => {
+    return new Set(getStoredData<string[]>(COURSE_LESSONS_KEY, []));
+  });
+  const [completedQuizzes, setCompletedQuizzes] = useState<Set<string>>(() => {
+    return new Set(getStoredData<string[]>(COURSE_QUIZZES_KEY, []));
+  });
 
   const totalLessons = courseModules.reduce((sum, m) => sum + m.lessons.length, 0);
   const totalQuizzes = courseModules.length;
 
   const markLessonComplete = useCallback((id: string) => {
-    setCompletedLessons((prev) => new Set(prev).add(id));
+    setCompletedLessons((prev) => {
+      const next = new Set(prev).add(id);
+      setStoredData(COURSE_LESSONS_KEY, Array.from(next));
+      return next;
+    });
   }, []);
 
   const markQuizPassed = useCallback((moduleId: string) => {
-    setCompletedQuizzes((prev) => new Set(prev).add(moduleId));
+    setCompletedQuizzes((prev) => {
+      const next = new Set(prev).add(moduleId);
+      setStoredData(COURSE_QUIZZES_KEY, Array.from(next));
+      return next;
+    });
   }, []);
 
   const isModuleUnlocked = (index: number) => {
