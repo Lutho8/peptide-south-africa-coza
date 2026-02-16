@@ -10,6 +10,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Disclaimer from "./pages/Disclaimer";
 import TermsOfService from "./pages/TermsOfService";
 import AdminDashboard from "./pages/AdminDashboard";
+import FreeCourse from "./pages/FreeCourse";
 
 // Initialize i18n
 import '@/i18n';
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/free-course" element={<FreeCourse />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
