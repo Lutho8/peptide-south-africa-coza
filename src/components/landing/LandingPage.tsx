@@ -8,6 +8,7 @@ import { BlogSection } from './BlogSection';
 import { CTASection } from './CTASection';
 import { LandingFooter } from './LandingFooter';
 import { VendorShowcase } from './VendorShowcase';
+import { FAQSection } from './FAQSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
 import { PeptideCategory } from '@/data/peptides';
@@ -77,6 +78,7 @@ export function LandingPage() {
         <FeaturedPeptides />
         <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
         <BlogSection />
+        <FAQSection />
         <CTASection onSignInClick={handleMembersClick} />
       </main>
 
