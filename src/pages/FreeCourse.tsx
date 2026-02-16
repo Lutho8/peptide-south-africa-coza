@@ -1,11 +1,9 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Rocket, BookOpen, Heart, Brain, Users, FlaskConical, TrendingUp, Clock, Gift, ArrowRight, GraduationCap, Stethoscope, Target, ShieldCheck, Zap } from 'lucide-react';
+import { Rocket, BookOpen, Heart, Brain, Users, FlaskConical, TrendingUp, CheckCircle, Clock, Gift, ArrowRight, GraduationCap, Stethoscope, Target, ShieldCheck, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingFooter } from '@/components/landing/LandingFooter';
-import { CourseEnrollModal } from '@/components/landing/CourseEnrollModal';
 import { useNavigate } from 'react-router-dom';
 
 const courseTopics = [
@@ -56,7 +54,6 @@ const fadeUp = {
 
 export default function FreeCourse() {
   const navigate = useNavigate();
-  const [enrollOpen, setEnrollOpen] = useState(false);
 
   const scrollToEnroll = () => {
     document.getElementById('enroll-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -213,16 +210,21 @@ export default function FreeCourse() {
             <span className="flex items-center gap-2"><Zap size={18} className="text-primary" /> Limited-Time Access – Don't Miss Out!</span>
           </div>
 
-          <div className="pt-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="pt-4"
+          >
             <Button
               size="lg"
-              className="text-lg px-10 py-7 rounded-full shadow-xl hover:shadow-2xl transition-all gap-2"
-              onClick={() => setEnrollOpen(true)}
+              className="text-lg px-10 py-7 rounded-full shadow-xl hover:shadow-2xl transition-all gap-2 animate-premium-shimmer"
+              onClick={() => window.open('https://mypeptideuniversity.com/peptide-intro', '_blank')}
             >
               👉 Get Instant Access Now
               <ArrowRight size={20} />
             </Button>
-          </div>
+          </motion.div>
 
           <p className="text-xs text-muted-foreground pt-4">
             This course is provided by Peptide University. By enrolling, you'll be redirected to their platform for instant access.
@@ -230,7 +232,6 @@ export default function FreeCourse() {
         </div>
       </section>
 
-      <CourseEnrollModal open={enrollOpen} onOpenChange={setEnrollOpen} />
       <LandingFooter />
     </div>
   );

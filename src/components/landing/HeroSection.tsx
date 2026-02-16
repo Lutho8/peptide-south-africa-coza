@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, FlaskConical, Award, BookOpen } from 'lucide-react';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
-import { FreeCourseBanner } from './FreeCourseBanner';
 import { PeptideCategory } from '@/data/peptides';
 import { useCountUp } from '@/hooks/useCountUp';
 
@@ -153,9 +152,6 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
 
           {/* Dynamic Category Badges */}
           <HeroCategoryBadges onCategoryClick={onCategoryClick} />
-
-          {/* Free Course Banner */}
-          <FreeCourseBanner />
         </div>
       </div>
     </section>
