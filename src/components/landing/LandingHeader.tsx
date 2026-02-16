@@ -16,6 +16,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
   const { user } = useAuth();
 
   const navLinks = [
+    { label: 'Free Course', href: '/free-course' },
     { label: 'Browse', href: '#browse' },
     { label: 'Compare', href: '#compare' },
     { label: 'Stacks', href: '#stacks' },
