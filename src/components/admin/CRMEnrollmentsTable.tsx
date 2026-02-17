@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { GraduationCap, Mail, Phone, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { GraduationCap, Mail, Phone, MessageSquare, CheckCircle2, Download } from 'lucide-react';
 
 interface Enrollment {
   id: string;
@@ -91,9 +92,40 @@ export default function CRMEnrollmentsTable() {
 
       {/* Enrollments Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Course Enrollments (CRM)</CardTitle>
-          <CardDescription>All leads from the free peptide therapy course — use for email campaigns</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Course Enrollments (CRM)</CardTitle>
+            <CardDescription>All leads from the free peptide therapy course — use for email campaigns</CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={enrollments.length === 0}
+            onClick={() => {
+              const headers = ['Name', 'Email', 'Phone', 'SMS Consent', 'Enrolled', 'Completed'];
+              const rows = enrollments.map(e => [
+                `"${e.full_name}"`,
+                e.email,
+                e.phone || '',
+                e.sms_consent ? 'Yes' : 'No',
+                format(new Date(e.enrolled_at), 'yyyy-MM-dd'),
+                e.course_completed_at ? format(new Date(e.course_completed_at), 'yyyy-MM-dd') : '',
+              ].join(','));
+              const csv = [headers.join(','), ...rows].join('\n');
+              const blob = new Blob([csv], { type: 'text/csv' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `course-enrollments-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+              toast.success('CSV downloaded');
+            }}
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
         </CardHeader>
         <CardContent>
           <Table>
