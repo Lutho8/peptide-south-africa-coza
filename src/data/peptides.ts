@@ -72,6 +72,7 @@ export interface Peptide {
     finding: string;
     doi?: string;
   }>;
+  recommendedDuration?: string;
 }
 
 export const peptides: Peptide[] = [
@@ -107,6 +108,7 @@ export const peptides: Peptide[] = [
       athlete: '1.5mg 3x/week'
     },
     frequency: '3x weekly',
+    recommendedDuration: '8–12 weeks per cycle, with 4-week breaks between cycles',
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Improved energy, reduced minor illness duration',
@@ -181,6 +183,7 @@ export const peptides: Peptide[] = [
       athlete: '10mg daily for 10 days'
     },
     frequency: 'Daily (10-day cycle, 2-3 cycles per year)',
+    recommendedDuration: '10–20 days per cycle, 2–3 cycles per year with 4–6 month intervals',
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Improved sleep onset, vivid dreams',
@@ -255,6 +258,7 @@ export const peptides: Peptide[] = [
       athlete: '600mcg daily intranasal'
     },
     frequency: 'Daily',
+    recommendedDuration: '30–90 days continuous, with optional 2-week breaks between cycles',
     administration: 'Intranasal spray',
     expectedResults: {
       week1_2: 'Increased mental clarity, focus',
@@ -330,6 +334,7 @@ export const peptides: Peptide[] = [
       athlete: '5mg daily'
     },
     frequency: 'Daily',
+    recommendedDuration: '8–12 weeks per cycle; clinical trials used 4–12 week protocols',
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Subtle energy improvements',
@@ -406,6 +411,7 @@ export const peptides: Peptide[] = [
       athlete: '4-8mg weekly'
     },
     frequency: 'Once weekly',
+    recommendedDuration: '24–48 weeks with gradual dose titration (1mg → 4mg → 8mg → 12mg every 4 weeks)',
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Reduced appetite, possible GI adjustment',
@@ -482,6 +488,7 @@ export const peptides: Peptide[] = [
       athlete: '500mcg daily (systemic) or local injection'
     },
     frequency: 'Daily',
+    recommendedDuration: '4–8 weeks for acute injury; up to 12 weeks for chronic conditions',
     administration: 'Subcutaneous injection (near injury site if applicable)',
     expectedResults: {
       week1_2: 'Reduced pain and inflammation',
@@ -557,6 +564,7 @@ export const peptides: Peptide[] = [
       athlete: '5mg 2x weekly'
     },
     frequency: '2x weekly',
+    recommendedDuration: '4–8 weeks loading phase, then 2x/week maintenance for up to 12 weeks',
     administration: 'Subcutaneous or intramuscular injection',
     expectedResults: {
       week1_2: 'General well-being improvement',
@@ -633,6 +641,7 @@ export const peptides: Peptide[] = [
       athlete: '200mcg before bed (combine with CJC-1295)'
     },
     frequency: 'Daily (before bed)',
+    recommendedDuration: '8–16 weeks continuous; cycle 5 days on / 2 days off for extended use',
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Improved sleep, recovery',
@@ -708,6 +717,7 @@ export const peptides: Peptide[] = [
       athlete: '200mcg before bed with Ipamorelin'
     },
     frequency: 'Daily (before bed)',
+    recommendedDuration: '8–16 weeks continuous; best combined with Ipamorelin on same schedule',
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Enhanced sleep quality, GH elevation',
@@ -784,6 +794,7 @@ export const peptides: Peptide[] = [
       athlete: '2mg daily'
     },
     frequency: 'Daily',
+    recommendedDuration: '8–12 weeks per cycle; topical use can be continuous',
     administration: 'Subcutaneous injection or topical',
     expectedResults: {
       week1_2: 'Improved skin quality',
@@ -857,6 +868,7 @@ export const peptides: Peptide[] = [
       athlete: '10mg weekly'
     },
     frequency: 'Weekly',
+    recommendedDuration: '8–12 weeks per cycle with 4-week breaks; limited human protocol data',
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Improved energy levels',

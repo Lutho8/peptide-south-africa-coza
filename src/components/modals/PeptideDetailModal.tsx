@@ -360,9 +360,13 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
                 <p className="text-foreground font-medium">{peptide.dosing.athlete}</p>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              <strong>Administration:</strong> {peptide.administration}
-            </p>
+            <div className="text-xs text-muted-foreground mt-2 space-y-1">
+              <p><strong>Frequency:</strong> {peptide.frequency}</p>
+              <p><strong>Administration:</strong> {peptide.administration}</p>
+              {peptide.recommendedDuration && (
+                <p><strong>Recommended Duration:</strong> {peptide.recommendedDuration}</p>
+              )}
+            </div>
           </GradientCard>
 
           {/* Risks */}
