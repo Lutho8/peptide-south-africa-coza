@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Rocket, ArrowRight, GraduationCap, Clock, Gift, Zap, ChevronDown, BookOpen, Lock } from 'lucide-react';
+import { Rocket, ArrowRight, GraduationCap, Clock, Gift, Zap, BookOpen, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { LandingHeader } from '@/components/landing/LandingHeader';
@@ -9,6 +9,7 @@ import { CourseProgress } from '@/components/course/CourseProgress';
 import { VideoLesson } from '@/components/course/VideoLesson';
 import { QuizSection } from '@/components/course/QuizSection';
 import { courseModules } from '@/data/courseContent';
+import { CourseCertificate } from '@/components/course/CourseCertificate';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -35,9 +36,16 @@ export default function FreeCourse() {
   const [completedQuizzes, setCompletedQuizzes] = useState<Set<string>>(() => {
     return new Set(getStoredData<string[]>(COURSE_QUIZZES_KEY, []));
   });
+  const [certificateDismissed, setCertificateDismissed] = useState(false);
 
   const totalLessons = courseModules.reduce((sum, m) => sum + m.lessons.length, 0);
   const totalQuizzes = courseModules.length;
+
+  const courseCompleted = useMemo(() => {
+    const allLessons = courseModules.every((m) => m.lessons.every((l) => completedLessons.has(l.id)));
+    const allQuizzes = courseModules.every((m) => completedQuizzes.has(m.id));
+    return allLessons && allQuizzes;
+  }, [completedLessons, completedQuizzes]);
 
   const markLessonComplete = useCallback((id: string) => {
     setCompletedLessons((prev) => {
@@ -282,6 +290,14 @@ export default function FreeCourse() {
           </motion.div>
         </div>
       </section>
+
+      {/* Certificate Modal */}
+      {courseCompleted && !certificateDismissed && (
+        <CourseCertificate
+          completionDate={new Date()}
+          onDismiss={() => setCertificateDismissed(true)}
+        />
+      )}
 
       <LandingFooter />
     </div>
