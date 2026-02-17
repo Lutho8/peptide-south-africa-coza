@@ -94,6 +94,8 @@ export default function FreeCourse() {
           totalLessons={totalLessons}
           completedQuizzes={completedQuizzes.size}
           totalQuizzes={totalQuizzes}
+          courseCompleted={courseCompleted}
+          onViewCertificate={() => setCertificateDismissed(false)}
         />
       )}
 
