@@ -116,6 +116,42 @@ export type Database = {
         }
         Relationships: []
       }
+      course_enrollments: {
+        Row: {
+          course_completed_at: string | null
+          created_at: string
+          email: string
+          enrolled_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          sms_consent: boolean
+          updated_at: string
+        }
+        Insert: {
+          course_completed_at?: string | null
+          created_at?: string
+          email: string
+          enrolled_at?: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          sms_consent?: boolean
+          updated_at?: string
+        }
+        Update: {
+          course_completed_at?: string | null
+          created_at?: string
+          email?: string
+          enrolled_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          sms_consent?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       daily_doses: {
         Row: {
           created_at: string

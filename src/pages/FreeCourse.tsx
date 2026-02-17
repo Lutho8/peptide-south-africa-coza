@@ -10,6 +10,7 @@ import { VideoLesson } from '@/components/course/VideoLesson';
 import { QuizSection } from '@/components/course/QuizSection';
 import { courseModules } from '@/data/courseContent';
 import { CourseCertificate } from '@/components/course/CourseCertificate';
+import { EnrollmentModal } from '@/components/course/EnrollmentModal';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -22,6 +23,7 @@ import { getStoredData, setStoredData } from '@/services/storage';
 
 const COURSE_LESSONS_KEY = 'peptide_app_course_lessons';
 const COURSE_QUIZZES_KEY = 'peptide_app_course_quizzes';
+const COURSE_STUDENT_KEY = 'peptide_app_course_student';
 
 export default function FreeCourse() {
   const navigate = useNavigate();
@@ -37,6 +39,10 @@ export default function FreeCourse() {
     return new Set(getStoredData<string[]>(COURSE_QUIZZES_KEY, []));
   });
   const [certificateDismissed, setCertificateDismissed] = useState(false);
+  const [studentName, setStudentName] = useState<string>(() => {
+    return getStoredData<string>(COURSE_STUDENT_KEY, '');
+  });
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
 
   const totalLessons = courseModules.reduce((sum, m) => sum + m.lessons.length, 0);
   const totalQuizzes = courseModules.length;
@@ -69,6 +75,21 @@ export default function FreeCourse() {
     const allLessonsDone = prev.lessons.every((l) => completedLessons.has(l.id));
     const quizDone = completedQuizzes.has(prev.id);
     return allLessonsDone && quizDone;
+  };
+
+  const handleStartClick = () => {
+    if (!studentName) {
+      setShowEnrollModal(true);
+    } else {
+      scrollToCourse();
+    }
+  };
+
+  const handleEnrolled = (name: string, _email: string) => {
+    setStudentName(name);
+    setStoredData(COURSE_STUDENT_KEY, name);
+    setShowEnrollModal(false);
+    scrollToCourse();
   };
 
   const scrollToCourse = () => {
@@ -127,7 +148,7 @@ export default function FreeCourse() {
             6 modules · 11 video lessons · 6 quizzes · 100% free & self-paced
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Button size="lg" onClick={scrollToCourse} className="text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all gap-2">
+            <Button size="lg" onClick={handleStartClick} className="text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all gap-2">
               👉 {started ? 'Continue Learning' : 'Start the Free Course'}
               <ArrowRight size={18} />
             </Button>
@@ -296,10 +317,16 @@ export default function FreeCourse() {
       {/* Certificate Modal */}
       {courseCompleted && !certificateDismissed && (
         <CourseCertificate
+          studentName={studentName || undefined}
           completionDate={new Date()}
           onDismiss={() => setCertificateDismissed(true)}
         />
       )}
+
+      <EnrollmentModal
+        open={showEnrollModal}
+        onEnrolled={handleEnrolled}
+      />
 
       <LandingFooter />
     </div>
