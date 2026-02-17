@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Crown, Calendar, Mail, Shield } from 'lucide-react';
+import { ArrowLeft, Users, Crown, Calendar, Mail, Shield, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import CRMEnrollmentsTable from '@/components/admin/CRMEnrollmentsTable';
 
 interface MemberData {
   id: string;
@@ -47,7 +49,6 @@ export default function AdminDashboard() {
     }
 
     try {
-      // Check if user has admin role using the security definer function
       const { data, error } = await supabase.rpc('has_role', {
         _user_id: user.id,
         _role: 'admin'
@@ -74,23 +75,13 @@ export default function AdminDashboard() {
 
   const loadMemberData = async () => {
     try {
-      // Fetch all memberships with profile info
       const { data: memberships, error } = await supabase
         .from('user_memberships')
-        .select(`
-          id,
-          user_id,
-          status,
-          started_at,
-          expires_at,
-          price_amount,
-          currency
-        `)
+        .select('id, user_id, status, started_at, expires_at, price_amount, currency')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Fetch profiles for each member
       const memberIds = memberships?.map(m => m.user_id) || [];
       const { data: profiles } = await supabase
         .from('profiles')
@@ -106,7 +97,6 @@ export default function AdminDashboard() {
 
       setMembers(enrichedMembers);
 
-      // Calculate stats
       const active = enrichedMembers.filter(m => m.status === 'active').length;
       const cancelled = enrichedMembers.filter(m => m.status === 'cancelled').length;
       const revenue = enrichedMembers
@@ -148,9 +138,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!isAdmin) {
-    return null;
-  }
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -174,109 +162,123 @@ export default function AdminDashboard() {
           </Badge>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Total Members</CardDescription>
-              <CardTitle className="text-3xl">{stats.totalMembers}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="members" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="members" className="gap-1.5">
+              <Users className="h-4 w-4" />
+              Members
+            </TabsTrigger>
+            <TabsTrigger value="crm" className="gap-1.5">
+              <GraduationCap className="h-4 w-4" />
+              Course CRM
+            </TabsTrigger>
+          </TabsList>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Active Subscriptions</CardDescription>
-              <CardTitle className="text-3xl text-green-500">{stats.activeMembers}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Crown className="h-4 w-4 text-green-500" />
-            </CardContent>
-          </Card>
+          <TabsContent value="members" className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Total Members</CardDescription>
+                  <CardTitle className="text-3xl">{stats.totalMembers}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Active Subscriptions</CardDescription>
+                  <CardTitle className="text-3xl text-green-500">{stats.activeMembers}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Crown className="h-4 w-4 text-green-500" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Cancelled</CardDescription>
+                  <CardTitle className="text-3xl text-destructive">{stats.cancelledMembers}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Calendar className="h-4 w-4 text-destructive" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Monthly Revenue</CardDescription>
+                  <CardTitle className="text-3xl">€{stats.revenue.toFixed(2)}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <span className="text-sm text-muted-foreground">Recurring</span>
+                </CardContent>
+              </Card>
+            </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Cancelled</CardDescription>
-              <CardTitle className="text-3xl text-destructive">{stats.cancelledMembers}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar className="h-4 w-4 text-destructive" />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Monthly Revenue</CardDescription>
-              <CardTitle className="text-3xl">€{stats.revenue.toFixed(2)}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <span className="text-sm text-muted-foreground">Recurring</span>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Members Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Members</CardTitle>
-            <CardDescription>Overview of all registered members and their subscription status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Started</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {members.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                      No members found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  members.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                            <Mail className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="font-medium">
-                            {member.profile?.display_name || 'Unknown User'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(member.status)}</TableCell>
-                      <TableCell>
-                        {member.started_at 
-                          ? format(new Date(member.started_at), 'MMM d, yyyy')
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {member.expires_at 
-                          ? format(new Date(member.expires_at), 'MMM d, yyyy')
-                          : 'Never'
-                        }
-                      </TableCell>
-                      <TableCell className="text-right">
-                        €{member.price_amount?.toFixed(2) || '9.99'}/{member.currency || 'EUR'}
-                      </TableCell>
+            {/* Members Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>All Members</CardTitle>
+                <CardDescription>Overview of all registered members and their subscription status</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Member</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Started</TableHead>
+                      <TableHead>Expires</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {members.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                          No members found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      members.map((member) => (
+                        <TableRow key={member.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                                <Mail className="h-4 w-4 text-primary" />
+                              </div>
+                              <span className="font-medium">
+                                {member.profile?.display_name || 'Unknown User'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(member.status)}</TableCell>
+                          <TableCell>
+                            {member.started_at
+                              ? format(new Date(member.started_at), 'MMM d, yyyy')
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {member.expires_at
+                              ? format(new Date(member.expires_at), 'MMM d, yyyy')
+                              : 'Never'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            €{member.price_amount?.toFixed(2) || '9.99'}/{member.currency || 'EUR'}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="crm">
+            <CRMEnrollmentsTable />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
