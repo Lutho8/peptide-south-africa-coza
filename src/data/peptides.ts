@@ -73,6 +73,13 @@ export interface Peptide {
     doi?: string;
   }>;
   recommendedDuration?: string;
+  cycleProtocol?: {
+    minDays: number;
+    maxDays: number;
+    breakDays: number;
+    restartAdvice: string;
+    breakAdvice: string[];
+  };
 }
 
 export const peptides: Peptide[] = [
@@ -109,6 +116,18 @@ export const peptides: Peptide[] = [
     },
     frequency: '3x weekly',
     recommendedDuration: '8–12 weeks per cycle, with 4-week breaks between cycles',
+    cycleProtocol: {
+      minDays: 56,
+      maxDays: 84,
+      breakDays: 28,
+      restartAdvice: 'Resume after 4-week break. Re-check CBC and immune markers before starting next cycle.',
+      breakAdvice: [
+        'Continue balanced nutrition with emphasis on zinc, vitamin D, and selenium for immune support',
+        'Maintain regular sleep schedule (7–9 hrs) to preserve immune gains',
+        'Monitor any lingering injection site reactions before restarting',
+        'Consider bloodwork (CBC with differential) to assess immune baseline before next cycle',
+      ],
+    },
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Improved energy, reduced minor illness duration',
@@ -184,6 +203,18 @@ export const peptides: Peptide[] = [
     },
     frequency: 'Daily (10-day cycle, 2-3 cycles per year)',
     recommendedDuration: '10–20 days per cycle, 2–3 cycles per year with 4–6 month intervals',
+    cycleProtocol: {
+      minDays: 10,
+      maxDays: 20,
+      breakDays: 150,
+      restartAdvice: 'Run 2–3 short cycles per year. Wait 4–6 months between cycles for optimal telomere response.',
+      breakAdvice: [
+        'Supplement with astragalus root and resveratrol to support telomere maintenance during off-cycle',
+        'Prioritize antioxidant-rich diet (berries, dark leafy greens) to reduce oxidative telomere damage',
+        'Maintain consistent exercise — moderate cardio supports telomerase activity naturally',
+        'Track sleep quality; poor sleep accelerates telomere shortening',
+      ],
+    },
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Improved sleep onset, vivid dreams',
@@ -259,6 +290,18 @@ export const peptides: Peptide[] = [
     },
     frequency: 'Daily',
     recommendedDuration: '30–90 days continuous, with optional 2-week breaks between cycles',
+    cycleProtocol: {
+      minDays: 30,
+      maxDays: 90,
+      breakDays: 14,
+      restartAdvice: 'Resume after 2-week washout. Receptor sensitivity restores within 10–14 days.',
+      breakAdvice: [
+        'Continue cognitive training (puzzles, reading, learning) to consolidate neural gains',
+        'Use natural nootropic support: lion\'s mane mushroom, omega-3 fatty acids, and phosphatidylserine',
+        'Maintain consistent sleep hygiene — sleep is critical for BDNF-dependent memory consolidation',
+        'Practice meditation or mindfulness to sustain enhanced focus and neuroplasticity',
+      ],
+    },
     administration: 'Intranasal spray',
     expectedResults: {
       week1_2: 'Increased mental clarity, focus',
@@ -335,6 +378,18 @@ export const peptides: Peptide[] = [
     },
     frequency: 'Daily',
     recommendedDuration: '8–12 weeks per cycle; clinical trials used 4–12 week protocols',
+    cycleProtocol: {
+      minDays: 56,
+      maxDays: 84,
+      breakDays: 28,
+      restartAdvice: 'Resume after 4-week break. Reassess mitochondrial markers and exercise performance.',
+      breakAdvice: [
+        'Maintain mitochondrial health with CoQ10, PQQ, and NAD+ precursors (NMN or NR)',
+        'Continue regular exercise — the mitochondrial biogenesis benefits compound with training',
+        'Focus on cold exposure (cold showers, ice baths) to naturally stimulate mitochondrial activity',
+        'Track cardiovascular performance metrics to measure retained benefits',
+      ],
+    },
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Subtle energy improvements',
@@ -412,6 +467,19 @@ export const peptides: Peptide[] = [
     },
     frequency: 'Once weekly',
     recommendedDuration: '24–48 weeks with gradual dose titration (1mg → 4mg → 8mg → 12mg every 4 weeks)',
+    cycleProtocol: {
+      minDays: 168,
+      maxDays: 336,
+      breakDays: 56,
+      restartAdvice: 'Taper dose down before stopping (reverse titration over 4 weeks). Restart at lowest effective dose after break.',
+      breakAdvice: [
+        'Taper off gradually — do NOT stop abruptly to avoid GI rebound and appetite surge',
+        'Maintain caloric deficit with high-protein diet (1.6–2.2g/kg) to preserve lean mass',
+        'Increase structured exercise volume to compensate for reduced metabolic support',
+        'Monitor fasting glucose, HbA1c, and lipid panel during break to track metabolic maintenance',
+        'Consider GLP-1 receptor sensitivity restoration — avoid high-glycemic foods during washout',
+      ],
+    },
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Reduced appetite, possible GI adjustment',
@@ -489,6 +557,18 @@ export const peptides: Peptide[] = [
     },
     frequency: 'Daily',
     recommendedDuration: '4–8 weeks for acute injury; up to 12 weeks for chronic conditions',
+    cycleProtocol: {
+      minDays: 28,
+      maxDays: 84,
+      breakDays: 14,
+      restartAdvice: 'Resume only if injury persists or for new injury. Most acute injuries resolve within one cycle.',
+      breakAdvice: [
+        'Continue physical therapy and progressive loading of injured tissue',
+        'Support healing with collagen peptides (15g daily), vitamin C, and glycine supplementation',
+        'Maintain anti-inflammatory nutrition: omega-3s, turmeric/curcumin, tart cherry',
+        'Use the break to assess healing progress — imaging or functional tests before considering another cycle',
+      ],
+    },
     administration: 'Subcutaneous injection (near injury site if applicable)',
     expectedResults: {
       week1_2: 'Reduced pain and inflammation',
@@ -565,6 +645,18 @@ export const peptides: Peptide[] = [
     },
     frequency: '2x weekly',
     recommendedDuration: '4–8 weeks loading phase, then 2x/week maintenance for up to 12 weeks',
+    cycleProtocol: {
+      minDays: 28,
+      maxDays: 84,
+      breakDays: 21,
+      restartAdvice: 'Resume after 3-week break. Often paired with BPC-157 for synergistic repair.',
+      breakAdvice: [
+        'Continue gentle mobility work and progressive tissue loading during break',
+        'Supplement with collagen, vitamin C, and MSM to support connective tissue remodeling',
+        'Monitor inflammatory markers (CRP, ESR) to assess healing progress',
+        'Maintain adequate protein intake (1.6g/kg) to support ongoing tissue repair',
+      ],
+    },
     administration: 'Subcutaneous or intramuscular injection',
     expectedResults: {
       week1_2: 'General well-being improvement',
@@ -642,6 +734,19 @@ export const peptides: Peptide[] = [
     },
     frequency: 'Daily (before bed)',
     recommendedDuration: '8–16 weeks continuous; cycle 5 days on / 2 days off for extended use',
+    cycleProtocol: {
+      minDays: 56,
+      maxDays: 112,
+      breakDays: 28,
+      restartAdvice: 'Resume after 4-week break to restore GH receptor sensitivity. Check IGF-1 levels before restart.',
+      breakAdvice: [
+        'Maintain fasted morning cardio to preserve fat oxidation pathways',
+        'Prioritize 7–9 hours of deep sleep — natural GH secretion peaks during slow-wave sleep',
+        'Use natural GH-supporting habits: high-intensity training, sauna, cold exposure',
+        'Track body composition during break to assess how well results are maintained',
+        'Supplement with arginine, ornithine, and GABA before bed for natural GH support',
+      ],
+    },
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Improved sleep, recovery',
@@ -718,6 +823,18 @@ export const peptides: Peptide[] = [
     },
     frequency: 'Daily (before bed)',
     recommendedDuration: '8–16 weeks continuous; best combined with Ipamorelin on same schedule',
+    cycleProtocol: {
+      minDays: 56,
+      maxDays: 112,
+      breakDays: 28,
+      restartAdvice: 'Resume with Ipamorelin after 4-week break. Pair together for sustained GH pulse optimization.',
+      breakAdvice: [
+        'Match break schedule with Ipamorelin — both should cycle off simultaneously',
+        'Maintain fasted training and protein-rich pre-bed meals for natural GH support',
+        'Track IGF-1 levels before restarting to confirm receptor resensitization',
+        'Continue resistance training to maintain lean mass gains from the GH cycle',
+      ],
+    },
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Enhanced sleep quality, GH elevation',
@@ -795,6 +912,18 @@ export const peptides: Peptide[] = [
     },
     frequency: 'Daily',
     recommendedDuration: '8–12 weeks per cycle; topical use can be continuous',
+    cycleProtocol: {
+      minDays: 56,
+      maxDays: 84,
+      breakDays: 21,
+      restartAdvice: 'Resume after 3-week break. Topical GHK-Cu can continue during injectable break.',
+      breakAdvice: [
+        'Continue topical copper peptide products to maintain skin and hair benefits',
+        'Support collagen synthesis with vitamin C (1000mg daily) and marine collagen',
+        'Maintain wound-healing and anti-aging support with retinoids and niacinamide topically',
+        'Track skin elasticity and hair density metrics to assess retained benefits',
+      ],
+    },
     administration: 'Subcutaneous injection or topical',
     expectedResults: {
       week1_2: 'Improved skin quality',
@@ -869,6 +998,18 @@ export const peptides: Peptide[] = [
     },
     frequency: 'Weekly',
     recommendedDuration: '8–12 weeks per cycle with 4-week breaks; limited human protocol data',
+    cycleProtocol: {
+      minDays: 56,
+      maxDays: 84,
+      breakDays: 28,
+      restartAdvice: 'Resume after 4-week break. Monitor exercise performance and metabolic markers.',
+      breakAdvice: [
+        'Maintain HIIT and zone 2 cardio to preserve AMPK pathway activation',
+        'Support metabolic health with berberine or metformin (if prescribed) during break',
+        'Track fasting glucose and insulin sensitivity markers during off-cycle',
+        'Continue balanced nutrition with emphasis on complex carbs and fiber for metabolic support',
+      ],
+    },
     administration: 'Subcutaneous injection',
     expectedResults: {
       week1_2: 'Improved energy levels',
