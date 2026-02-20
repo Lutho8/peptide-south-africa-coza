@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { CycleHistoryTimeline } from '@/components/doses/CycleHistoryTimeline';
+import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -344,28 +346,16 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
             </div>
           </div>
 
-          {/* Completed Cycles */}
+          {/* Cycle Break Alerts */}
+          <CycleBreakAlert
+            cycles={cycles}
+            onStartBreak={(cycle) => handleToggleCycleStatus(cycle)}
+          />
+
+          {/* Cycle History Timeline */}
           <div>
-            <h3 className="font-medium text-foreground mb-3">Completed History</h3>
-            {cycles.filter(c => c.status === 'completed').length > 0 ? (
-              <div className="space-y-2">
-                {cycles.filter(c => c.status === 'completed').map((cycle) => (
-                  <GradientCard key={cycle.id} className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-sm font-medium text-foreground">{cycle.peptideName}</h4>
-                        <p className="text-xs text-muted-foreground">{cycle.startDate}</p>
-                      </div>
-                      <StatusBadge status="completed" />
-                    </div>
-                  </GradientCard>
-                ))}
-              </div>
-            ) : (
-              <GradientCard className="p-3 text-center">
-                <p className="text-sm text-muted-foreground">No completed cycles yet</p>
-              </GradientCard>
-            )}
+            <h3 className="font-medium text-foreground mb-3">Cycle Timeline</h3>
+            <CycleHistoryTimeline cycles={cycles} />
           </div>
         </div>
 
