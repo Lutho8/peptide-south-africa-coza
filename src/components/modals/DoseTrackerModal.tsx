@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
 import {
   Select,
   SelectContent,
@@ -18,8 +19,11 @@ import {
   saveDoseSchedule,
   saveDoseLog,
   deleteDoseSchedule,
+  getCycles,
+  updateCycle,
   DoseSchedule,
-  DoseLog 
+  DoseLog,
+  Cycle 
 } from '@/services/storage';
 import { 
   isNotificationEnabledForSchedule,
@@ -54,7 +58,7 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
   const [showAddSchedule, setShowAddSchedule] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [doses, setDoses] = useState<DoseSchedule[]>([]);
-  
+  const [cycles, setCycles] = useState<Cycle[]>([]);
   // New schedule form state
   const [newPeptideId, setNewPeptideId] = useState('');
   const [newDose, setNewDose] = useState('');
@@ -66,8 +70,19 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
   useEffect(() => {
     if (open) {
       setDoses(getDoseSchedules());
+      setCycles(getCycles());
     }
   }, [open]);
+
+  const handleStartBreak = (cycle: Cycle) => {
+    const updatedCycle = { ...cycle, status: 'break' as const };
+    updateCycle(updatedCycle);
+    setCycles(cycles.map(c => c.id === cycle.id ? updatedCycle : c));
+    toast({
+      title: "Break started",
+      description: `${cycle.peptideName} is now on break. Follow the protocol advice for best results.`,
+    });
+  };
 
   const handleMarkTaken = (dose: DoseSchedule) => {
     const updatedDoses = doses.map(d => 
@@ -233,6 +248,9 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
               );
             })}
           </div>
+
+          {/* Cycle Break Alerts */}
+          <CycleBreakAlert cycles={cycles} onStartBreak={handleStartBreak} />
 
           {/* Add Schedule Button */}
           <Button
