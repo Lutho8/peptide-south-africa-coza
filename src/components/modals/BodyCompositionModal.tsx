@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import {
   BodyComposition 
 } from '@/services/storage';
 import { BodyCompositionCharts } from '@/components/charts/BodyCompositionCharts';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, TrendingDown, TrendingUp, Minus, Activity, Droplets, Flame, Heart, Save, BarChart3, Grid3X3, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -64,6 +66,7 @@ function getTrend(current: number, previous: number): React.ReactNode {
 }
 
 export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModalProps) {
+  const { user } = useAuth();
   const [showAddEntry, setShowAddEntry] = useState(false);
   const [viewMode, setViewMode] = useState<'metrics' | 'charts'>('metrics');
   const [history, setHistory] = useState<BodyComposition[]>([]);
@@ -118,7 +121,7 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
     validateField(field, numValue);
   };
 
-  const handleSaveEntry = () => {
+  const handleSaveEntry = async () => {
     // Build validation object
     const toValidate: Record<string, number | undefined> = {
       weight: newEntry.weight,
@@ -167,6 +170,33 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
 
     saveBodyCompositionEntry(entry);
     setHistory([entry, ...history]);
+
+    // Save to cloud if logged in
+    if (user) {
+      try {
+        await supabase.from('body_composition').upsert({
+          user_id: user.id,
+          date: entry.date,
+          weight: entry.weight,
+          body_fat: entry.bodyFat,
+          fat_free_weight: entry.fatFreeWeight,
+          muscle_mass: entry.muscleMass,
+          skeletal_muscle: entry.skeletalMuscle,
+          body_water: entry.bodyWater,
+          subcutaneous_fat: entry.subcutaneousFat,
+          bone_mass: entry.boneMass,
+          protein: entry.protein,
+          bmi: entry.bmi,
+          visceral_fat: entry.visceralFat,
+          metabolic_age: entry.metabolicAge,
+          bmr: entry.bmr,
+          source: 'manual',
+        }, { onConflict: 'user_id,date' });
+      } catch (err) {
+        console.error('Error saving to cloud:', err);
+      }
+    }
+
     setNewEntry({});
     setValidationErrors({});
     setShowAddEntry(false);
@@ -181,9 +211,10 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-lg bg-background border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Body Composition</DialogTitle>
-          </DialogHeader>
+        <DialogHeader>
+          <DialogTitle className="text-foreground">Body Composition</DialogTitle>
+          <DialogDescription className="sr-only">Track your body composition metrics</DialogDescription>
+        </DialogHeader>
           <p className="text-muted-foreground text-center py-8">No data yet. Add your first entry!</p>
         </DialogContent>
       </Dialog>
