@@ -1,5 +1,5 @@
 import { GradientCard } from '@/components/ui/GradientCard';
-import { bodyCompositionHistory } from '@/data/userData';
+import { getBodyCompositionHistory } from '@/services/storage';
 import { TrendingDown, Target, Activity, Droplets } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -8,7 +8,22 @@ interface BodyCompositionCardProps {
 }
 
 export function BodyCompositionCard({ onViewDetails }: BodyCompositionCardProps) {
-  const latest = bodyCompositionHistory[0];
+  const history = getBodyCompositionHistory();
+  const latest = history[0];
+  if (!latest) {
+    return (
+      <GradientCard variant="primary" hover onClick={onViewDetails} className="relative overflow-hidden">
+        <div className="flex items-center gap-3 py-4">
+          <Activity size={20} className="text-primary" />
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">Body Composition</h3>
+            <p className="text-sm text-muted-foreground">Tap to add your first entry</p>
+          </div>
+        </div>
+      </GradientCard>
+    );
+  }
+
   const targetBodyFat = 15;
   const progressToGoal = ((19 - latest.bodyFat) / (19 - targetBodyFat)) * 100;
 
