@@ -236,6 +236,54 @@ export type Database = {
         }
         Relationships: []
       }
+      food_logs: {
+        Row: {
+          calories: number
+          carbs_g: number
+          created_at: string
+          date: string
+          fat_g: number
+          fiber_g: number
+          id: string
+          meal_name: string
+          meal_type: string
+          notes: string | null
+          protein_g: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          date: string
+          fat_g?: number
+          fiber_g?: number
+          id?: string
+          meal_name: string
+          meal_type?: string
+          notes?: string | null
+          protein_g?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          date?: string
+          fat_g?: number
+          fiber_g?: number
+          id?: string
+          meal_name?: string
+          meal_type?: string
+          notes?: string | null
+          protein_g?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -257,6 +305,39 @@ export type Database = {
           email_reminders_enabled?: boolean
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      progress_photos: {
+        Row: {
+          category: string
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          photo_url: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          photo_url: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          photo_url?: string
+          user_id?: string
+          weight?: number | null
         }
         Relationships: []
       }
@@ -384,6 +465,36 @@ export type Database = {
           frequency?: string
           id?: string
           peptide_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      water_intake: {
+        Row: {
+          amount_ml: number
+          created_at: string
+          date: string
+          goal_ml: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_ml?: number
+          created_at?: string
+          date: string
+          goal_ml?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_ml?: number
+          created_at?: string
+          date?: string
+          goal_ml?: number
+          id?: string
           updated_at?: string
           user_id?: string
         }

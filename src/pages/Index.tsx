@@ -27,6 +27,7 @@ const MyStackScreen = lazy(() => import('@/screens/MyStackScreen').then(m => ({ 
 const DailyLogScreen = lazy(() => import('@/screens/DailyLogScreen').then(m => ({ default: m.DailyLogScreen })));
 const DosageScreen = lazy(() => import('@/screens/DosageScreen').then(m => ({ default: m.DosageScreen })));
 const ResearchLibraryScreen = lazy(() => import('@/screens/ResearchLibraryScreen').then(m => ({ default: m.ResearchLibraryScreen })));
+const TransformationScreen = lazy(() => import('@/screens/TransformationScreen').then(m => ({ default: m.TransformationScreen })));
 const SettingsScreen = lazy(() => import('@/screens/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 
@@ -43,7 +44,7 @@ const ScreenLoaderHome = () => <HomeSkeleton />;
 const ScreenLoaderList = () => <ListSkeleton />;
 const ScreenLoaderCards = () => <CardSkeleton />;
 
-type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'research';
+type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'transformation';
 
 const Index = () => {
   useStorageInit();
@@ -112,7 +113,7 @@ const Index = () => {
       stack: <ScreenLoaderList />,
       'daily-log': <ScreenLoaderList />,
       dosage: <ScreenLoaderCards />,
-      research: <ScreenLoaderList />,
+      transformation: <ScreenLoaderCards />,
     };
 
     const screenNames: Record<TabId, string> = {
@@ -120,7 +121,7 @@ const Index = () => {
       stack: 'My Stack',
       'daily-log': 'Daily Log',
       dosage: 'Dosage Calculator',
-      research: 'Research Library',
+      transformation: 'Transformation',
     };
 
     return (
@@ -141,7 +142,7 @@ const Index = () => {
           {activeTab === 'stack' && <MyStackScreen />}
           {activeTab === 'daily-log' && <DailyLogScreen />}
           {activeTab === 'dosage' && <DosageScreen />}
-          {activeTab === 'research' && <ResearchLibraryScreen />}
+          {activeTab === 'transformation' && <TransformationScreen />}
         </Suspense>
       </ErrorBoundary>
     );

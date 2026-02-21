@@ -1,8 +1,8 @@
-import { Home, Layers, CalendarDays, Calculator, BookOpen } from 'lucide-react';
+import { Home, Layers, CalendarDays, Calculator, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'research';
+type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'transformation';
 
 interface BottomNavProps {
   activeTab: TabId;
@@ -15,7 +15,7 @@ const tabs = [
   { id: 'stack' as const, icon: Layers, label: 'My Stack' },
   { id: 'daily-log' as const, icon: CalendarDays, label: 'Daily Log' },
   { id: 'dosage' as const, icon: Calculator, label: 'Dosage' },
-  { id: 'research' as const, icon: BookOpen, label: 'Research' },
+  { id: 'transformation' as const, icon: Sparkles, label: 'Transform' },
 ];
 
 export function BottomNav({ activeTab, onTabChange, pendingReminders = 0 }: BottomNavProps) {
