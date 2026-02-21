@@ -10,12 +10,12 @@ import { LandingFooter } from './LandingFooter';
 import { VendorShowcase } from './VendorShowcase';
 import { FAQSection } from './FAQSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMembership } from '@/hooks/useMembership';
+
 import { PeptideCategory } from '@/data/peptides';
 
 // Lazy load modals - only loaded when opened
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
-const MembersPaywall = lazy(() => import('./MembersPaywall').then(m => ({ default: m.MembersPaywall })));
+
 const PeptideQuiz = lazy(() => import('./PeptideQuiz').then(m => ({ default: m.PeptideQuiz })));
 const PeptideCompare = lazy(() => import('./PeptideCompare').then(m => ({ default: m.PeptideCompare })));
 const PeptideSearch = lazy(() => import('./PeptideSearch').then(m => ({ default: m.PeptideSearch })));
@@ -24,29 +24,15 @@ const ReconstitutionCalculator = lazy(() => import('./ReconstitutionCalculator')
 
 export function LandingPage() {
   const { user } = useAuth();
-  const { hasMembership } = useMembership();
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [membersPaywallOpen, setMembersPaywallOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [stackBuilderOpen, setStackBuilderOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
 
-  // Check URL for membership callback
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('membership') === 'success') {
-      setMembersPaywallOpen(true);
-    }
-  }, []);
-
   const handleSignInClick = () => {
     setAuthModalOpen(true);
-  };
-
-  const handleMembersClick = () => {
-    setMembersPaywallOpen(true);
   };
 
   const handleCategoryClick = (category: PeptideCategory) => {
@@ -61,14 +47,14 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader 
-        onSignInClick={handleMembersClick} 
+        onSignInClick={handleSignInClick} 
         onSearch={() => setSearchOpen(true)}
       />
       
       <main>
         <HeroSection onCategoryClick={handleCategoryClick} />
         <FAQSection />
-        <VendorShowcase onSignInClick={handleMembersClick} />
+        <VendorShowcase onSignInClick={handleSignInClick} />
         <ResearchTools 
           onCompareClick={() => setCompareOpen(true)}
           onQuizClick={() => setQuizOpen(true)}
@@ -79,25 +65,13 @@ export function LandingPage() {
         <FeaturedPeptides />
         <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
         <BlogSection />
-        <CTASection onSignInClick={handleMembersClick} />
+        <CTASection onSignInClick={handleSignInClick} />
       </main>
 
       <LandingFooter />
 
       <Suspense fallback={null}>
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
-        {membersPaywallOpen && (
-          <MembersPaywall 
-            open={membersPaywallOpen} 
-            onOpenChange={setMembersPaywallOpen}
-            onSignInClick={() => {
-              setMembersPaywallOpen(false);
-              setAuthModalOpen(true);
-            }}
-            isAuthenticated={!!user}
-            onAccessDashboard={handleAccessDashboard}
-          />
-        )}
         {quizOpen && <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />}
         {compareOpen && <PeptideCompare open={compareOpen} onClose={() => setCompareOpen(false)} />}
         {searchOpen && <PeptideSearch open={searchOpen} onClose={() => setSearchOpen(false)} />}

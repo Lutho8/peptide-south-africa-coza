@@ -11,7 +11,7 @@ import { useScreenTransition } from '@/hooks/useScreenTransition';
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { Settings, User, LogOut, Loader2, ArrowLeft, Crown, Lock } from 'lucide-react';
+import { Settings, User, LogOut, Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -49,7 +49,7 @@ const Index = () => {
   useStorageInit();
   const { addDose } = useDailyDoses();
   const { user, signOut, isLoading } = useAuth();
-  const { hasAccess, isLoading: accessLoading } = useAccessControl();
+  const { isLoading: accessLoading } = useAccessControl();
   const { getDirection, getTransitionVariants } = useScreenTransition();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
@@ -187,56 +187,6 @@ const Index = () => {
           </motion.div>
         </div>
       </Suspense>
-    );
-  }
-
-  // Paywall for users without membership
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full text-center space-y-6"
-        >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <Lock size={28} className="text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Membership Required</h1>
-            <p className="text-muted-foreground mt-2">
-              A €9.99/month Pro Membership is required to access the Peptide Pro dashboard.
-            </p>
-          </div>
-          <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Crown size={20} className="text-primary" />
-              <span className="font-semibold text-foreground">Pro Membership</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">€9.99<span className="text-sm font-normal text-muted-foreground">/month</span></p>
-          </div>
-          <div className="space-y-3">
-            <Button
-              className="w-full bg-[#0070ba] hover:bg-[#003087] text-white touch-target"
-              onClick={() => {
-                const returnUrl = encodeURIComponent(window.location.origin + '/?membership=success');
-                const cancelUrl = encodeURIComponent(window.location.origin + '/?membership=cancelled');
-                window.open(`https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-PEPTIDEPRO-MONTHLY-EUR&return_url=${returnUrl}&cancel_url=${cancelUrl}`, '_blank');
-              }}
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.77.77 0 0 1 .761-.629h6.317c2.102 0 3.585.453 4.413 1.348.796.858 1.058 2.042.781 3.52l-.026.15-.13.626-.038.171c-.537 2.664-2.212 4.004-4.976 4.004H9.73l-.969 5.434a.77.77 0 0 1-.761.629H7.076Z"/>
-                <path d="M19.956 8.665c-.497 2.922-2.401 4.405-5.696 4.405h-1.445c-.35 0-.648.253-.703.597l-.792 5.027-.224 1.421a.37.37 0 0 0 .366.427h2.57a.641.641 0 0 0 .632-.538l.026-.135.501-3.17.032-.175a.641.641 0 0 1 .633-.538h.399c2.581 0 4.6-1.048 5.191-4.079.247-1.266.119-2.323-.535-3.066a2.563 2.563 0 0 0-.955-.676Z"/>
-              </svg>
-              Subscribe with PayPal
-            </Button>
-            <Button variant="ghost" className="w-full touch-target" onClick={() => signOut()}>
-              <LogOut size={16} className="mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </motion.div>
-      </div>
     );
   }
 
