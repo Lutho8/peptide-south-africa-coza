@@ -6,12 +6,12 @@ import { NotificationSettings } from '@/components/settings/NotificationSettings
 import { NotificationSoundSettings } from '@/components/settings/NotificationSoundSettings';
 
 import { BluetoothScaleConnection } from '@/components/settings/BluetoothScaleConnection';
-import { MembershipManagement } from '@/components/settings/MembershipManagement';
+
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCloudSync } from '@/hooks/useCloudSync';
-import { useMembership } from '@/hooks/useMembership';
+
 import { 
   exportAsJSON, 
   exportBodyCompositionCSV, 
@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   User, Bell, Download, Upload, Database, FileJson, FileSpreadsheet,
   Shield, Info, ExternalLink, ChevronRight, Settings2, Trash2,
-  Cloud, CloudOff, RefreshCw, LogOut, LogIn, Loader2, Crown
+  Cloud, CloudOff, RefreshCw, LogOut, LogIn, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,14 +36,14 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { t } = useTranslation();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [membershipModalOpen, setMembershipModalOpen] = useState(false);
+  
   const [profile, setProfile] = useState(getUserProfile());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
   const { user, signOut, isLoading: authLoading } = useAuth();
   const { isSyncing, lastSyncAt, syncAll, isAuthenticated } = useCloudSync();
-  const { hasMembership, membership } = useMembership();
+  
 
   const handleExportJSON = () => {
     try {
@@ -148,37 +148,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           <p className="text-sm text-muted-foreground">{t('settings.subtitle')}</p>
         </div>
       </div>
-
-      {/* Membership Section */}
-      {user && (
-        <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Membership</h2>
-          <GradientCard 
-            className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => setMembershipModalOpen(true)}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hasMembership ? 'bg-primary/20' : 'bg-muted'}`}>
-                  <Crown size={20} className={hasMembership ? 'text-primary' : 'text-muted-foreground'} />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">
-                    {hasMembership ? 'Pro Membership Active' : 'Free Plan'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {hasMembership 
-                      ? `Expires ${membership?.expires_at ? new Date(membership.expires_at).toLocaleDateString() : 'N/A'}`
-                      : 'Upgrade to unlock all features'}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight size={20} className="text-muted-foreground" />
-            </div>
-          </GradientCard>
-        </div>
-      )}
-
 
 
 
@@ -431,10 +400,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       <AuthModal 
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
-      />
-      <MembershipManagement
-        open={membershipModalOpen}
-        onOpenChange={setMembershipModalOpen}
       />
     </div>
   );

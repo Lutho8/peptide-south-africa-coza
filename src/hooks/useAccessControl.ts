@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMembership } from '@/hooks/useMembership';
 
 export function useAccessControl() {
   const { user } = useAuth();
-  const { hasMembership, isLoading: membershipLoading } = useMembership();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -36,8 +34,8 @@ export function useAccessControl() {
     checkAdmin();
   }, [user]);
 
-  const hasAccess = isAdmin || hasMembership;
-  const loading = isLoading || membershipLoading;
+  // All authenticated users have access - no paywall
+  const hasAccess = !!user;
 
-  return { hasAccess, isAdmin, hasMembership, isLoading: loading };
+  return { hasAccess, isAdmin, isLoading };
 }
