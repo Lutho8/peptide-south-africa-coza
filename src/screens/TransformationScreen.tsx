@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Droplets, UtensilsCrossed, Camera, Activity } from 'lucide-react';
+import { Sparkles, Droplets, UtensilsCrossed, Camera, CalendarDays } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WaterTracker } from '@/components/tracking/WaterTracker';
 import { FoodLogger } from '@/components/tracking/FoodLogger';
 import { ProgressPhotos } from '@/components/tracking/ProgressPhotos';
-import { GradientCard } from '@/components/ui/GradientCard';
+import { ActivityCalendar } from '@/components/tracking/ActivityCalendar';
 
 export function TransformationScreen() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('calendar');
 
   return (
     <div className="pb-24 space-y-6">
@@ -29,7 +29,11 @@ export function TransformationScreen() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="calendar" className="text-xs gap-1">
+            <CalendarDays className="w-3.5 h-3.5" />
+            Calendar
+          </TabsTrigger>
           <TabsTrigger value="water" className="text-xs gap-1">
             <Droplets className="w-3.5 h-3.5" />
             Water
@@ -43,6 +47,10 @@ export function TransformationScreen() {
             Photos
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="calendar" className="mt-4">
+          <ActivityCalendar />
+        </TabsContent>
 
         <TabsContent value="water" className="mt-4">
           <WaterTracker />
