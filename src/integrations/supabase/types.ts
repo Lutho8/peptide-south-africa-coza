@@ -284,6 +284,54 @@ export type Database = {
         }
         Relationships: []
       }
+      measurements: {
+        Row: {
+          chest_cm: number | null
+          created_at: string
+          date: string
+          hips_cm: number | null
+          id: string
+          left_arm_cm: number | null
+          left_thigh_cm: number | null
+          notes: string | null
+          right_arm_cm: number | null
+          right_thigh_cm: number | null
+          updated_at: string
+          user_id: string
+          waist_cm: number | null
+        }
+        Insert: {
+          chest_cm?: number | null
+          created_at?: string
+          date: string
+          hips_cm?: number | null
+          id?: string
+          left_arm_cm?: number | null
+          left_thigh_cm?: number | null
+          notes?: string | null
+          right_arm_cm?: number | null
+          right_thigh_cm?: number | null
+          updated_at?: string
+          user_id: string
+          waist_cm?: number | null
+        }
+        Update: {
+          chest_cm?: number | null
+          created_at?: string
+          date?: string
+          hips_cm?: number | null
+          id?: string
+          left_arm_cm?: number | null
+          left_thigh_cm?: number | null
+          notes?: string | null
+          right_arm_cm?: number | null
+          right_thigh_cm?: number | null
+          updated_at?: string
+          user_id?: string
+          waist_cm?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
