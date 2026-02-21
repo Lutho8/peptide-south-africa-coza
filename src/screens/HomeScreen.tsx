@@ -27,6 +27,7 @@ interface HomeScreenProps {
   onNavigatePeptides: () => void;
   onNavigateStack: () => void;
   onOpenSettings: () => void;
+  onNavigateResearch?: () => void;
 }
 
 const containerVariants = {
@@ -61,7 +62,8 @@ export function HomeScreen({
   onOpenInventory,
   onNavigatePeptides,
   onNavigateStack,
-  onOpenSettings
+  onOpenSettings,
+  onNavigateResearch
 }: HomeScreenProps) {
   const { reminders, refreshReminders } = useDoseReminders();
   const { refreshDoses } = useDailyDoses();
@@ -168,6 +170,7 @@ export function HomeScreen({
           onPeptides={onNavigatePeptides}
           onBloodwork={onOpenBloodwork}
           onInventory={onOpenInventory}
+          onResearch={onNavigateResearch}
         />
       </motion.div>
 

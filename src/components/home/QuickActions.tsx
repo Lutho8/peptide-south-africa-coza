@@ -1,4 +1,4 @@
-import { Syringe, BarChart3, Calendar, Database, Activity, Package } from 'lucide-react';
+import { Syringe, BarChart3, Calendar, Database, Activity, Package, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface QuickActionsProps {
@@ -8,6 +8,7 @@ interface QuickActionsProps {
   onPeptides: () => void;
   onBloodwork: () => void;
   onInventory: () => void;
+  onResearch?: () => void;
 }
 
 const actions = [
@@ -53,6 +54,13 @@ const actions = [
     gradient: 'from-amber-600 to-orange-700',
     onClick: 'onInventory'
   },
+  { 
+    id: 'research', 
+    icon: BookOpen, 
+    label: 'Research',
+    gradient: 'from-indigo-600 to-blue-700',
+    onClick: 'onResearch'
+  },
 ];
 
 export function QuickActions({ 
@@ -61,7 +69,8 @@ export function QuickActions({
   onCycles, 
   onPeptides,
   onBloodwork,
-  onInventory 
+  onInventory,
+  onResearch
 }: QuickActionsProps) {
   const handlers: Record<string, () => void> = {
     onDoseTracker,
@@ -69,7 +78,8 @@ export function QuickActions({
     onCycles,
     onPeptides,
     onBloodwork,
-    onInventory
+    onInventory,
+    onResearch: onResearch || (() => {}),
   };
 
   return (

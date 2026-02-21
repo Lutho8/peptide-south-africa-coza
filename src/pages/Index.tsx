@@ -55,6 +55,7 @@ const Index = () => {
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [showSettings, setShowSettings] = useState(false);
+  const [showResearch, setShowResearch] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [showLandingPage, setShowLandingPage] = useState(false);
   const [bodyCompositionOpen, setBodyCompositionOpen] = useState(false);
@@ -93,7 +94,7 @@ const Index = () => {
     setActiveTab('home');
   };
 
-  const screenKey = showSettings ? 'settings' : activeTab;
+  const screenKey = showSettings ? 'settings' : showResearch ? 'research' : activeTab;
   const direction = getDirection(screenKey);
   const variants = getTransitionVariants(direction);
 
@@ -103,6 +104,27 @@ const Index = () => {
         <ErrorBoundary fallbackTitle="Settings failed to load">
           <Suspense fallback={<ScreenLoaderList />}>
             <SettingsScreen onBack={() => setShowSettings(false)} />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    if (showResearch) {
+      return (
+        <ErrorBoundary fallbackTitle="Research Library failed to load">
+          <Suspense fallback={<ScreenLoaderList />}>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowResearch(false)}
+                className="mb-4 gap-1 text-muted-foreground"
+              >
+                <ArrowLeft size={16} />
+                Back to Dashboard
+              </Button>
+              <ResearchLibraryScreen />
+            </div>
           </Suspense>
         </ErrorBoundary>
       );
@@ -137,6 +159,7 @@ const Index = () => {
               onNavigatePeptides={() => setActiveTab('daily-log')}
               onNavigateStack={() => setActiveTab('stack')}
               onOpenSettings={() => setShowSettings(true)}
+              onNavigateResearch={() => setShowResearch(true)}
             />
           )}
           {activeTab === 'stack' && <MyStackScreen />}
@@ -240,8 +263,8 @@ const Index = () => {
         </AnimatePresence>
       </main>
 
-      {!showSettings && (
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {!showSettings && !showResearch && (
+        <BottomNav activeTab={activeTab} onTabChange={(tab) => { setShowResearch(false); setActiveTab(tab); }} />
       )}
 
       <InstallBanner />
