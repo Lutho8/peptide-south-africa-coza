@@ -35,7 +35,7 @@ import {
 import { peptides } from '@/data/peptides';
 import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
-import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2, AlertTriangle, Timer, Play } from 'lucide-react';
+import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2, AlertTriangle, Timer, Play, Pause, Square } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -438,12 +438,43 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
                               )}
                             </div>
                             {activeCycle ? (
-                              <div className="relative">
-                                <Progress
-                                  value={progress}
-                                  className={cn("h-2", isOverdue && "[&>div]:bg-destructive", isNearEnd && !isOverdue && "[&>div]:bg-amber-400")}
-                                />
-                              </div>
+                              <>
+                                <div className="relative">
+                                  <Progress
+                                    value={progress}
+                                    className={cn("h-2", isOverdue && "[&>div]:bg-destructive", isNearEnd && !isOverdue && "[&>div]:bg-amber-400")}
+                                  />
+                                </div>
+                                {(isNearEnd || isOverdue) && (
+                                  <div className="flex items-center justify-between">
+                                    <p className={cn("text-[10px] flex items-center gap-1", isOverdue ? "text-destructive" : "text-amber-400")}>
+                                      <AlertTriangle size={10} />
+                                      {isOverdue ? 'Cycle complete — time for a break' : 'Approaching end of recommended cycle'}
+                                    </p>
+                                    <div className="flex gap-1.5">
+                                      <button
+                                        onClick={() => handleStartBreak(activeCycle)}
+                                        className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md bg-amber-400/15 text-amber-400 hover:bg-amber-400/25 transition-colors"
+                                      >
+                                        <Pause size={10} />
+                                        Break
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const updated = { ...activeCycle, status: 'completed' as const };
+                                          updateCycle(updated);
+                                          setCycles(cycles.map(c => c.id === activeCycle.id ? updated : c));
+                                          toast({ title: "Cycle ended", description: `${activeCycle.peptideName} cycle completed.` });
+                                        }}
+                                        className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md bg-destructive/15 text-destructive hover:bg-destructive/25 transition-colors"
+                                      >
+                                        <Square size={10} />
+                                        End
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
                             ) : (
                               <button
                                 onClick={() => handleStartCycle(dose)}
@@ -452,12 +483,6 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
                                 <Play size={12} />
                                 Start cycle ({cycleDuration} days)
                               </button>
-                            )}
-                            {isNearEnd && activeCycle && !isOverdue && (
-                              <p className="text-[10px] text-amber-400 flex items-center gap-1">
-                                <AlertTriangle size={10} />
-                                Approaching end of recommended cycle
-                              </p>
                             )}
                           </div>
                         );
