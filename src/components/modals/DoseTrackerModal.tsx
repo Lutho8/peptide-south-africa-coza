@@ -32,8 +32,9 @@ import {
   scheduleNotification
 } from '@/services/notifications';
 import { peptides } from '@/data/peptides';
+import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
-import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2 } from 'lucide-react';
+import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2, AlertTriangle, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -336,6 +337,8 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
               ) : (
                 doses.map((dose) => {
                   const notificationEnabled = isNotificationEnabledForSchedule(dose.id);
+                  const cycleSuggestion = getCycleSuggestion(dose.peptideId);
+                  const protocol = cycleSuggestion?.protocols?.[0]; // default to beginner
                   
                   return (
                     <GradientCard key={dose.id} className="p-3">
@@ -372,6 +375,20 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
                           <StatusBadge status={dose.status} />
                         </div>
                       </div>
+
+                      {/* Cycle Protocol Info */}
+                      {protocol && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/50 mb-2">
+                          <Timer size={13} className="text-amber-400 shrink-0" />
+                          <p className="text-[11px] text-muted-foreground">
+                            <span className="font-medium text-foreground">Cycle:</span>{' '}
+                            {protocol.cycleDuration} days on, {protocol.breakDuration > 0 ? `${protocol.breakDuration} days off` : 'continuous'}
+                            {cycleSuggestion?.warnings?.[0] && (
+                              <span className="ml-1 text-amber-400">• {cycleSuggestion.warnings[0]}</span>
+                            )}
+                          </p>
+                        </div>
+                      )}
 
                       {dose.status === 'pending' && (
                         <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">

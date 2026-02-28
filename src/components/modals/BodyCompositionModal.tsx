@@ -80,10 +80,44 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
   const { toast } = useToast();
 
   useEffect(() => {
-    if (open) {
+    if (open && user) {
+      // Fetch from cloud first, fallback to localStorage
+      const fetchFromCloud = async () => {
+        const { data } = await supabase
+          .from('body_composition')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+          .limit(50);
+        
+        if (data && data.length > 0) {
+          const mapped: BodyComposition[] = data.map(d => ({
+            date: d.date,
+            weight: Number(d.weight),
+            bmi: Number(d.bmi || 0),
+            bodyFat: Number(d.body_fat || 0),
+            fatFreeWeight: Number(d.fat_free_weight || 0),
+            muscleMass: Number(d.muscle_mass || 0),
+            skeletalMuscle: Number(d.skeletal_muscle || 0),
+            bodyWater: Number(d.body_water || 0),
+            subcutaneousFat: Number(d.subcutaneous_fat || 0),
+            visceralFat: Number(d.visceral_fat || 0),
+            boneMass: Number(d.bone_mass || 0),
+            protein: Number(d.protein || 0),
+            bmr: Number(d.bmr || 0),
+            metabolicAge: Number(d.metabolic_age || 0),
+            source: (d.source as 'manual' | 'renpho') || 'manual',
+          }));
+          setHistory(mapped);
+        } else {
+          setHistory(getBodyCompositionHistory());
+        }
+      };
+      fetchFromCloud();
+    } else if (open) {
       setHistory(getBodyCompositionHistory());
     }
-  }, [open]);
+  }, [open, user]);
 
   const latest = history[0];
   const previous = history[1];
