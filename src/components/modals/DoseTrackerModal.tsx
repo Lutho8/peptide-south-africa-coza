@@ -18,6 +18,7 @@ import {
   getDoseSchedules, 
   saveDoseSchedule,
   saveDoseLog,
+  saveCycle,
   deleteDoseSchedule,
   getCycles,
   updateCycle,
@@ -34,7 +35,7 @@ import {
 import { peptides } from '@/data/peptides';
 import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
-import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2, AlertTriangle, Timer } from 'lucide-react';
+import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2, AlertTriangle, Timer, Play } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -83,6 +84,28 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
     toast({
       title: "Break started",
       description: `${cycle.peptideName} is now on break. Follow the protocol advice for best results.`,
+    });
+  };
+
+  const handleStartCycle = (dose: DoseSchedule) => {
+    const cycleSuggestion = getCycleSuggestion(dose.peptideId);
+    const protocol = cycleSuggestion?.protocols?.[0];
+    const newCycle: Cycle = {
+      id: `cycle-${Date.now()}`,
+      peptideId: dose.peptideId,
+      peptideName: dose.peptideName,
+      dose: dose.dose,
+      frequency: dose.frequency,
+      startDate: new Date().toISOString().split('T')[0],
+      plannedDuration: protocol?.cycleDuration || 60,
+      breakDuration: protocol?.breakDuration || 14,
+      status: 'active',
+    };
+    saveCycle(newCycle);
+    setCycles([...cycles, newCycle]);
+    toast({
+      title: "Cycle started",
+      description: `${dose.peptideName} cycle started — ${newCycle.plannedDuration} days.`,
     });
   };
 
@@ -422,7 +445,13 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
                                 />
                               </div>
                             ) : (
-                              <p className="text-[10px] text-muted-foreground">No active cycle — start one in Cycle Management</p>
+                              <button
+                                onClick={() => handleStartCycle(dose)}
+                                className="flex items-center gap-1.5 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
+                              >
+                                <Play size={12} />
+                                Start cycle ({cycleDuration} days)
+                              </button>
                             )}
                             {isNearEnd && activeCycle && !isOverdue && (
                               <p className="text-[10px] text-amber-400 flex items-center gap-1">
