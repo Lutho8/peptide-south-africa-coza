@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
-import { ChevronLeft, ChevronRight, Syringe, Droplets, UtensilsCrossed, Camera, Scale } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Syringe, Droplets, UtensilsCrossed, Camera, Scale, Ruler } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ interface DayActivity {
   meals: number;
   photos: number;
   weight: boolean;
+  measurements: boolean;
 }
 
 type ActivityMap = Record<string, DayActivity>;
@@ -24,6 +25,7 @@ const ACTIVITY_ICONS = [
   { key: 'meals' as const, icon: UtensilsCrossed, label: 'Meals', color: 'bg-amber-500' },
   { key: 'photos' as const, icon: Camera, label: 'Photos', color: 'bg-pink-500' },
   { key: 'weight' as const, icon: Scale, label: 'Weight', color: 'bg-emerald-500' },
+  { key: 'measurements' as const, icon: Ruler, label: 'Measurements', color: 'bg-teal-500' },
 ];
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -53,18 +55,19 @@ export function ActivityCalendar() {
     const from = format(monthStart, 'yyyy-MM-dd');
     const to = format(monthEnd, 'yyyy-MM-dd');
 
-    const [dosesRes, waterRes, foodRes, photosRes, weightRes] = await Promise.all([
+    const [dosesRes, waterRes, foodRes, photosRes, weightRes, measureRes] = await Promise.all([
       supabase.from('daily_doses').select('date').eq('user_id', user.id).gte('date', from).lte('date', to),
       supabase.from('water_intake').select('date, amount_ml').eq('user_id', user.id).gte('date', from).lte('date', to),
       supabase.from('food_logs').select('date').eq('user_id', user.id).gte('date', from).lte('date', to),
       supabase.from('progress_photos').select('date').eq('user_id', user.id).gte('date', from).lte('date', to),
       supabase.from('body_composition').select('date').eq('user_id', user.id).gte('date', from).lte('date', to),
+      supabase.from('measurements').select('date').eq('user_id', user.id).gte('date', from).lte('date', to),
     ]);
 
     const map: ActivityMap = {};
 
     const ensureDay = (date: string) => {
-      if (!map[date]) map[date] = { doses: 0, water: false, meals: 0, photos: 0, weight: false };
+      if (!map[date]) map[date] = { doses: 0, water: false, meals: 0, photos: 0, weight: false, measurements: false };
     };
 
     dosesRes.data?.forEach(d => { ensureDay(d.date); map[d.date].doses++; });
@@ -72,6 +75,7 @@ export function ActivityCalendar() {
     foodRes.data?.forEach(d => { ensureDay(d.date); map[d.date].meals++; });
     photosRes.data?.forEach(d => { ensureDay(d.date); map[d.date].photos++; });
     weightRes.data?.forEach(d => { ensureDay(d.date); map[d.date].weight = true; });
+    measureRes.data?.forEach(d => { ensureDay(d.date); map[d.date].measurements = true; });
 
     setActivities(map);
     setLoading(false);
@@ -87,6 +91,7 @@ export function ActivityCalendar() {
     if (act.meals > 0) dots.push('bg-amber-500');
     if (act.photos > 0) dots.push('bg-pink-500');
     if (act.weight) dots.push('bg-emerald-500');
+    if (act.measurements) dots.push('bg-teal-500');
     return dots;
   };
 
@@ -225,6 +230,17 @@ export function ActivityCalendar() {
                   <div>
                     <p className="font-medium text-foreground">✓</p>
                     <p className="text-[10px] text-muted-foreground">Weigh-in</p>
+                  </div>
+                </div>
+              )}
+              {selectedActivity.measurements && (
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center">
+                    <Ruler size={16} className="text-teal-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">✓</p>
+                    <p className="text-[10px] text-muted-foreground">Measured</p>
                   </div>
                 </div>
               )}
