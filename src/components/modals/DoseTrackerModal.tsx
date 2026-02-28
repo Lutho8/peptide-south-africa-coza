@@ -35,6 +35,7 @@ import { peptides } from '@/data/peptides';
 import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2, AlertTriangle, Timer } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -376,19 +377,62 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
                         </div>
                       </div>
 
-                      {/* Cycle Protocol Info */}
-                      {protocol && (
-                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/50 mb-2">
-                          <Timer size={13} className="text-amber-400 shrink-0" />
-                          <p className="text-[11px] text-muted-foreground">
-                            <span className="font-medium text-foreground">Cycle:</span>{' '}
-                            {protocol.cycleDuration} days on, {protocol.breakDuration > 0 ? `${protocol.breakDuration} days off` : 'continuous'}
-                            {cycleSuggestion?.warnings?.[0] && (
-                              <span className="ml-1 text-amber-400">• {cycleSuggestion.warnings[0]}</span>
+                      {/* Cycle Progress Bar */}
+                      {protocol && (() => {
+                        const activeCycle = cycles.find(c => c.peptideId === dose.peptideId && c.status === 'active');
+                        const cycleDuration = activeCycle?.plannedDuration || protocol.cycleDuration;
+                        const breakDuration = activeCycle?.breakDuration ?? protocol.breakDuration;
+                        const daysElapsed = activeCycle
+                          ? Math.floor((Date.now() - new Date(activeCycle.startDate).getTime()) / (1000 * 60 * 60 * 24))
+                          : 0;
+                        const progress = activeCycle ? Math.min((daysElapsed / cycleDuration) * 100, 100) : 0;
+                        const daysRemaining = Math.max(0, cycleDuration - daysElapsed);
+                        const isNearEnd = daysElapsed >= cycleDuration * 0.85;
+                        const isOverdue = daysElapsed >= cycleDuration;
+
+                        return (
+                          <div className="space-y-1.5 px-1 mb-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <Timer size={13} className={cn(
+                                  isOverdue ? "text-destructive" : isNearEnd ? "text-amber-400" : "text-primary"
+                                )} />
+                                <span className="text-[11px] font-medium text-foreground">
+                                  {activeCycle ? (
+                                    isOverdue ? 'Cycle complete — start break' : `Day ${daysElapsed} of ${cycleDuration}`
+                                  ) : (
+                                    `${cycleDuration}d cycle, ${breakDuration > 0 ? `${breakDuration}d break` : 'continuous'}`
+                                  )}
+                                </span>
+                              </div>
+                              {activeCycle && !isOverdue && (
+                                <span className="text-[10px] text-muted-foreground">{daysRemaining}d left</span>
+                              )}
+                              {isOverdue && activeCycle && (
+                                <span className="text-[10px] font-medium text-destructive">
+                                  {daysElapsed - cycleDuration}d overdue
+                                </span>
+                              )}
+                            </div>
+                            {activeCycle ? (
+                              <div className="relative">
+                                <Progress
+                                  value={progress}
+                                  className={cn("h-2", isOverdue && "[&>div]:bg-destructive", isNearEnd && !isOverdue && "[&>div]:bg-amber-400")}
+                                />
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-muted-foreground">No active cycle — start one in Cycle Management</p>
                             )}
-                          </p>
-                        </div>
-                      )}
+                            {isNearEnd && activeCycle && !isOverdue && (
+                              <p className="text-[10px] text-amber-400 flex items-center gap-1">
+                                <AlertTriangle size={10} />
+                                Approaching end of recommended cycle
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {dose.status === 'pending' && (
                         <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
