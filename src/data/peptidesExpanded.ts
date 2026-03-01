@@ -2787,5 +2787,755 @@ export const expandedPeptides: Peptide[] = [
       'Very limited human safety data',
       'Long-term effects unknown'
     ]
+  },
+  {
+    id: 'dihexa',
+    name: 'Dihexa',
+    shortName: 'Dihexa',
+    category: 'cognitive',
+    molecularWeight: '507.63 Da',
+    halfLife: '~6 hours',
+    longevityScore: 8,
+    mechanism: 'An angiotensin IV analog (N-hexanoic-Tyr-Ile-(6) aminohexanoic amide) that is approximately 10 million times more potent than BDNF at promoting hepatocyte growth factor (HGF)/c-Met receptor activation. Enhances synaptogenesis, spinogenesis, and memory consolidation in the hippocampus.',
+    benefits: [
+      'Potent cognitive enhancement via HGF/c-Met pathway',
+      'Promotes new synapse formation',
+      'Enhanced memory consolidation and recall',
+      'Neuroprotective properties',
+      'May support nerve regeneration'
+    ],
+    athleteBenefits: [
+      'Superior focus and learning capacity',
+      'Enhanced motor skill acquisition',
+      'Improved spatial memory',
+      'Neuroprotection during contact sports'
+    ],
+    risks: [
+      'Very limited human safety data',
+      'Potential cancer risk (HGF/c-Met pathway involved in tumor growth)',
+      'Unknown long-term effects',
+      'Extremely potent — dosing errors risky'
+    ],
+    dosing: {
+      beginner: '10mg oral or 5mg sublingual daily',
+      intermediate: '20mg oral daily',
+      advanced: '30mg oral daily',
+      athlete: '10-20mg oral daily'
+    },
+    frequency: 'Daily',
+    recommendedDuration: '4-8 weeks with careful monitoring',
+    cycleProtocol: {
+      minDays: 28,
+      maxDays: 56,
+      breakDays: 28,
+      restartAdvice: 'Take 4-week break between cycles. Monitor cognitive function.',
+      breakAdvice: [
+        'Use natural nootropics (lion\'s mane, bacopa) during break',
+        'Continue cognitive training to retain synaptogenesis benefits',
+        'Monitor for any unusual symptoms',
+        'Reassess cognitive baseline before restarting'
+      ]
+    },
+    administration: 'Oral or sublingual',
+    expectedResults: {
+      week1_2: 'Improved mental clarity and focus',
+      week3_4: 'Enhanced memory and learning speed',
+      week5_8: 'Significant cognitive enhancement',
+      longTerm: 'Sustained neuroplasticity improvements'
+    },
+    janoshikTested: false,
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'DIHX-50MG',
+      price: 55,
+      stock: 'in-stock'
+    },
+    references: ['PMID: 23459100'],
+    aminoAcidSequence: 'N-hexanoic-Tyr-Ile-(6)aminohexanoic amide',
+    bioavailability: 'Good (oral)',
+    storageRequirements: 'Store at -20°C, protect from light and moisture',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research)',
+      australia: 'Not scheduled (research)'
+    },
+    clinicalStatus: 'preclinical',
+    fdaApproved: false,
+    warnings: [
+      'Extremely potent — precise dosing critical',
+      'HGF/c-Met pathway implicated in cancer; use with caution',
+      'No human clinical trials completed',
+      'Not recommended for those with cancer history'
+    ],
+    notableStudies: [
+      {
+        title: 'Dihexa augments cognition via HGF/c-Met',
+        year: 2013,
+        finding: 'Seven orders of magnitude more potent than BDNF in promoting synaptogenesis',
+        doi: '10.1124/jpet.112.199497'
+      }
+    ]
+  },
+  {
+    id: 'p21',
+    name: 'P21 (Cerebrolysin-derived)',
+    shortName: 'P21',
+    category: 'cognitive',
+    molecularWeight: '~1100 Da',
+    halfLife: '~4 hours',
+    longevityScore: 7,
+    mechanism: 'A synthetic peptide derived from the active region of Cerebrolysin CNTF (ciliary neurotrophic factor). Enhances neurogenesis in the hippocampal dentate gyrus and subventricular zone. Reduces neuroinflammation and tau hyperphosphorylation. Crosses the blood-brain barrier effectively.',
+    benefits: [
+      'Promotes hippocampal neurogenesis',
+      'Reduces tau phosphorylation (Alzheimer\'s model)',
+      'Anti-neuroinflammatory effects',
+      'Enhanced spatial learning and memory',
+      'Crosses blood-brain barrier'
+    ],
+    athleteBenefits: [
+      'Enhanced learning and adaptation',
+      'Improved spatial awareness',
+      'Neuroprotection',
+      'Cognitive recovery support'
+    ],
+    risks: [
+      'Limited human data',
+      'Possible headaches',
+      'Nasal irritation (intranasal route)',
+      'Long-term effects unknown'
+    ],
+    dosing: {
+      beginner: '1mg intranasal daily',
+      intermediate: '2mg intranasal daily',
+      advanced: '4mg intranasal daily',
+      athlete: '2mg intranasal daily'
+    },
+    frequency: 'Daily',
+    recommendedDuration: '4-8 weeks per cycle',
+    cycleProtocol: {
+      minDays: 28,
+      maxDays: 56,
+      breakDays: 21,
+      restartAdvice: 'Take 3-week break. Assess cognitive improvements before restarting.',
+      breakAdvice: [
+        'Support neurogenesis with exercise (running/HIIT)',
+        'Use omega-3 fatty acids and lion\'s mane',
+        'Maintain sleep quality for memory consolidation',
+        'Practice active learning during break'
+      ]
+    },
+    administration: 'Intranasal',
+    expectedResults: {
+      week1_2: 'Subtle improvements in clarity',
+      week3_4: 'Noticeable memory enhancement',
+      week5_8: 'Significant cognitive benefits',
+      longTerm: 'Sustained neurogenesis and neuroprotection'
+    },
+    janoshikTested: false,
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'P21-50MG',
+      price: 48,
+      stock: 'in-stock'
+    },
+    references: ['PMID: 25246030'],
+    bioavailability: 'Good (intranasal, crosses BBB)',
+    storageRequirements: 'Store at -20°C, protect from light',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research)',
+      australia: 'Not scheduled (research)'
+    },
+    clinicalStatus: 'preclinical',
+    fdaApproved: false,
+    warnings: [
+      'Animal studies only — no human clinical data',
+      'Avoid in individuals with nasal conditions',
+      'Long-term neurogenic effects unknown'
+    ],
+    notableStudies: [
+      {
+        title: 'P21 peptide enhances neurogenesis and cognition',
+        year: 2014,
+        finding: 'Rescued cognitive deficits and enhanced dentate gyrus neurogenesis in Alzheimer\'s mouse model',
+        doi: '10.1016/j.neuropharm.2014.09.017'
+      }
+    ]
+  },
+  {
+    id: 'snap8',
+    name: 'SNAP-8 (Acetyl Octapeptide-3)',
+    shortName: 'SNAP-8',
+    category: 'skin-hair',
+    molecularWeight: '1075.17 Da',
+    halfLife: '~12 hours (topical)',
+    longevityScore: 4,
+    mechanism: 'An extension of Argireline (Acetyl Hexapeptide-3) with two additional amino acids, making it more potent. Acts as a competitive antagonist for the SNARE complex, inhibiting catecholamine release and reducing muscular contraction at the neuromuscular junction. Reduces expression wrinkle depth by up to 63%.',
+    benefits: [
+      'Reduces expression wrinkle depth up to 63%',
+      'More potent than Argireline',
+      'Non-invasive botox alternative',
+      'Improved skin smoothness',
+      'Compatible with other skincare actives'
+    ],
+    athleteBenefits: [
+      'Skin recovery from sun/wind exposure',
+      'Anti-aging for outdoor athletes',
+      'Non-systemic (topical only)'
+    ],
+    risks: [
+      'Topical irritation in sensitive skin',
+      'Effectiveness varies by formulation',
+      'No systemic effects'
+    ],
+    dosing: {
+      beginner: '3% topical solution 1x/day',
+      intermediate: '5% topical solution 2x/day',
+      advanced: '10% topical solution 2x/day',
+      athlete: '5% topical solution 1x/day'
+    },
+    frequency: 'Daily (topical)',
+    recommendedDuration: 'Continuous use; results build over 4-8 weeks',
+    cycleProtocol: {
+      minDays: 28,
+      maxDays: 365,
+      breakDays: 0,
+      restartAdvice: 'No cycling needed. Continuous topical use is safe.',
+      breakAdvice: [
+        'Maintain moisturizing routine',
+        'Use sunscreen daily',
+        'Consider retinol during breaks',
+        'Stay hydrated for skin health'
+      ]
+    },
+    administration: 'Topical',
+    expectedResults: {
+      week1_2: 'Subtle smoothing of fine lines',
+      week3_4: 'Visible reduction in expression wrinkles',
+      week5_8: 'Up to 63% wrinkle depth reduction',
+      longTerm: 'Sustained anti-wrinkle effects with continued use'
+    },
+    janoshikTested: false,
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'SNAP8-1G',
+      price: 28,
+      stock: 'in-stock'
+    },
+    references: ['PMID: 20098710'],
+    aminoAcidSequence: 'Ac-Glu-Glu-Met-Gln-Arg-Arg-Ala-Asp-NH2',
+    bioavailability: 'Topical penetration (stratum corneum)',
+    storageRequirements: 'Store at room temperature, protect from heat',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Cosmetic ingredient (INCI listed)',
+      australia: 'Cosmetic ingredient'
+    },
+    clinicalStatus: 'phase2',
+    fdaApproved: false,
+    warnings: [
+      'For external/topical use only',
+      'Patch test before first use',
+      'Not a substitute for injectable neurotoxins'
+    ]
+  },
+  {
+    id: 'argireline',
+    name: 'Argireline (Acetyl Hexapeptide-3)',
+    shortName: 'Argireline',
+    category: 'skin-hair',
+    molecularWeight: '888.97 Da',
+    halfLife: '~8 hours (topical)',
+    longevityScore: 4,
+    mechanism: 'A hexapeptide that mimics the N-terminal end of SNAP-25, competing for position in the SNARE complex. Destabilizes the SNARE complex formation, reducing vesicle docking and neurotransmitter release at the neuromuscular junction. This attenuates muscle contraction, reducing expression wrinkle depth by up to 30%.',
+    benefits: [
+      'Reduces expression wrinkles up to 30%',
+      'Non-invasive botox alternative',
+      'Extensively studied cosmetic peptide',
+      'Good safety profile',
+      'Compatible with most skincare routines'
+    ],
+    athleteBenefits: [
+      'Anti-aging skin protection',
+      'Non-systemic topical use',
+      'Recovery from environmental skin damage'
+    ],
+    risks: [
+      'Lower potency than SNAP-8',
+      'Mild tingling in some users',
+      'Results require consistent use'
+    ],
+    dosing: {
+      beginner: '5% topical solution 1x/day',
+      intermediate: '10% topical solution 2x/day',
+      advanced: '10% topical solution 2x/day',
+      athlete: '5% topical solution 1x/day'
+    },
+    frequency: 'Daily (topical)',
+    recommendedDuration: 'Continuous use; visible effects within 2-4 weeks',
+    cycleProtocol: {
+      minDays: 28,
+      maxDays: 365,
+      breakDays: 0,
+      restartAdvice: 'No cycling needed. Safe for continuous topical use.',
+      breakAdvice: [
+        'Use retinoids and vitamin C during breaks',
+        'Maintain sunscreen routine',
+        'Stay hydrated',
+        'Consider other anti-aging actives'
+      ]
+    },
+    administration: 'Topical',
+    expectedResults: {
+      week1_2: 'Mild smoothing of fine lines',
+      week3_4: 'Noticeable wrinkle reduction',
+      week5_8: 'Up to 30% wrinkle depth reduction',
+      longTerm: 'Maintained anti-wrinkle effects'
+    },
+    janoshikTested: false,
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'ARGI-1G',
+      price: 22,
+      stock: 'in-stock'
+    },
+    references: ['PMID: 12062883'],
+    aminoAcidSequence: 'Ac-Glu-Glu-Met-Gln-Arg-Arg-NH2',
+    bioavailability: 'Topical penetration',
+    storageRequirements: 'Store at room temperature, protect from heat and light',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Cosmetic ingredient (INCI listed)',
+      australia: 'Cosmetic ingredient'
+    },
+    clinicalStatus: 'phase2',
+    fdaApproved: false,
+    warnings: [
+      'For external/topical use only',
+      'Patch test recommended for sensitive skin',
+      'Effects reverse upon discontinuation'
+    ],
+    notableStudies: [
+      {
+        title: 'Argireline anti-wrinkle efficacy study',
+        year: 2002,
+        finding: 'Reduced wrinkle depth by 30% in 30 days of topical application at 10%',
+        doi: '10.1016/S0223-5234(02)01378-X'
+      }
+    ]
+  },
+  {
+    id: 'ghk',
+    name: 'GHK (Glycyl-L-Histidyl-L-Lysine)',
+    shortName: 'GHK',
+    category: 'skin-hair',
+    molecularWeight: '340.38 Da',
+    halfLife: '~2 hours',
+    longevityScore: 7,
+    mechanism: 'A tripeptide naturally found in human plasma, saliva, and urine. Concentration declines with age. Regulates over 4,000 genes, with 31.2% of genes upregulated being those involved in tissue remodeling and wound healing. Stimulates collagen synthesis, decorin, and glycosaminoglycans. Anti-inflammatory via NF-κB suppression.',
+    benefits: [
+      'Stimulates collagen and elastin synthesis',
+      'Regulates 4,000+ human genes',
+      'Potent wound healing properties',
+      'Anti-inflammatory effects',
+      'Promotes hair growth',
+      'Antioxidant gene expression'
+    ],
+    athleteBenefits: [
+      'Accelerated wound healing',
+      'Skin and tissue repair from training',
+      'Joint health support via GAG production',
+      'Anti-inflammatory recovery'
+    ],
+    risks: [
+      'Well-tolerated in research',
+      'Mild redness at injection site',
+      'Few reported side effects'
+    ],
+    dosing: {
+      beginner: '50mg topical cream daily',
+      intermediate: '100-200mcg subcutaneous daily',
+      advanced: '500mcg subcutaneous daily',
+      athlete: '200mcg subcutaneous daily'
+    },
+    frequency: 'Daily',
+    recommendedDuration: '4-12 weeks',
+    cycleProtocol: {
+      minDays: 28,
+      maxDays: 84,
+      breakDays: 14,
+      restartAdvice: 'Short break then resume. Very safe peptide for extended use.',
+      breakAdvice: [
+        'Use topical GHK-Cu products during break',
+        'Maintain vitamin C intake for collagen support',
+        'Continue skin protection with SPF',
+        'Support with zinc and copper-rich foods'
+      ]
+    },
+    administration: 'Subcutaneous injection or topical',
+    expectedResults: {
+      week1_2: 'Improved skin texture and hydration',
+      week3_4: 'Visible skin tightening and glow',
+      week5_8: 'Significant collagen improvement, wound healing',
+      longTerm: 'Sustained anti-aging, hair, and tissue benefits'
+    },
+    janoshikTested: false,
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'GHK-1G',
+      price: 30,
+      stock: 'in-stock'
+    },
+    references: ['PMID: 24508075'],
+    aminoAcidSequence: 'Gly-His-Lys',
+    bioavailability: 'Good (subcutaneous), Moderate (topical)',
+    storageRequirements: 'Store at 2-8°C, protect from light',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Cosmetic ingredient (topical)',
+      australia: 'Not scheduled (research)'
+    },
+    clinicalStatus: 'phase2',
+    fdaApproved: false,
+    warnings: [
+      'Copper-free version — differs from GHK-Cu',
+      'Monitor copper status if combining with GHK-Cu',
+      'Very safe based on available data'
+    ],
+    notableStudies: [
+      {
+        title: 'GHK gene expression and tissue remodeling',
+        year: 2014,
+        finding: 'Upregulated 31.2% of genes involved in wound healing and tissue remodeling',
+        doi: '10.1016/j.gene.2014.02.016'
+      }
+    ]
+  },
+  {
+    id: 'palmitoyl-pentapeptide-4',
+    name: 'Palmitoyl Pentapeptide-4 (Matrixyl)',
+    shortName: 'Matrixyl',
+    category: 'skin-hair',
+    molecularWeight: '802.05 Da',
+    halfLife: '~6 hours (topical)',
+    longevityScore: 5,
+    mechanism: 'A lipopeptide that stimulates the production of collagen I, III, and IV, fibronectin, and glycosaminoglycans in the dermal extracellular matrix. Acts as a matrikine — a small peptide fragment that signals the skin to produce new collagen and repair the dermal matrix. Palmitoyl group enhances skin penetration.',
+    benefits: [
+      'Stimulates collagen I, III, IV production',
+      'Reduces wrinkle depth and volume',
+      'Improves skin firmness and elasticity',
+      'Non-irritating alternative to retinoids',
+      'Well-established safety profile'
+    ],
+    athleteBenefits: [
+      'Skin repair from environmental exposure',
+      'Anti-aging without systemic effects',
+      'Compatible with active lifestyle'
+    ],
+    risks: [
+      'Very few side effects reported',
+      'Rare skin sensitivity',
+      'Slower results than injectable peptides'
+    ],
+    dosing: {
+      beginner: '2% topical cream 1x/day',
+      intermediate: '4% topical cream 2x/day',
+      advanced: '4% topical serum 2x/day',
+      athlete: '2% topical cream 1x/day'
+    },
+    frequency: 'Daily (topical)',
+    recommendedDuration: 'Continuous use; results visible in 2-4 months',
+    cycleProtocol: {
+      minDays: 60,
+      maxDays: 365,
+      breakDays: 0,
+      restartAdvice: 'No cycling needed. Safe for continuous topical use.',
+      breakAdvice: [
+        'Use retinol or vitamin C serums',
+        'Maintain SPF protection',
+        'Keep skin hydrated',
+        'Continue with a basic anti-aging routine'
+      ]
+    },
+    administration: 'Topical',
+    expectedResults: {
+      week1_2: 'Improved skin hydration',
+      week3_4: 'Subtle texture improvement',
+      week5_8: 'Visible firmness improvement',
+      longTerm: 'Significant wrinkle reduction (up to 36% in studies)'
+    },
+    janoshikTested: false,
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'MATRX-1G',
+      price: 25,
+      stock: 'in-stock'
+    },
+    references: ['PMID: 15675889'],
+    aminoAcidSequence: 'Pal-Lys-Thr-Thr-Lys-Ser',
+    bioavailability: 'Good topical penetration (palmitoyl enhances delivery)',
+    storageRequirements: 'Store at room temperature, protect from heat',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Cosmetic ingredient (INCI listed)',
+      australia: 'Cosmetic ingredient'
+    },
+    clinicalStatus: 'phase2',
+    fdaApproved: false,
+    warnings: [
+      'For external/topical use only',
+      'May take 2-4 months for visible results',
+      'Less effective than injectable peptides for deep wrinkles'
+    ],
+    notableStudies: [
+      {
+        title: 'Matrixyl anti-wrinkle clinical study',
+        year: 2005,
+        finding: 'Reduced wrinkle depth by 36% and wrinkle volume by 27% over 4 months',
+        doi: '10.1111/j.1468-2494.2005.00220.x'
+      }
+    ]
+  },
+  {
+    id: 'copper-peptide-ahk',
+    name: 'AHK-Cu (Alanyl-Histidyl-Lysyl Copper)',
+    shortName: 'AHK-Cu',
+    category: 'skin-hair',
+    molecularWeight: '~420 Da',
+    halfLife: '~3 hours',
+    longevityScore: 5,
+    mechanism: 'A copper-binding tripeptide that stimulates hair follicle growth by increasing follicle size and proliferation of dermal papilla cells. Activates the Wnt/β-catenin signaling pathway essential for hair follicle morphogenesis and cycling. Also promotes VEGF expression for follicular vascularization.',
+    benefits: [
+      'Stimulates hair follicle growth',
+      'Increases dermal papilla cell proliferation',
+      'Activates Wnt/β-catenin pathway',
+      'Promotes follicular vascularization via VEGF',
+      'May reverse miniaturization of hair follicles'
+    ],
+    athleteBenefits: [
+      'Hair preservation during hormonal stress',
+      'Scalp health support',
+      'Non-systemic topical application'
+    ],
+    risks: [
+      'Limited clinical data',
+      'Scalp irritation possible',
+      'Results vary significantly'
+    ],
+    dosing: {
+      beginner: '1% topical solution daily',
+      intermediate: '3% topical solution daily',
+      advanced: '5% topical solution daily',
+      athlete: '1-3% topical solution daily'
+    },
+    frequency: 'Daily (topical to scalp)',
+    recommendedDuration: '3-6 months for visible results',
+    cycleProtocol: {
+      minDays: 90,
+      maxDays: 180,
+      breakDays: 14,
+      restartAdvice: 'Continuous use recommended for hair growth. Brief breaks acceptable.',
+      breakAdvice: [
+        'Continue biotin and zinc supplementation',
+        'Use gentle, sulfate-free shampoo',
+        'Scalp massage to promote circulation',
+        'Consider minoxidil during breaks'
+      ]
+    },
+    administration: 'Topical (scalp)',
+    expectedResults: {
+      week1_2: 'Reduced hair shedding',
+      week3_4: 'Improved scalp health',
+      week5_8: 'Early signs of new growth',
+      longTerm: 'Visible hair regrowth and thickening'
+    },
+    janoshikTested: false,
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'AHKCU-500MG',
+      price: 35,
+      stock: 'in-stock'
+    },
+    references: ['PMID: 17907165'],
+    aminoAcidSequence: 'Ala-His-Lys-Cu',
+    bioavailability: 'Topical (scalp penetration)',
+    storageRequirements: 'Store at 2-8°C, protect from light',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Cosmetic ingredient',
+      australia: 'Not scheduled (research)'
+    },
+    clinicalStatus: 'preclinical',
+    fdaApproved: false,
+    warnings: [
+      'Topical use only',
+      'Results highly individual',
+      'Monitor copper levels if combining with GHK-Cu'
+    ]
+  },
+  {
+    id: 'epithalon-nasal',
+    name: 'N-Acetyl Epitalon Amidate',
+    shortName: 'NAEA',
+    category: 'longevity',
+    molecularWeight: '~475 Da',
+    halfLife: '~2 hours (intranasal)',
+    longevityScore: 9,
+    mechanism: 'An enhanced bioavailable form of Epitalon with N-acetylation and C-terminal amidation modifications. These modifications increase resistance to enzymatic degradation and improve blood-brain barrier penetration. Retains telomerase-activating properties with enhanced CNS bioavailability.',
+    benefits: [
+      'Enhanced bioavailability over standard Epitalon',
+      'Telomerase activation',
+      'Improved BBB penetration',
+      'Melatonin regulation',
+      'Anti-aging effects'
+    ],
+    athleteBenefits: [
+      'Non-injectable administration',
+      'Improved sleep quality',
+      'Cellular rejuvenation',
+      'Convenient intranasal dosing'
+    ],
+    risks: [
+      'Very limited human data',
+      'Nasal irritation possible',
+      'Novel compound with unknown long-term effects'
+    ],
+    dosing: {
+      beginner: '1mg intranasal daily',
+      intermediate: '3mg intranasal daily',
+      advanced: '5mg intranasal daily',
+      athlete: '3mg intranasal daily'
+    },
+    frequency: 'Daily for 20-day cycles',
+    recommendedDuration: '20-day cycles, 2-3x per year',
+    cycleProtocol: {
+      minDays: 10,
+      maxDays: 20,
+      breakDays: 120,
+      restartAdvice: 'Run short cycles 2-3x per year like standard Epitalon.',
+      breakAdvice: [
+        'Support telomere health with astragalus and resveratrol',
+        'Maintain consistent sleep schedule',
+        'Continue exercise for natural telomerase stimulation',
+        'Track sleep quality metrics'
+      ]
+    },
+    administration: 'Intranasal spray',
+    expectedResults: {
+      week1_2: 'Improved sleep quality',
+      week3_4: 'N/A (short cycle)',
+      week5_8: 'N/A (short cycle)',
+      longTerm: 'Telomere maintenance, anti-aging effects'
+    },
+    janoshikTested: false,
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'NAEA-50MG',
+      price: 95,
+      stock: 'low-stock'
+    },
+    references: ['PMID: 40908429'],
+    bioavailability: 'Enhanced (intranasal with modified peptide)',
+    storageRequirements: 'Store at -20°C, protect from light',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research)',
+      australia: 'Not scheduled (research)'
+    },
+    clinicalStatus: 'preclinical',
+    fdaApproved: false,
+    warnings: [
+      'Novel modification — very limited data',
+      'Not interchangeable with standard Epitalon dosing',
+      'Avoid with nasal conditions'
+    ]
+  },
+  {
+    id: 'peptide-aod9604',
+    name: 'AOD-9604',
+    shortName: 'AOD',
+    category: 'weight-loss',
+    molecularWeight: '1817.12 Da',
+    halfLife: '~1 hour',
+    longevityScore: 5,
+    mechanism: 'A modified fragment of human growth hormone (hGH fragment 176-191) with an additional tyrosine at the N-terminus. Stimulates lipolysis and inhibits lipogenesis without the diabetogenic effects of full-length hGH. Acts on beta-3 adrenergic receptors in adipose tissue.',
+    benefits: [
+      'Targeted fat metabolism without GH side effects',
+      'No effect on blood sugar or insulin',
+      'Anti-lipogenic properties',
+      'GRAS status for food use',
+      'Does not affect growth or IGF-1'
+    ],
+    athleteBenefits: [
+      'Fat-specific weight loss',
+      'No muscle-wasting effects',
+      'Safe for anti-doping (not listed)',
+      'Targeted abdominal fat reduction'
+    ],
+    risks: [
+      'Modest efficacy compared to GLP-1 agonists',
+      'Injection site reactions',
+      'Limited clinical trial success'
+    ],
+    dosing: {
+      beginner: '250mcg daily',
+      intermediate: '300mcg daily',
+      advanced: '500mcg daily',
+      athlete: '300mcg daily'
+    },
+    frequency: 'Daily (fasted, morning)',
+    recommendedDuration: '8-12 weeks',
+    cycleProtocol: {
+      minDays: 56,
+      maxDays: 84,
+      breakDays: 21,
+      restartAdvice: 'Take 3-week break between cycles. Best combined with exercise.',
+      breakAdvice: [
+        'Maintain caloric deficit',
+        'Continue fasted cardio',
+        'Focus on high-protein diet',
+        'Monitor body composition changes'
+      ]
+    },
+    administration: 'Subcutaneous injection',
+    expectedResults: {
+      week1_2: 'Subtle fat mobilization',
+      week3_4: 'Mild fat loss beginning',
+      week5_8: 'Moderate fat reduction',
+      longTerm: 'Targeted fat loss with diet/exercise'
+    },
+    janoshikTested: true,
+    janoshikPurity: 98.5,
+    janoshikDate: '2024-09-15',
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'AOD-5MG',
+      price: 32,
+      stock: 'in-stock'
+    },
+    references: ['PMID: 11713213'],
+    aminoAcidSequence: 'Tyr-Leu-Arg-Ile-Val-Gln-Cys-Arg-Ser-Val-Glu-Gly-Ser-Cys-Gly-Phe',
+    bioavailability: 'Moderate (subcutaneous)',
+    storageRequirements: 'Store at 2-8°C, protect from light',
+    legalStatus: {
+      usa: 'research-only',
+      eu: 'Not regulated (research)',
+      australia: 'TGA approved (GRAS for food)'
+    },
+    clinicalStatus: 'phase2',
+    fdaApproved: false,
+    warnings: [
+      'Modest efficacy as standalone',
+      'Best combined with diet and exercise',
+      'Does not replace proper nutrition'
+    ],
+    notableStudies: [
+      {
+        title: 'AOD-9604 lipolytic activity',
+        year: 2001,
+        finding: 'Stimulated lipolysis and inhibited lipogenesis without affecting IGF-1 or insulin',
+        doi: '10.1038/sj.ijo.0801864'
+      }
+    ]
   }
 ];
