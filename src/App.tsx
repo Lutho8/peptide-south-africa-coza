@@ -36,17 +36,19 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/disclaimer" element={<Disclaimer />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/free-course" element={<FreeCourse />} />
-              <Route path="/coa-verification" element={<COAVerification />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/disclaimer" element={<Disclaimer />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/free-course" element={<FreeCourse />} />
+                <Route path="/coa-verification" element={<COAVerification />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
