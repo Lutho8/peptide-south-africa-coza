@@ -288,7 +288,6 @@ export default function AdminDashboard() {
             <VialLabelMaker />
           </TabsContent>
         </Tabs>
-        </Tabs>
       </div>
     </div>
   );
