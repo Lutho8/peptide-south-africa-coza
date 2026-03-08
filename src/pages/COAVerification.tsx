@@ -45,6 +45,17 @@ export default function COAVerification() {
     return purities.length ? purities.reduce((a, b) => a + b, 0) / purities.length : 0;
   }, [allTestedPeptides]);
 
+  const purityChartData = useMemo(() => {
+    return allTestedPeptides
+      .filter(p => p.janoshikPurity)
+      .map(p => ({
+        name: p.shortName,
+        purity: p.janoshikPurity!,
+        category: p.category,
+      }))
+      .sort((a, b) => b.purity - a.purity);
+  }, [allTestedPeptides]);
+
   const peptideCount = useCountUp({ end: allTestedPeptides.length, duration: 1500, enableScrollTrigger: true });
   const coaCount = useCountUp({ end: totalCOAs, duration: 1800, delay: 200, enableScrollTrigger: true });
   const purityCount = useCountUp({ end: avgPurity, duration: 2000, delay: 400, decimals: 1, suffix: '%', enableScrollTrigger: true });
