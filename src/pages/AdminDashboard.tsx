@@ -283,6 +283,11 @@ export default function AdminDashboard() {
           <TabsContent value="crm">
             <CRMEnrollmentsTable />
           </TabsContent>
+
+          <TabsContent value="labels">
+            <VialLabelMaker />
+          </TabsContent>
+        </Tabs>
         </Tabs>
       </div>
     </div>
