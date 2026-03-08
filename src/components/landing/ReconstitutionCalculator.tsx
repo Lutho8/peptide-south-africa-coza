@@ -480,6 +480,15 @@ export function ReconstitutionCalculator({ open, onClose }: ReconstitutionCalcul
                     </Button>
                   </Card>
 
+                  {/* Step-by-step Reconstitution Guide */}
+                  <Card className="p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Syringe className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold">Step-by-Step Reconstitution Guide</h3>
+                    </div>
+                    <ReconstitutionGuide />
+                  </Card>
+
                   {/* Important Notes */}
                   <Card className="p-4 bg-accent/5 border-accent/20">
                     <div className="flex gap-3">
