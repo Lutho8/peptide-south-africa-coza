@@ -499,8 +499,28 @@ export const corePeptides: Peptide[] = [
       longTerm: 'Metabolic optimization, up to 24% weight reduction at 48 weeks'
     },
     janoshikTested: true,
-    janoshikPurity: 99.1,
-    janoshikDate: '2024-11-10',
+    janoshikPurity: 99.856,
+    janoshikDate: '2025-07-03',
+    janoshikCOA: [
+      {
+        taskNumber: '#61141',
+        verifyKey: 'UMR871KAJ2N9',
+        sampleName: 'Retatrutide 10mg',
+        measuredAmount: '10.80 mg',
+        purity: '99.060%',
+        testDate: '01 APR 2025',
+        manufacturer: 'https://zztai-tech.com',
+      },
+      {
+        taskNumber: '#69929',
+        verifyKey: 'TA2CQT3F44X9',
+        sampleName: 'Retatrutide 10mg',
+        measuredAmount: '11.22 mg',
+        purity: '99.856%',
+        testDate: '03 JUL 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'RETA-10MG',
