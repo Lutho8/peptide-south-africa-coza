@@ -296,8 +296,6 @@ export default function AdminDashboard() {
           <TabsContent value="coa">
             <COAUploadManager />
           </TabsContent>
-            <VialLabelMaker />
-          </TabsContent>
         </Tabs>
       </div>
     </div>
