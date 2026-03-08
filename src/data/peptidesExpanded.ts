@@ -62,8 +62,19 @@ export const expandedPeptides: Peptide[] = [
       longTerm: '15-20% total body weight reduction'
     },
     janoshikTested: true,
-    janoshikPurity: 99.4,
-    janoshikDate: '2024-11-15',
+    janoshikPurity: 99.051,
+    janoshikDate: '2025-04-01',
+    janoshikCOA: [
+      {
+        taskNumber: '#61142',
+        verifyKey: '4UW2EUE83VR6',
+        sampleName: 'Semaglutide 10mg',
+        measuredAmount: '10.73 mg',
+        purity: '99.051%',
+        testDate: '01 APR 2025',
+        manufacturer: 'https://zztai-tech.com',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'SEMA-5MG',
