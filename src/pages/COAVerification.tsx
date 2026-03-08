@@ -5,6 +5,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { peptides, categoryConfig } from '@/data/peptides';
 import type { PeptideCategory } from '@/data/peptides';
@@ -42,6 +43,17 @@ export default function COAVerification() {
       .filter(p => p.janoshikPurity)
       .map(p => p.janoshikPurity!);
     return purities.length ? purities.reduce((a, b) => a + b, 0) / purities.length : 0;
+  }, [allTestedPeptides]);
+
+  const purityChartData = useMemo(() => {
+    return allTestedPeptides
+      .filter(p => p.janoshikPurity)
+      .map(p => ({
+        name: p.shortName,
+        purity: p.janoshikPurity!,
+        category: p.category,
+      }))
+      .sort((a, b) => b.purity - a.purity);
   }, [allTestedPeptides]);
 
   const peptideCount = useCountUp({ end: allTestedPeptides.length, duration: 1500, enableScrollTrigger: true });
@@ -135,7 +147,47 @@ export default function COAVerification() {
           </Card>
         </div>
 
-        {/* Search & Filter */}
+        {/* Purity Comparison Chart */}
+        {purityChartData.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Award className="w-4 h-4 text-primary" />
+                Purity Ranking
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">All tested peptides ranked by verified purity percentage</p>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <div style={{ width: '100%', height: Math.max(purityChartData.length * 32, 200) }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={purityChartData} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
+                    <XAxis type="number" domain={[90, 100]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} />
+                    <Tooltip
+                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                      formatter={(value: number) => [`${value}%`, 'Purity']}
+                    />
+                    <ReferenceLine x={avgPurity} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" label={{ value: `Avg ${avgPurity.toFixed(1)}%`, position: 'top', fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                    <Bar dataKey="purity" radius={[0, 4, 4, 0]} maxBarSize={20}>
+                      {purityChartData.map((entry, i) => (
+                        <Cell
+                          key={i}
+                          fill={entry.purity >= 99 ? 'hsl(var(--primary))' : entry.purity >= 97 ? 'hsl(142 71% 45%)' : 'hsl(var(--muted-foreground))'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center gap-4 mt-3 text-[10px] text-muted-foreground justify-center">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-primary inline-block" /> ≥99%</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: 'hsl(142 71% 45%)' }} /> 97–99%</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground inline-block" /> &lt;97%</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex flex-col gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
