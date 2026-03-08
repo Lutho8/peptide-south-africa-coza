@@ -62,8 +62,19 @@ export const expandedPeptides: Peptide[] = [
       longTerm: '15-20% total body weight reduction'
     },
     janoshikTested: true,
-    janoshikPurity: 99.4,
-    janoshikDate: '2024-11-15',
+    janoshikPurity: 99.051,
+    janoshikDate: '2025-04-01',
+    janoshikCOA: [
+      {
+        taskNumber: '#61142',
+        verifyKey: '4UW2EUE83VR6',
+        sampleName: 'Semaglutide 10mg',
+        measuredAmount: '10.73 mg',
+        purity: '99.051%',
+        testDate: '01 APR 2025',
+        manufacturer: 'https://zztai-tech.com',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'SEMA-5MG',
@@ -152,8 +163,37 @@ export const expandedPeptides: Peptide[] = [
       longTerm: '20-25% total body weight reduction'
     },
     janoshikTested: true,
-    janoshikPurity: 99.2,
-    janoshikDate: '2024-11-12',
+    janoshikPurity: 99.787,
+    janoshikDate: '2025-04-01',
+    janoshikCOA: [
+      {
+        taskNumber: '#55576',
+        verifyKey: 'VUHTNG6CHEGP',
+        sampleName: 'Tirzepatide 10mg',
+        measuredAmount: '10.66 mg',
+        purity: '99.486%',
+        testDate: '09 JAN 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+      {
+        taskNumber: '#61140',
+        verifyKey: 'X818BNESWL23',
+        sampleName: 'Tirzepatide 60mg',
+        measuredAmount: '61.85 mg',
+        purity: '99.787%',
+        testDate: '01 APR 2025',
+        manufacturer: 'https://zztai-tech.com',
+      },
+      {
+        taskNumber: '#66345',
+        verifyKey: 'PB7DIYP5JS8W',
+        sampleName: 'Tirzepatide 20mg',
+        measuredAmount: '20.90 mg',
+        purity: '99.451%',
+        testDate: '28 MAY 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'TIRZ-10MG',
@@ -915,8 +955,19 @@ export const expandedPeptides: Peptide[] = [
       longTerm: 'Significant body composition improvement'
     },
     janoshikTested: true,
-    janoshikPurity: 99.2,
-    janoshikDate: '2024-11-02',
+    janoshikPurity: 99.456,
+    janoshikDate: '2025-05-28',
+    janoshikCOA: [
+      {
+        taskNumber: '#66349',
+        verifyKey: 'D3J54TA1BX6Q',
+        sampleName: 'Tesamorelin 10mg',
+        measuredAmount: '10.35 mg',
+        purity: '99.456%',
+        testDate: '28 MAY 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'TESA-2MG',
@@ -1804,7 +1855,19 @@ export const expandedPeptides: Peptide[] = [
       week5_8: 'Sustained cellular rejuvenation',
       longTerm: 'Slowed cellular aging markers'
     },
-    janoshikTested: false,
+    janoshikTested: true,
+    janoshikPurity: undefined,
+    janoshikDate: '2025-07-02',
+    janoshikCOA: [
+      {
+        taskNumber: '#69931',
+        verifyKey: '8IBNP21R84AE',
+        sampleName: 'NAD+ 500mg',
+        measuredAmount: '563.73 mg',
+        testDate: '02 JUL 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'NAD-500MG',

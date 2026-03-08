@@ -395,16 +395,48 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
                 </div>
                 <StatusBadge status="verified" />
               </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Purity</p>
-                  <p className="text-2xl font-bold text-primary">{peptide.janoshikPurity}%</p>
-                </div>
+              <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                {peptide.janoshikPurity && (
+                  <div>
+                    <p className="text-muted-foreground">Purity</p>
+                    <p className="text-2xl font-bold text-primary">{peptide.janoshikPurity}%</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-muted-foreground">Test Date</p>
                   <p className="text-foreground font-medium">{peptide.janoshikDate}</p>
                 </div>
               </div>
+
+              {/* COA Details */}
+              {peptide.janoshikCOA && peptide.janoshikCOA.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Certificates of Analysis</p>
+                  {peptide.janoshikCOA.map((coa, i) => (
+                    <div key={i} className="bg-muted/30 rounded-md p-2.5 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-foreground">{coa.sampleName}</span>
+                        <span className="text-muted-foreground">{coa.testDate}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-muted-foreground">
+                        <span>Measured: <span className="text-foreground font-medium">{coa.measuredAmount}</span></span>
+                        {coa.purity && <span>Purity: <span className="text-foreground font-medium">{coa.purity}</span></span>}
+                        <span>Task: <span className="text-foreground font-mono">{coa.taskNumber}</span></span>
+                        {coa.verifyKey && (
+                          <a
+                            href={`https://www.janoshik.com/verify/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            Verify: {coa.verifyKey}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </GradientCard>
           )}
 
