@@ -567,6 +567,15 @@ export const corePeptides: Peptide[] = [
         testDate: '21 OCT 2025',
         manufacturer: 'https://zztai-tech.com/',
       },
+      {
+        taskNumber: '#103521',
+        verifyKey: 'IP2JHRQSC9T9',
+        sampleName: 'Retatrutide 50mg',
+        measuredAmount: '50.83 mg',
+        purity: '99.830%',
+        testDate: '30 JAN 2026',
+        manufacturer: 'https://zztai-tech.com/',
+      },
     ],
     supplier: {
       name: 'ZZTai-Tech',
