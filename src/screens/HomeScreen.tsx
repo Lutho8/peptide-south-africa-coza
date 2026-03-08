@@ -13,6 +13,7 @@ import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
 import { BookCallSection } from '@/components/booking/BookCallSection';
 import { VendorListCard } from '@/components/home/VendorListCard';
+import { WelcomeGuide } from '@/components/home/WelcomeGuide';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
@@ -109,6 +110,16 @@ export function HomeScreen({
         >
           {initials}
         </motion.div>
+      </motion.div>
+
+      {/* Beginner Welcome Guide */}
+      <motion.div variants={itemVariants}>
+        <WelcomeGuide
+          onDoseTracker={onOpenDoseTracker}
+          onBodyStats={onOpenBodyComposition}
+          onCycles={onOpenCycles}
+          onResearch={onNavigateResearch}
+        />
       </motion.div>
 
       {/* News Ticker */}

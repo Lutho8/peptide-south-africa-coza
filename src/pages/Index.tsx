@@ -249,7 +249,7 @@ const Index = () => {
         <Settings size={20} />
       </button>
 
-      <main className="max-w-lg mx-auto px-4 py-6 pt-20 scroll-smooth-touch">
+      <main className="max-w-lg mx-auto px-4 py-6 pt-20 pb-28 scroll-smooth-touch">
         <AnimatePresence mode="wait">
           <motion.div
             key={screenKey}

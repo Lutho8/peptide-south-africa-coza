@@ -71,11 +71,11 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
 
   // Reduced particles on mobile for performance
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const particleCount = isMobile ? 5 : 15;
+  const particleCount = isMobile ? 3 : 10;
   const particles = Array.from({ length: particleCount }, (_, i) => ({
     id: i,
-    delay: i * 0.5,
-    duration: 4 + Math.random() * 3,
+    delay: i * 0.8,
+    duration: 5 + Math.random() * 3,
     x: Math.random() * 100 - 50,
     y: Math.random() * 200,
   }));
