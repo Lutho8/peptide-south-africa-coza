@@ -1107,8 +1107,19 @@ export const corePeptides: Peptide[] = [
       longTerm: 'Sustained metabolic health'
     },
     janoshikTested: true,
-    janoshikPurity: 98.8,
-    janoshikDate: '2024-11-08',
+    janoshikPurity: 99.098,
+    janoshikDate: '2025-10-21',
+    janoshikCOA: [
+      {
+        taskNumber: '#83567',
+        verifyKey: 'HGNB5E53261C',
+        sampleName: 'MOTS-C 10mg',
+        measuredAmount: '11.42 mg',
+        purity: '99.098%',
+        testDate: '21 OCT 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'MOTS-10MG',
