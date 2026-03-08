@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Crown, Calendar, Mail, Shield, GraduationCap, Tag } from 'lucide-react';
+import { ArrowLeft, Users, Crown, Calendar, Mail, Shield, GraduationCap, Tag, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
