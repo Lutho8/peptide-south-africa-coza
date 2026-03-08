@@ -3629,5 +3629,186 @@ export const expandedPeptides: Peptide[] = [
         doi: '10.1038/sj.ijo.0801864'
       }
     ]
+  },
+  {
+    id: 'hgh-191aa',
+    name: 'HGH 191AA (Somatropin)',
+    shortName: 'HGH 191AA',
+    category: 'gh-secretagogue',
+    molecularWeight: '22,124 Da',
+    halfLife: '2-3 hours',
+    longevityScore: 9,
+    mechanism: 'Recombinant human growth hormone identical to endogenous 191-amino acid GH. Binds GH receptors to stimulate IGF-1 production, promoting muscle growth, fat metabolism, bone density, and tissue repair.',
+    benefits: [
+      'Increased lean muscle mass',
+      'Enhanced fat metabolism',
+      'Improved bone density',
+      'Better sleep quality',
+      'Accelerated wound healing',
+      'Anti-aging effects on skin and hair'
+    ],
+    athleteBenefits: [
+      'Significant muscle hypertrophy support',
+      'Accelerated recovery between training sessions',
+      'Enhanced fat oxidation during cutting phases',
+      'Improved joint and connective tissue health'
+    ],
+    risks: [
+      'Water retention and bloating',
+      'Carpal tunnel syndrome',
+      'Joint pain',
+      'Insulin resistance with prolonged use',
+      'Potential tumor growth acceleration',
+      'Requires careful dosing protocol'
+    ],
+    dosing: {
+      beginner: '2 IU/day',
+      intermediate: '4 IU/day',
+      advanced: '6-8 IU/day',
+      athlete: '4-6 IU/day'
+    },
+    frequency: 'Daily (split AM/PM for higher doses)',
+    recommendedDuration: '12-24 weeks minimum',
+    cycleProtocol: {
+      minDays: 84,
+      maxDays: 180,
+      breakDays: 30,
+      restartAdvice: 'Monitor IGF-1 levels before restarting. 4-week break minimum.',
+      breakAdvice: [
+        'Monitor blood glucose and insulin sensitivity',
+        'Check IGF-1 levels',
+        'Maintain training intensity',
+        'Support with proper nutrition'
+      ]
+    },
+    administration: 'Subcutaneous injection (abdominal)',
+    expectedResults: {
+      week1_2: 'Improved sleep, mild water retention',
+      week3_4: 'Better recovery, skin quality improvement',
+      week5_8: 'Noticeable fat loss and muscle fullness',
+      longTerm: 'Significant body composition changes, anti-aging benefits'
+    },
+    janoshikTested: true,
+    janoshikPurity: 97.496,
+    janoshikDate: '2025-10-20',
+    janoshikCOA: [
+      {
+        taskNumber: '#83566',
+        verifyKey: 'XVV36PVC83IM',
+        sampleName: 'HGH 191AA(Somatropin) 10IU',
+        measuredAmount: '3.34 mg / 10.02 IU',
+        purity: '97.496%',
+        testDate: '20 OCT 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'HGH-10IU',
+      price: 45,
+      stock: 'in-stock'
+    },
+    legalStatus: {
+      usa: 'prescription',
+      eu: 'Prescription only',
+      australia: 'Prescription (Schedule 4)'
+    },
+    clinicalStatus: 'approved',
+    fdaApproved: true,
+    fdaApprovalYear: 1985,
+    warnings: [
+      'Monitor blood glucose regularly',
+      'Do not use with active cancer',
+      'May worsen diabetic retinopathy'
+    ],
+  },
+  {
+    id: 'hcg',
+    name: 'HCG (Human Chorionic Gonadotropin)',
+    shortName: 'HCG',
+    category: 'hormonal',
+    molecularWeight: '~36,700 Da',
+    halfLife: '24-36 hours',
+    longevityScore: 5,
+    mechanism: 'Glycoprotein hormone that mimics luteinizing hormone (LH). Stimulates Leydig cells to produce testosterone, maintains testicular size and function during TRT or steroid cycles, and supports fertility.',
+    benefits: [
+      'Maintains testicular size and function',
+      'Stimulates endogenous testosterone production',
+      'Supports fertility during hormone therapy',
+      'Prevents testicular atrophy',
+      'Improves libido and mood'
+    ],
+    athleteBenefits: [
+      'Hormonal recovery support post-cycle',
+      'Maintains natural testosterone production',
+      'Preserves fertility during performance protocols',
+      'Supports overall endocrine health'
+    ],
+    risks: [
+      'Gynecomastia (via aromatization)',
+      'Water retention',
+      'Mood swings at high doses',
+      'Headache',
+      'Desensitization of Leydig cells with chronic high-dose use'
+    ],
+    dosing: {
+      beginner: '250 IU 2x/week',
+      intermediate: '500 IU 2x/week',
+      advanced: '1000 IU 2x/week',
+      athlete: '500 IU 2-3x/week'
+    },
+    frequency: '2-3x per week',
+    recommendedDuration: '8-16 weeks',
+    cycleProtocol: {
+      minDays: 56,
+      maxDays: 112,
+      breakDays: 28,
+      restartAdvice: 'Taper dose before discontinuation. Monitor LH/FSH recovery.',
+      breakAdvice: [
+        'Monitor testosterone and estrogen levels',
+        'Check fertility markers if relevant',
+        'Support with zinc and vitamin D',
+        'Avoid abrupt discontinuation'
+      ]
+    },
+    administration: 'Subcutaneous or intramuscular injection',
+    expectedResults: {
+      week1_2: 'Improved testicular fullness, mild mood boost',
+      week3_4: 'Noticeable testosterone support, libido improvement',
+      week5_8: 'Stable hormonal support, maintained fertility markers',
+      longTerm: 'Sustained testicular function and hormonal balance'
+    },
+    janoshikTested: true,
+    janoshikPurity: undefined,
+    janoshikDate: '2026-01-29',
+    janoshikCOA: [
+      {
+        taskNumber: '#103976',
+        verifyKey: 'G35USEABEAYS',
+        sampleName: 'HCG 10000iu',
+        measuredAmount: '16004 IU',
+        purity: undefined,
+        testDate: '29 JAN 2026',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
+    supplier: {
+      name: 'ZZTai-Tech',
+      productCode: 'HCG-10000IU',
+      price: 55,
+      stock: 'in-stock'
+    },
+    legalStatus: {
+      usa: 'prescription',
+      eu: 'Prescription only',
+      australia: 'Prescription (Schedule 4)'
+    },
+    clinicalStatus: 'approved',
+    fdaApproved: true,
+    warnings: [
+      'Monitor estrogen levels - may require AI',
+      'Not for use in hormone-sensitive cancers',
+      'Requires medical supervision'
+    ],
   }
 ];
