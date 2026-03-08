@@ -56,9 +56,9 @@ export default function COAVerification() {
       .sort((a, b) => b.purity - a.purity);
   }, [allTestedPeptides]);
 
-  const peptideCount = useCountUp({ end: allTestedPeptides.length, duration: 1500, enableScrollTrigger: true });
-  const coaCount = useCountUp({ end: totalCOAs, duration: 1800, delay: 200, enableScrollTrigger: true });
-  const purityCount = useCountUp({ end: avgPurity, duration: 2000, delay: 400, decimals: 1, suffix: '%', enableScrollTrigger: true });
+  const peptideCount = useCountUp({ end: allTestedPeptides.length, duration: 1500, enableScrollTrigger: false });
+  const coaCount = useCountUp({ end: totalCOAs, duration: 1800, delay: 200, enableScrollTrigger: false });
+  const purityCount = useCountUp({ end: avgPurity, duration: 2000, delay: 400, decimals: 1, suffix: '%', enableScrollTrigger: false });
 
   const categories = useMemo(() => {
     const cats = new Set<PeptideCategory>();
