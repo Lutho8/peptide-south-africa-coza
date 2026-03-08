@@ -112,6 +112,16 @@ export function HomeScreen({
         </motion.div>
       </motion.div>
 
+      {/* Beginner Welcome Guide */}
+      <motion.div variants={itemVariants}>
+        <WelcomeGuide
+          onDoseTracker={onOpenDoseTracker}
+          onBodyStats={onOpenBodyComposition}
+          onCycles={onOpenCycles}
+          onResearch={onNavigateResearch}
+        />
+      </motion.div>
+
       {/* News Ticker */}
       <motion.div variants={itemVariants}>
         <NewsTicker />
