@@ -409,17 +409,45 @@
 /* Global mobile optimizations */
 @media (max-width: 768px) {
   html {
-    /* Prevent iOS bounce effect */
     overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
   }
 
-  /* Ensure all interactive elements meet 44px touch target */
-  button, a, [role="button"], input, select, textarea {
+  /* Ensure interactive elements meet 44px touch target */
+  button, a[role="button"], [role="button"] {
     min-height: 44px;
+  }
+
+  /* Don't force min-height on inline inputs/labels inside cards */
+  input, select, textarea {
+    min-height: 40px;
   }
 
   /* Improve tap highlight */
   * {
     -webkit-tap-highlight-color: hsl(var(--primary) / 0.1);
+  }
+
+  /* Content-visibility for off-screen sections (perf boost) */
+  section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Desktop performance: content-visibility for heavy sections */
+@media (min-width: 769px) {
+  section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 800px;
   }
 }
