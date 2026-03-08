@@ -31,7 +31,22 @@ export default function COAVerification() {
       .sort((a, b) => (b.janoshikCOA?.length || 0) - (a.janoshikCOA?.length || 0));
   }, [search, selectedCategory]);
 
-  const totalCOAs = testedPeptides.reduce((sum, p) => sum + (p.janoshikCOA?.length || 0), 0);
+  const allTestedPeptides = useMemo(() => {
+    return peptides.filter(p => p.janoshikTested && p.janoshikCOA && p.janoshikCOA.length > 0);
+  }, []);
+
+  const totalCOAs = allTestedPeptides.reduce((sum, p) => sum + (p.janoshikCOA?.length || 0), 0);
+
+  const avgPurity = useMemo(() => {
+    const purities = allTestedPeptides
+      .filter(p => p.janoshikPurity)
+      .map(p => p.janoshikPurity!);
+    return purities.length ? purities.reduce((a, b) => a + b, 0) / purities.length : 0;
+  }, [allTestedPeptides]);
+
+  const peptideCount = useCountUp({ end: allTestedPeptides.length, duration: 1500, enableScrollTrigger: true });
+  const coaCount = useCountUp({ end: totalCOAs, duration: 1800, delay: 200, enableScrollTrigger: true });
+  const purityCount = useCountUp({ end: avgPurity, duration: 2000, delay: 400, decimals: 1, suffix: '%', enableScrollTrigger: true });
 
   const categories = useMemo(() => {
     const cats = new Set<PeptideCategory>();
