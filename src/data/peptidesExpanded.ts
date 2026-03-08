@@ -1855,7 +1855,19 @@ export const expandedPeptides: Peptide[] = [
       week5_8: 'Sustained cellular rejuvenation',
       longTerm: 'Slowed cellular aging markers'
     },
-    janoshikTested: false,
+    janoshikTested: true,
+    janoshikPurity: undefined,
+    janoshikDate: '2025-07-02',
+    janoshikCOA: [
+      {
+        taskNumber: '#69931',
+        verifyKey: '8IBNP21R84AE',
+        sampleName: 'NAD+ 500mg',
+        measuredAmount: '563.73 mg',
+        testDate: '02 JUL 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'NAD-500MG',
