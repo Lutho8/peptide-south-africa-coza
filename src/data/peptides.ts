@@ -46,6 +46,15 @@ export interface Peptide {
   janoshikTested: boolean;
   janoshikPurity?: number;
   janoshikDate?: string;
+  janoshikCOA?: Array<{
+    taskNumber: string;
+    verifyKey: string;
+    sampleName: string;
+    measuredAmount: string;
+    purity?: string;
+    testDate: string;
+    manufacturer: string;
+  }>;
   supplier: {
     name: string;
     productCode: string;
