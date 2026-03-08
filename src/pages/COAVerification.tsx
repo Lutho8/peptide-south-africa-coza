@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Shield, Search, ExternalLink, FlaskConical, CheckCircle2, Filter } from 'lucide-react';
+import { ArrowLeft, Shield, Search, ExternalLink, FlaskConical, CheckCircle2, Filter, Award, Percent, FileCheck } from 'lucide-react';
+import { useCountUp } from '@/hooks/useCountUp';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +31,22 @@ export default function COAVerification() {
       .sort((a, b) => (b.janoshikCOA?.length || 0) - (a.janoshikCOA?.length || 0));
   }, [search, selectedCategory]);
 
-  const totalCOAs = testedPeptides.reduce((sum, p) => sum + (p.janoshikCOA?.length || 0), 0);
+  const allTestedPeptides = useMemo(() => {
+    return peptides.filter(p => p.janoshikTested && p.janoshikCOA && p.janoshikCOA.length > 0);
+  }, []);
+
+  const totalCOAs = allTestedPeptides.reduce((sum, p) => sum + (p.janoshikCOA?.length || 0), 0);
+
+  const avgPurity = useMemo(() => {
+    const purities = allTestedPeptides
+      .filter(p => p.janoshikPurity)
+      .map(p => p.janoshikPurity!);
+    return purities.length ? purities.reduce((a, b) => a + b, 0) / purities.length : 0;
+  }, [allTestedPeptides]);
+
+  const peptideCount = useCountUp({ end: allTestedPeptides.length, duration: 1500, enableScrollTrigger: true });
+  const coaCount = useCountUp({ end: totalCOAs, duration: 1800, delay: 200, enableScrollTrigger: true });
+  const purityCount = useCountUp({ end: avgPurity, duration: 2000, delay: 400, decimals: 1, suffix: '%', enableScrollTrigger: true });
 
   const categories = useMemo(() => {
     const cats = new Set<PeptideCategory>();
@@ -87,6 +103,37 @@ export default function COAVerification() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Stats Summary */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="text-center p-4">
+            <div ref={peptideCount.ref} className="flex flex-col items-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-1">
+                <FlaskConical className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-2xl font-bold text-foreground">{peptideCount.count}</span>
+              <span className="text-[11px] text-muted-foreground leading-tight">Peptides Tested</span>
+            </div>
+          </Card>
+          <Card className="text-center p-4">
+            <div ref={purityCount.ref} className="flex flex-col items-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center mb-1">
+                <Award className="w-5 h-5 text-emerald-500" />
+              </div>
+              <span className="text-2xl font-bold text-foreground">{purityCount.formattedValue}</span>
+              <span className="text-[11px] text-muted-foreground leading-tight">Avg Purity</span>
+            </div>
+          </Card>
+          <Card className="text-center p-4">
+            <div ref={coaCount.ref} className="flex flex-col items-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-1">
+                <FileCheck className="w-5 h-5 text-blue-500" />
+              </div>
+              <span className="text-2xl font-bold text-foreground">{coaCount.count}</span>
+              <span className="text-[11px] text-muted-foreground leading-tight">Certificates</span>
+            </div>
+          </Card>
+        </div>
 
         {/* Search & Filter */}
         <div className="flex flex-col gap-3">
