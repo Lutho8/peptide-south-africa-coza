@@ -89,7 +89,7 @@ export default function COAVerification() {
         </Card>
 
         {/* Search & Filter */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -99,11 +99,11 @@ export default function COAVerification() {
               className="pl-9"
             />
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all whitespace-nowrap ${
                 selectedCategory === 'all'
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'border-input bg-background text-muted-foreground hover:bg-muted'
@@ -115,7 +115,7 @@ export default function COAVerification() {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all whitespace-nowrap ${
                   selectedCategory === cat
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-input bg-background text-muted-foreground hover:bg-muted'
