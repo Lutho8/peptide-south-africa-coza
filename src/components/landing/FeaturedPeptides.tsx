@@ -81,12 +81,20 @@ export function FeaturedPeptides() {
                           <p className="text-sm text-muted-foreground">{peptide.category}</p>
                         </div>
                       </div>
-                      <Badge 
-                        variant={isFdaApproved ? 'default' : 'secondary'}
-                        className={isFdaApproved ? 'bg-green-500/20 text-green-400 border-green-500/30' : ''}
-                      >
-                        {isFdaApproved ? 'FDA Approved' : 'Research'}
-                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        {peptide.janoshikTested && peptide.janoshikCOA?.length ? (
+                          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] px-1.5">
+                            <FlaskConical className="w-3 h-3 mr-0.5" />
+                            COA Verified
+                          </Badge>
+                        ) : null}
+                        <Badge 
+                          variant={isFdaApproved ? 'default' : 'secondary'}
+                          className={isFdaApproved ? 'bg-green-500/20 text-green-400 border-green-500/30' : ''}
+                        >
+                          {isFdaApproved ? 'FDA Approved' : 'Research'}
+                        </Badge>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>

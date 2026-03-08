@@ -248,9 +248,17 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
                         </div>
                       </div>
 
-                      <Badge className={cn('mb-3', categoryColors[peptide.category])}>
-                        {categoryLabels[peptide.category]}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 mb-3">
+                        <Badge className={cn(categoryColors[peptide.category])}>
+                          {categoryLabels[peptide.category]}
+                        </Badge>
+                        {peptide.janoshikTested && peptide.janoshikCOA?.length ? (
+                          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] px-1.5">
+                            <FlaskConical className="w-3 h-3 mr-0.5" />
+                            COA
+                          </Badge>
+                        ) : null}
+                      </div>
 
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                         {peptide.mechanism.slice(0, 120)}...
