@@ -13,6 +13,7 @@ import Disclaimer from "./pages/Disclaimer";
 import TermsOfService from "./pages/TermsOfService";
 import AdminDashboard from "./pages/AdminDashboard";
 import FreeCourse from "./pages/FreeCourse";
+import COAVerification from "./pages/COAVerification";
 
 // Initialize i18n
 import '@/i18n';
