@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Sparkles, Activity, Scale } from 'lucide-react';
+import { Shield, Sparkles, Activity, Scale, FlaskConical } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PeptideDetailModal } from '@/components/modals/PeptideDetailModal';
