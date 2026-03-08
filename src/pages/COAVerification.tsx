@@ -250,9 +250,27 @@ export default function COAVerification() {
                         </Badge>
                       )}
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {peptide.janoshikCOA!.length} COA{peptide.janoshikCOA!.length > 1 ? 's' : ''}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {peptide.janoshikCOA!.length} COA{peptide.janoshikCOA!.length > 1 ? 's' : ''}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
+                        onClick={() => generateCOAPdf({
+                          shortName: peptide.shortName,
+                          name: peptide.name,
+                          category: categoryConfig[peptide.category]?.label || peptide.category,
+                          janoshikPurity: peptide.janoshikPurity,
+                          janoshikDate: peptide.janoshikDate,
+                          janoshikCOA: peptide.janoshikCOA!,
+                        })}
+                      >
+                        <Download className="w-3.5 h-3.5 mr-1" />
+                        PDF
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">{peptide.name}</p>
                 </CardHeader>
