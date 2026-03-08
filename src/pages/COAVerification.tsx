@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Shield, Search, ExternalLink, FlaskConical, CheckCircle2, Filter, Award, Percent, FileCheck } from 'lucide-react';
+import { ArrowLeft, Shield, Search, ExternalLink, FlaskConical, CheckCircle2, Filter, Award, Percent, FileCheck, Download } from 'lucide-react';
+import { generateCOAPdf } from '@/utils/coaPdfExport';
 import { useCountUp } from '@/hooks/useCountUp';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
