@@ -16,6 +16,7 @@ const actions = [
     id: 'dose', 
     icon: Syringe, 
     label: 'Dose Tracker',
+    hint: 'Log doses',
     gradient: 'from-violet-600 to-purple-700',
     onClick: 'onDoseTracker'
   },
@@ -23,6 +24,7 @@ const actions = [
     id: 'stats', 
     icon: BarChart3, 
     label: 'Body Stats',
+    hint: 'Track weight',
     gradient: 'from-emerald-600 to-green-700',
     onClick: 'onBodyStats'
   },
@@ -30,6 +32,7 @@ const actions = [
     id: 'cycles', 
     icon: Calendar, 
     label: 'Cycles',
+    hint: 'Plan protocols',
     gradient: 'from-red-600 to-rose-700',
     onClick: 'onCycles'
   },
@@ -37,6 +40,7 @@ const actions = [
     id: 'peptides', 
     icon: Database, 
     label: 'Peptides',
+    hint: 'Browse 98+',
     gradient: 'from-cyan-600 to-teal-700',
     onClick: 'onPeptides'
   },
@@ -44,6 +48,7 @@ const actions = [
     id: 'bloodwork', 
     icon: Activity, 
     label: 'Bloodwork',
+    hint: 'Lab results',
     gradient: 'from-pink-600 to-rose-700',
     onClick: 'onBloodwork'
   },
@@ -51,6 +56,7 @@ const actions = [
     id: 'inventory', 
     icon: Package, 
     label: 'Inventory',
+    hint: 'Stock levels',
     gradient: 'from-amber-600 to-orange-700',
     onClick: 'onInventory'
   },
@@ -58,6 +64,7 @@ const actions = [
     id: 'research', 
     icon: BookOpen, 
     label: 'Research',
+    hint: 'Studies & refs',
     gradient: 'from-indigo-600 to-blue-700',
     onClick: 'onResearch'
   },
