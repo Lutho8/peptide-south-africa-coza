@@ -321,8 +321,19 @@ export const corePeptides: Peptide[] = [
       longTerm: 'Sustained neuroprotection, reduced neuroinflammation'
     },
     janoshikTested: true,
-    janoshikPurity: 99.5,
-    janoshikDate: '2024-11-01',
+    janoshikPurity: 99.401,
+    janoshikDate: '2025-07-04',
+    janoshikCOA: [
+      {
+        taskNumber: '#69935',
+        verifyKey: 'IL67K5WH8NK1',
+        sampleName: 'Semax 10mg',
+        measuredAmount: '10.65 mg',
+        purity: '99.401%',
+        testDate: '04 JUL 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'SEM-30MG',
