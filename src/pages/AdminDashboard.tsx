@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import CRMEnrollmentsTable from '@/components/admin/CRMEnrollmentsTable';
+import VialLabelMaker from '@/components/admin/VialLabelMaker';
 
 interface MemberData {
   id: string;
