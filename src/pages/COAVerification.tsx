@@ -5,6 +5,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { peptides, categoryConfig } from '@/data/peptides';
 import type { PeptideCategory } from '@/data/peptides';
