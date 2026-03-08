@@ -178,7 +178,10 @@ export default function AdminDashboard() {
               <Tag className="h-4 w-4" />
               Label Maker
             </TabsTrigger>
-          </TabsList>
+            <TabsTrigger value="coa" className="gap-1.5">
+              <Upload className="h-4 w-4" />
+              COA Upload
+            </TabsTrigger>
 
           <TabsContent value="members" className="space-y-6">
             {/* Stats Cards */}
