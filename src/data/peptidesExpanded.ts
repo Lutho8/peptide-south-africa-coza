@@ -193,6 +193,24 @@ export const expandedPeptides: Peptide[] = [
         testDate: '28 MAY 2025',
         manufacturer: 'https://zztai-tech.com/',
       },
+      {
+        taskNumber: '#69934',
+        verifyKey: '1NL24F2YXYMF',
+        sampleName: 'Tirzepatide 30mg',
+        measuredAmount: '31.40 mg',
+        purity: '99.974%',
+        testDate: '03 JUL 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+      {
+        taskNumber: '#83563',
+        verifyKey: 'NTY2BI8U6AKW',
+        sampleName: 'Tirzepatide 15mg',
+        measuredAmount: '16.76 mg',
+        purity: '99.357%',
+        testDate: '21 OCT 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
     ],
     supplier: {
       name: 'ZZTai-Tech',
@@ -712,8 +730,19 @@ export const expandedPeptides: Peptide[] = [
       longTerm: 'Improved stress resilience'
     },
     janoshikTested: true,
-    janoshikPurity: 99.1,
-    janoshikDate: '2024-10-25',
+    janoshikPurity: 99.404,
+    janoshikDate: '2025-07-04',
+    janoshikCOA: [
+      {
+        taskNumber: '#69936',
+        verifyKey: 'Q8WTI92ZPI4B',
+        sampleName: 'Selank 10mg',
+        measuredAmount: '10.12 mg',
+        purity: '99.404%',
+        testDate: '04 JUL 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'SEL-5MG',

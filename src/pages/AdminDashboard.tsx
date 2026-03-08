@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Crown, Calendar, Mail, Shield, GraduationCap, Tag } from 'lucide-react';
+import { ArrowLeft, Users, Crown, Calendar, Mail, Shield, GraduationCap, Tag, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import CRMEnrollmentsTable from '@/components/admin/CRMEnrollmentsTable';
 import VialLabelMaker from '@/components/admin/VialLabelMaker';
+import COAUploadManager from '@/components/admin/COAUploadManager';
 
 interface MemberData {
   id: string;
@@ -177,6 +178,10 @@ export default function AdminDashboard() {
               <Tag className="h-4 w-4" />
               Label Maker
             </TabsTrigger>
+            <TabsTrigger value="coa" className="gap-1.5">
+              <Upload className="h-4 w-4" />
+              COA Upload
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="members" className="space-y-6">
@@ -286,6 +291,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="labels">
             <VialLabelMaker />
+          </TabsContent>
+
+          <TabsContent value="coa">
+            <COAUploadManager />
           </TabsContent>
         </Tabs>
       </div>
