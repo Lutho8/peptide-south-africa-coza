@@ -106,7 +106,8 @@ export function QuickActions({
             <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
               <Icon size={20} />
             </div>
-            <span className="font-medium text-xs text-center">{action.label}</span>
+            <span className="font-medium text-xs text-center leading-tight">{action.label}</span>
+            <span className="text-[9px] text-white/70 -mt-1 leading-tight">{action.hint}</span>
           </button>
         );
       })}
