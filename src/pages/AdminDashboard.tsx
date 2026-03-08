@@ -182,6 +182,7 @@ export default function AdminDashboard() {
               <Upload className="h-4 w-4" />
               COA Upload
             </TabsTrigger>
+          </TabsList>
 
           <TabsContent value="members" className="space-y-6">
             {/* Stats Cards */}
