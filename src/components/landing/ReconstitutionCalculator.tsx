@@ -19,6 +19,7 @@ import { peptides } from '@/data/peptides';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { ReconstitutionGuide } from './ReconstitutionGuide';
 
 interface ReconstitutionCalculatorProps {
   open: boolean;
