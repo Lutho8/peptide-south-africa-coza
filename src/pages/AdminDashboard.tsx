@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import CRMEnrollmentsTable from '@/components/admin/CRMEnrollmentsTable';
 import VialLabelMaker from '@/components/admin/VialLabelMaker';
+import COAUploadManager from '@/components/admin/COAUploadManager';
 
 interface MemberData {
   id: string;
