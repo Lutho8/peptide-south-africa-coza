@@ -696,8 +696,19 @@ export const corePeptides: Peptide[] = [
       longTerm: 'Sustained healing benefits'
     },
     janoshikTested: true,
-    janoshikPurity: 98.5,
-    janoshikDate: '2024-09-18',
+    janoshikPurity: 99.109,
+    janoshikDate: '2025-04-24',
+    janoshikCOA: [
+      {
+        taskNumber: '#62995',
+        verifyKey: '',
+        sampleName: 'TB500 (Thymosin B4 Acetate) 5mg',
+        measuredAmount: '5.97 mg',
+        purity: '99.109%',
+        testDate: '24 APR 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'TB5-10MG',

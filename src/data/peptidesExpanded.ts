@@ -955,8 +955,19 @@ export const expandedPeptides: Peptide[] = [
       longTerm: 'Significant body composition improvement'
     },
     janoshikTested: true,
-    janoshikPurity: 99.2,
-    janoshikDate: '2024-11-02',
+    janoshikPurity: 99.456,
+    janoshikDate: '2025-05-28',
+    janoshikCOA: [
+      {
+        taskNumber: '#66349',
+        verifyKey: 'D3J54TA1BX6Q',
+        sampleName: 'Tesamorelin 10mg',
+        measuredAmount: '10.35 mg',
+        purity: '99.456%',
+        testDate: '28 MAY 2025',
+        manufacturer: 'https://zztai-tech.com/',
+      },
+    ],
     supplier: {
       name: 'ZZTai-Tech',
       productCode: 'TESA-2MG',
