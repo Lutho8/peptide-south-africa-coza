@@ -17,6 +17,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
 
   const navLinks = [
     { label: 'Free Course', href: '/free-course' },
+    { label: 'COA Verified', href: '/coa-verification' },
     { label: 'Browse', href: '#browse' },
     { label: 'Compare', href: '#compare' },
     { label: 'Stacks', href: '#stacks' },
