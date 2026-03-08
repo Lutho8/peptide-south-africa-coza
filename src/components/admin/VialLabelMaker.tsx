@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Tag, Printer, Copy, Check, Download, Plus, Trash2 } from 'lucide-react';
+import { Tag, Printer, Copy, Check, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { peptides } from '@/data/peptides';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface VialLabel {
   id: string;
@@ -28,6 +29,10 @@ interface VialLabel {
   cc: string;
   reconDate: string;
   expiryDate: string;
+}
+
+function buildQrData(label: VialLabel): string {
+  return `RTD|${label.peptideName}|${label.coaAmount}mg COA|${label.bacWater}mL BAC|${label.concentration}mg/mL|${label.dosePerInjection}${label.doseUnit}=${label.units}u(${label.cc}cc)|Recon:${label.reconDate}|Exp:${label.expiryDate}`;
 }
 
 export default function VialLabelMaker() {
@@ -57,7 +62,7 @@ export default function VialLabelMaker() {
     const concentrationMgMl = coa / bac;
     const doseMg = doseUnit === 'mg' ? dose : dose / 1000;
     const volumeMl = doseMg / concentrationMgMl;
-    const unitsToDraw = Math.round(volumeMl * 100 * 10) / 10; // U-100 syringe
+    const unitsToDraw = Math.round(volumeMl * 100 * 10) / 10;
 
     const reconDate = format(new Date(), 'MMMM do, yyyy');
     const expiry = new Date();
@@ -87,7 +92,7 @@ export default function VialLabelMaker() {
   };
 
   const handleCopyLabel = async (label: VialLabel) => {
-    const text = `${label.peptideName}\n${label.coaAmount}mg COA / ${label.bacWater}mL BAC\n${label.concentration}mg/mL | ${label.dosePerInjection}${label.doseUnit} = ${label.units}u (${label.cc}cc)\nRecon: ${label.reconDate}\nExp: ${label.expiryDate}`;
+    const text = `RTD | ${label.peptideName}\n${label.coaAmount}mg COA / ${label.bacWater}mL BAC\n${label.concentration}mg/mL | ${label.dosePerInjection}${label.doseUnit} = ${label.units}u (${label.cc}cc)\nRecon: ${label.reconDate}\nExp: ${label.expiryDate}`;
     try {
       await navigator.clipboard.writeText(text);
       setCopied(label.id);
@@ -107,27 +112,37 @@ export default function VialLabelMaker() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const labelsHtml = labels.map(label => `
+    const labelsHtml = labels.map(label => {
+      const qrData = encodeURIComponent(buildQrData(label));
+      return `
       <div style="border: 2px solid #333; border-radius: 8px; padding: 12px; width: 280px; font-family: monospace; font-size: 11px; page-break-inside: avoid; margin: 8px;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 8px;">
           <img src="/logo-animated.png" style="width: 24px; height: 24px;" />
-          <strong style="font-size: 14px;">Peptide Mastery</strong>
+          <strong style="font-size: 14px;">RTD — Ride The Tide</strong>
         </div>
-        <div style="font-size: 16px; font-weight: bold; margin-bottom: 4px;">${label.peptideName}</div>
-        <div>${label.coaAmount}mg COA / ${label.bacWater}mL BAC</div>
-        <div>${label.concentration}mg/mL | ${label.dosePerInjection}${label.doseUnit} = ${label.units}u (${label.cc}cc)</div>
-        <div style="margin-top: 6px; font-size: 10px; color: #666;">
-          Recon: ${label.reconDate}<br/>
-          Exp: ${label.expiryDate}
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div style="flex: 1;">
+            <div style="font-size: 16px; font-weight: bold; margin-bottom: 4px;">${label.peptideName}</div>
+            <div>${label.coaAmount}mg COA / ${label.bacWater}mL BAC</div>
+            <div>${label.concentration}mg/mL | ${label.dosePerInjection}${label.doseUnit} = ${label.units}u (${label.cc}cc)</div>
+            <div style="margin-top: 6px; font-size: 10px; color: #666;">
+              Recon: ${label.reconDate}<br/>
+              Exp: ${label.expiryDate}
+            </div>
+          </div>
+          <div style="margin-left: 8px;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${qrData}" width="70" height="70" />
+          </div>
         </div>
-        <div style="margin-top: 6px; font-size: 9px; color: #999; text-align: center;">For Research Purposes Only</div>
+        <div style="margin-top: 6px; font-size: 9px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 4px;">For Research Purposes Only</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
-        <head><title>Vial Labels — Peptide Mastery</title></head>
+        <head><title>Vial Labels — Ride The Tide</title></head>
         <body style="display: flex; flex-wrap: wrap; padding: 16px; gap: 8px;">
           ${labelsHtml}
           <script>window.onload = () => window.print();</script>
@@ -146,7 +161,7 @@ export default function VialLabelMaker() {
             <Tag className="h-5 w-5 text-primary" />
             Vial Label Maker
           </CardTitle>
-          <CardDescription>Create printable labels for reconstituted peptide vials with your branding</CardDescription>
+          <CardDescription>Create printable labels with RTD branding, QR codes, and reconstitution details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -218,23 +233,39 @@ export default function VialLabelMaker() {
                   key={label.id}
                   className="border-2 border-border rounded-lg p-3 font-mono text-xs bg-card relative group"
                 >
-                  {/* Brand header */}
+                  {/* RTD Brand header */}
                   <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border">
-                    <img src="/logo-animated.png" className="w-5 h-5" alt="Logo" />
-                    <span className="font-bold text-sm text-foreground">Peptide Mastery</span>
+                    <img src="/logo-animated.png" className="w-5 h-5" alt="RTD Logo" />
+                    <span className="font-bold text-sm text-foreground">RTD — Ride The Tide</span>
                   </div>
 
-                  <div className="text-base font-bold text-foreground mb-1">{label.peptideName}</div>
-                  <div className="text-muted-foreground">{label.coaAmount}mg COA / {label.bacWater}mL BAC</div>
-                  <div className="text-muted-foreground">
-                    {label.concentration}mg/mL | {label.dosePerInjection}{label.doseUnit} = {label.units}u ({label.cc}cc)
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="text-base font-bold text-foreground mb-1">{label.peptideName}</div>
+                      <div className="text-muted-foreground">{label.coaAmount}mg COA / {label.bacWater}mL BAC</div>
+                      <div className="text-muted-foreground">
+                        {label.concentration}mg/mL | {label.dosePerInjection}{label.doseUnit} = {label.units}u ({label.cc}cc)
+                      </div>
+                      <div className="mt-2 text-[10px] text-muted-foreground">
+                        Recon: {label.reconDate}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        Exp: {label.expiryDate}
+                      </div>
+                    </div>
+                    {/* QR Code */}
+                    <div className="ml-2 shrink-0">
+                      <QRCodeSVG
+                        value={buildQrData(label)}
+                        size={64}
+                        level="M"
+                        bgColor="transparent"
+                        fgColor="currentColor"
+                        className="text-foreground"
+                      />
+                    </div>
                   </div>
-                  <div className="mt-2 text-[10px] text-muted-foreground">
-                    Recon: {label.reconDate}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    Exp: {label.expiryDate}
-                  </div>
+
                   <div className="mt-2 text-[9px] text-muted-foreground text-center border-t border-border pt-1">
                     For Research Purposes Only
                   </div>

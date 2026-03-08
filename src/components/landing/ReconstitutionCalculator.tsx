@@ -19,6 +19,7 @@ import { peptides } from '@/data/peptides';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { ReconstitutionGuide } from './ReconstitutionGuide';
 
 interface ReconstitutionCalculatorProps {
   open: boolean;
@@ -477,6 +478,15 @@ export function ReconstitutionCalculator({ open, onClose }: ReconstitutionCalcul
                       {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
                       {copied ? 'Copied!' : 'Copy Label'}
                     </Button>
+                  </Card>
+
+                  {/* Step-by-step Reconstitution Guide */}
+                  <Card className="p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Syringe className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold">Step-by-Step Reconstitution Guide</h3>
+                    </div>
+                    <ReconstitutionGuide />
                   </Card>
 
                   {/* Important Notes */}
