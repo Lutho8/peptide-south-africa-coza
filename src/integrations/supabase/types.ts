@@ -393,32 +393,50 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          email_consent: boolean
           experience_level: string
+          first_name: string | null
           full_name: string
           id: string
+          last_name: string | null
           phone: string | null
           session_month: string
           topics_of_interest: string[] | null
+          whatsapp_consent: boolean
+          whatsapp_country_code: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           created_at?: string
           email: string
+          email_consent?: boolean
           experience_level?: string
+          first_name?: string | null
           full_name: string
           id?: string
+          last_name?: string | null
           phone?: string | null
           session_month: string
           topics_of_interest?: string[] | null
+          whatsapp_consent?: boolean
+          whatsapp_country_code?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           created_at?: string
           email?: string
+          email_consent?: boolean
           experience_level?: string
+          first_name?: string | null
           full_name?: string
           id?: string
+          last_name?: string | null
           phone?: string | null
           session_month?: string
           topics_of_interest?: string[] | null
+          whatsapp_consent?: boolean
+          whatsapp_country_code?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }
