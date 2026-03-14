@@ -146,6 +146,23 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
             </motion.p>
           </motion.div>
 
+          {/* Live Q&A CTA */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="mb-8"
+          >
+            <Button
+              size="lg"
+              onClick={() => navigate('/live-qna')}
+              className="bg-gradient-to-r from-accent to-primary hover:opacity-90 text-primary-foreground gap-2 px-6 shadow-lg"
+            >
+              <Video className="w-5 h-5" />
+              Join Free Monthly Q&A — Live on Zoom
+            </Button>
+          </motion.div>
+
           {/* Stats Grid with Count-up Animation */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {stats.map((stat, index) => (

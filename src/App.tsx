@@ -46,6 +46,7 @@ const App = () => {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/free-course" element={<FreeCourse />} />
                 <Route path="/coa-verification" element={<COAVerification />} />
+                <Route path="/live-qna" element={<LiveQnA />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

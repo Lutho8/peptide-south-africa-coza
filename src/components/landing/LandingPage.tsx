@@ -70,6 +70,7 @@ export function LandingPage() {
       </main>
 
       <LandingFooter />
+      <LiveQnAPopup />
 
       <Suspense fallback={null}>
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
