@@ -9,6 +9,7 @@ import { CTASection } from './CTASection';
 import { LandingFooter } from './LandingFooter';
 import { VendorShowcase } from './VendorShowcase';
 import { FAQSection } from './FAQSection';
+import { LiveQnAPopup } from './LiveQnAPopup';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { PeptideCategory } from '@/data/peptides';
