@@ -17,6 +17,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const FreeCourse = lazy(() => import("./pages/FreeCourse"));
 const COAVerification = lazy(() => import("./pages/COAVerification"));
+const LiveQnA = lazy(() => import("./pages/LiveQnA"));
 
 // Initialize i18n
 import '@/i18n';
