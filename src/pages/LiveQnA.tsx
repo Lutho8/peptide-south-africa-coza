@@ -12,6 +12,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 
+const COUNTRY_CODES = [
+  { code: '+1', label: 'US (+1)' },
+  { code: '+44', label: 'UK (+44)' },
+  { code: '+49', label: 'Germany (+49)' },
+  { code: '+27', label: 'South Africa (+27)' },
+  { code: '+61', label: 'Australia (+61)' },
+  { code: '+33', label: 'France (+33)' },
+  { code: '+34', label: 'Spain (+34)' },
+  { code: '+39', label: 'Italy (+39)' },
+  { code: '+31', label: 'Netherlands (+31)' },
+  { code: '+46', label: 'Sweden (+46)' },
+  { code: '+47', label: 'Norway (+47)' },
+  { code: '+48', label: 'Poland (+48)' },
+  { code: '+55', label: 'Brazil (+55)' },
+  { code: '+81', label: 'Japan (+81)' },
+  { code: '+82', label: 'South Korea (+82)' },
+  { code: '+86', label: 'China (+86)' },
+  { code: '+91', label: 'India (+91)' },
+  { code: '+971', label: 'UAE (+971)' },
+  { code: '+966', label: 'Saudi Arabia (+966)' },
+  { code: '+90', label: 'Turkey (+90)' },
+];
+
+const EXPERIENCE_OPTIONS = [
+  { value: 'beginner', label: 'Complete Beginner - Just getting started' },
+  { value: 'some_research', label: 'Some Research Done - Looking for guidance' },
+  { value: 'currently_using', label: 'Currently Using Peptides - Need optimization' },
+  { value: 'experienced', label: 'Experienced User - Advanced questions' },
+];
+
 const TOPICS = [
   'Beginner Peptide Basics',
   'Dosage & Administration',
@@ -25,7 +55,6 @@ const TOPICS = [
 
 function getNextSessionDate() {
   const now = new Date();
-  // Next session = first Saturday of next month
   const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   while (next.getDay() !== 6) next.setDate(next.getDate() + 1);
   return next;
@@ -41,11 +70,14 @@ export default function LiveQnA() {
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [form, setForm] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    phone: '',
+    whatsappCountryCode: '+49',
+    whatsappNumber: '',
     experienceLevel: 'beginner',
     topics: [] as string[],
+    consent: false,
   });
 
   const sessionDate = getNextSessionDate();
@@ -62,17 +94,26 @@ export default function LiveQnA() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.fullName.trim() || !form.email.trim()) return;
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.consent) {
+      toast({ title: 'Please fill all required fields', description: 'All fields marked with * are required, including consent.', variant: 'destructive' });
+      return;
+    }
 
     setLoading(true);
     try {
       const { error } = await supabase.from('qna_registrations').insert({
-        full_name: form.fullName.trim().slice(0, 100),
+        full_name: `${form.firstName.trim()} ${form.lastName.trim()}`.slice(0, 100),
+        first_name: form.firstName.trim().slice(0, 50),
+        last_name: form.lastName.trim().slice(0, 50),
         email: form.email.trim().toLowerCase().slice(0, 255),
-        phone: form.phone.trim().slice(0, 20) || null,
+        whatsapp_country_code: form.whatsappCountryCode,
+        whatsapp_number: form.whatsappNumber.trim().replace(/\D/g, '').slice(0, 15) || null,
+        phone: form.whatsappNumber.trim() ? `${form.whatsappCountryCode}${form.whatsappNumber.trim().replace(/\D/g, '')}` : null,
         experience_level: form.experienceLevel,
         topics_of_interest: form.topics,
         session_month: sessionMonth,
+        email_consent: form.consent,
+        whatsapp_consent: form.consent && !!form.whatsappNumber.trim(),
       });
 
       if (error) {
@@ -168,6 +209,16 @@ export default function LiveQnA() {
                 </p>
               </CardContent>
             </Card>
+
+            {/* Topics of Interest */}
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-3">Topics Covered</h3>
+              <div className="flex flex-wrap gap-2">
+                {TOPICS.map(topic => (
+                  <Badge key={topic} variant="secondary" className="text-xs">{topic}</Badge>
+                ))}
+              </div>
+            </div>
           </motion.div>
 
           {/* Registration Form */}
@@ -180,59 +231,92 @@ export default function LiveQnA() {
                   </motion.div>
                   <h3 className="text-2xl font-bold text-foreground">You're Registered!</h3>
                   <p className="text-muted-foreground">Check your inbox for confirmation. The Zoom link will be sent 24 hours before the session.</p>
+                  {form.whatsappNumber && <p className="text-sm text-muted-foreground">You'll also receive a WhatsApp reminder.</p>}
                   <Link to="/">
                     <Button variant="outline" className="mt-4">Explore Peptides</Button>
                   </Link>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-border/50">
+              <Card className="border-primary/30 shadow-lg">
+                <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary rounded-t-lg" />
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold text-foreground mb-1">Reserve Your Spot</h3>
-                  <p className="text-sm text-muted-foreground mb-6">Free · {sessionMonth} Session</p>
+                  <p className="text-sm text-muted-foreground mb-6">Free · {sessionMonth} Session · Via Zoom</p>
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Email */}
                     <div>
-                      <Label htmlFor="fullName">Full Name *</Label>
-                      <Input id="fullName" required maxLength={100} value={form.fullName} onChange={e => setForm(p => ({ ...p, fullName: e.target.value }))} placeholder="Your name" />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
                       <Input id="email" type="email" required maxLength={255} value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="you@example.com" />
                     </div>
-                    <div>
-                      <Label htmlFor="phone">Phone (optional)</Label>
-                      <Input id="phone" type="tel" maxLength={20} value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="+1 (555) 000-0000" />
+
+                    {/* Name Row */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="firstName">First Name <span className="text-destructive">*</span></Label>
+                        <Input id="firstName" required maxLength={50} value={form.firstName} onChange={e => setForm(p => ({ ...p, firstName: e.target.value }))} placeholder="First name" />
+                      </div>
+                      <div>
+                        <Label htmlFor="lastName">Last Name <span className="text-destructive">*</span></Label>
+                        <Input id="lastName" required maxLength={50} value={form.lastName} onChange={e => setForm(p => ({ ...p, lastName: e.target.value }))} placeholder="Last name" />
+                      </div>
                     </div>
+
+                    {/* WhatsApp Number */}
                     <div>
-                      <Label>Experience Level</Label>
+                      <Label>WhatsApp Number <span className="text-destructive">*</span></Label>
+                      <div className="grid grid-cols-[140px_1fr] gap-2">
+                        <Select value={form.whatsappCountryCode} onValueChange={v => setForm(p => ({ ...p, whatsappCountryCode: v }))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {COUNTRY_CODES.map(cc => (
+                              <SelectItem key={cc.code} value={cc.code}>{cc.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input type="tel" maxLength={15} value={form.whatsappNumber} onChange={e => setForm(p => ({ ...p, whatsappNumber: e.target.value }))} placeholder="15776292139" />
+                      </div>
+                    </div>
+
+                    {/* Experience Level */}
+                    <div>
+                      <Label>👉 Choose the option below that best describes you 👈 <span className="text-destructive">*</span></Label>
                       <Select value={form.experienceLevel} onValueChange={v => setForm(p => ({ ...p, experienceLevel: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="beginner">Complete Beginner</SelectItem>
-                          <SelectItem value="some_research">Some Research Done</SelectItem>
-                          <SelectItem value="currently_using">Currently Using Peptides</SelectItem>
-                          <SelectItem value="experienced">Experienced User</SelectItem>
+                          {EXPERIENCE_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
-                      <Label className="mb-2 block">Topics of Interest</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {TOPICS.map(topic => (
-                          <label key={topic} className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded-md hover:bg-muted/50 transition-colors">
-                            <Checkbox checked={form.topics.includes(topic)} onCheckedChange={() => handleTopicToggle(topic)} />
-                            <span className="text-muted-foreground">{topic}</span>
-                          </label>
-                        ))}
-                      </div>
+
+                    {/* Consent */}
+                    <div className="border border-border rounded-lg p-4 bg-muted/30">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <Checkbox
+                          checked={form.consent}
+                          onCheckedChange={(checked) => setForm(p => ({ ...p, consent: checked === true }))}
+                          className="mt-0.5"
+                        />
+                        <span className="text-sm text-muted-foreground leading-relaxed">
+                          I consent to receiving communications from Ride The Tide regarding the Q&A session I registered for, as well as additional updates via email and WhatsApp. I understand that my personal data will be processed and shared with Zoom to facilitate the webinar. I may withdraw my consent at any time with future effect by using the unsubscribe link in the communications. <span className="text-destructive">*</span>
+                        </span>
+                      </label>
+                      <Link to="/privacy" className="text-xs text-primary hover:underline mt-2 block">
+                        Click here to know how we use and protect your data.
+                      </Link>
                     </div>
-                    <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                      {loading ? 'Registering...' : 'Register for Free'}
+
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      size="lg" 
+                      disabled={loading || !form.consent}
+                    >
+                      {loading ? 'Registering...' : 'SUBMIT'}
                     </Button>
-                    <p className="text-xs text-muted-foreground text-center">
-                      By registering you agree to our <Link to="/privacy" className="underline">Privacy Policy</Link>. No spam, ever.
-                    </p>
                   </form>
                 </CardContent>
               </Card>
