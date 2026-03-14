@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, FlaskConical, Award, BookOpen } from 'lucide-react';
+import { TrendingUp, FlaskConical, Award, BookOpen, Video } from 'lucide-react';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
 import { useCountUp } from '@/hooks/useCountUp';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 
 const stats = [
