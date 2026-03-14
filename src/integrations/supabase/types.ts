@@ -389,6 +389,39 @@ export type Database = {
         }
         Relationships: []
       }
+      qna_registrations: {
+        Row: {
+          created_at: string
+          email: string
+          experience_level: string
+          full_name: string
+          id: string
+          phone: string | null
+          session_month: string
+          topics_of_interest: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          experience_level?: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          session_month: string
+          topics_of_interest?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          experience_level?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          session_month?: string
+          topics_of_interest?: string[] | null
+        }
+        Relationships: []
+      }
       renpho_credentials: {
         Row: {
           created_at: string
