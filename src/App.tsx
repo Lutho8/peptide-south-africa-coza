@@ -17,6 +17,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const FreeCourse = lazy(() => import("./pages/FreeCourse"));
 const COAVerification = lazy(() => import("./pages/COAVerification"));
+const LiveQnA = lazy(() => import("./pages/LiveQnA"));
 
 // Initialize i18n
 import '@/i18n';
@@ -45,6 +46,7 @@ const App = () => {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/free-course" element={<FreeCourse />} />
                 <Route path="/coa-verification" element={<COAVerification />} />
+                <Route path="/live-qna" element={<LiveQnA />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, FlaskConical, Award, BookOpen } from 'lucide-react';
+import { TrendingUp, FlaskConical, Award, BookOpen, Video } from 'lucide-react';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
 import { useCountUp } from '@/hooks/useCountUp';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 
 const stats = [
@@ -68,6 +70,7 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onCategoryClick }: HeroSectionProps) {
+  const navigate = useNavigate();
 
   // Reduced particles on mobile for performance
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -141,6 +144,23 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
               Your research-grade peptide database with 98+ peptides. 
               Comprehensive research, mechanisms, clinical data, and scientific literature.
             </motion.p>
+          </motion.div>
+
+          {/* Live Q&A CTA */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="mb-8"
+          >
+            <Button
+              size="lg"
+              onClick={() => navigate('/live-qna')}
+              className="bg-gradient-to-r from-accent to-primary hover:opacity-90 text-primary-foreground gap-2 px-6 shadow-lg"
+            >
+              <Video className="w-5 h-5" />
+              Join Free Monthly Q&A — Live on Zoom
+            </Button>
           </motion.div>
 
           {/* Stats Grid with Count-up Animation */}
