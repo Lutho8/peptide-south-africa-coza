@@ -70,6 +70,7 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onCategoryClick }: HeroSectionProps) {
+  const navigate = useNavigate();
 
   // Reduced particles on mobile for performance
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
