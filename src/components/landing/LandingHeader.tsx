@@ -20,7 +20,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
     { label: 'Free Course', href: '/free-course' },
     { label: 'COA Verified', href: '/coa-verification' },
     { label: 'Browse', href: '#browse' },
-    { label: 'Compare', href: '#compare' },
+    { label: 'Blends', href: '#tools' },
     { label: 'Stacks', href: '#stacks' },
     { label: 'Calculator', href: '#calc' },
     { label: 'Quiz', href: '#quiz' },

@@ -10,7 +10,7 @@ const footerLinks = {
     { label: 'Research Phase', href: '#' },
   ],
   Tools: [
-    { label: 'Compare', href: '#compare' },
+    { label: 'Blends', href: '#tools' },
     { label: 'Stack Builder', href: '#stack' },
     { label: 'Calculator', href: '#calculator' },
     { label: 'Quiz', href: '#quiz' },
