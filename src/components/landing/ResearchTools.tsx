@@ -1,16 +1,16 @@
 import { motion } from 'framer-motion';
-import { GitCompare, Layers, Calculator, HelpCircle, Search } from 'lucide-react';
+import { FlaskConical, Layers, Calculator, HelpCircle, Search } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ResearchToolsProps {
-  onCompareClick?: () => void;
+  onBlendsClick?: () => void;
   onQuizClick?: () => void;
   onSearchClick?: () => void;
   onStackClick?: () => void;
   onCalculatorClick?: () => void;
 }
 
-export function ResearchTools({ onCompareClick, onQuizClick, onSearchClick, onStackClick, onCalculatorClick }: ResearchToolsProps) {
+export function ResearchTools({ onBlendsClick, onQuizClick, onSearchClick, onStackClick, onCalculatorClick }: ResearchToolsProps) {
   const tools = [
     {
       icon: Search,
@@ -20,17 +20,17 @@ export function ResearchTools({ onCompareClick, onQuizClick, onSearchClick, onSt
       onClick: onSearchClick,
     },
     {
-      icon: GitCompare,
-      title: 'Compare',
-      description: 'Side-by-side peptide comparison with detailed metrics and research data.',
-      color: 'from-blue-500 to-cyan-500',
-      onClick: onCompareClick,
+      icon: FlaskConical,
+      title: 'Blends',
+      description: 'Explore pre-formulated peptide blends with full dosage protocols and references.',
+      color: 'from-purple-500 to-pink-500',
+      onClick: onBlendsClick,
     },
     {
       icon: Layers,
       title: 'Stack Builder',
       description: 'Create optimized peptide combinations based on your research goals.',
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-blue-500 to-cyan-500',
       onClick: onStackClick,
     },
     {
