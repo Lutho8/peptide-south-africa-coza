@@ -1,13 +1,10 @@
-import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, FlaskConical, Award, BookOpen, Video, ChevronLeft, ChevronRight, Beaker, ExternalLink } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { TrendingUp, FlaskConical, Award, BookOpen, Video } from 'lucide-react';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
 import { useCountUp } from '@/hooks/useCountUp';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
-import { peptideBlends } from '@/data/peptideBlends';
 
 const stats = [
   { label: 'Peptides', value: 98, suffix: '+', icon: FlaskConical },
@@ -15,8 +12,6 @@ const stats = [
   { label: 'Categories', value: 11, suffix: '', icon: TrendingUp },
   { label: 'Citations', value: 500, suffix: '+', icon: BookOpen },
 ];
-
-const featuredBlends = peptideBlends.slice(0, 3);
 
 // Floating particle component - reduced for mobile perf
 function FloatingParticle({ delay, duration, x, y }: { delay: number; duration: number; x: number; y: number }) {
@@ -69,81 +64,12 @@ function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
   );
 }
 
-// Featured blend carousel card
-function BlendCarouselCard({ blend, onViewAll }: { blend: typeof featuredBlends[0]; onViewAll: () => void }) {
-  return (
-    <motion.div
-      className="flex-shrink-0 w-full"
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-md p-5 md:p-6 hover:border-accent/40 transition-all">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
-            <FlaskConical className="w-6 h-6 text-purple-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-bold text-base md:text-lg truncate">{blend.shortName}</h3>
-              <Badge variant="outline" className="text-[10px] flex-shrink-0">{blend.vialSize}</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{blend.description.slice(0, 150)}...</p>
-            
-            {/* Quick stats */}
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <div className="rounded-lg bg-muted/30 px-3 py-1.5">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Components</div>
-                <div className="text-xs font-medium">{blend.components.length} peptides</div>
-              </div>
-              <div className="rounded-lg bg-muted/30 px-3 py-1.5">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">References</div>
-                <div className="text-xs font-medium">{blend.references.length} studies</div>
-              </div>
-            </div>
-
-            {/* Component badges */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {blend.components.map((c, i) => (
-                <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent-foreground border border-accent/20">{c}</span>
-              ))}
-            </div>
-
-            {/* Quickstart preview */}
-            <div className="text-xs text-muted-foreground space-y-0.5">
-              <div><strong className="text-foreground">Dose:</strong> {blend.quickstart.typicalDose}</div>
-              <div><strong className="text-foreground">Reconstitute:</strong> {blend.quickstart.reconstitute}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-4 flex items-center justify-end">
-          <Button size="sm" variant="ghost" onClick={onViewAll} className="text-xs text-primary hover:text-primary gap-1">
-            View All Blends & Stacks <ExternalLink className="w-3 h-3" />
-          </Button>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
 interface HeroSectionProps {
   onCategoryClick?: (category: PeptideCategory) => void;
-  onBlendsClick?: () => void;
 }
 
-export function HeroSection({ onCategoryClick, onBlendsClick }: HeroSectionProps) {
+export function HeroSection({ onCategoryClick }: HeroSectionProps) {
   const navigate = useNavigate();
-  const [currentBlend, setCurrentBlend] = useState(0);
-
-  const nextBlend = useCallback(() => {
-    setCurrentBlend(prev => (prev + 1) % featuredBlends.length);
-  }, []);
-
-  const prevBlend = useCallback(() => {
-    setCurrentBlend(prev => (prev - 1 + featuredBlends.length) % featuredBlends.length);
-  }, []);
 
   // Reduced particles on mobile for performance
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -242,48 +168,6 @@ export function HeroSection({ onCategoryClick, onBlendsClick }: HeroSectionProps
               <StatCard key={stat.label} stat={stat} index={index} />
             ))}
           </div>
-
-          {/* Featured Blends Carousel */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
-            className="mb-8"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Beaker className="w-5 h-5 text-purple-400" />
-                <h2 className="text-lg font-bold">Featured Peptide Blends</h2>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={prevBlend} className="h-8 w-8 rounded-full">
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <div className="flex gap-1 mx-1">
-                  {featuredBlends.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentBlend(i)}
-                      className={`w-2 h-2 rounded-full transition-all ${i === currentBlend ? 'bg-primary w-5' : 'bg-muted-foreground/30'}`}
-                    />
-                  ))}
-                </div>
-                <Button variant="ghost" size="icon" onClick={nextBlend} className="h-8 w-8 rounded-full">
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="overflow-hidden">
-              <AnimatePresence mode="wait">
-                <BlendCarouselCard
-                  key={featuredBlends[currentBlend].id}
-                  blend={featuredBlends[currentBlend]}
-                  onViewAll={onBlendsClick || (() => {})}
-                />
-              </AnimatePresence>
-            </div>
-          </motion.div>
 
           {/* Dynamic Category Badges */}
           <HeroCategoryBadges onCategoryClick={onCategoryClick} />

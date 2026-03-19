@@ -4,7 +4,6 @@ import { FlaskConical, Layers, X, Search, ChevronRight, BookOpen, Home } from 'l
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { peptideBlends, peptideStacks, PeptideBlend } from '@/data/peptideBlends';
 import { BlendDetailModal } from './BlendDetailModal';
 import { cn } from '@/lib/utils';
@@ -136,7 +135,7 @@ export function PeptideBlends({ open, onClose }: PeptideBlendsProps) {
             </div>
           </div>
 
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto">
             <div className="container mx-auto p-4">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map(item => (
@@ -150,7 +149,7 @@ export function PeptideBlends({ open, onClose }: PeptideBlendsProps) {
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </motion.div>
 
