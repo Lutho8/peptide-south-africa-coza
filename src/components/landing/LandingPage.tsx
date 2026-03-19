@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
 import { ResearchTools } from './ResearchTools';
@@ -18,7 +18,7 @@ import { PeptideCategory } from '@/data/peptides';
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
 
 const PeptideQuiz = lazy(() => import('./PeptideQuiz').then(m => ({ default: m.PeptideQuiz })));
-const PeptideCompare = lazy(() => import('./PeptideCompare').then(m => ({ default: m.PeptideCompare })));
+const PeptideBlends = lazy(() => import('./PeptideBlends').then(m => ({ default: m.PeptideBlends })));
 const PeptideSearch = lazy(() => import('./PeptideSearch').then(m => ({ default: m.PeptideSearch })));
 const StackBuilder = lazy(() => import('./StackBuilder').then(m => ({ default: m.StackBuilder })));
 const ReconstitutionCalculator = lazy(() => import('./ReconstitutionCalculator').then(m => ({ default: m.ReconstitutionCalculator })));
@@ -27,7 +27,7 @@ export function LandingPage() {
   const { user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
-  const [compareOpen, setCompareOpen] = useState(false);
+  const [blendsOpen, setBlendsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [stackBuilderOpen, setStackBuilderOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
@@ -41,7 +41,6 @@ export function LandingPage() {
   };
 
   const handleAccessDashboard = () => {
-    // This would redirect to dashboard - handled by parent component
     window.location.reload();
   };
 
@@ -57,7 +56,7 @@ export function LandingPage() {
         <FAQSection />
         <VendorShowcase onSignInClick={handleSignInClick} />
         <ResearchTools 
-          onCompareClick={() => setCompareOpen(true)}
+          onBlendsClick={() => setBlendsOpen(true)}
           onQuizClick={() => setQuizOpen(true)}
           onSearchClick={() => setSearchOpen(true)}
           onStackClick={() => setStackBuilderOpen(true)}
@@ -75,7 +74,7 @@ export function LandingPage() {
       <Suspense fallback={null}>
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
         {quizOpen && <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />}
-        {compareOpen && <PeptideCompare open={compareOpen} onClose={() => setCompareOpen(false)} />}
+        {blendsOpen && <PeptideBlends open={blendsOpen} onClose={() => setBlendsOpen(false)} />}
         {searchOpen && <PeptideSearch open={searchOpen} onClose={() => setSearchOpen(false)} />}
         {stackBuilderOpen && <StackBuilder open={stackBuilderOpen} onClose={() => setStackBuilderOpen(false)} />}
         {calculatorOpen && <ReconstitutionCalculator open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />}

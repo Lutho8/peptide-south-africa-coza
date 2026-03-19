@@ -9,7 +9,7 @@ export { BlogSection } from './BlogSection';
 export { CTASection } from './CTASection';
 export { LandingFooter } from './LandingFooter';
 export { PeptideQuiz } from './PeptideQuiz';
-export { PeptideCompare } from './PeptideCompare';
+export { PeptideBlends } from './PeptideBlends';
 export { PeptideSearch } from './PeptideSearch';
 export { StackBuilder } from './StackBuilder';
 export { ReconstitutionCalculator } from './ReconstitutionCalculator';
