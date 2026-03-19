@@ -52,7 +52,7 @@ export function LandingPage() {
       />
       
       <main>
-        <HeroSection onCategoryClick={handleCategoryClick} onBlendsClick={() => setBlendsOpen(true)} />
+        <HeroSection onCategoryClick={handleCategoryClick} />
         <FAQSection />
         <VendorShowcase onSignInClick={handleSignInClick} />
         <ResearchTools 
