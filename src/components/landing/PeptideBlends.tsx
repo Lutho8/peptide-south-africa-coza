@@ -91,7 +91,13 @@ export function PeptideBlends({ open, onClose }: PeptideBlendsProps) {
                   <p className="text-xs text-muted-foreground">{peptideBlends.length} blends • {peptideStacks.length} stacks • Research-grade protocols</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose}><X className="w-5 h-5" /></Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={onClose} className="gap-1.5">
+                  <Home className="w-4 h-4" />
+                  <span className="hidden sm:inline">Home</span>
+                </Button>
+                <Button variant="ghost" size="icon" onClick={onClose}><X className="w-5 h-5" /></Button>
+              </div>
             </div>
           </div>
 
