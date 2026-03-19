@@ -1,13 +1,11 @@
 import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, FlaskConical, Award, BookOpen, Video, ChevronLeft, ChevronRight, Beaker, ExternalLink } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { TrendingUp, FlaskConical, Award, BookOpen, Video } from 'lucide-react';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
 import { useCountUp } from '@/hooks/useCountUp';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
-import { peptideBlends } from '@/data/peptideBlends';
 
 const stats = [
   { label: 'Peptides', value: 98, suffix: '+', icon: FlaskConical },
