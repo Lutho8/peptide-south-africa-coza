@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FlaskConical, Layers, X, Search, ChevronRight, BookOpen } from 'lucide-react';
+import { FlaskConical, Layers, X, Search, ChevronRight, BookOpen, Home } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
