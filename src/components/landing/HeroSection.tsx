@@ -14,7 +14,7 @@ const stats = [
   { label: 'Citations', value: 500, suffix: '+', icon: BookOpen },
 ];
 
-const featuredBlends = peptideBlends.slice(0, 3);
+
 
 // Floating particle component - reduced for mobile perf
 function FloatingParticle({ delay, duration, x, y }: { delay: number; duration: number; x: number; y: number }) {

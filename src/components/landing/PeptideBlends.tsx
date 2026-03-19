@@ -135,7 +135,7 @@ export function PeptideBlends({ open, onClose }: PeptideBlendsProps) {
             </div>
           </div>
 
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto">
             <div className="container mx-auto p-4">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map(item => (
@@ -149,7 +149,7 @@ export function PeptideBlends({ open, onClose }: PeptideBlendsProps) {
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </motion.div>
 
