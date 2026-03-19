@@ -4,7 +4,6 @@ import { FlaskConical, Layers, X, Search, ChevronRight, BookOpen, Home } from 'l
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { peptideBlends, peptideStacks, PeptideBlend } from '@/data/peptideBlends';
 import { BlendDetailModal } from './BlendDetailModal';
 import { cn } from '@/lib/utils';
