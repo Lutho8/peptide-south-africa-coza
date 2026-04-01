@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { peptides } from '@/data/peptides';
-import { Plus, Trash2, X } from 'lucide-react';
+import { getAllSelectablePeptides, findPeptideOrBlend } from '@/data/blendAdapters';
+import { Plus, Trash2, X, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
 
 export interface StackItem {
