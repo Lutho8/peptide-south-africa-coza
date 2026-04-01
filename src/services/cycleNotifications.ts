@@ -1,5 +1,6 @@
 import { getCycles, Cycle } from '@/services/storage';
-import { peptides } from '@/data/peptides';
+import { findPeptideOrBlend } from '@/data/blendAdapters';
+import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { showNotification, isNotificationSupported } from '@/services/notifications';
 
 const CYCLE_NOTIFICATION_KEY = 'peptide_app_cycle_notifications_sent';
@@ -39,6 +40,28 @@ function getDaysElapsed(startDate: string): number {
   return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+function getProtocolForCycle(cycle: Cycle): { maxDays: number; breakDays: number } | null {
+  // Try peptide cycleProtocol first
+  const peptide = findPeptideOrBlend(cycle.peptideId);
+  if (peptide?.cycleProtocol) {
+    return peptide.cycleProtocol;
+  }
+
+  // Fall back to cycle suggestions (covers blends)
+  const suggestion = getCycleSuggestion(cycle.peptideId);
+  if (suggestion?.protocols?.length) {
+    const proto = suggestion.protocols[0];
+    return { maxDays: proto.cycleDuration, breakDays: proto.breakDuration };
+  }
+
+  // Use the cycle's own planned duration as last resort
+  if (cycle.plannedDuration > 0) {
+    return { maxDays: cycle.plannedDuration, breakDays: cycle.breakDuration };
+  }
+
+  return null;
+}
+
 export function checkCycleNotifications(): void {
   if (!isNotificationSupported() || Notification.permission !== 'granted') return;
 
@@ -47,15 +70,14 @@ export function checkCycleNotifications(): void {
   cycles
     .filter(c => c.status === 'active')
     .forEach(cycle => {
-      const peptide = peptides.find(p => p.id === cycle.peptideId);
-      const protocol = peptide?.cycleProtocol;
+      const protocol = getProtocolForCycle(cycle);
       if (!protocol) return;
 
       const daysElapsed = getDaysElapsed(cycle.startDate);
       const daysRemaining = protocol.maxDays - daysElapsed;
       const warningThreshold = Math.min(7, Math.floor(protocol.maxDays * 0.15)); // 15% or 7 days
 
-      // Warning: nearing end
+      // Warning: nearing end (at 85% completion)
       if (daysRemaining <= warningThreshold && daysRemaining > 0) {
         if (!wasNotificationSent(cycle.id, 'warning')) {
           showNotification(`⏰ ${cycle.peptideName} — Cycle Ending Soon`, {

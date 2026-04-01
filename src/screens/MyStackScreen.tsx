@@ -371,6 +371,7 @@ export function MyStackScreen() {
                 dose={item.dose}
                 frequency={item.frequency}
                 cycle={getCycleForPeptide(item.peptideId)}
+                onStartCycle={handleStartCycle}
               />
             );
           })
