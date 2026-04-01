@@ -4,13 +4,15 @@ import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { userProfile, stackOptimizations, activeCycles } from '@/data/userData';
 import { peptides } from '@/data/peptides';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, Bot } from 'lucide-react';
+import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, Bot, FlaskConical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { EditStackModal, StackItem } from '@/components/modals/EditStackModal';
 import { getActiveStack, saveActiveStack, getUserProfile } from '@/services/storage';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
+import { Badge } from '@/components/ui/badge';
 
 interface StackItemProps {
   peptide: typeof peptides[0];
