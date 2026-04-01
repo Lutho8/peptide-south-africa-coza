@@ -4,12 +4,14 @@ import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { userProfile, stackOptimizations } from '@/data/userData';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { EditStackModal, StackItem } from '@/components/modals/EditStackModal';
-import { getActiveStack, saveActiveStack, getUserProfile, getCycles, updateCycle, Cycle } from '@/services/storage';
+import { getActiveStack, saveActiveStack, getUserProfile, getCycles, updateCycle, saveCycle, Cycle } from '@/services/storage';
+import { getCycleSuggestion } from '@/data/cycleSuggestions';
+import { toast } from '@/hooks/use-toast';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
 import { Badge } from '@/components/ui/badge';
 import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
@@ -22,6 +24,7 @@ interface StackItemProps {
   frequency: string;
   peptideId: string;
   cycle?: Cycle;
+  onStartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
 }
 
 function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number; isNearing: boolean; isOverdue: boolean } {
@@ -38,7 +41,7 @@ function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number
   };
 }
 
-function StackItemCard({ peptide, dose, frequency, peptideId, cycle }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycle }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
@@ -81,6 +84,24 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle }: StackItem
             )}
           </div>
         </CollapsibleTrigger>
+
+        {/* Start Cycle button when no active cycle */}
+        {!cycle && onStartCycle && (
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartCycle(peptideId, peptide.name, dose, frequency);
+              }}
+            >
+              <Play size={12} />
+              Start Cycle
+            </Button>
+          </div>
+        )}
 
         {/* Inline cycle progress bar */}
         {cycle && cycleInfo && (
@@ -252,6 +273,31 @@ export function MyStackScreen() {
     setCycles(getCycles());
   };
 
+  const handleStartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
+    const suggestion = getCycleSuggestion(peptideId);
+    const protocol = suggestion?.protocols?.[0];
+    const cycleDuration = protocol?.cycleDuration || 60;
+    const breakDuration = protocol?.breakDuration || 14;
+
+    const newCycle: Cycle = {
+      id: `cycle-${Date.now()}`,
+      peptideId,
+      peptideName,
+      dose,
+      frequency,
+      startDate: new Date().toISOString().split('T')[0],
+      plannedDuration: cycleDuration,
+      breakDuration,
+      status: 'active',
+    };
+    saveCycle(newCycle);
+    setCycles(getCycles());
+    toast({
+      title: '🚀 Cycle Started',
+      description: `${peptideName} — ${cycleDuration}-day cycle with ${breakDuration}-day break.`,
+    });
+  };
+
   // Map cycles to stack items
   const getCycleForPeptide = (peptideId: string): Cycle | undefined => {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
@@ -325,6 +371,7 @@ export function MyStackScreen() {
                 dose={item.dose}
                 frequency={item.frequency}
                 cycle={getCycleForPeptide(item.peptideId)}
+                onStartCycle={handleStartCycle}
               />
             );
           })
