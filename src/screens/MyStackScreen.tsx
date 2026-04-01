@@ -24,6 +24,7 @@ interface StackItemProps {
   frequency: string;
   peptideId: string;
   cycle?: Cycle;
+  onStartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
 }
 
 function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number; isNearing: boolean; isOverdue: boolean } {
