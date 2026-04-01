@@ -260,12 +260,13 @@ export function MyStackScreen() {
           </GradientCard>
         ) : (
           activeStack.map((item) => {
-            const peptide = peptides.find(p => p.id === item.peptideId);
+            const peptide = findPeptideOrBlend(item.peptideId);
             if (!peptide) return null;
             return (
               <StackItemCard
-                key={peptide.id}
+                key={item.peptideId}
                 peptide={peptide}
+                peptideId={item.peptideId}
                 dose={item.dose}
                 frequency={item.frequency}
               />
