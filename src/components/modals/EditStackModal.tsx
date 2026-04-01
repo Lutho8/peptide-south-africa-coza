@@ -172,16 +172,26 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
               </div>
 
               <div className="space-y-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground">Peptide</Label>
+              <div>
+                  <Label className="text-xs text-muted-foreground">Peptide / Blend</Label>
                   <Select value={newPeptideId} onValueChange={setNewPeptideId}>
                     <SelectTrigger className="bg-muted border-border">
-                      <SelectValue placeholder="Select peptide" />
+                      <SelectValue placeholder="Select peptide or blend" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availablePeptides.map(peptide => (
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Individual Peptides</div>
+                      {availablePeptides.filter(p => !p.isBlend).map(peptide => (
                         <SelectItem key={peptide.id} value={peptide.id}>
                           {peptide.name}
+                        </SelectItem>
+                      ))}
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1 pt-1.5">Blends & Stacks</div>
+                      {availablePeptides.filter(p => p.isBlend).map(peptide => (
+                        <SelectItem key={peptide.id} value={peptide.id}>
+                          <span className="flex items-center gap-1.5">
+                            <FlaskConical className="w-3 h-3 text-purple-400" />
+                            {peptide.name}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
