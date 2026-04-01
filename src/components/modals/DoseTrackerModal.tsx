@@ -34,6 +34,8 @@ import {
 } from '@/services/notifications';
 import { peptides } from '@/data/peptides';
 import { getCycleSuggestion } from '@/data/cycleSuggestions';
+import { getAllSelectablePeptides } from '@/data/blendAdapters';
+import { FlaskConical } from 'lucide-react';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2, AlertTriangle, Timer, Play, Pause, Square } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -174,13 +176,14 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
       return;
     }
 
-    const peptide = peptides.find(p => p.id === newPeptideId);
-    if (!peptide) return;
+    const allSelectable = getAllSelectablePeptides();
+    const match = allSelectable.find(p => p.id === newPeptideId);
+    if (!match) return;
 
     const newSchedule: DoseSchedule = {
       id: `schedule-${Date.now()}`,
       peptideId: newPeptideId,
-      peptideName: peptide.name,
+      peptideName: match.name,
       dose: newDose,
       frequency: newFrequency,
       time: newTime,
@@ -199,7 +202,7 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
 
     toast({
       title: "Schedule added",
-      description: `${peptide.name} scheduled at ${newTime}.`,
+      description: `${match.name} scheduled at ${newTime}.`,
     });
   };
 
@@ -295,14 +298,31 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
                   <Label className="text-xs">Peptide Name *</Label>
                   <Select value={newPeptideId} onValueChange={setNewPeptideId}>
                     <SelectTrigger className="bg-muted">
-                      <SelectValue placeholder="Select peptide..." />
+                      <SelectValue placeholder="Select peptide or blend..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {peptides.map((peptide) => (
-                        <SelectItem key={peptide.id} value={peptide.id}>
-                          {peptide.name} ({peptide.shortName})
-                        </SelectItem>
-                      ))}
+                      {(() => {
+                        const all = getAllSelectablePeptides();
+                        return (
+                          <>
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Peptides</div>
+                            {all.filter(p => !p.isBlend).map((peptide) => (
+                              <SelectItem key={peptide.id} value={peptide.id}>
+                                {peptide.name} ({peptide.shortName})
+                              </SelectItem>
+                            ))}
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1 pt-1.5">Blends & Stacks</div>
+                            {all.filter(p => p.isBlend).map((peptide) => (
+                              <SelectItem key={peptide.id} value={peptide.id}>
+                                <span className="flex items-center gap-1.5">
+                                  <FlaskConical className="w-3 h-3 text-purple-400" />
+                                  {peptide.name}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </>
+                        );
+                      })()}
                     </SelectContent>
                   </Select>
                 </div>

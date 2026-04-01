@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { peptides } from '@/data/peptides';
-import { Plus, Trash2, X } from 'lucide-react';
+import { getAllSelectablePeptides, findPeptideOrBlend } from '@/data/blendAdapters';
+import { Plus, Trash2, X, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
 
 export interface StackItem {
@@ -81,7 +82,8 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
     toast.success('Stack updated successfully');
   };
 
-  const availablePeptides = peptides.filter(p => !stack.some(s => s.peptideId === p.id));
+  const allSelectable = getAllSelectablePeptides();
+  const availablePeptides = allSelectable.filter(p => !stack.some(s => s.peptideId === p.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,18 +97,25 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
           {stack.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>No peptides in your stack yet.</p>
-              <p className="text-sm">Add your first peptide below.</p>
+              <p className="text-sm">Add your first peptide or blend below.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {stack.map((item, index) => {
-                const peptide = peptides.find(p => p.id === item.peptideId);
+                const peptide = findPeptideOrBlend(item.peptideId);
+                const isBlend = allSelectable.find(s => s.id === item.peptideId)?.isBlend;
                 if (!peptide) return null;
 
                 return (
                   <GradientCard key={item.peptideId} className="p-3">
                     <div className="flex items-start gap-3">
-                      <CategoryBadge category={peptide.category} showCount={false} size="sm" />
+                      {isBlend ? (
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
+                          <FlaskConical className="w-4 h-4 text-purple-400" />
+                        </div>
+                      ) : (
+                        <CategoryBadge category={peptide.category} showCount={false} size="sm" />
+                      )}
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium text-foreground text-sm">{peptide.name}</h4>
@@ -163,16 +172,26 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
               </div>
 
               <div className="space-y-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground">Peptide</Label>
+              <div>
+                  <Label className="text-xs text-muted-foreground">Peptide / Blend</Label>
                   <Select value={newPeptideId} onValueChange={setNewPeptideId}>
                     <SelectTrigger className="bg-muted border-border">
-                      <SelectValue placeholder="Select peptide" />
+                      <SelectValue placeholder="Select peptide or blend" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availablePeptides.map(peptide => (
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Individual Peptides</div>
+                      {availablePeptides.filter(p => !p.isBlend).map(peptide => (
                         <SelectItem key={peptide.id} value={peptide.id}>
                           {peptide.name}
+                        </SelectItem>
+                      ))}
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1 pt-1.5">Blends & Stacks</div>
+                      {availablePeptides.filter(p => p.isBlend).map(peptide => (
+                        <SelectItem key={peptide.id} value={peptide.id}>
+                          <span className="flex items-center gap-1.5">
+                            <FlaskConical className="w-3 h-3 text-purple-400" />
+                            {peptide.name}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -213,7 +232,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
               onClick={() => setShowAddNew(true)}
             >
               <Plus size={16} className="mr-2" />
-              Add Peptide to Stack
+              Add Peptide or Blend
             </Button>
           )}
 
