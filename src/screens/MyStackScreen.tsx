@@ -85,6 +85,24 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
           </div>
         </CollapsibleTrigger>
 
+        {/* Start Cycle button when no active cycle */}
+        {!cycle && onStartCycle && (
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartCycle(peptideId, peptide.name, dose, frequency);
+              }}
+            >
+              <Play size={12} />
+              Start Cycle
+            </Button>
+          </div>
+        )}
+
         {/* Inline cycle progress bar */}
         {cycle && cycleInfo && (
           <div className="mt-3 space-y-1">
