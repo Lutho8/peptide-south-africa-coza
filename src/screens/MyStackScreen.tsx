@@ -273,6 +273,31 @@ export function MyStackScreen() {
     setCycles(getCycles());
   };
 
+  const handleStartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
+    const suggestion = getCycleSuggestion(peptideId);
+    const protocol = suggestion?.protocols?.[0];
+    const cycleDuration = protocol?.cycleDuration || 60;
+    const breakDuration = protocol?.breakDuration || 14;
+
+    const newCycle: Cycle = {
+      id: `cycle-${Date.now()}`,
+      peptideId,
+      peptideName,
+      dose,
+      frequency,
+      startDate: new Date().toISOString().split('T')[0],
+      plannedDuration: cycleDuration,
+      breakDuration,
+      status: 'active',
+    };
+    saveCycle(newCycle);
+    setCycles(getCycles());
+    toast({
+      title: '🚀 Cycle Started',
+      description: `${peptideName} — ${cycleDuration}-day cycle with ${breakDuration}-day break.`,
+    });
+  };
+
   // Map cycles to stack items
   const getCycleForPeptide = (peptideId: string): Cycle | undefined => {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
