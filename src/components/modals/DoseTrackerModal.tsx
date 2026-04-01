@@ -33,7 +33,8 @@ import {
   scheduleNotification
 } from '@/services/notifications';
 import { peptides } from '@/data/peptides';
-import { getAllSelectablePeptides, findPeptideOrBlend } from '@/data/blendAdapters';
+import { getCycleSuggestion } from '@/data/cycleSuggestions';
+import { getAllSelectablePeptides } from '@/data/blendAdapters';
 import { FlaskConical } from 'lucide-react';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2, AlertTriangle, Timer, Play, Pause, Square } from 'lucide-react';
