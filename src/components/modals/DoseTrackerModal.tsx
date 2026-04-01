@@ -182,7 +182,7 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
     const newSchedule: DoseSchedule = {
       id: `schedule-${Date.now()}`,
       peptideId: newPeptideId,
-      peptideName: peptide.name,
+      peptideName: match.name,
       dose: newDose,
       frequency: newFrequency,
       time: newTime,
