@@ -175,8 +175,9 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
       return;
     }
 
-    const peptide = peptides.find(p => p.id === newPeptideId);
-    if (!peptide) return;
+    const allSelectable = getAllSelectablePeptides();
+    const match = allSelectable.find(p => p.id === newPeptideId);
+    if (!match) return;
 
     const newSchedule: DoseSchedule = {
       id: `schedule-${Date.now()}`,
