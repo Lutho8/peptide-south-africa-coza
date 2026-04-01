@@ -232,7 +232,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
               onClick={() => setShowAddNew(true)}
             >
               <Plus size={16} className="mr-2" />
-              Add Peptide to Stack
+              Add Peptide or Blend
             </Button>
           )}
 
