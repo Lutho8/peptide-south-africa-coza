@@ -2,30 +2,49 @@ import { useState, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { userProfile, stackOptimizations, activeCycles } from '@/data/userData';
-import { peptides } from '@/data/peptides';
+import { userProfile, stackOptimizations } from '@/data/userData';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, Bot, FlaskConical } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { EditStackModal, StackItem } from '@/components/modals/EditStackModal';
-import { getActiveStack, saveActiveStack, getUserProfile } from '@/services/storage';
+import { getActiveStack, saveActiveStack, getUserProfile, getCycles, updateCycle, Cycle } from '@/services/storage';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
 import { Badge } from '@/components/ui/badge';
+import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
+import { Progress } from '@/components/ui/progress';
 
+// --- Stack Item Card ---
 interface StackItemProps {
   peptide: ReturnType<typeof findPeptideOrBlend>;
   dose: string;
   frequency: string;
   peptideId: string;
+  cycle?: Cycle;
 }
 
-function StackItemCard({ peptide, dose, frequency, peptideId }: StackItemProps) {
+function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number; isNearing: boolean; isOverdue: boolean } {
+  const start = new Date(cycle.startDate);
+  const now = new Date();
+  const daysElapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const progress = Math.min((daysElapsed / cycle.plannedDuration) * 100, 100);
+  const warningThreshold = cycle.plannedDuration * 0.85;
+  return {
+    daysElapsed,
+    progress,
+    isNearing: daysElapsed >= warningThreshold && daysElapsed < cycle.plannedDuration,
+    isOverdue: daysElapsed >= cycle.plannedDuration,
+  };
+}
+
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
   if (!peptide) return null;
+
+  const cycleInfo = cycle ? getCycleProgress(cycle) : null;
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -63,17 +82,45 @@ function StackItemCard({ peptide, dose, frequency, peptideId }: StackItemProps) 
           </div>
         </CollapsibleTrigger>
 
+        {/* Inline cycle progress bar */}
+        {cycle && cycleInfo && (
+          <div className="mt-3 space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                Cycle Day {cycleInfo.daysElapsed}/{cycle.plannedDuration}
+              </span>
+              <Badge
+                variant={cycleInfo.isOverdue ? "destructive" : cycleInfo.isNearing ? "secondary" : "outline"}
+                className="text-[10px]"
+              >
+                {cycle.status === 'break' ? 'On Break' : cycleInfo.isOverdue ? 'Overdue' : cycleInfo.isNearing ? 'Nearing End' : 'Active'}
+              </Badge>
+            </div>
+            <div className="w-full h-2 rounded-full bg-muted">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  cycleInfo.isOverdue ? "bg-destructive" : cycleInfo.isNearing ? "bg-yellow-500" : "bg-primary"
+                )}
+                style={{ width: `${Math.min(cycleInfo.progress, 100)}%` }}
+              />
+            </div>
+            {cycle.breakDuration > 0 && (
+              <p className="text-[10px] text-muted-foreground">
+                {cycle.breakDuration}-day break recommended after cycle
+              </p>
+            )}
+          </div>
+        )}
+
         <CollapsibleContent>
           <div className="mt-4 pt-4 border-t border-border/50 space-y-4">
             {blendData ? (
               <>
-                {/* Blend Protocol Info */}
                 <div>
                   <h5 className="text-sm font-medium text-foreground mb-2">Protocol Overview</h5>
                   <p className="text-xs text-muted-foreground">{blendData.howItWorks.slice(0, 200)}...</p>
                 </div>
-                
-                {/* Dosing Table */}
                 <div>
                   <h5 className="text-sm font-medium text-foreground mb-2">Dosing Schedule</h5>
                   <div className="space-y-1.5">
@@ -85,8 +132,6 @@ function StackItemCard({ peptide, dose, frequency, peptideId }: StackItemProps) 
                     ))}
                   </div>
                 </div>
-
-                {/* Benefits */}
                 <div>
                   <h5 className="text-sm font-medium text-foreground mb-2">Benefits</h5>
                   <ul className="space-y-1">
@@ -98,8 +143,6 @@ function StackItemCard({ peptide, dose, frequency, peptideId }: StackItemProps) 
                     ))}
                   </ul>
                 </div>
-
-                {/* Side Effects */}
                 <div>
                   <h5 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                     <AlertTriangle size={14} className="text-yellow-500" />
@@ -114,14 +157,12 @@ function StackItemCard({ peptide, dose, frequency, peptideId }: StackItemProps) 
                     ))}
                   </ul>
                 </div>
-
-                {/* References */}
                 {blendData.references.length > 0 && (
                   <div>
                     <h5 className="text-sm font-medium text-foreground mb-2">References</h5>
                     <div className="space-y-1">
                       {blendData.references.slice(0, 3).map((ref, i) => (
-                        <a key={i} href={ref.url} target="_blank" rel="noopener noreferrer" 
+                        <a key={i} href={ref.url} target="_blank" rel="noopener noreferrer"
                            className="block text-[10px] text-primary/80 hover:text-primary truncate">
                           {ref.source}: {ref.title}
                         </a>
@@ -132,7 +173,6 @@ function StackItemCard({ peptide, dose, frequency, peptideId }: StackItemProps) 
               </>
             ) : (
               <>
-                {/* Expected Results Timeline */}
                 <div>
                   <h5 className="text-sm font-medium text-foreground mb-2">Expected Results Timeline</h5>
                   <div className="grid grid-cols-2 gap-2 text-xs">
@@ -154,8 +194,6 @@ function StackItemCard({ peptide, dose, frequency, peptideId }: StackItemProps) 
                     </div>
                   </div>
                 </div>
-
-                {/* Top Athlete Benefits */}
                 <div>
                   <h5 className="text-sm font-medium text-foreground mb-2">Top Athlete Benefits</h5>
                   <ul className="space-y-1">
@@ -167,8 +205,6 @@ function StackItemCard({ peptide, dose, frequency, peptideId }: StackItemProps) 
                     ))}
                   </ul>
                 </div>
-
-                {/* Risks */}
                 <div>
                   <h5 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                     <AlertTriangle size={14} className="text-yellow-500" />
@@ -192,14 +228,17 @@ function StackItemCard({ peptide, dose, frequency, peptideId }: StackItemProps) 
   );
 }
 
+// --- Main Screen ---
 export function MyStackScreen() {
   const [activeStack, setActiveStack] = useState<StackItem[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profile, setProfile] = useState(userProfile);
+  const [cycles, setCycles] = useState<Cycle[]>([]);
 
   useEffect(() => {
     setActiveStack(getActiveStack());
     setProfile(getUserProfile());
+    setCycles(getCycles());
   }, []);
 
   const handleSaveStack = (newStack: StackItem[]) => {
@@ -207,9 +246,20 @@ export function MyStackScreen() {
     saveActiveStack(newStack);
   };
 
+  const handleStartBreak = (cycle: Cycle) => {
+    const updated: Cycle = { ...cycle, status: 'break' };
+    updateCycle(updated);
+    setCycles(getCycles());
+  };
+
+  // Map cycles to stack items
+  const getCycleForPeptide = (peptideId: string): Cycle | undefined => {
+    return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
+  };
+
   return (
     <div className="pb-24 space-y-6 fade-in">
-      {/* User Profile Header - Luxury */}
+      {/* User Profile Header */}
       <GradientCard className="relative overflow-hidden premium-border">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-primary/5 pointer-events-none" />
         <div className="relative flex items-center gap-4">
@@ -232,6 +282,11 @@ export function MyStackScreen() {
           </div>
         </div>
       </GradientCard>
+
+      {/* Cycle Break Alerts */}
+      {cycles.length > 0 && (
+        <CycleBreakAlert cycles={cycles} onStartBreak={handleStartBreak} />
+      )}
 
       {/* Active Stack Overview */}
       <div>
@@ -269,6 +324,7 @@ export function MyStackScreen() {
                 peptideId={item.peptideId}
                 dose={item.dose}
                 frequency={item.frequency}
+                cycle={getCycleForPeptide(item.peptideId)}
               />
             );
           })
@@ -335,22 +391,39 @@ export function MyStackScreen() {
       </Button>
 
       {/* Active Cycles Summary */}
-      <div>
-        <h3 className="text-lg font-semibold text-foreground mb-3">Active Cycles</h3>
-        <div className="space-y-2">
-          {activeCycles.map((cycle) => (
-            <GradientCard key={cycle.id} className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-foreground">{cycle.peptideName}</h4>
-                  <p className="text-xs text-muted-foreground">{cycle.dose} • {cycle.frequency}</p>
-                </div>
-                <StatusBadge status={cycle.status} />
-              </div>
-            </GradientCard>
-          ))}
+      {cycles.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-foreground mb-3">Active Cycles</h3>
+          <div className="space-y-2">
+            {cycles.filter(c => c.status === 'active' || c.status === 'break').map((cycle) => {
+              const info = getCycleProgress(cycle);
+              return (
+                <GradientCard key={cycle.id} className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground">{cycle.peptideName}</h4>
+                      <p className="text-xs text-muted-foreground">{cycle.dose} • {cycle.frequency}</p>
+                    </div>
+                    <StatusBadge status={cycle.status} />
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all",
+                        info.isOverdue ? "bg-destructive" : info.isNearing ? "bg-yellow-500" : "bg-primary"
+                      )}
+                      style={{ width: `${Math.min(info.progress, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Day {info.daysElapsed}/{cycle.plannedDuration} • {cycle.breakDuration}d break after
+                  </p>
+                </GradientCard>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Research Disclaimer */}
       <div className="p-4 rounded-xl border border-border bg-muted/30">
