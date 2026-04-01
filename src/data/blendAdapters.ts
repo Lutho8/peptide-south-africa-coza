@@ -1,6 +1,7 @@
 // Adapts PeptideBlend data to work with the peptide stack/dose/cycle system
 import { Peptide, PeptideCategory } from './peptides';
 import { peptideBlends, peptideStacks, PeptideBlend } from './peptideBlends';
+import { getCycleSuggestion } from './cycleSuggestions';
 
 const categoryMap: Record<string, PeptideCategory> = {
   'Healing & Regeneration': 'healing',
@@ -22,6 +23,12 @@ function mapCategory(blendCategory: string): PeptideCategory {
 export function blendToPeptide(blend: PeptideBlend): Peptide {
   const typicalDose = blend.quickstart.typicalDose || blend.dosingTable[0]?.dailyDose || 'See protocol';
   
+  // Use cycle suggestion data for accurate protocol timing
+  const cycleSuggestion = getCycleSuggestion(blend.id);
+  const longestProtocol = cycleSuggestion?.protocols?.reduce((longest, p) => 
+    p.cycleDuration > longest.cycleDuration ? p : longest, cycleSuggestion.protocols[0]);
+  const shortestProtocol = cycleSuggestion?.protocols?.[0];
+
   return {
     id: blend.id,
     name: blend.shortName,
@@ -33,10 +40,10 @@ export function blendToPeptide(blend: PeptideBlend): Peptide {
     athleteBenefits: blend.benefits.slice(0, 3),
     risks: blend.sideEffects.slice(0, 3),
     dosing: {
-      beginner: typicalDose,
-      intermediate: typicalDose,
-      advanced: typicalDose,
-      athlete: typicalDose,
+      beginner: shortestProtocol?.dose || typicalDose,
+      intermediate: longestProtocol?.dose || typicalDose,
+      advanced: longestProtocol?.dose || typicalDose,
+      athlete: longestProtocol?.dose || typicalDose,
     },
     frequency: blend.dosingFrequency.split('.')[0],
     administration: 'Subcutaneous injection',
@@ -54,11 +61,14 @@ export function blendToPeptide(blend: PeptideBlend): Peptide {
       stock: 'in-stock',
     },
     cycleProtocol: {
-      minDays: 28,
-      maxDays: blend.dosingTable.length > 1 ? 56 : 28,
-      breakDays: 14,
-      restartAdvice: 'Allow a 2-4 week break before restarting the blend protocol.',
-      breakAdvice: ['Monitor progress during break', 'Maintain nutrition and lifestyle factors'],
+      minDays: shortestProtocol?.cycleDuration || 28,
+      maxDays: longestProtocol?.cycleDuration || (blend.dosingTable.length > 1 ? 56 : 28),
+      breakDays: longestProtocol?.breakDuration || 14,
+      restartAdvice: longestProtocol?.notes || 'Allow a 2-4 week break before restarting the blend protocol.',
+      breakAdvice: [
+        ...(cycleSuggestion?.monitoringRecommendations || ['Monitor progress during break']),
+        'Maintain nutrition and lifestyle factors',
+      ],
     },
   };
 }

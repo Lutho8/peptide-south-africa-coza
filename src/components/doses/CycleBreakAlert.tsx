@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { peptides } from '@/data/peptides';
+import { findPeptideOrBlend } from '@/data/blendAdapters';
 import { Cycle } from '@/services/storage';
 import { AlertTriangle, Calendar, Coffee, ChevronDown, ChevronUp, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -30,7 +30,7 @@ export function CycleBreakAlert({ cycles, onStartBreak }: CycleBreakAlertProps) 
   const cycleAlerts = cycles
     .filter(c => c.status === 'active')
     .map(cycle => {
-      const peptide = peptides.find(p => p.id === cycle.peptideId);
+      const peptide = findPeptideOrBlend(cycle.peptideId);
       const protocol = peptide?.cycleProtocol;
       if (!protocol) return null;
 
