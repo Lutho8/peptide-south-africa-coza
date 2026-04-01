@@ -280,7 +280,7 @@ export function MyStackScreen() {
         <AIAgentPanel
           mode="optimize"
           currentStack={activeStack.map(item => {
-            const peptide = peptides.find(p => p.id === item.peptideId);
+            const peptide = findPeptideOrBlend(item.peptideId);
             return peptide?.name || item.peptideId;
           })}
           userWeight={profile.weight}
