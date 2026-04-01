@@ -201,7 +201,7 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
 
     toast({
       title: "Schedule added",
-      description: `${peptide.name} scheduled at ${newTime}.`,
+      description: `${match.name} scheduled at ${newTime}.`,
     });
   };
 
