@@ -112,6 +112,21 @@ export function DosageScreen() {
     setNotificationsEnabled(permission === 'granted' && settings.enabled);
   }, []);
 
+  // Blend auto-fill for calculator
+  const selectedBlendData = useMemo(() => findBlendData(selectedBlendForCalc), [selectedBlendForCalc]);
+  const allBlends = useMemo(() => [...peptideBlends, ...peptideStacks], []);
+
+  const handleBlendSelect = (blendId: string) => {
+    setSelectedBlendForCalc(blendId);
+    const blend = findBlendData(blendId);
+    if (blend) {
+      const mgMatch = blend.vialSize.match(/([\d.]+)\s*mg/i);
+      if (mgMatch) setVialSize(mgMatch[1]);
+      const waterMatch = blend.quickstart.reconstitute.match(/([\d.]+)\s*mL/i);
+      if (waterMatch) setBacWater(waterMatch[1]);
+    }
+  };
+
   // Get selected syringe config
   const selectedSyringe = SYRINGE_TYPES.find(s => s.id === syringeType) || SYRINGE_TYPES[1];
 
