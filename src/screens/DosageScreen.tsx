@@ -297,7 +297,40 @@ export function DosageScreen() {
           <h2 className="text-base sm:text-lg font-semibold text-foreground">Reconstitution Calculator</h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+        {/* Blend Quick-Fill Selector */}
+        <div className="mb-4 space-y-1.5">
+          <Label className="text-xs sm:text-sm text-muted-foreground">Quick-Fill from Blend/Stack</Label>
+          <Select value={selectedBlendForCalc} onValueChange={handleBlendSelect}>
+            <SelectTrigger className="bg-muted border-border h-10">
+              <SelectValue placeholder="Select a blend to auto-fill..." />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border z-50 max-h-60">
+              <SelectItem value="custom">Custom / Individual Peptide</SelectItem>
+              {allBlends.map((blend) => (
+                <SelectItem key={blend.id} value={blend.id}>
+                  <span className="flex items-center gap-1.5">
+                    <FlaskConical className="w-3 h-3 text-primary" />
+                    {blend.shortName} ({blend.vialSize})
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Blend Safety Warning */}
+        {selectedBlendData && (
+          <Alert variant="destructive" className="mb-4 border-destructive bg-destructive/10">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle className="text-sm font-bold">⚠️ Blend-Specific Values</AlertTitle>
+            <AlertDescription className="text-xs">
+              Values auto-filled for <strong>{selectedBlendData.shortName}</strong>. 
+              Do NOT use generic peptide defaults — blends have higher total mg and different concentrations.
+              Always verify against your specific product.
+            </AlertDescription>
+          </Alert>
+        )}
+
           <div className="space-y-1.5">
             <Label className="text-xs sm:text-sm text-muted-foreground">Vial Size (mg)</Label>
             <Input
