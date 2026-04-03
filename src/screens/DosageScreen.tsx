@@ -1,7 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { peptides, getCategoryLabel } from '@/data/peptides';
-import { getAllSelectablePeptides, findPeptideOrBlend, allBlendsAsPeptides } from '@/data/blendAdapters';
+import { getAllSelectablePeptides, findPeptideOrBlend, allBlendsAsPeptides, findBlendData } from '@/data/blendAdapters';
+import { peptideBlends, peptideStacks } from '@/data/peptideBlends';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FlaskConical } from 'lucide-react';
 import { AlertTriangle, Calculator, Droplets, Syringe, ChevronDown, ChevronUp, Clock, Calendar, Bell, BellOff, Save, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
