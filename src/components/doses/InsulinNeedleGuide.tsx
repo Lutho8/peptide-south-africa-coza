@@ -1,225 +1,187 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Syringe, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Syringe, Info, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { findBlendData } from '@/data/blendAdapters';
 
 interface InsulinNeedleGuideProps {
   dose: number;
   unit: 'mcg' | 'mg' | 'IU';
-  concentration?: number; // mcg per mL (from reconstitution)
+  concentration?: number;
+  peptideId?: string;
 }
 
 type SyringeType = 'U40' | 'U50' | 'U100';
 
-interface SyringeConfig {
-  name: string;
-  unitsPerMl: number;
-  totalMl: number;
-  color: string;
-  description: string;
-  tickInterval: number;
-  maxUnits: number;
+interface BlendConcentration {
+  totalMg: number;
+  waterMl: number;
+  concentrationMgPerMl: number;
 }
 
-const syringeConfigs: Record<SyringeType, SyringeConfig> = {
-  U40: {
-    name: 'U-40',
-    unitsPerMl: 40,
-    totalMl: 1,
-    color: 'text-orange-500',
-    description: 'Best for precise small doses. Each unit = 0.025mL',
-    tickInterval: 4,
-    maxUnits: 40,
-  },
-  U50: {
-    name: 'U-50',
-    unitsPerMl: 50,
-    totalMl: 0.5,
-    color: 'text-cyan-500',
-    description: 'Good for medium doses. Each unit = 0.02mL',
-    tickInterval: 5,
-    maxUnits: 50,
-  },
-  U100: {
-    name: 'U-100',
-    unitsPerMl: 100,
-    totalMl: 1,
-    color: 'text-violet-500',
-    description: 'Standard insulin syringe. Each unit = 0.01mL',
-    tickInterval: 10,
-    maxUnits: 100,
-  },
+function getBlendConcentration(peptideId?: string): BlendConcentration | null {
+  if (!peptideId) return null;
+  const blend = findBlendData(peptideId);
+  if (!blend) return null;
+
+  const mgMatch = blend.vialSize.match(/([\d.]+)\s*mg/i);
+  const totalMg = mgMatch ? parseFloat(mgMatch[1]) : null;
+  if (!totalMg) return null;
+
+  // Extract water volume from reconstitution quickstart
+  const waterMatch = blend.quickstart.reconstitute.match(/([\d.]+)\s*mL/i);
+  const waterMl = waterMatch ? parseFloat(waterMatch[1]) : 2.0;
+
+  return {
+    totalMg,
+    waterMl,
+    concentrationMgPerMl: totalMg / waterMl,
+  };
+}
+
+const syringeUnitsPerMl: Record<SyringeType, number> = {
+  U40: 40,
+  U50: 50,
+  U100: 100,
 };
 
-// Visual syringe component with animated fill
-function SyringeVisual({ 
-  syringeType, 
-  unitsToDraw,
-  isActive 
-}: { 
-  syringeType: SyringeType; 
-  unitsToDraw: number;
-  isActive: boolean;
-}) {
-  const config = syringeConfigs[syringeType];
-  const fillPercent = Math.min((unitsToDraw / config.maxUnits) * 100, 100);
-  const roundedUnits = Math.round(unitsToDraw * 10) / 10;
-  
-  return (
-    <motion.div 
-      className={cn(
-        "flex flex-col items-center p-3 rounded-lg border transition-all",
-        isActive 
-          ? "border-primary bg-primary/5 ring-2 ring-primary/20" 
-          : "border-border bg-muted/30"
-      )}
-      whileHover={{ scale: 1.02 }}
-    >
-      {/* Syringe Label */}
-      <div className={cn("text-sm font-bold mb-1", config.color)}>
-        {config.name}
-      </div>
-      
-      {/* Visual Syringe - Enhanced */}
-      <div className="relative w-10 h-32 mb-2">
-        {/* Plunger rod */}
-        <motion.div 
-          className="absolute left-1/2 -translate-x-1/2 w-1 bg-muted-foreground/40 rounded-full"
-          style={{ top: 0 }}
-          initial={{ height: '100%' }}
-          animate={{ height: `${Math.max(100 - fillPercent, 15)}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        />
-        
-        {/* Plunger handle */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-3 bg-muted-foreground/30 rounded-sm border border-border" />
-        
-        {/* Syringe barrel */}
-        <div className="absolute inset-x-0 bottom-4 h-24 bg-background rounded-sm border-2 border-muted-foreground/30 overflow-hidden">
-          {/* Graduation marks */}
-          {[0.2, 0.4, 0.6, 0.8].map((pos) => (
-            <div 
-              key={pos}
-              className="absolute left-0 w-2 border-t border-muted-foreground/40"
-              style={{ bottom: `${pos * 100}%` }}
-            />
-          ))}
-          {[0.1, 0.3, 0.5, 0.7, 0.9].map((pos) => (
-            <div 
-              key={pos}
-              className="absolute left-0 w-1 border-t border-muted-foreground/20"
-              style={{ bottom: `${pos * 100}%` }}
-            />
-          ))}
-          
-          {/* Liquid fill with animated wave */}
-          <motion.div 
-            className={cn(
-              "absolute bottom-0 left-0 right-0 rounded-b-sm overflow-hidden",
-              isActive ? "bg-primary/30" : "bg-muted-foreground/15"
-            )}
-            initial={{ height: 0 }}
-            animate={{ height: `${fillPercent}%` }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
-            {/* Animated wave on top of liquid */}
-            {isActive && fillPercent > 5 && (
-              <motion.div
-                className="absolute top-0 left-0 right-0 h-1.5"
-                style={{
-                  background: `linear-gradient(90deg, transparent, hsl(var(--primary) / 0.4), transparent)`,
-                  borderRadius: '50%',
-                }}
-                animate={{
-                  x: [-2, 2, -2],
-                  scaleY: [1, 1.5, 1],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            )}
-          </motion.div>
+const syringeLabels: Record<SyringeType, string> = {
+  U40: 'U-40',
+  U50: 'U-50',
+  U100: 'U-100',
+};
 
-          {/* Fill line indicator */}
-          {isActive && fillPercent > 0 && fillPercent < 100 && (
-            <motion.div
-              className="absolute left-0 right-0 border-t-2 border-primary border-dashed"
-              initial={{ bottom: 0 }}
-              animate={{ bottom: `${fillPercent}%` }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            />
-          )}
+// Dynamic calculator section
+function ReconstitutionCalculator({ 
+  defaultTotalMg, 
+  defaultWaterMl,
+  isBlend,
+}: { 
+  defaultTotalMg: number; 
+  defaultWaterMl: number;
+  isBlend: boolean;
+}) {
+  const [totalMg, setTotalMg] = useState(defaultTotalMg);
+  const [waterMl, setWaterMl] = useState(defaultWaterMl);
+  const [syringeType, setSyringeType] = useState<SyringeType>('U100');
+
+  const unitsPerMl = syringeUnitsPerMl[syringeType];
+  const concentrationMgPerMl = waterMl > 0 ? totalMg / waterMl : 0;
+  const mcgPerUnit = concentrationMgPerMl > 0 ? (concentrationMgPerMl / unitsPerMl) * 1000 : 0;
+
+  const dosePresets = [2, 4, 6];
+
+  return (
+    <div className="space-y-3 p-3 rounded-lg bg-muted/50 border border-border">
+      <div className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+        <Syringe size={14} className="text-primary" />
+        Dynamic Reconstitution Calculator
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <Label className="text-xs text-muted-foreground">Total mg in vial</Label>
+          <Input
+            type="number"
+            value={totalMg}
+            onChange={(e) => setTotalMg(parseFloat(e.target.value) || 0)}
+            className="h-8 text-sm"
+            min={0}
+            step={1}
+          />
         </div>
-        
-        {/* Needle hub */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-3 h-2 bg-muted-foreground/40 rounded-sm" />
-        
-        {/* Needle */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-2 bg-muted-foreground/60" />
+        <div>
+          <Label className="text-xs text-muted-foreground">mL BAC water</Label>
+          <Input
+            type="number"
+            value={waterMl}
+            onChange={(e) => setWaterMl(parseFloat(e.target.value) || 0)}
+            className="h-8 text-sm"
+            min={0.1}
+            step={0.5}
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Syringe</Label>
+          <Select value={syringeType} onValueChange={(v) => setSyringeType(v as SyringeType)}>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="U40">U-40</SelectItem>
+              <SelectItem value="U50">U-50</SelectItem>
+              <SelectItem value="U100">U-100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      
-      {/* Units to draw */}
-      <motion.div 
-        className={cn(
-          "text-lg font-bold",
-          isActive ? "text-primary" : "text-muted-foreground"
-        )}
-        key={roundedUnits}
-        initial={{ scale: 1.2, opacity: 0.7 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {roundedUnits} units
-      </motion.div>
-      <div className="text-[10px] text-muted-foreground text-center">
-        ({(unitsToDraw / config.unitsPerMl).toFixed(3)} mL)
-      </div>
-    </motion.div>
+
+      {concentrationMgPerMl > 0 && (
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="p-2 rounded-md bg-background border border-border">
+              <div className="text-muted-foreground">Concentration</div>
+              <div className="text-sm font-bold text-foreground">{concentrationMgPerMl.toFixed(2)} mg/mL</div>
+            </div>
+            <div className="p-2 rounded-md bg-background border border-border">
+              <div className="text-muted-foreground">1 unit ({syringeLabels[syringeType]})</div>
+              <div className="text-sm font-bold text-primary">{Math.round(mcgPerUnit)} mcg</div>
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="h-8 text-xs">Target Dose</TableHead>
+                <TableHead className="h-8 text-xs">Units to Draw ({syringeLabels[syringeType]})</TableHead>
+                <TableHead className="h-8 text-xs">Volume (mL)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dosePresets.map((doseMg) => {
+                const volumeMl = concentrationMgPerMl > 0 ? doseMg / concentrationMgPerMl : 0;
+                const units = volumeMl * unitsPerMl;
+                return (
+                  <TableRow key={doseMg}>
+                    <TableCell className="py-1.5 text-sm font-medium">{doseMg} mg</TableCell>
+                    <TableCell className="py-1.5 text-sm font-bold text-primary">{units.toFixed(1)} units</TableCell>
+                    <TableCell className="py-1.5 text-sm text-muted-foreground">{volumeMl.toFixed(3)} mL</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
   );
 }
 
-export function InsulinNeedleGuide({ dose, unit, concentration }: InsulinNeedleGuideProps) {
+export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: InsulinNeedleGuideProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [selectedSyringe, setSelectedSyringe] = useState<SyringeType>('U40');
-  
-  // Default concentration if not provided (5mg vial in 2mL water = 2500mcg/mL)
-  const defaultConcentration = 2500; // mcg per mL
-  const activeConcentration = concentration || defaultConcentration;
-  
+
+  const blendConc = useMemo(() => getBlendConcentration(peptideId), [peptideId]);
+  const isBlend = !!blendConc;
+  const blendData = useMemo(() => peptideId ? findBlendData(peptideId) : null, [peptideId]);
+
+  // For blends use their real concentration; for individual peptides fall back to provided or default
+  const activeTotalMg = blendConc?.totalMg ?? 5;
+  const activeWaterMl = blendConc?.waterMl ?? 2;
+  const activeConcentrationMcgPerMl = (blendConc?.concentrationMgPerMl ?? (concentration || 2500 / 1000)) * 1000;
+
   // Convert dose to mcg
-  const doseMcg = unit === 'mg' ? dose * 1000 : unit === 'IU' ? dose : dose;
-  
-  // Calculate volume needed in mL
-  const volumeNeededMl = doseMcg / activeConcentration;
-  
-  // Calculate units for each syringe type
-  const syringeCalculations = Object.entries(syringeConfigs).map(([type, config]) => {
-    const unitsToDraw = volumeNeededMl * config.unitsPerMl;
-    const isPractical = unitsToDraw <= config.maxUnits && unitsToDraw >= 1;
-    const isIdeal = unitsToDraw <= config.maxUnits * 0.8 && unitsToDraw >= 2;
-    
-    return {
-      type: type as SyringeType,
-      config,
-      unitsToDraw,
-      isPractical,
-      isIdeal,
-    };
-  });
-  
-  // Find the best syringe recommendation
-  const recommendedSyringe = syringeCalculations.find(s => s.isIdeal) || 
-                             syringeCalculations.find(s => s.isPractical) ||
-                             syringeCalculations[0];
-  
+  const doseMcg = unit === 'mg' ? dose * 1000 : dose;
+  const volumeNeededMl = doseMcg / activeConcentrationMcgPerMl;
+
   if (dose <= 0) return null;
-  
+
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-card">
-      {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
@@ -227,12 +189,12 @@ export function InsulinNeedleGuide({ dose, unit, concentration }: InsulinNeedleG
         <div className="flex items-center gap-2">
           <Syringe size={16} className="text-primary" />
           <span className="text-sm font-medium text-foreground">
-            Insulin Needle Dosage Guide
+            {isBlend ? `${blendData?.shortName || 'Blend'} Dosage Guide` : 'Insulin Needle Dosage Guide'}
           </span>
         </div>
         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
-      
+
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -243,67 +205,100 @@ export function InsulinNeedleGuide({ dose, unit, concentration }: InsulinNeedleG
             className="overflow-hidden"
           >
             <div className="p-3 pt-0 space-y-3">
-              {/* Info Banner */}
-              <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
-                <Info size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                <div className="text-xs text-muted-foreground">
-                  <span className="text-foreground font-medium">Based on standard reconstitution: </span>
-                  5mg vial + 2mL BAC water = {activeConcentration.toLocaleString()} mcg/mL
+              {/* Safety Warning for blends */}
+              {isBlend && (
+                <Alert variant="destructive" className="border-destructive bg-destructive/10">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle className="text-sm font-bold">⚠️ SAFETY CORRECTION</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    Previous dosage values for this blend were <strong>incorrect and potentially dangerous</strong>. 
+                    The values below use the verified standard protocol ({activeTotalMg}mg vial + {activeWaterMl}mL BAC water). 
+                    Always verify concentration based on YOUR reconstitution.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Blend concentration info */}
+              {isBlend && blendConc && (
+                <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                  <Info size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                  <div className="text-xs text-muted-foreground">
+                    <span className="text-foreground font-medium">Standard reconstitution: </span>
+                    {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {blendConc.concentrationMgPerMl.toFixed(2)} mg/mL
+                    <br />
+                    <span className="text-foreground font-medium">1 unit (U-100) = {Math.round(blendConc.concentrationMgPerMl * 10)} mcg total peptides</span>
+                  </div>
                 </div>
-              </div>
-              
-              {/* Syringe Comparison */}
-              <div className="grid grid-cols-3 gap-2">
-                {syringeCalculations.map(({ type, unitsToDraw, isIdeal }) => (
-                  <button 
-                    key={type} 
-                    onClick={() => setSelectedSyringe(type)}
-                    className="relative"
-                  >
-                    {isIdeal && type === recommendedSyringe.type && (
-                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-10">
-                        <span className="text-[9px] bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full font-medium">
-                          Recommended
-                        </span>
-                      </div>
-                    )}
-                    <SyringeVisual 
-                      syringeType={type}
-                      unitsToDraw={unitsToDraw}
-                      isActive={selectedSyringe === type}
-                    />
-                  </button>
-                ))}
-              </div>
-              
-              {/* Selected Syringe Details */}
+              )}
+
+              {/* Non-blend info */}
+              {!isBlend && (
+                <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                  <Info size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                  <div className="text-xs text-muted-foreground">
+                    <span className="text-foreground font-medium">Based on reconstitution: </span>
+                    {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {(activeConcentrationMcgPerMl).toLocaleString()} mcg/mL
+                  </div>
+                </div>
+              )}
+
+              {/* Blend dosing table from protocol data */}
+              {isBlend && blendData && blendData.dosingTable.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-foreground">
+                    {blendData.shortName} Protocol Dosing Table
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="h-8 text-xs">Period</TableHead>
+                        <TableHead className="h-8 text-xs">Daily Dose</TableHead>
+                        <TableHead className="h-8 text-xs">Units to Draw</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {blendData.dosingTable.map((row, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="py-1.5 text-xs font-medium">{row.week}</TableCell>
+                          <TableCell className="py-1.5 text-xs">{row.dailyDose}</TableCell>
+                          <TableCell className="py-1.5 text-xs font-bold text-primary">{row.units}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
+              {/* Current dose quick reference */}
               <div className="p-3 rounded-lg bg-muted/50 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">
-                    Using {syringeConfigs[selectedSyringe].name} Syringe:
-                  </span>
+                <div className="text-sm font-medium text-foreground">
+                  Your current dose: {dose} {unit}
                 </div>
-                
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 rounded bg-background border border-border">
-                    <div className="text-muted-foreground">Draw to line</div>
-                    <div className="text-lg font-bold text-primary">
-                      {Math.round(volumeNeededMl * syringeConfigs[selectedSyringe].unitsPerMl)} units
-                    </div>
-                  </div>
-                  <div className="p-2 rounded bg-background border border-border">
-                    <div className="text-muted-foreground">Volume</div>
-                    <div className="text-lg font-bold text-foreground">
-                      {volumeNeededMl.toFixed(3)} mL
-                    </div>
-                  </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  {(['U40', 'U50', 'U100'] as SyringeType[]).map((sType) => {
+                    const uPerMl = syringeUnitsPerMl[sType];
+                    const units = volumeNeededMl * uPerMl;
+                    return (
+                      <div key={sType} className="p-2 rounded-md bg-background border border-border text-center">
+                        <div className="text-muted-foreground">{syringeLabels[sType]}</div>
+                        <div className="text-lg font-bold text-primary">{units.toFixed(1)}</div>
+                        <div className="text-muted-foreground">units</div>
+                      </div>
+                    );
+                  })}
                 </div>
-                
-                <p className="text-xs text-muted-foreground">
-                  {syringeConfigs[selectedSyringe].description}
-                </p>
+                <div className="text-xs text-muted-foreground text-center">
+                  Volume: {volumeNeededMl.toFixed(3)} mL
+                </div>
               </div>
-              
+
+              {/* Dynamic Calculator */}
+              <ReconstitutionCalculator
+                defaultTotalMg={activeTotalMg}
+                defaultWaterMl={activeWaterMl}
+                isBlend={isBlend}
+              />
+
               {/* Quick Reference */}
               <div className="text-[10px] text-muted-foreground text-center border-t border-border pt-2">
                 <strong>Quick Reference:</strong> U-40 = 40 units/mL • U-50 = 50 units/mL • U-100 = 100 units/mL

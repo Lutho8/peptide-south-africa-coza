@@ -516,6 +516,7 @@ export function DailyLogScreen() {
               <InsulinNeedleGuide 
                 dose={parseFloat(formData.dose) || 0}
                 unit={formData.unit}
+                peptideId={formData.peptideId}
               />
             )}
           </div>
