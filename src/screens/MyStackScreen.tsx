@@ -331,6 +331,26 @@ export function MyStackScreen() {
     });
   };
 
+  const handleEndCycle = (cycle: Cycle) => {
+    const updated: Cycle = { ...cycle, status: 'completed' as any };
+    updateCycle(updated);
+    setCycles(getCycles());
+    toast({
+      title: '✅ Cycle Ended',
+      description: `${cycle.peptideName} cycle completed. Consider a ${cycle.breakDuration}-day break.`,
+    });
+  };
+
+  const handleRestartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
+    // End any existing cycle for this peptide
+    const existing = cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
+    if (existing) {
+      updateCycle({ ...existing, status: 'completed' as any });
+    }
+    // Start fresh
+    handleStartCycle(peptideId, peptideName, dose, frequency);
+  };
+
   // Map cycles to stack items
   const getCycleForPeptide = (peptideId: string): Cycle | undefined => {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
