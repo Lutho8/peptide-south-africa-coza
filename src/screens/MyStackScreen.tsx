@@ -4,7 +4,7 @@ import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { userProfile, stackOptimizations } from '@/data/userData';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -25,6 +25,8 @@ interface StackItemProps {
   peptideId: string;
   cycle?: Cycle;
   onStartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
+  onEndCycle?: (cycle: Cycle) => void;
+  onRestartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
 }
 
 function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number; isNearing: boolean; isOverdue: boolean } {
@@ -41,7 +43,7 @@ function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number
   };
 }
 
-function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycle }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycle, onEndCycle, onRestartCycle }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
@@ -105,7 +107,7 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
 
         {/* Inline cycle progress bar */}
         {cycle && cycleInfo && (
-          <div className="mt-3 space-y-1">
+          <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
                 Cycle Day {cycleInfo.daysElapsed}/{cycle.plannedDuration}
@@ -131,6 +133,37 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
                 {cycle.breakDuration}-day break recommended after cycle
               </p>
             )}
+            {/* Inline cycle action buttons */}
+            <div className="flex gap-2">
+              {cycle.status === 'active' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-1.5 text-xs h-7"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEndCycle?.(cycle);
+                  }}
+                >
+                  <Square size={10} />
+                  End Cycle
+                </Button>
+              )}
+              {(cycle.status === 'break' || cycleInfo.isOverdue) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-1.5 text-xs h-7 border-primary/30 text-primary hover:bg-primary/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRestartCycle?.(peptideId, peptide.name, dose, frequency);
+                  }}
+                >
+                  <RotateCcw size={10} />
+                  Restart Cycle
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
@@ -298,6 +331,26 @@ export function MyStackScreen() {
     });
   };
 
+  const handleEndCycle = (cycle: Cycle) => {
+    const updated: Cycle = { ...cycle, status: 'completed' as any };
+    updateCycle(updated);
+    setCycles(getCycles());
+    toast({
+      title: '✅ Cycle Ended',
+      description: `${cycle.peptideName} cycle completed. Consider a ${cycle.breakDuration}-day break.`,
+    });
+  };
+
+  const handleRestartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
+    // End any existing cycle for this peptide
+    const existing = cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
+    if (existing) {
+      updateCycle({ ...existing, status: 'completed' as any });
+    }
+    // Start fresh
+    handleStartCycle(peptideId, peptideName, dose, frequency);
+  };
+
   // Map cycles to stack items
   const getCycleForPeptide = (peptideId: string): Cycle | undefined => {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
@@ -372,6 +425,8 @@ export function MyStackScreen() {
                 frequency={item.frequency}
                 cycle={getCycleForPeptide(item.peptideId)}
                 onStartCycle={handleStartCycle}
+                onEndCycle={handleEndCycle}
+                onRestartCycle={handleRestartCycle}
               />
             );
           })

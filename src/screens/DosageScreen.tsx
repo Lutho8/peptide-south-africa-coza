@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { peptides, getCategoryLabel } from '@/data/peptides';
+import { getAllSelectablePeptides, findPeptideOrBlend, allBlendsAsPeptides } from '@/data/blendAdapters';
+import { FlaskConical } from 'lucide-react';
 import { AlertTriangle, Calculator, Droplets, Syringe, ChevronDown, ChevronUp, Clock, Calendar, Bell, BellOff, Save, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -134,7 +136,7 @@ export function DosageScreen() {
 
   // Get schedule for selected peptide
   const schedulePeptide = useMemo(() => 
-    peptides.find(p => p.id === selectedSchedulePeptide), 
+    findPeptideOrBlend(selectedSchedulePeptide), 
     [selectedSchedulePeptide]
   );
   
@@ -387,11 +389,28 @@ export function DosageScreen() {
                 <SelectValue placeholder="Choose a peptide..." />
               </SelectTrigger>
               <SelectContent className="bg-card border-border z-50 max-h-60">
-                {peptides.map((peptide) => (
-                  <SelectItem key={peptide.id} value={peptide.id}>
-                    {peptide.name}
-                  </SelectItem>
-                ))}
+                {(() => {
+                  const all = getAllSelectablePeptides();
+                  return (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Peptides</div>
+                      {all.filter(p => !p.isBlend).map((peptide) => (
+                        <SelectItem key={peptide.id} value={peptide.id}>
+                          {peptide.name}
+                        </SelectItem>
+                      ))}
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1 pt-1.5">Blends & Stacks</div>
+                      {all.filter(p => p.isBlend).map((peptide) => (
+                        <SelectItem key={peptide.id} value={peptide.id}>
+                          <span className="flex items-center gap-1.5">
+                            <FlaskConical className="w-3 h-3 text-purple-400" />
+                            {peptide.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </>
+                  );
+                })()}
               </SelectContent>
             </Select>
           </div>
@@ -525,7 +544,7 @@ export function DosageScreen() {
       <div>
         <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 sm:mb-3">Dosage Reference</h3>
         <div className="space-y-2">
-          {peptides.map((peptide) => (
+          {[...peptides, ...allBlendsAsPeptides].map((peptide) => (
             <Collapsible 
               key={peptide.id}
               open={expandedPeptide === peptide.id}
@@ -534,9 +553,14 @@ export function DosageScreen() {
               <GradientCard className="p-2 sm:p-3">
                 <CollapsibleTrigger className="w-full touch-manipulation">
                   <div className="flex items-center justify-between">
-                    <div className="text-left">
-                      <h4 className="font-medium text-foreground text-sm sm:text-base">{peptide.name}</h4>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">{getCategoryLabel(peptide.category)}</p>
+                    <div className="text-left flex items-center gap-2">
+                      {allBlendsAsPeptides.some(b => b.id === peptide.id) && (
+                        <FlaskConical className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                      )}
+                      <div>
+                        <h4 className="font-medium text-foreground text-sm sm:text-base">{peptide.name}</h4>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">{getCategoryLabel(peptide.category)}</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs sm:text-sm text-primary font-medium">
