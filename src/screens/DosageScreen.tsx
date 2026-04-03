@@ -389,11 +389,28 @@ export function DosageScreen() {
                 <SelectValue placeholder="Choose a peptide..." />
               </SelectTrigger>
               <SelectContent className="bg-card border-border z-50 max-h-60">
-                {peptides.map((peptide) => (
-                  <SelectItem key={peptide.id} value={peptide.id}>
-                    {peptide.name}
-                  </SelectItem>
-                ))}
+                {(() => {
+                  const all = getAllSelectablePeptides();
+                  return (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Peptides</div>
+                      {all.filter(p => !p.isBlend).map((peptide) => (
+                        <SelectItem key={peptide.id} value={peptide.id}>
+                          {peptide.name}
+                        </SelectItem>
+                      ))}
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1 pt-1.5">Blends & Stacks</div>
+                      {all.filter(p => p.isBlend).map((peptide) => (
+                        <SelectItem key={peptide.id} value={peptide.id}>
+                          <span className="flex items-center gap-1.5">
+                            <FlaskConical className="w-3 h-3 text-purple-400" />
+                            {peptide.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </>
+                  );
+                })()}
               </SelectContent>
             </Select>
           </div>
