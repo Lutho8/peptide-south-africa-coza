@@ -24,7 +24,7 @@ import { z } from 'zod';
 const doseEntrySchema = z.object({
   peptideId: z.string().min(1, 'Please select a peptide'),
   dose: z.number().min(0.001, 'Dose must be greater than 0').max(10000, 'Dose seems too high'),
-  unit: z.enum(['mcg', 'mg', 'IU']),
+  unit: z.enum(['mg', 'IU']),
   time: z.string().min(1, 'Please enter a time'),
   notes: z.string().max(200, 'Notes must be less than 200 characters').optional(),
 });
@@ -45,7 +45,7 @@ export function DailyLogScreen() {
   const [formData, setFormData] = useState({
     peptideId: '',
     dose: '',
-    unit: 'mcg' as 'mcg' | 'mg' | 'IU',
+    unit: 'mg' as 'mg' | 'IU',
     time: format(new Date(), 'HH:mm'),
     notes: '',
   });
@@ -135,7 +135,7 @@ export function DailyLogScreen() {
       setFormData({
         peptideId: '',
         dose: '',
-        unit: 'mcg',
+        unit: 'mg',
         time: format(new Date(), 'HH:mm'),
         notes: '',
       });

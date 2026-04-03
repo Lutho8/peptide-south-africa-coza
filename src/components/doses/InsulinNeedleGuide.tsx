@@ -4,19 +4,16 @@ import { Syringe, Info, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-rea
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { findBlendData } from '@/data/blendAdapters';
 
 interface InsulinNeedleGuideProps {
   dose: number;
-  unit: 'mcg' | 'mg' | 'IU';
+  unit: 'mg' | 'IU';
   concentration?: number;
   peptideId?: string;
 }
-
-type SyringeType = 'U40' | 'U50' | 'U100';
 
 interface BlendConcentration {
   totalMg: number;
@@ -33,7 +30,6 @@ function getBlendConcentration(peptideId?: string): BlendConcentration | null {
   const totalMg = mgMatch ? parseFloat(mgMatch[1]) : null;
   if (!totalMg) return null;
 
-  // Extract water volume from reconstitution quickstart
   const waterMatch = blend.quickstart.reconstitute.match(/([\d.]+)\s*mL/i);
   const waterMl = waterMatch ? parseFloat(waterMatch[1]) : 2.0;
 
@@ -44,35 +40,21 @@ function getBlendConcentration(peptideId?: string): BlendConcentration | null {
   };
 }
 
-const syringeUnitsPerMl: Record<SyringeType, number> = {
-  U40: 40,
-  U50: 50,
-  U100: 100,
-};
+const U40_UNITS_PER_ML = 40;
 
-const syringeLabels: Record<SyringeType, string> = {
-  U40: 'U-40',
-  U50: 'U-50',
-  U100: 'U-100',
-};
-
-// Dynamic calculator section
+// Dynamic calculator section — U-40 only
 function ReconstitutionCalculator({ 
   defaultTotalMg, 
   defaultWaterMl,
-  isBlend,
 }: { 
   defaultTotalMg: number; 
   defaultWaterMl: number;
-  isBlend: boolean;
 }) {
   const [totalMg, setTotalMg] = useState(defaultTotalMg);
   const [waterMl, setWaterMl] = useState(defaultWaterMl);
-  const [syringeType, setSyringeType] = useState<SyringeType>('U100');
 
-  const unitsPerMl = syringeUnitsPerMl[syringeType];
   const concentrationMgPerMl = waterMl > 0 ? totalMg / waterMl : 0;
-  const mcgPerUnit = concentrationMgPerMl > 0 ? (concentrationMgPerMl / unitsPerMl) * 1000 : 0;
+  const mgPerUnit = concentrationMgPerMl > 0 ? concentrationMgPerMl / U40_UNITS_PER_ML : 0;
 
   const dosePresets = [2, 4, 6];
 
@@ -80,10 +62,10 @@ function ReconstitutionCalculator({
     <div className="space-y-3 p-3 rounded-lg bg-muted/50 border border-border">
       <div className="text-sm font-semibold text-foreground flex items-center gap-1.5">
         <Syringe size={14} className="text-primary" />
-        Dynamic Reconstitution Calculator
+        Dynamic Calculator (U-40 Syringe)
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <Label className="text-xs text-muted-foreground">Total mg in vial</Label>
           <Input
@@ -106,19 +88,6 @@ function ReconstitutionCalculator({
             step={0.5}
           />
         </div>
-        <div>
-          <Label className="text-xs text-muted-foreground">Syringe</Label>
-          <Select value={syringeType} onValueChange={(v) => setSyringeType(v as SyringeType)}>
-            <SelectTrigger className="h-8 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="U40">U-40</SelectItem>
-              <SelectItem value="U50">U-50</SelectItem>
-              <SelectItem value="U100">U-100</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       {concentrationMgPerMl > 0 && (
@@ -129,8 +98,8 @@ function ReconstitutionCalculator({
               <div className="text-sm font-bold text-foreground">{concentrationMgPerMl.toFixed(2)} mg/mL</div>
             </div>
             <div className="p-2 rounded-md bg-background border border-border">
-              <div className="text-muted-foreground">1 unit ({syringeLabels[syringeType]})</div>
-              <div className="text-sm font-bold text-primary">{Math.round(mcgPerUnit)} mcg</div>
+              <div className="text-muted-foreground">1 unit (U-40)</div>
+              <div className="text-sm font-bold text-primary">{mgPerUnit.toFixed(3)} mg</div>
             </div>
           </div>
 
@@ -138,14 +107,14 @@ function ReconstitutionCalculator({
             <TableHeader>
               <TableRow>
                 <TableHead className="h-8 text-xs">Target Dose</TableHead>
-                <TableHead className="h-8 text-xs">Units to Draw ({syringeLabels[syringeType]})</TableHead>
+                <TableHead className="h-8 text-xs">U-40 Units</TableHead>
                 <TableHead className="h-8 text-xs">Volume (mL)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {dosePresets.map((doseMg) => {
                 const volumeMl = concentrationMgPerMl > 0 ? doseMg / concentrationMgPerMl : 0;
-                const units = volumeMl * unitsPerMl;
+                const units = volumeMl * U40_UNITS_PER_ML;
                 return (
                   <TableRow key={doseMg}>
                     <TableCell className="py-1.5 text-sm font-medium">{doseMg} mg</TableCell>
@@ -169,14 +138,14 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
   const isBlend = !!blendConc;
   const blendData = useMemo(() => peptideId ? findBlendData(peptideId) : null, [peptideId]);
 
-  // For blends use their real concentration; for individual peptides fall back to provided or default
   const activeTotalMg = blendConc?.totalMg ?? 5;
   const activeWaterMl = blendConc?.waterMl ?? 2;
-  const activeConcentrationMcgPerMl = (blendConc?.concentrationMgPerMl ?? (concentration || 2500 / 1000)) * 1000;
+  const activeConcentrationMgPerMl = blendConc?.concentrationMgPerMl ?? (concentration ? concentration / 1000 : 2.5);
 
-  // Convert dose to mcg
-  const doseMcg = unit === 'mg' ? dose * 1000 : dose;
-  const volumeNeededMl = doseMcg / activeConcentrationMcgPerMl;
+  // Convert dose to mg
+  const doseMg = unit === 'mg' ? dose : dose; // IU treated as mg equivalent for display
+  const volumeNeededMl = activeConcentrationMgPerMl > 0 ? doseMg / activeConcentrationMgPerMl : 0;
+  const u40Units = volumeNeededMl * U40_UNITS_PER_ML;
 
   if (dose <= 0) return null;
 
@@ -189,7 +158,7 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
         <div className="flex items-center gap-2">
           <Syringe size={16} className="text-primary" />
           <span className="text-sm font-medium text-foreground">
-            {isBlend ? `${blendData?.shortName || 'Blend'} Dosage Guide` : 'Insulin Needle Dosage Guide'}
+            {isBlend ? `${blendData?.shortName || 'Blend'} U-40 Dosage Guide` : 'U-40 Syringe Dosage Guide'}
           </span>
         </div>
         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -218,29 +187,16 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                 </Alert>
               )}
 
-              {/* Blend concentration info */}
-              {isBlend && blendConc && (
-                <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
-                  <Info size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                  <div className="text-xs text-muted-foreground">
-                    <span className="text-foreground font-medium">Standard reconstitution: </span>
-                    {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {blendConc.concentrationMgPerMl.toFixed(2)} mg/mL
-                    <br />
-                    <span className="text-foreground font-medium">1 unit (U-100) = {Math.round(blendConc.concentrationMgPerMl * 10)} mcg total peptides</span>
-                  </div>
+              {/* Concentration info */}
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                <Info size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-muted-foreground">
+                  <span className="text-foreground font-medium">Reconstitution: </span>
+                  {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {activeConcentrationMgPerMl.toFixed(2)} mg/mL
+                  <br />
+                  <span className="text-foreground font-medium">1 U-40 unit = {(activeConcentrationMgPerMl / U40_UNITS_PER_ML).toFixed(3)} mg</span>
                 </div>
-              )}
-
-              {/* Non-blend info */}
-              {!isBlend && (
-                <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
-                  <Info size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                  <div className="text-xs text-muted-foreground">
-                    <span className="text-foreground font-medium">Based on reconstitution: </span>
-                    {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {(activeConcentrationMcgPerMl).toLocaleString()} mcg/mL
-                  </div>
-                </div>
-              )}
+              </div>
 
               {/* Blend dosing table from protocol data */}
               {isBlend && blendData && blendData.dosingTable.length > 0 && (
@@ -253,7 +209,7 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                       <TableRow>
                         <TableHead className="h-8 text-xs">Period</TableHead>
                         <TableHead className="h-8 text-xs">Daily Dose</TableHead>
-                        <TableHead className="h-8 text-xs">Units to Draw</TableHead>
+                        <TableHead className="h-8 text-xs">U-40 Units</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -269,26 +225,16 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                 </div>
               )}
 
-              {/* Current dose quick reference */}
+              {/* Current dose — U-40 only */}
               <div className="p-3 rounded-lg bg-muted/50 space-y-2">
                 <div className="text-sm font-medium text-foreground">
                   Your current dose: {dose} {unit}
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  {(['U40', 'U50', 'U100'] as SyringeType[]).map((sType) => {
-                    const uPerMl = syringeUnitsPerMl[sType];
-                    const units = volumeNeededMl * uPerMl;
-                    return (
-                      <div key={sType} className="p-2 rounded-md bg-background border border-border text-center">
-                        <div className="text-muted-foreground">{syringeLabels[sType]}</div>
-                        <div className="text-lg font-bold text-primary">{units.toFixed(1)}</div>
-                        <div className="text-muted-foreground">units</div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="text-xs text-muted-foreground text-center">
-                  Volume: {volumeNeededMl.toFixed(3)} mL
+                <div className="p-3 rounded-md bg-background border border-border text-center">
+                  <div className="text-muted-foreground text-xs">U-40 Syringe</div>
+                  <div className="text-2xl font-bold text-primary">{u40Units.toFixed(1)}</div>
+                  <div className="text-muted-foreground text-xs">units to draw</div>
+                  <div className="text-muted-foreground text-[10px] mt-1">({volumeNeededMl.toFixed(3)} mL)</div>
                 </div>
               </div>
 
@@ -296,13 +242,7 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
               <ReconstitutionCalculator
                 defaultTotalMg={activeTotalMg}
                 defaultWaterMl={activeWaterMl}
-                isBlend={isBlend}
               />
-
-              {/* Quick Reference */}
-              <div className="text-[10px] text-muted-foreground text-center border-t border-border pt-2">
-                <strong>Quick Reference:</strong> U-40 = 40 units/mL • U-50 = 50 units/mL • U-100 = 100 units/mL
-              </div>
             </div>
           </motion.div>
         )}

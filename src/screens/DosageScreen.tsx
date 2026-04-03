@@ -92,7 +92,7 @@ export function DosageScreen() {
   
   const [vialSize, setVialSize] = useState(savedSettings.lastVialSize || '5');
   const [bacWater, setBacWater] = useState(savedSettings.lastBacWater || '2');
-  const [targetDose, setTargetDose] = useState(savedSettings.lastTargetDose || '250');
+  const [targetDose, setTargetDose] = useState(savedSettings.lastTargetDose || '2');
   const [selectedBlendForCalc, setSelectedBlendForCalc] = useState<string>('');
   const [syringeType, setSyringeType] = useState<SyringeType>(savedSettings.syringeType || 'u40');
   const [experienceLevel, setExperienceLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'athlete'>(
@@ -133,25 +133,21 @@ export function DosageScreen() {
   // Parse inputs with validation
   const vialMg = Math.max(0, parseFloat(vialSize) || 0);
   const waterMl = Math.max(0, parseFloat(bacWater) || 0);
-  const targetMcg = Math.max(0, parseFloat(targetDose) || 0);
+  const targetMg = Math.max(0, parseFloat(targetDose) || 0);
 
-  // Precision constants
-  const MCG_PER_MG = 1000;
-
-  // Core calculations with high precision
-  const totalMcg = vialMg * MCG_PER_MG;
-  const concentration = waterMl > 0 ? totalMcg / waterMl : 0;
-  const volumeNeeded = concentration > 0 ? targetMcg / concentration : 0;
+  // Core calculations in mg — U-40 syringe (40 units = 1mL)
+  const concentrationMgPerMl = waterMl > 0 ? vialMg / waterMl : 0;
+  const volumeNeeded = concentrationMgPerMl > 0 ? targetMg / concentrationMgPerMl : 0;
   
-  // Calculate syringe units based on selected syringe type
+  // U-40 syringe units
   const syringeUnits = volumeNeeded * selectedSyringe.unitsPerMl;
 
   // Verification calculation
-  const verificationDose = volumeNeeded * concentration;
-  const isAccurate = Math.abs(verificationDose - targetMcg) < 0.001 || targetMcg === 0;
+  const verificationDose = volumeNeeded * concentrationMgPerMl;
+  const isAccurate = Math.abs(verificationDose - targetMg) < 0.001 || targetMg === 0;
 
   // Calculate doses per vial
-  const dosesPerVial = targetMcg > 0 ? Math.floor(totalMcg / targetMcg) : 0;
+  const dosesPerVial = targetMg > 0 ? Math.floor(vialMg / targetMg) : 0;
 
   // Get schedule for selected peptide
   const schedulePeptide = useMemo(() => 
@@ -353,7 +349,7 @@ export function DosageScreen() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs sm:text-sm text-muted-foreground">Target Dose (mcg)</Label>
+            <Label className="text-xs sm:text-sm text-muted-foreground">Target Dose (mg)</Label>
             <Input
               type="number"
               inputMode="decimal"
@@ -390,8 +386,8 @@ export function DosageScreen() {
           <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
             <Droplets size={16} className="mx-auto text-primary mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Concentration</p>
-            <p className="text-base sm:text-lg font-bold text-foreground">{concentration.toFixed(2)}</p>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">mcg/ml</p>
+            <p className="text-base sm:text-lg font-bold text-foreground">{concentrationMgPerMl.toFixed(2)}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">mg/ml</p>
           </div>
           <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
             <Syringe size={16} className="mx-auto text-primary mb-1" />
@@ -402,7 +398,7 @@ export function DosageScreen() {
           <div className="text-center p-2 sm:p-3 rounded-lg bg-primary/20">
             <Syringe size={16} className="mx-auto text-primary mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">{selectedSyringe.label} Units</p>
-            <p className="text-base sm:text-lg font-bold text-primary">{syringeUnits.toFixed(2)}</p>
+            <p className="text-base sm:text-lg font-bold text-primary">{syringeUnits.toFixed(1)}</p>
             <p className="text-[10px] sm:text-xs text-muted-foreground">units</p>
           </div>
           <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
@@ -414,14 +410,14 @@ export function DosageScreen() {
         </div>
 
         {/* Verification Badge */}
-        {concentration > 0 && (
+        {concentrationMgPerMl > 0 && (
           <div className={cn(
             "mt-3 sm:mt-4 p-2 rounded-lg text-center text-xs",
             isAccurate ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
           )}>
             {isAccurate ? "✓ Calculation verified" : "⚠ Precision warning"}
             <span className="block text-muted-foreground mt-1 text-[10px] sm:text-xs">
-              {volumeNeeded.toFixed(4)} ml × {concentration.toFixed(2)} mcg/ml = {verificationDose.toFixed(2)} mcg
+              {volumeNeeded.toFixed(4)} ml × {concentrationMgPerMl.toFixed(2)} mg/ml = {verificationDose.toFixed(2)} mg
             </span>
           </div>
         )}
