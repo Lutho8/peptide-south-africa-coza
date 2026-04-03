@@ -1,7 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { peptides, getCategoryLabel } from '@/data/peptides';
-import { getAllSelectablePeptides, findPeptideOrBlend, allBlendsAsPeptides } from '@/data/blendAdapters';
+import { getAllSelectablePeptides, findPeptideOrBlend, allBlendsAsPeptides, findBlendData } from '@/data/blendAdapters';
+import { peptideBlends, peptideStacks } from '@/data/peptideBlends';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FlaskConical } from 'lucide-react';
 import { AlertTriangle, Calculator, Droplets, Syringe, ChevronDown, ChevronUp, Clock, Calendar, Bell, BellOff, Save, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -90,6 +93,7 @@ export function DosageScreen() {
   const [vialSize, setVialSize] = useState(savedSettings.lastVialSize || '5');
   const [bacWater, setBacWater] = useState(savedSettings.lastBacWater || '2');
   const [targetDose, setTargetDose] = useState(savedSettings.lastTargetDose || '250');
+  const [selectedBlendForCalc, setSelectedBlendForCalc] = useState<string>('');
   const [syringeType, setSyringeType] = useState<SyringeType>(savedSettings.syringeType || 'u40');
   const [experienceLevel, setExperienceLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'athlete'>(
     savedSettings.experienceLevel || 'intermediate'
@@ -107,6 +111,21 @@ export function DosageScreen() {
     const settings = getNotificationSettings();
     setNotificationsEnabled(permission === 'granted' && settings.enabled);
   }, []);
+
+  // Blend auto-fill for calculator
+  const selectedBlendData = useMemo(() => findBlendData(selectedBlendForCalc), [selectedBlendForCalc]);
+  const allBlends = useMemo(() => [...peptideBlends, ...peptideStacks], []);
+
+  const handleBlendSelect = (blendId: string) => {
+    setSelectedBlendForCalc(blendId);
+    const blend = findBlendData(blendId);
+    if (blend) {
+      const mgMatch = blend.vialSize.match(/([\d.]+)\s*mg/i);
+      if (mgMatch) setVialSize(mgMatch[1]);
+      const waterMatch = blend.quickstart.reconstitute.match(/([\d.]+)\s*mL/i);
+      if (waterMatch) setBacWater(waterMatch[1]);
+    }
+  };
 
   // Get selected syringe config
   const selectedSyringe = SYRINGE_TYPES.find(s => s.id === syringeType) || SYRINGE_TYPES[1];
@@ -278,6 +297,40 @@ export function DosageScreen() {
           <h2 className="text-base sm:text-lg font-semibold text-foreground">Reconstitution Calculator</h2>
         </div>
 
+        {/* Blend Quick-Fill Selector */}
+        <div className="mb-4 space-y-1.5">
+          <Label className="text-xs sm:text-sm text-muted-foreground">Quick-Fill from Blend/Stack</Label>
+          <Select value={selectedBlendForCalc} onValueChange={handleBlendSelect}>
+            <SelectTrigger className="bg-muted border-border h-10">
+              <SelectValue placeholder="Select a blend to auto-fill..." />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border z-50 max-h-60">
+              <SelectItem value="custom">Custom / Individual Peptide</SelectItem>
+              {allBlends.map((blend) => (
+                <SelectItem key={blend.id} value={blend.id}>
+                  <span className="flex items-center gap-1.5">
+                    <FlaskConical className="w-3 h-3 text-primary" />
+                    {blend.shortName} ({blend.vialSize})
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Blend Safety Warning */}
+        {selectedBlendData && (
+          <Alert variant="destructive" className="mb-4 border-destructive bg-destructive/10">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle className="text-sm font-bold">⚠️ Blend-Specific Values</AlertTitle>
+            <AlertDescription className="text-xs">
+              Values auto-filled for <strong>{selectedBlendData.shortName}</strong>. 
+              Do NOT use generic peptide defaults — blends have higher total mg and different concentrations.
+              Always verify against your specific product.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
           <div className="space-y-1.5">
             <Label className="text-xs sm:text-sm text-muted-foreground">Vial Size (mg)</Label>
@@ -370,6 +423,42 @@ export function DosageScreen() {
             <span className="block text-muted-foreground mt-1 text-[10px] sm:text-xs">
               {volumeNeeded.toFixed(4)} ml × {concentration.toFixed(2)} mcg/ml = {verificationDose.toFixed(2)} mcg
             </span>
+          </div>
+        )}
+
+        {/* Blend Protocol Dosing Table */}
+        {selectedBlendData && selectedBlendData.dosingTable.length > 0 && (
+          <div className="mt-4 space-y-2 border-t border-border pt-4">
+            <div className="flex items-center gap-2">
+              <FlaskConical size={16} className="text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">{selectedBlendData.shortName} Protocol Dosing Table</h3>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="h-8 text-xs">Period</TableHead>
+                  <TableHead className="h-8 text-xs">Daily Dose</TableHead>
+                  <TableHead className="h-8 text-xs">Units to Draw</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedBlendData.dosingTable.map((row, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="py-1.5 text-xs font-medium">{row.week}</TableCell>
+                    <TableCell className="py-1.5 text-xs">{row.dailyDose}</TableCell>
+                    <TableCell className="py-1.5 text-xs font-bold text-primary">{row.units}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {selectedBlendData.syringeMath && (
+              <div className="p-2 rounded-lg bg-muted/50 text-xs space-y-0.5">
+                <div className="font-medium text-foreground mb-1">Syringe Math:</div>
+                {selectedBlendData.syringeMath.map((line, i) => (
+                  <div key={i} className="text-muted-foreground">• {line}</div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </GradientCard>
