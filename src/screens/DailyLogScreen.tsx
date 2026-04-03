@@ -1,14 +1,15 @@
 import { useState, useMemo, useCallback } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import { peptides } from '@/data/peptides';
+import { findPeptideOrBlend, getAllSelectablePeptides } from '@/data/blendAdapters';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, Syringe, Trash2, Calendar, Cloud, CloudOff, Loader2, BarChart3, Pencil, ArrowUpDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Syringe, Trash2, Calendar, Cloud, CloudOff, Loader2, BarChart3, Pencil, ArrowUpDown, FlaskConical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
@@ -58,6 +59,19 @@ export function DailyLogScreen() {
 
   const startDayOfWeek = monthStart.getDay();
   const emptyDays = Array(startDayOfWeek).fill(null);
+  const selectablePeptides = useMemo(() => getAllSelectablePeptides(), []);
+  const individualPeptides = useMemo(
+    () => selectablePeptides.filter((peptide) => !peptide.isBlend),
+    [selectablePeptides]
+  );
+  const blendOptions = useMemo(
+    () => selectablePeptides.filter((peptide) => peptide.isBlend),
+    [selectablePeptides]
+  );
+  const selectedPeptide = useMemo(
+    () => selectablePeptides.find((peptide) => peptide.id === formData.peptideId) ?? null,
+    [formData.peptideId, selectablePeptides]
+  );
 
   const selectedDateDoses = useMemo(() => {
     const dayDoses = getDosesForDate(selectedDate);
@@ -73,7 +87,7 @@ export function DailyLogScreen() {
   const handleAddDose = async () => {
     setFormErrors({});
     
-    const peptide = peptides.find(p => p.id === formData.peptideId);
+    const peptide = findPeptideOrBlend(formData.peptideId);
     const doseNumber = parseFloat(formData.dose);
 
     const result = doseEntrySchema.safeParse({
@@ -168,7 +182,7 @@ export function DailyLogScreen() {
   };
 
   const getCategoryColor = (peptideId: string) => {
-    const peptide = peptides.find(p => p.id === peptideId);
+    const peptide = findPeptideOrBlend(peptideId);
     if (!peptide) return 'bg-muted';
     const colors: Record<string, string> = {
       'immune': 'bg-indigo-500',
@@ -177,6 +191,11 @@ export function DailyLogScreen() {
       'metabolic': 'bg-red-500',
       'healing': 'bg-orange-500',
       'gh-secretagogue': 'bg-violet-500',
+      'weight-loss': 'bg-pink-500',
+      'anti-aging': 'bg-lime-500',
+      'skin-hair': 'bg-rose-500',
+      'hormonal': 'bg-amber-500',
+      'bioregulators': 'bg-sky-500',
     };
     return colors[peptide.category] || 'bg-muted';
   };
@@ -409,15 +428,34 @@ export function DailyLogScreen() {
                 value={formData.peptideId}
                 onValueChange={(val) => setFormData(prev => ({ ...prev, peptideId: val }))}
               >
-                <SelectTrigger className={cn(formErrors.peptideId && "border-destructive")}>
-                  <SelectValue placeholder="Select peptide..." />
+                  <SelectTrigger className={cn(formErrors.peptideId && "border-destructive")}>
+                    <SelectValue placeholder="Select peptide or blend..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border z-50">
-                  {peptides.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.shortName} - {p.name}
-                    </SelectItem>
-                  ))}
+                    <SelectGroup>
+                      <SelectLabel>Individual Peptides</SelectLabel>
+                      {individualPeptides.map((peptide) => (
+                        <SelectItem key={peptide.id} value={peptide.id}>
+                          {peptide.shortName} - {peptide.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                    {blendOptions.length > 0 && (
+                      <>
+                        <SelectSeparator />
+                        <SelectGroup>
+                          <SelectLabel>Blends & Stacks</SelectLabel>
+                          {blendOptions.map((peptide) => (
+                            <SelectItem key={peptide.id} value={peptide.id}>
+                              <span className="flex items-center gap-2">
+                                <FlaskConical className="h-3.5 w-3.5 text-primary" />
+                                <span>{peptide.name}</span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </>
+                    )}
                 </SelectContent>
               </Select>
               {formErrors.peptideId && (
@@ -487,7 +525,7 @@ export function DailyLogScreen() {
               {formData.peptideId && formData.dose && formData.time && (
                 <QuickAddReminderButton
                   peptideId={formData.peptideId}
-                  peptideName={peptides.find(p => p.id === formData.peptideId)?.shortName || formData.peptideId}
+                  peptideName={selectedPeptide?.shortName || formData.peptideId}
                   dose={formData.dose}
                   unit={formData.unit}
                   time={formData.time}
