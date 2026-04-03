@@ -386,8 +386,8 @@ export function DosageScreen() {
           <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
             <Droplets size={16} className="mx-auto text-primary mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Concentration</p>
-            <p className="text-base sm:text-lg font-bold text-foreground">{concentration.toFixed(2)}</p>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">mcg/ml</p>
+            <p className="text-base sm:text-lg font-bold text-foreground">{concentrationMgPerMl.toFixed(2)}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">mg/ml</p>
           </div>
           <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
             <Syringe size={16} className="mx-auto text-primary mb-1" />
@@ -398,7 +398,7 @@ export function DosageScreen() {
           <div className="text-center p-2 sm:p-3 rounded-lg bg-primary/20">
             <Syringe size={16} className="mx-auto text-primary mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">{selectedSyringe.label} Units</p>
-            <p className="text-base sm:text-lg font-bold text-primary">{syringeUnits.toFixed(2)}</p>
+            <p className="text-base sm:text-lg font-bold text-primary">{syringeUnits.toFixed(1)}</p>
             <p className="text-[10px] sm:text-xs text-muted-foreground">units</p>
           </div>
           <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
@@ -410,14 +410,14 @@ export function DosageScreen() {
         </div>
 
         {/* Verification Badge */}
-        {concentration > 0 && (
+        {concentrationMgPerMl > 0 && (
           <div className={cn(
             "mt-3 sm:mt-4 p-2 rounded-lg text-center text-xs",
             isAccurate ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
           )}>
             {isAccurate ? "✓ Calculation verified" : "⚠ Precision warning"}
             <span className="block text-muted-foreground mt-1 text-[10px] sm:text-xs">
-              {volumeNeeded.toFixed(4)} ml × {concentration.toFixed(2)} mcg/ml = {verificationDose.toFixed(2)} mcg
+              {volumeNeeded.toFixed(4)} ml × {concentrationMgPerMl.toFixed(2)} mg/ml = {verificationDose.toFixed(2)} mg
             </span>
           </div>
         )}
