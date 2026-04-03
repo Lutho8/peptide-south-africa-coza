@@ -133,7 +133,7 @@ export function DosageScreen() {
   // Parse inputs with validation
   const vialMg = Math.max(0, parseFloat(vialSize) || 0);
   const waterMl = Math.max(0, parseFloat(bacWater) || 0);
-  const targetMcg = Math.max(0, parseFloat(targetDose) || 0);
+  const targetMg = Math.max(0, parseFloat(targetDose) || 0);
 
   // Precision constants
   const MCG_PER_MG = 1000;
