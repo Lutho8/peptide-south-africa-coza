@@ -135,7 +135,7 @@ export function DailyLogScreen() {
       setFormData({
         peptideId: '',
         dose: '',
-        unit: 'mcg',
+        unit: 'mg',
         time: format(new Date(), 'HH:mm'),
         notes: '',
       });
