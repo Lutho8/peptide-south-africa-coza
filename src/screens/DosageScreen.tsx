@@ -331,6 +331,7 @@ export function DosageScreen() {
           </Alert>
         )}
 
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
           <div className="space-y-1.5">
             <Label className="text-xs sm:text-sm text-muted-foreground">Vial Size (mg)</Label>
             <Input
