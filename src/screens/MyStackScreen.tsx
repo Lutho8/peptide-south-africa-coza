@@ -4,7 +4,7 @@ import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { userProfile, stackOptimizations } from '@/data/userData';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
