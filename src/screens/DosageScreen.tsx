@@ -349,7 +349,7 @@ export function DosageScreen() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs sm:text-sm text-muted-foreground">Target Dose (mcg)</Label>
+            <Label className="text-xs sm:text-sm text-muted-foreground">Target Dose (mg)</Label>
             <Input
               type="number"
               inputMode="decimal"
