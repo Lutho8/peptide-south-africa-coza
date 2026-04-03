@@ -45,7 +45,7 @@ export function DailyLogScreen() {
   const [formData, setFormData] = useState({
     peptideId: '',
     dose: '',
-    unit: 'mcg' as 'mcg' | 'mg' | 'IU',
+    unit: 'mg' as 'mg' | 'IU',
     time: format(new Date(), 'HH:mm'),
     notes: '',
   });
