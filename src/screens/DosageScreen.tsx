@@ -544,7 +544,7 @@ export function DosageScreen() {
       <div>
         <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 sm:mb-3">Dosage Reference</h3>
         <div className="space-y-2">
-          {peptides.map((peptide) => (
+          {[...peptides, ...allBlendsAsPeptides].map((peptide) => (
             <Collapsible 
               key={peptide.id}
               open={expandedPeptide === peptide.id}
@@ -553,9 +553,14 @@ export function DosageScreen() {
               <GradientCard className="p-2 sm:p-3">
                 <CollapsibleTrigger className="w-full touch-manipulation">
                   <div className="flex items-center justify-between">
-                    <div className="text-left">
-                      <h4 className="font-medium text-foreground text-sm sm:text-base">{peptide.name}</h4>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">{getCategoryLabel(peptide.category)}</p>
+                    <div className="text-left flex items-center gap-2">
+                      {allBlendsAsPeptides.some(b => b.id === peptide.id) && (
+                        <FlaskConical className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                      )}
+                      <div>
+                        <h4 className="font-medium text-foreground text-sm sm:text-base">{peptide.name}</h4>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">{getCategoryLabel(peptide.category)}</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs sm:text-sm text-primary font-medium">
