@@ -93,6 +93,7 @@ export function DosageScreen() {
   const [vialSize, setVialSize] = useState(savedSettings.lastVialSize || '5');
   const [bacWater, setBacWater] = useState(savedSettings.lastBacWater || '2');
   const [targetDose, setTargetDose] = useState(savedSettings.lastTargetDose || '250');
+  const [selectedBlendForCalc, setSelectedBlendForCalc] = useState<string>('');
   const [syringeType, setSyringeType] = useState<SyringeType>(savedSettings.syringeType || 'u40');
   const [experienceLevel, setExperienceLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'athlete'>(
     savedSettings.experienceLevel || 'intermediate'
