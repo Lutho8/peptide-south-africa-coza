@@ -43,7 +43,7 @@ function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number
   };
 }
 
-function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycle }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycle, onEndCycle, onRestartCycle }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
