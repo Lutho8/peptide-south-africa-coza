@@ -136,7 +136,7 @@ export function DosageScreen() {
 
   // Get schedule for selected peptide
   const schedulePeptide = useMemo(() => 
-    peptides.find(p => p.id === selectedSchedulePeptide), 
+    findPeptideOrBlend(selectedSchedulePeptide), 
     [selectedSchedulePeptide]
   );
   
