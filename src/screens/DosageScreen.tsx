@@ -135,23 +135,19 @@ export function DosageScreen() {
   const waterMl = Math.max(0, parseFloat(bacWater) || 0);
   const targetMg = Math.max(0, parseFloat(targetDose) || 0);
 
-  // Precision constants
-  const MCG_PER_MG = 1000;
-
-  // Core calculations with high precision
-  const totalMcg = vialMg * MCG_PER_MG;
-  const concentration = waterMl > 0 ? totalMcg / waterMl : 0;
-  const volumeNeeded = concentration > 0 ? targetMcg / concentration : 0;
+  // Core calculations in mg — U-40 syringe (40 units = 1mL)
+  const concentrationMgPerMl = waterMl > 0 ? vialMg / waterMl : 0;
+  const volumeNeeded = concentrationMgPerMl > 0 ? targetMg / concentrationMgPerMl : 0;
   
-  // Calculate syringe units based on selected syringe type
+  // U-40 syringe units
   const syringeUnits = volumeNeeded * selectedSyringe.unitsPerMl;
 
   // Verification calculation
-  const verificationDose = volumeNeeded * concentration;
-  const isAccurate = Math.abs(verificationDose - targetMcg) < 0.001 || targetMcg === 0;
+  const verificationDose = volumeNeeded * concentrationMgPerMl;
+  const isAccurate = Math.abs(verificationDose - targetMg) < 0.001 || targetMg === 0;
 
   // Calculate doses per vial
-  const dosesPerVial = targetMcg > 0 ? Math.floor(totalMcg / targetMcg) : 0;
+  const dosesPerVial = targetMg > 0 ? Math.floor(vialMg / targetMg) : 0;
 
   // Get schedule for selected peptide
   const schedulePeptide = useMemo(() => 
