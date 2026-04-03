@@ -425,6 +425,42 @@ export function DosageScreen() {
             </span>
           </div>
         )}
+
+        {/* Blend Protocol Dosing Table */}
+        {selectedBlendData && selectedBlendData.dosingTable.length > 0 && (
+          <div className="mt-4 space-y-2 border-t border-border pt-4">
+            <div className="flex items-center gap-2">
+              <FlaskConical size={16} className="text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">{selectedBlendData.shortName} Protocol Dosing Table</h3>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="h-8 text-xs">Period</TableHead>
+                  <TableHead className="h-8 text-xs">Daily Dose</TableHead>
+                  <TableHead className="h-8 text-xs">Units to Draw</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedBlendData.dosingTable.map((row, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="py-1.5 text-xs font-medium">{row.week}</TableCell>
+                    <TableCell className="py-1.5 text-xs">{row.dailyDose}</TableCell>
+                    <TableCell className="py-1.5 text-xs font-bold text-primary">{row.units}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {selectedBlendData.syringeMath && (
+              <div className="p-2 rounded-lg bg-muted/50 text-xs space-y-0.5">
+                <div className="font-medium text-foreground mb-1">Syringe Math:</div>
+                {selectedBlendData.syringeMath.map((line, i) => (
+                  <div key={i} className="text-muted-foreground">• {line}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </GradientCard>
 
       {/* Dosing Schedule Calculator */}
