@@ -284,6 +284,51 @@ export type Database = {
         }
         Relationships: []
       }
+      lab_reports: {
+        Row: {
+          ai_insights: string | null
+          ai_summary: string | null
+          created_at: string
+          extracted_biomarkers: Json | null
+          file_name: string
+          file_url: string
+          id: string
+          report_date: string | null
+          status: string
+          updated_at: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_insights?: string | null
+          ai_summary?: string | null
+          created_at?: string
+          extracted_biomarkers?: Json | null
+          file_name: string
+          file_url: string
+          id?: string
+          report_date?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_insights?: string | null
+          ai_summary?: string | null
+          created_at?: string
+          extracted_biomarkers?: Json | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          report_date?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       measurements: {
         Row: {
           chest_cm: number | null
