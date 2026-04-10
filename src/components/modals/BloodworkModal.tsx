@@ -456,6 +456,11 @@ export function BloodworkModal({ open, onOpenChange }: BloodworkModalProps) {
               ))}
             </div>
           )}
+
+          {/* AI Insights View */}
+          {viewMode === 'insights' && (
+            <BiomarkerInsights />
+          )}
         </div>
       </DialogContent>
     </Dialog>
