@@ -35,9 +35,10 @@ import { getStoredData, setStoredData } from '@/services/storage';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, Save, AlertTriangle, TrendingUp, TrendingDown, Minus, 
-  Activity, Heart, Droplets, Flame, BarChart3, FileText, Calendar
+  Activity, Heart, Droplets, Flame, BarChart3, FileText, Calendar, Brain
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BiomarkerInsights } from '@/components/biomarkers/BiomarkerInsights';
 
 interface BloodworkModalProps {
   open: boolean;
@@ -61,7 +62,7 @@ export function BloodworkModal({ open, onOpenChange }: BloodworkModalProps) {
   const [newValue, setNewValue] = useState('');
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   const [newNotes, setNewNotes] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'charts' | 'panels'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'charts' | 'panels' | 'insights'>('list');
   const { toast } = useToast();
 
   // User gender for reference ranges
@@ -266,7 +267,7 @@ export function BloodworkModal({ open, onOpenChange }: BloodworkModalProps) {
           )}
 
           {/* View Toggle */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant={viewMode === 'list' ? 'default' : 'outline'}
               size="sm"
@@ -293,6 +294,15 @@ export function BloodworkModal({ open, onOpenChange }: BloodworkModalProps) {
             >
               <Calendar size={14} />
               Panels
+            </Button>
+            <Button
+              variant={viewMode === 'insights' ? 'default' : 'outline'}
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={() => setViewMode('insights')}
+            >
+              <Brain size={14} />
+              AI Insights
             </Button>
           </div>
 
@@ -445,6 +455,11 @@ export function BloodworkModal({ open, onOpenChange }: BloodworkModalProps) {
                 </GradientCard>
               ))}
             </div>
+          )}
+
+          {/* AI Insights View */}
+          {viewMode === 'insights' && (
+            <BiomarkerInsights />
           )}
         </div>
       </DialogContent>
