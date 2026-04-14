@@ -10,7 +10,7 @@ export interface DailyDoseEntry {
   peptide_id: string;
   peptide_name: string;
   dose: number;
-  unit: 'mcg' | 'mg' | 'IU';
+  unit: 'mg' | 'IU' | 'units';
   time: string;
   notes?: string;
   user_id?: string;
@@ -57,7 +57,7 @@ export function useDailyDoses() {
           peptide_id: d.peptide_id,
           peptide_name: d.peptide_name,
           dose: Number(d.dose),
-          unit: d.unit as 'mcg' | 'mg' | 'IU',
+          unit: d.unit as 'mg' | 'IU' | 'units',
           time: d.time,
           notes: d.notes || undefined,
           user_id: d.user_id,

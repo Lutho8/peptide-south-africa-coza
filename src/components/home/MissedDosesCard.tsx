@@ -72,7 +72,7 @@ export function MissedDosesCard() {
       // Parse dose value and unit
       const doseMatch = missed.dose.match(/^([\d.]+)\s*(mcg|mg|IU)?$/i);
       const doseValue = doseMatch ? parseFloat(doseMatch[1]) : parseFloat(missed.dose);
-      const unit = (doseMatch?.[2]?.toLowerCase() || 'mcg') as 'mcg' | 'mg' | 'IU';
+      const unit = (doseMatch?.[2]?.toLowerCase() || 'mg') as 'mg' | 'IU' | 'units';
 
       await addDose({
         date: missed.date,

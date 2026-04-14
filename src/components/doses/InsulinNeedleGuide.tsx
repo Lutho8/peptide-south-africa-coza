@@ -10,7 +10,7 @@ import { findBlendData } from '@/data/blendAdapters';
 
 interface InsulinNeedleGuideProps {
   dose: number;
-  unit: 'mg' | 'IU';
+  unit: 'mg' | 'IU' | 'units';
   concentration?: number;
   peptideId?: string;
 }

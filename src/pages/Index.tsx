@@ -67,7 +67,7 @@ const Index = () => {
   const handleMarkDoseAsTaken = useCallback((peptideName: string, dose: string, time: string) => {
     const doseMatch = dose.match(/^([\d.]+)(\w+)$/);
     const doseValue = doseMatch ? parseFloat(doseMatch[1]) : 0;
-    const unit = (doseMatch ? doseMatch[2] : 'mcg') as 'mcg' | 'mg' | 'IU';
+    const unit = (doseMatch ? doseMatch[2] : 'mg') as 'mg' | 'IU' | 'units';
     
     addDose({
       date: format(new Date(), 'yyyy-MM-dd'),
