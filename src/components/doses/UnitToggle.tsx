@@ -2,11 +2,11 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface UnitToggleProps {
-  value: 'mg' | 'IU';
-  onChange: (unit: 'mg' | 'IU') => void;
+  value: 'mg' | 'IU' | 'units';
+  onChange: (unit: 'mg' | 'IU' | 'units') => void;
 }
 
-const units: Array<'mg' | 'IU'> = ['mg', 'IU'];
+const units: Array<'mg' | 'IU' | 'units'> = ['mg', 'IU', 'units'];
 
 export function UnitToggle({ value, onChange }: UnitToggleProps) {
   return (

@@ -10,7 +10,7 @@ export interface DailyDoseEntry {
   peptide_id: string;
   peptide_name: string;
   dose: number;
-  unit: 'mcg' | 'mg' | 'IU';
+  unit: 'mg' | 'IU' | 'units';
   time: string;
   notes?: string;
   user_id?: string;
