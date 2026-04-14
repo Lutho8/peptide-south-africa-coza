@@ -57,7 +57,7 @@ export function useDailyDoses() {
           peptide_id: d.peptide_id,
           peptide_name: d.peptide_name,
           dose: Number(d.dose),
-          unit: d.unit as 'mcg' | 'mg' | 'IU',
+          unit: d.unit as 'mg' | 'IU' | 'units',
           time: d.time,
           notes: d.notes || undefined,
           user_id: d.user_id,
