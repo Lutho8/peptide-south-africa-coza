@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, FlaskConical, Clock, Syringe, Shield, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react';
 import { corePeptides, categoryConfig } from '@/data/peptides';
-import { topPeptidesSlugs } from '@/data/entitySlugs';
+import { topPeptidesSlugs, categorySlugs } from '@/data/entitySlugs';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd, buildPeptideSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
@@ -254,7 +254,7 @@ export default function PeptideEntityPage() {
           <GradientCard className="p-4 text-center">
             <p className="text-sm text-muted-foreground mb-2">Explore more peptides in this category</p>
             <Link 
-              to={`/categories/${Object.entries(require('@/data/entitySlugs').categorySlugs).find(([,v]) => v === peptide.category)?.[0] || peptide.category}`}
+              to={`/categories/${Object.entries(categorySlugs).find(([,v]) => v === peptide.category)?.[0] || peptide.category}`}
               className="text-primary font-medium hover:underline"
             >
               View All {catConfig?.label} Peptides →
