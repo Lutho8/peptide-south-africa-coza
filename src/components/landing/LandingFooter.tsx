@@ -3,23 +3,25 @@ import { Twitter, Mail, Linkedin } from 'lucide-react';
 import logoIcon from '@/assets/logo-icon.png';
 
 const footerLinks = {
-  Database: [
-    { label: 'All Peptides', href: '#peptides' },
-    { label: 'Categories', href: '#categories' },
-    { label: 'FDA Approved', href: '#' },
-    { label: 'Research Phase', href: '#' },
+  'Popular Peptides': [
+    { label: 'BPC-157', href: '/peptides/bpc-157', isRoute: true },
+    { label: 'Retatrutide', href: '/peptides/retatrutide', isRoute: true },
+    { label: 'Tirzepatide', href: '/peptides/tirzepatide', isRoute: true },
+    { label: 'Semaglutide', href: '/peptides/semaglutide', isRoute: true },
+    { label: 'Ipamorelin', href: '/peptides/ipamorelin', isRoute: true },
   ],
-  Tools: [
-    { label: 'Blends', href: '#tools' },
-    { label: 'Stack Builder', href: '#stack' },
-    { label: 'Calculator', href: '#calculator' },
-    { label: 'Quiz', href: '#quiz' },
+  Categories: [
+    { label: 'Weight Loss', href: '/categories/weight-loss', isRoute: true },
+    { label: 'Healing', href: '/categories/healing', isRoute: true },
+    { label: 'Growth Hormone', href: '/categories/growth-hormone', isRoute: true },
+    { label: 'Longevity', href: '/categories/longevity', isRoute: true },
+    { label: 'Cognitive', href: '/categories/cognitive', isRoute: true },
   ],
-  Resources: [
-    { label: 'Research Library', href: '#' },
-    { label: 'Blog', href: '#blog' },
-    { label: 'Documentation', href: '#' },
-    { label: 'API', href: '#' },
+  Guides: [
+    { label: 'Reconstitution Guide', href: '/guides/reconstitution', isRoute: true },
+    { label: 'Injection Guide', href: '/guides/injection', isRoute: true },
+    { label: 'Bloodwork Monitoring', href: '/guides/bloodwork', isRoute: true },
+    { label: 'Free Course', href: '/free-course', isRoute: true },
   ],
   Legal: [
     { label: 'Privacy Policy', href: '/privacy', isRoute: true },

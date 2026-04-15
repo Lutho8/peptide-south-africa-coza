@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, HelpCircle, Shield, FlaskConical, Wrench, Info } from 'lucide-react';
 
-const faqCategories = [
+export const faqCategories = [
   {
     id: 'general',
     title: 'General',

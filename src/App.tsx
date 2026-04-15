@@ -18,6 +18,9 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const FreeCourse = lazy(() => import("./pages/FreeCourse"));
 const COAVerification = lazy(() => import("./pages/COAVerification"));
 const LiveQnA = lazy(() => import("./pages/LiveQnA"));
+const PeptideEntityPage = lazy(() => import("./pages/PeptideEntityPage"));
+const CategoryHubPage = lazy(() => import("./pages/CategoryHubPage"));
+const GuidePage = lazy(() => import("./pages/GuidePage"));
 
 // Initialize i18n
 import '@/i18n';
@@ -47,6 +50,9 @@ const App = () => {
                 <Route path="/free-course" element={<FreeCourse />} />
                 <Route path="/coa-verification" element={<COAVerification />} />
                 <Route path="/live-qna" element={<LiveQnA />} />
+                <Route path="/peptides/:slug" element={<PeptideEntityPage />} />
+                <Route path="/categories/:slug" element={<CategoryHubPage />} />
+                <Route path="/guides/:slug" element={<GuidePage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
