@@ -8,9 +8,11 @@ import { BlogSection } from './BlogSection';
 import { CTASection } from './CTASection';
 import { LandingFooter } from './LandingFooter';
 import { VendorShowcase } from './VendorShowcase';
-import { FAQSection } from './FAQSection';
+import { FAQSection, faqCategories } from './FAQSection';
 import { LiveQnAPopup } from './LiveQnAPopup';
 import { useAuth } from '@/contexts/AuthContext';
+import { SEOHead } from '@/components/seo/SEOHead';
+import { JsonLd, buildOrganizationSchema, buildWebSiteSchema, buildFAQSchema } from '@/components/seo/JsonLd';
 
 import { PeptideCategory } from '@/data/peptides';
 
@@ -44,8 +46,19 @@ export function LandingPage() {
     window.location.reload();
   };
 
+  // Collect all FAQs for JSON-LD
+  const allFaqs = faqCategories.flatMap(cat => cat.faqs);
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Ride The Tide – Peptide Research & Protocol Tracking Platform"
+        description="Research-backed peptide database with protocol tracking, reconstitution calculators, AI-powered biomarker analysis, and 50+ peptide profiles. Free tools for dosing, stacking, and bloodwork monitoring."
+        canonical="https://peptide-mastery.lovable.app"
+      />
+      <JsonLd data={buildOrganizationSchema()} id="org-schema" />
+      <JsonLd data={buildWebSiteSchema()} id="website-schema" />
+      <JsonLd data={buildFAQSchema(allFaqs)} id="faq-schema" />
       <LandingHeader 
         onSignInClick={handleSignInClick} 
         onSearch={() => setSearchOpen(true)}
