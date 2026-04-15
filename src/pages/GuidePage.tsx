@@ -149,7 +149,7 @@ export default function GuidePage() {
           <h2 className="text-xl font-bold text-foreground mb-4">Popular Peptides</h2>
           <div className="flex flex-wrap gap-2">
             {Object.entries(topPeptidesSlugs).slice(0, 8).map(([pSlug, pId]) => {
-              const p = require('@/data/peptides').corePeptides.find((pp: any) => pp.id === pId);
+              const p = corePeptides.find((pp) => pp.id === pId);
               return p ? (
                 <Link key={pSlug} to={`/peptides/${pSlug}`} className="px-3 py-1.5 rounded-full bg-muted/50 text-sm text-foreground hover:bg-primary/20 transition-colors">
                   {p.name}
