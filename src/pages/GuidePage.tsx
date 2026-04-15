@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { guidePages } from '@/data/entitySlugs';
+import { guidePages, topPeptidesSlugs } from '@/data/entitySlugs';
+import { corePeptides } from '@/data/peptides';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd, buildHowToSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
