@@ -5,7 +5,8 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { userProfile, stackOptimizations } from '@/data/userData';
 import { useAuth } from '@/contexts/AuthContext';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target } from 'lucide-react';
+import { getGoalLabels } from '@/data/goalMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -402,6 +403,39 @@ export function MyStackScreen() {
             )}
           </div>
         </div>
+
+        {/* Tuned to your goals chip banner */}
+        {(() => {
+          const goalLabelList = getGoalLabels(profile.goals);
+          if (goalLabelList.length > 0) {
+            return (
+              <div className="relative mt-4 flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <Sparkles size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground mb-1.5">Tuned to your goals:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {goalLabelList.map(g => (
+                      <Badge key={g} variant="secondary" className="text-[10px] py-0 h-5">
+                        {g}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <a
+              href="/?screen=settings"
+              className="relative mt-4 flex items-center gap-2 p-3 rounded-lg bg-muted/40 border border-border hover:bg-muted/60 transition-colors"
+            >
+              <Target size={14} className="text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
+                Set your goals in <span className="text-primary font-medium">Settings → Profile</span> to personalize recommendations.
+              </p>
+            </a>
+          );
+        })()}
       </GradientCard>
 
       {/* Cycle Break Alerts */}

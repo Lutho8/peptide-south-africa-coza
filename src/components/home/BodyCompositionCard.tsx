@@ -25,7 +25,9 @@ export function BodyCompositionCard({ onViewDetails }: BodyCompositionCardProps)
   }
 
   const targetBodyFat = 15;
-  const progressToGoal = ((19 - latest.bodyFat) / (19 - targetBodyFat)) * 100;
+  const currentBodyFat = latest.bodyFat ?? targetBodyFat;
+  const baseline = Math.max(currentBodyFat, targetBodyFat + 0.1);
+  const progressToGoal = ((baseline - currentBodyFat) / (baseline - targetBodyFat)) * 100;
 
   return (
     <GradientCard 
@@ -71,7 +73,7 @@ export function BodyCompositionCard({ onViewDetails }: BodyCompositionCardProps)
             <Target size={14} className="text-primary" />
             <span className="text-xs text-muted-foreground">Goal: {targetBodyFat}% body fat</span>
           </div>
-          <span className="text-xs font-medium text-primary">{(latest.bodyFat - targetBodyFat).toFixed(1)}% to go</span>
+          <span className="text-xs font-medium text-primary">{Math.max(0, currentBodyFat - targetBodyFat).toFixed(1)}% to go</span>
         </div>
         <Progress value={Math.max(0, progressToGoal)} className="h-2" />
       </div>
