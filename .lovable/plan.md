@@ -1,55 +1,38 @@
 
 
-## Plan: Goal banner on My Stack header, "Why recommended?" tooltips, and easier body composition + Bluetooth scale UX
+## Plan: Renpho pairing guide + BT sync status pill
 
-Three connected enhancements:
+Two small UX additions to make the Renpho scale connection feel reliable and discoverable.
 
-### 1. "Tuned to your goals" chip banner on My Stack header
+### 1. "How to pair my Renpho" collapsible (`src/components/settings/BluetoothScaleConnection.tsx`)
 
-Add the same goal-chip banner used in `EditStackModal` directly to the profile header card in `src/screens/MyStackScreen.tsx`, so users see their goals reflected without opening the modal.
+Add a `Collapsible` (already available at `src/components/ui/collapsible.tsx`) below the connection button that walks first-time users through the pairing dance.
 
-- Read `profile.goals` (already in state) → resolve via `getGoalLabels()` from `src/data/goalMap.ts`.
-- Render below the activity/experience pills in the header card:
-  - If goals exist: small `Sparkles` icon + "Tuned to:" label + secondary `Badge` chips for each goal.
-  - If no goals: subtle CTA "Set your goals in Settings → Profile" linking to `/?screen=settings`.
+- Trigger: ghost-styled row with `HelpCircle` icon + label **"How to pair my Renpho scale"** + chevron that rotates on open.
+- Content: numbered 3-step list with brief, friendly copy:
+  1. **Open the Renpho app** on your phone and **forget / unpair** the scale from it (Bluetooth scales only talk to one device at a time).
+  2. **Step on the scale** so the display lights up — it should now be in pairing mode.
+  3. **Tap "Connect Scale" above** and pick your scale from the browser's Bluetooth chooser.
+- Add a small troubleshooting hint at the bottom: *"Still not showing? Toggle Bluetooth off/on in your phone settings, then try again."*
+- Keep the existing iOS notice and supported-brand list intact.
 
-### 2. "Why recommended?" tooltip in EditStackModal
+### 2. "Connected to Renpho ✓" status pill (`src/components/modals/BodyCompositionModal.tsx`)
 
-For each peptide highlighted in the "Recommended for your goals" group, add a small info tooltip showing **which user goal(s) match the peptide's category**.
+Show a live sync confirmation in the modal header when a Bluetooth-sourced entry exists in the last 24h.
 
-- In `src/data/goalMap.ts`, add a reverse helper `getMatchingGoalsForCategory(category, userGoals)` that returns the user-selected goal labels matching a peptide's category.
-- In `src/components/modals/EditStackModal.tsx`, wrap each recommended `SelectItem`'s label with a `Tooltip` (already available at `src/components/ui/tooltip.tsx`) showing e.g.:
-  > "Recommended because it targets: **Fat Loss, Metabolic Health**"
-- Add a tiny `Info` icon next to the peptide name inside recommended items to make the tooltip discoverable. Wrap the modal in `TooltipProvider`.
-
-### 3. Easy body composition editing + clearer Bluetooth scale connection
-
-Two improvements to make weight/body comp tracking effortless for Renpho (and other) users:
-
-**3a. Body Composition modal — quick edit on existing entries** (`src/components/modals/BodyCompositionModal.tsx`)
-
-- Surface the **"Add New Entry"** button more prominently with a primary style (currently outline) and rename to **"Log / Update Today's Reading"**.
-- Auto-prefill the form with the latest reading values when expanded (so users edit rather than re-type), and overwrite today's entry via the existing `(user_id, date)` upsert.
-- Add a **"Connect Bluetooth Scale"** shortcut button at the top of the modal that opens Settings → Connected Devices section (or directly triggers `connectScale()` from `useBluetoothScale`).
-- Fix `BodyCompositionCard.tsx` hardcoded `19` placeholder so the home card uses real `latest.bodyFat` for the "to-go" calculation.
-
-**3b. Bluetooth scale UX polish** (`src/components/settings/BluetoothScaleConnection.tsx` + `src/hooks/useBluetoothScale.ts`)
-
-- Renpho support is already wired in `useBluetoothScale.ts` (`RENPHO_SCALE_SERVICE`). Verify works end-to-end and add an explicit **scale brand list** to the empty state: "Works with Renpho, Xiaomi, Eufy, Withings, Yunmai, and standard Bluetooth scales."
-- Add a **"Test Reading" / "Last Reading"** card showing the most recent BT-sourced weight with timestamp, so users get instant confirmation the connection is live.
-- Add an **iOS notice** (since Web Bluetooth doesn't work on iOS Safari) suggesting users open the app via the installed PWA on Android, or use manual entry on iOS.
-- Surface a "Connect Scale" CTA inside the Body Composition modal (links to Settings) when no Bluetooth-sourced entry exists yet.
+- Compute `recentBtEntry = history.find(h => h.source === 'renpho' && (Date.now() - new Date(h.date).getTime()) < 24*60*60*1000)`.
+- If present, render a small pill next to the `DialogTitle`:
+  - Style: `bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-full px-2 py-0.5 text-xs`
+  - Content: `<Bluetooth size={10} />` + **"Connected to Renpho ✓"**
+- If absent, no pill (avoids noise for manual-entry users).
+- Place it inline with the title via a flex wrapper so it sits to the right of "Body Composition".
 
 ### Files touched
 
 ```text
-src/screens/MyStackScreen.tsx                          ← goal chip banner in header
-src/data/goalMap.ts                                    ← add reverse helper
-src/components/modals/EditStackModal.tsx               ← Tooltip on recommended items
-src/components/modals/BodyCompositionModal.tsx        ← prominent edit, prefill, BT shortcut
-src/components/home/BodyCompositionCard.tsx          ← fix hardcoded body-fat baseline
-src/components/settings/BluetoothScaleConnection.tsx ← brand list, last reading, iOS notice
+src/components/settings/BluetoothScaleConnection.tsx  ← Renpho pairing collapsible
+src/components/modals/BodyCompositionModal.tsx        ← header sync pill
 ```
 
-No DB migrations. No new dependencies. Reuses existing `Tooltip`, `Badge`, `Sparkles`, `useBluetoothScale`, and the `(user_id, date)` upsert logic already in place.
+No new dependencies. `Collapsible`, `Bluetooth`, `HelpCircle`, and `ChevronDown` are all already imported across the codebase.
 
