@@ -65,7 +65,9 @@ export function shouldShowProfileSetup(userId: string | undefined): boolean {
 export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSetupWizardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { pushProfile } = useProfileSync();
   const [step, setStep] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const [data, setData] = useState<WizardData>({
     name: '',
     age: 30,
