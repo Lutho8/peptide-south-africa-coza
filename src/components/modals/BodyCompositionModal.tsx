@@ -121,6 +121,11 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
 
   const latest = history[0];
   const previous = history[1];
+  const recentBtEntry = history.find(
+    (h) =>
+      h.source === 'renpho' &&
+      Date.now() - new Date(h.date).getTime() < 24 * 60 * 60 * 1000
+  );
 
   const validateField = (field: keyof z.infer<typeof bodyCompositionSchema>, value: number | undefined) => {
     if (value === undefined) {
@@ -275,7 +280,15 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-background border-border">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Body Composition</DialogTitle>
+          <div className="flex items-center gap-2 flex-wrap">
+            <DialogTitle className="text-foreground">Body Composition</DialogTitle>
+            {recentBtEntry && (
+              <span className="inline-flex items-center gap-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-full px-2 py-0.5 text-xs font-medium">
+                <Bluetooth size={10} />
+                Connected to Renpho ✓
+              </span>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-4">

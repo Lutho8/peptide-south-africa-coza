@@ -8,9 +8,10 @@ import { useBluetoothScale } from '@/hooks/useBluetoothScale';
 import { saveBodyCompositionEntry, BodyComposition, getBodyCompositionHistory } from '@/services/storage';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Scale, Bluetooth, BluetoothOff, Loader2, Info, AlertTriangle, Edit3, Save, X } from 'lucide-react';
+import { Scale, Bluetooth, BluetoothOff, Loader2, Info, AlertTriangle, Edit3, Save, X, HelpCircle, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function BluetoothScaleConnection() {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ export function BluetoothScaleConnection() {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualWeight, setManualWeight] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showRenphoGuide, setShowRenphoGuide] = useState(false);
 
   const handleManualSave = async () => {
     const weight = parseFloat(manualWeight);
@@ -183,6 +185,56 @@ export function BluetoothScaleConnection() {
           </p>
         </div>
       )}
+
+      {/* Renpho pairing guide */}
+      <Collapsible open={showRenphoGuide} onOpenChange={setShowRenphoGuide}>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-between text-muted-foreground hover:text-foreground"
+          >
+            <span className="flex items-center gap-2">
+              <HelpCircle size={14} />
+              How to pair my Renpho scale
+            </span>
+            <ChevronDown
+              size={14}
+              className={cn(
+                "transition-transform duration-200",
+                showRenphoGuide && "rotate-180"
+              )}
+            />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-3">
+          <div className="rounded-lg bg-muted/40 p-3 space-y-3">
+            <ol className="space-y-2.5 text-xs text-foreground">
+              <li className="flex gap-2">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/15 text-primary font-semibold flex items-center justify-center text-[10px]">1</span>
+                <span className="text-muted-foreground leading-relaxed">
+                  <span className="text-foreground font-medium">Open the Renpho app</span> on your phone and <span className="text-foreground font-medium">forget / unpair</span> the scale from it (Bluetooth scales only talk to one device at a time).
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/15 text-primary font-semibold flex items-center justify-center text-[10px]">2</span>
+                <span className="text-muted-foreground leading-relaxed">
+                  <span className="text-foreground font-medium">Step on the scale</span> so the display lights up — it should now be in pairing mode.
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/15 text-primary font-semibold flex items-center justify-center text-[10px]">3</span>
+                <span className="text-muted-foreground leading-relaxed">
+                  <span className="text-foreground font-medium">Tap "Connect" above</span> and pick your scale from the browser's Bluetooth chooser.
+                </span>
+              </li>
+            </ol>
+            <p className="text-[11px] text-muted-foreground/80 italic border-t border-border/50 pt-2">
+              Still not showing? Toggle Bluetooth off/on in your phone settings, then try again.
+            </p>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {isConnected && (
         <div className="space-y-2">
