@@ -1,43 +1,62 @@
 
 
-# Safety-Critical Fix: KLOW Dosage Guide Correction
+## Plan: Goal-tuned stack picker, profile re-edit, and AI prompt verification
 
-## Problem
-The `InsulinNeedleGuide` component hardcodes a default concentration of **2,500 mcg/mL** (based on a generic 5mg vial + 2mL water). When KLOW is selected (80mg vial + 3.0mL water = **26,667 mcg/mL**), the guide shows dangerously incorrect unit values — off by **10x**. The screenshot shows "32 units = 0.800 mL" which is wrong for KLOW.
+Three tightly-related improvements that lean on the goals collected in the Profile Setup wizard:
 
-## Plan
+### 1. Goal-aware EditStackModal (`src/components/modals/EditStackModal.tsx`)
 
-### 1. Add blend-aware concentration lookup
-- Update `InsulinNeedleGuide` props to accept an optional `peptideId`
-- When a blend is selected, auto-resolve its correct concentration from `peptideBlends.ts` data (e.g., KLOW → 80mg / 3mL = 26,667 mcg/mL)
-- Build a small lookup map for known blend concentrations so the guide is always accurate
+Highlight peptides/blends that match the user's saved goals so a new member intuitively picks what aligns with their priorities.
 
-### 2. Add prominent red safety warning banner
-- At the top of the guide (inside the expandable section), show a red `AlertTriangle` banner when a blend peptide is detected
-- Text: **"⚠️ SAFETY CORRECTION: Previous dosage values for this blend were incorrect. Always verify concentration based on YOUR reconstitution. The values below use the standard protocol for this blend."**
-- Styled with `bg-red-50 border-red-500 text-red-700`
+- Read `profile.goals` from `getUserProfile()` on open.
+- Add a small `goalToCategories` map (in `src/data/entitySlugs.ts` or a new `src/data/goalMap.ts`) e.g.:
+  - `Fat Loss` → `weight-loss`, `metabolic`
+  - `Muscle Gain` → `gh-secretagogue`
+  - `Recovery & Healing` → `healing`, `immune`
+  - `Longevity` → `longevity`, `anti-aging`
+  - `Cognitive Edge` → `cognitive`
+  - `Energy & Performance` → `gh-secretagogue`, `metabolic`
+  - `Sleep Quality` → `gh-secretagogue`
+  - `Metabolic Health` → `metabolic`, `weight-loss`
+- In the Select dropdown, split `availablePeptides` into:
+  - **"Recommended for your goals"** group (matches user goal categories) — shown first, with a small `Sparkles` icon and pulse-tinted background.
+  - **All other peptides / blends** — existing groups below.
+- Add a one-line helper banner above the Select: `"Tuned to: Fat Loss, Recovery"` chips, mirroring the style already used in `AIAgentPanel`.
+- If the user has no goals yet, show a soft inline CTA: *"Complete your profile to see recommended peptides"* linking to Settings.
 
-### 3. Add KLOW-specific dosing reference table
-- When `peptideId` matches a blend, show the blend's `dosingTable` from `peptideBlends.ts` inline (e.g., 7.5 units = 2mg, 15 units = 4mg, 22.5 units = 6mg)
-- This replaces the generic syringe comparison for blends, since blends have pre-calculated unit values
+### 2. Edit Profile shortcut in Settings (`src/screens/SettingsScreen.tsx`)
 
-### 4. Add dynamic reconstitution calculator
-- Input fields: Total mg in vial (default from blend data), mL BAC water added (default from blend data), syringe type selector
-- Auto-calculates and displays:
-  - Concentration (mg/mL)
-  - 1 unit = X mcg
-  - Common dose presets (2mg, 4mg, 6mg) → units to draw
-- Updates in real-time as inputs change
+Let users re-run the wizard anytime to refresh goals, weight, experience.
 
-### 5. Wire it up in DailyLogScreen
-- Pass `peptideId={formData.peptideId}` to `InsulinNeedleGuide` so it can resolve the correct blend concentration automatically
-- Remove hardcoded "5mg vial + 2mL BAC water" text when a blend with known reconstitution is selected
+- Add a new card in the existing **Profile** section: `"Update goals & body stats"` button.
+- Clicking opens `<ProfileSetupWizard open={...} onComplete={...} />` (same component already used in `Index.tsx`).
+- After completion, refresh local `profile` state via `getUserProfile()` so the avatar/age/activity line updates immediately.
+- Wizard already pushes to Supabase via `useProfileSync`, so cross-device sync is automatic.
 
-## Files to modify
-- `src/components/doses/InsulinNeedleGuide.tsx` — Major rewrite: blend detection, safety warning, dosing table, dynamic calculator
-- `src/screens/DailyLogScreen.tsx` — Pass `peptideId` prop to guide
+### 3. Verify AI references the goals chips
 
-## Safety verification
-- KLOW at default (80mg / 3mL): 7.5 units = ~2mg ✓, 15 units = ~4mg ✓, 22.5 units = ~6mg ✓
-- No reference to "2,500 mcg/mL" or "32 units" will appear for blend peptides
+Audit only — no UI build, but confirm the wiring works end-to-end:
+
+- `MyStackScreen.tsx` already passes `userGoals={profile.goals}` to both `AIAgentPanel` modes (`recommend` + `optimize`). ✓
+- `usePeptideAI.ts` forwards `userProfile.goals` in the body. ✓
+- `peptide-ai-agent/index.ts` injects `Goals: ${userProfile.goals?.join(", ")}` into BOTH the recommend and optimize prompts. ✓
+
+The pipeline is intact. To make the AI **explicitly cite** goals (so users see them echoed back), tighten the system prompts:
+
+- In `recommend` system prompt, add: *"Begin your response by acknowledging the user's selected goals verbatim, then explain how each recommendation maps to those goals."*
+- In `optimize` system prompt, add: *"Reference the user's stated goals throughout your analysis. For each suggestion, name which goal it advances."*
+
+This guarantees the chips shown in the UI ("Tuned to: Fat Loss, Recovery") appear in the AI output, closing the loop.
+
+### Files touched
+
+```text
+src/components/modals/EditStackModal.tsx   ← goal-grouped Select + chips
+src/screens/SettingsScreen.tsx             ← Edit Profile card + wizard mount
+src/data/goalMap.ts                        ← NEW: goal → category map (small)
+supabase/functions/peptide-ai-agent/       ← prompt tightening (recommend + optimize)
+  index.ts
+```
+
+No DB migrations. No new dependencies. ProfileSetupWizard, useProfileSync, and AIAgentPanel are reused as-is.
 
