@@ -280,7 +280,15 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-background border-border">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Body Composition</DialogTitle>
+          <div className="flex items-center gap-2 flex-wrap">
+            <DialogTitle className="text-foreground">Body Composition</DialogTitle>
+            {recentBtEntry && (
+              <span className="inline-flex items-center gap-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-full px-2 py-0.5 text-xs font-medium">
+                <Bluetooth size={10} />
+                Connected to Renpho ✓
+              </span>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-4">
