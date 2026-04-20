@@ -8,7 +8,10 @@ import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { peptides } from '@/data/peptides';
 import { getAllSelectablePeptides, findPeptideOrBlend } from '@/data/blendAdapters';
-import { Plus, Trash2, X, FlaskConical } from 'lucide-react';
+import { getCategoriesForGoals, getGoalLabels } from '@/data/goalMap';
+import { getUserProfile } from '@/services/storage';
+import { Plus, Trash2, X, FlaskConical, Sparkles } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 export interface StackItem {
@@ -30,13 +33,19 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
   const [newPeptideId, setNewPeptideId] = useState('');
   const [newDose, setNewDose] = useState('');
   const [newFrequency, setNewFrequency] = useState('');
+  const [userGoals, setUserGoals] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
       setStack([...currentStack]);
       setShowAddNew(false);
+      const profile = getUserProfile();
+      setUserGoals(profile?.goals ?? []);
     }
   }, [open, currentStack]);
+
+  const goalCategories = getCategoriesForGoals(userGoals);
+  const goalLabelList = getGoalLabels(userGoals);
 
   const handleUpdateItem = (index: number, field: 'dose' | 'frequency', value: string) => {
     const updated = [...stack];
@@ -84,6 +93,12 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
 
   const allSelectable = getAllSelectablePeptides();
   const availablePeptides = allSelectable.filter(p => !stack.some(s => s.peptideId === p.id));
+  const recommendedPeptides = goalCategories.size > 0
+    ? availablePeptides.filter(p => goalCategories.has(p.category))
+    : [];
+  const recommendedIds = new Set(recommendedPeptides.map(p => p.id));
+  const otherIndividual = availablePeptides.filter(p => !p.isBlend && !recommendedIds.has(p.id));
+  const otherBlends = availablePeptides.filter(p => p.isBlend && !recommendedIds.has(p.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
