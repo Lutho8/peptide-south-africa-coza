@@ -8,7 +8,7 @@ import { useBluetoothScale } from '@/hooks/useBluetoothScale';
 import { saveBodyCompositionEntry, BodyComposition, getBodyCompositionHistory } from '@/services/storage';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Scale, Bluetooth, BluetoothOff, Loader2, Info, AlertTriangle, Edit3, Save, X, HelpCircle, ChevronDown } from 'lucide-react';
+import { Scale, Bluetooth, BluetoothOff, Loader2, Info, AlertTriangle, Edit3, Save, X, HelpCircle, ChevronDown, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -21,11 +21,18 @@ export function BluetoothScaleConnection() {
     isSupported,
     isConnecting,
     isConnected,
+    isSyncing,
     deviceName,
     lastReading,
+    scaleBrand,
     connectScale,
     disconnectScale,
+    syncNow,
   } = useBluetoothScale();
+
+  const brandLabel = scaleBrand
+    ? scaleBrand.charAt(0).toUpperCase() + scaleBrand.slice(1)
+    : null;
 
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualWeight, setManualWeight] = useState('');
@@ -121,8 +128,8 @@ export function BluetoothScaleConnection() {
               {t('bluetooth.title', 'Bluetooth Scale')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {isConnected 
-                ? `${deviceName} • ${t('bluetooth.connected', 'Connected')}${lastReading ? ` • ${t('settings.lastSync', 'Last sync')}: ${lastReading.toLocaleTimeString()}` : ''}`
+              {isConnected
+                ? `${brandLabel ? brandLabel + ' • ' : ''}${deviceName} • ${t('bluetooth.connected', 'Connected')}${lastReading ? ` • ${t('settings.lastSync', 'Last sync')}: ${lastReading.toLocaleTimeString()}` : ''}`
                 : t('bluetooth.notConnected', 'Not connected')
               }
             </p>
@@ -131,15 +138,31 @@ export function BluetoothScaleConnection() {
         
         <div className="flex gap-2">
           {isConnected ? (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={disconnectScale}
-              className="text-destructive hover:text-destructive"
-            >
-              <BluetoothOff size={14} className="mr-1" />
-              {t('bluetooth.disconnect', 'Disconnect')}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={syncNow}
+                disabled={isSyncing}
+                title="Re-read latest measurement from the scale"
+              >
+                {isSyncing ? (
+                  <Loader2 size={14} className="animate-spin mr-1" />
+                ) : (
+                  <RefreshCw size={14} className="mr-1" />
+                )}
+                Sync Now
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={disconnectScale}
+                className="text-destructive hover:text-destructive"
+              >
+                <BluetoothOff size={14} className="mr-1" />
+                {t('bluetooth.disconnect', 'Disconnect')}
+              </Button>
+            </>
           ) : isSupported ? (
             <Button 
               variant="outline" 

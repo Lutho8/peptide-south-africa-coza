@@ -1,6 +1,12 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  setActiveUserId,
+  clearAllUserScopedStorage,
+  clearLegacyGlobalKeys,
+  initializeStorage,
+} from '@/services/storage';
 
 interface AuthContextType {
   user: User | null;
@@ -13,26 +19,61 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// One-time legacy cleanup flag
+let legacyCleared = false;
+function ensureLegacyCleared() {
+  if (legacyCleared) return;
+  clearLegacyGlobalKeys();
+  legacyCleared = true;
+}
+
+function applyUserScope(currentUser: User | null, prevUserId: string | null) {
+  // If the user changed (login, switch, or logout), wipe the previous user's
+  // local-namespace data so no leakage occurs on the same device.
+  const newUserId = currentUser?.id ?? null;
+  if (prevUserId !== newUserId) {
+    // Wipe ALL namespaced data (both prior user's and any guest leftover).
+    clearAllUserScopedStorage();
+  }
+  setActiveUserId(newUserId);
+  // Seed default data into the (now-empty) namespace for this user/guest.
+  initializeStorage();
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const prevUserIdRef = React.useRef<string | null>(null);
+  const initializedRef = React.useRef(false);
 
   React.useEffect(() => {
+    ensureLegacyCleared();
+
+    const handleAuth = (currentSession: Session | null) => {
+      const currentUser = currentSession?.user ?? null;
+      // Only apply scope changes after the first resolution, OR on actual user-id change.
+      const prevId = prevUserIdRef.current;
+      if (!initializedRef.current || prevId !== (currentUser?.id ?? null)) {
+        applyUserScope(currentUser, prevId);
+        prevUserIdRef.current = currentUser?.id ?? null;
+        initializedRef.current = true;
+      }
+      setSession(currentSession);
+      setUser(currentUser);
+      setIsLoading(false);
+    };
+
     // Set up auth state listener BEFORE checking session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setIsLoading(false);
+        handleAuth(currentSession);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setIsLoading(false);
+      handleAuth(currentSession);
     });
 
     return () => subscription.unsubscribe();

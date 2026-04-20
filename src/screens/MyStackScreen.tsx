@@ -296,7 +296,7 @@ export function MyStackScreen() {
     setActiveStack(getActiveStack());
     setProfile(getUserProfile());
     setCycles(getCycles());
-  }, []);
+  }, [user?.id]);
 
   // Resolve display name: stored profile → auth metadata → email → fallback.
   const displayName =

@@ -9,12 +9,29 @@ const STORAGE_KEYS = {
   CALCULATOR_SETTINGS: 'peptide_app_calculator_settings',
   SCHEDULED_REMINDERS: 'peptide_app_scheduled_reminders',
   ACTIVE_STACK: 'peptide_app_active_stack',
+  DAILY_DOSES: 'peptide-daily-doses',
 } as const;
 
-// Generic storage functions
+// ===== Per-user namespacing =====
+let activeUserId: string | null = null;
+
+export function setActiveUserId(userId: string | null): void {
+  activeUserId = userId;
+}
+
+export function getActiveUserId(): string | null {
+  return activeUserId;
+}
+
+function namespacedKey(baseKey: string): string {
+  const scope = activeUserId ?? 'guest';
+  return `${baseKey}::${scope}`;
+}
+
+// Generic storage functions (auto-namespaced)
 export function getStoredData<T>(key: string, defaultValue: T): T {
   try {
-    const stored = localStorage.getItem(key);
+    const stored = localStorage.getItem(namespacedKey(key));
     if (stored) {
       return JSON.parse(stored) as T;
     }
@@ -27,7 +44,7 @@ export function getStoredData<T>(key: string, defaultValue: T): T {
 
 export function setStoredData<T>(key: string, data: T): void {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    localStorage.setItem(namespacedKey(key), JSON.stringify(data));
   } catch (error) {
     console.error(`Error writing to localStorage (${key}):`, error);
   }
@@ -35,17 +52,55 @@ export function setStoredData<T>(key: string, data: T): void {
 
 export function removeStoredData(key: string): void {
   try {
-    localStorage.removeItem(key);
+    localStorage.removeItem(namespacedKey(key));
   } catch (error) {
     console.error(`Error removing from localStorage (${key}):`, error);
+  }
+}
+
+// Wipe all user-scoped storage entries (used on sign-out).
+// Removes both the current user's namespace and any guest namespace,
+// so the next user starts with a clean slate.
+export function clearAllUserScopedStorage(): void {
+  try {
+    const baseKeys = Object.values(STORAGE_KEYS);
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      // Match any "<base>::<anyId>" key for our app keys
+      if (baseKeys.some(base => k.startsWith(`${base}::`))) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch (error) {
+    console.error('Error clearing user-scoped storage:', error);
+  }
+}
+
+// One-time idempotent migration: remove legacy un-namespaced global keys
+// so leftover data from before per-user namespacing can't leak.
+export function clearLegacyGlobalKeys(): void {
+  try {
+    const baseKeys = Object.values(STORAGE_KEYS);
+    baseKeys.forEach(base => {
+      // Only remove the bare key (no "::userId" suffix)
+      if (localStorage.getItem(base) !== null) {
+        localStorage.removeItem(base);
+      }
+    });
+  } catch (error) {
+    console.error('Error clearing legacy global keys:', error);
   }
 }
 
 // Body Composition Storage
 import { BodyComposition as BodyCompType, bodyCompositionHistory as defaultBodyComp, DoseSchedule as DoseScheduleType, Cycle as CycleType, todaysDoses as defaultDoses, activeCycles as defaultCycles, UserProfile as UserProfileType, userProfile as defaultUserProfile, activeStack as defaultActiveStack } from '@/data/userData';
 
-export interface BodyComposition extends BodyCompType {
-  source?: 'manual' | 'renpho';
+export interface BodyComposition extends Omit<BodyCompType, 'source'> {
+  // Widened to allow scale brand strings (renpho, xiaomi, eufy, yunmai, withings, fitbit, generic, bluetooth)
+  source?: string;
 }
 export type DoseSchedule = DoseScheduleType;
 export type Cycle = CycleType;
@@ -256,18 +311,18 @@ export function toggleReminderEnabled(reminderId: string): void {
   }
 }
 
-// Initialize storage with defaults if empty
+// Initialize storage with defaults if empty (per current user's namespace)
 export function initializeStorage(): void {
-  if (!localStorage.getItem(STORAGE_KEYS.BODY_COMPOSITION)) {
+  if (localStorage.getItem(namespacedKey(STORAGE_KEYS.BODY_COMPOSITION)) === null) {
     setStoredData(STORAGE_KEYS.BODY_COMPOSITION, defaultBodyComp);
   }
-  if (!localStorage.getItem(STORAGE_KEYS.DOSE_SCHEDULES)) {
+  if (localStorage.getItem(namespacedKey(STORAGE_KEYS.DOSE_SCHEDULES)) === null) {
     setStoredData(STORAGE_KEYS.DOSE_SCHEDULES, defaultDoses);
   }
-  if (!localStorage.getItem(STORAGE_KEYS.CYCLES)) {
+  if (localStorage.getItem(namespacedKey(STORAGE_KEYS.CYCLES)) === null) {
     setStoredData(STORAGE_KEYS.CYCLES, defaultCycles);
   }
-  if (!localStorage.getItem(STORAGE_KEYS.ACTIVE_STACK)) {
+  if (localStorage.getItem(namespacedKey(STORAGE_KEYS.ACTIVE_STACK)) === null) {
     setStoredData(STORAGE_KEYS.ACTIVE_STACK, defaultActiveStack);
   }
 }

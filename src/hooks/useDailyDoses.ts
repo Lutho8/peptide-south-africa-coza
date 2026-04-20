@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { getStoredData, setStoredData, STORAGE_KEYS } from '@/services/storage';
 
 export interface DailyDoseEntry {
   id: string;
@@ -16,19 +17,12 @@ export interface DailyDoseEntry {
   user_id?: string;
 }
 
-const LOCAL_STORAGE_KEY = 'peptide-daily-doses';
-
 function loadLocalDoses(): DailyDoseEntry[] {
-  try {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
+  return getStoredData<DailyDoseEntry[]>(STORAGE_KEYS.DAILY_DOSES, []);
 }
 
 function saveLocalDoses(doses: DailyDoseEntry[]) {
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(doses));
+  setStoredData(STORAGE_KEYS.DAILY_DOSES, doses);
 }
 
 export function useDailyDoses() {
@@ -64,10 +58,10 @@ export function useDailyDoses() {
         }));
 
         setDoses(mappedDoses);
-        // Also sync to localStorage for offline access
+        // Also sync to localStorage (per-user namespace) for offline access
         saveLocalDoses(mappedDoses);
       } else {
-        // Use localStorage when not logged in
+        // Use localStorage when not logged in (guest namespace)
         setDoses(loadLocalDoses());
       }
     } catch (error) {
@@ -79,9 +73,13 @@ export function useDailyDoses() {
     }
   }, [user]);
 
+  // Reset in-memory state immediately when the user changes so a stale list
+  // from a previous user never flashes on screen.
   useEffect(() => {
+    setDoses([]);
+    setIsLoading(true);
     loadDoses();
-  }, [loadDoses]);
+  }, [user?.id, loadDoses]);
 
   // Sync local doses to cloud when user logs in
   const syncLocalToCloud = useCallback(async () => {

@@ -106,7 +106,7 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
             protein: Number(d.protein || 0),
             bmr: Number(d.bmr || 0),
             metabolicAge: Number(d.metabolic_age || 0),
-            source: (d.source as 'manual' | 'renpho') || 'manual',
+            source: (d.source as string) || 'manual',
           }));
           setHistory(mapped);
         } else {
@@ -121,11 +121,16 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
 
   const latest = history[0];
   const previous = history[1];
+  // Any non-manual source is a Bluetooth-sourced entry (renpho, xiaomi, eufy, yunmai, etc.)
   const recentBtEntry = history.find(
     (h) =>
-      h.source === 'renpho' &&
+      h.source &&
+      h.source !== 'manual' &&
       Date.now() - new Date(h.date).getTime() < 24 * 60 * 60 * 1000
   );
+  const recentBrandLabel = recentBtEntry?.source
+    ? recentBtEntry.source.charAt(0).toUpperCase() + recentBtEntry.source.slice(1)
+    : null;
 
   const validateField = (field: keyof z.infer<typeof bodyCompositionSchema>, value: number | undefined) => {
     if (value === undefined) {
@@ -285,7 +290,7 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
             {recentBtEntry && (
               <span className="inline-flex items-center gap-1 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded-full px-2 py-0.5 text-xs font-medium">
                 <Bluetooth size={10} />
-                Connected to Renpho ✓
+                Connected to {recentBrandLabel} ✓
               </span>
             )}
           </div>
@@ -529,8 +534,8 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
                     <span className="text-sm text-foreground">{entry.date}</span>
                     <span className={cn(
                       "text-[10px] px-1.5 py-0.5 rounded font-medium uppercase",
-                      entry.source === 'renpho' 
-                        ? "bg-cyan-500/20 text-cyan-400" 
+                      entry.source && entry.source !== 'manual'
+                        ? "bg-cyan-500/20 text-cyan-400"
                         : "bg-violet-500/20 text-violet-400"
                     )}>
                       {entry.source || 'manual'}
