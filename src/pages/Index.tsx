@@ -7,6 +7,7 @@ import { useStorageInit } from '@/hooks/useStorageInit';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
+import { useProfileSync } from '@/hooks/useProfileSync';
 import { useScreenTransition } from '@/hooks/useScreenTransition';
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
@@ -52,6 +53,7 @@ const Index = () => {
   const { addDose } = useDailyDoses();
   const { user, signOut, isLoading } = useAuth();
   const { isLoading: accessLoading } = useAccessControl();
+  const { hydrated: profileHydrated } = useProfileSync();
   const { getDirection, getTransitionVariants } = useScreenTransition();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
@@ -66,17 +68,20 @@ const Index = () => {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [profileSetupOpen, setProfileSetupOpen] = useState(false);
 
-  // Auto-open the profile setup wizard once per user
+  // Auto-open the profile setup wizard once per user — wait for cloud hydration first
+  // so we don't prompt a user who already has a profile saved on another device.
   useEffect(() => {
-    if (!user) return;
+    if (!user || !profileHydrated) return;
+    let cancelled = false;
     import('@/components/onboarding/ProfileSetupWizard').then(({ shouldShowProfileSetup }) => {
+      if (cancelled) return;
       if (shouldShowProfileSetup(user.id)) {
-        // Small delay so the dashboard renders behind it
         const t = setTimeout(() => setProfileSetupOpen(true), 600);
         return () => clearTimeout(t);
       }
     });
-  }, [user]);
+    return () => { cancelled = true; };
+  }, [user, profileHydrated]);
 
   const handleMarkDoseAsTaken = useCallback((peptideName: string, dose: string, time: string) => {
     const doseMatch = dose.match(/^([\d.]+)(\w+)$/);

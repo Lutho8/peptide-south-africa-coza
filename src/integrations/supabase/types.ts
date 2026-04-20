@@ -379,25 +379,52 @@ export type Database = {
       }
       profiles: {
         Row: {
+          activity_level: string | null
+          age: number | null
           created_at: string
           display_name: string | null
           email_reminders_enabled: boolean
+          experience: string | null
+          full_name: string | null
+          gender: string | null
+          goals: string[] | null
+          height_cm: number | null
           id: string
+          profile_completed_at: string | null
           updated_at: string
+          weight_kg: number | null
         }
         Insert: {
+          activity_level?: string | null
+          age?: number | null
           created_at?: string
           display_name?: string | null
           email_reminders_enabled?: boolean
+          experience?: string | null
+          full_name?: string | null
+          gender?: string | null
+          goals?: string[] | null
+          height_cm?: number | null
           id: string
+          profile_completed_at?: string | null
           updated_at?: string
+          weight_kg?: number | null
         }
         Update: {
+          activity_level?: string | null
+          age?: number | null
           created_at?: string
           display_name?: string | null
           email_reminders_enabled?: boolean
+          experience?: string | null
+          full_name?: string | null
+          gender?: string | null
+          goals?: string[] | null
+          height_cm?: number | null
           id?: string
+          profile_completed_at?: string | null
           updated_at?: string
+          weight_kg?: number | null
         }
         Relationships: []
       }

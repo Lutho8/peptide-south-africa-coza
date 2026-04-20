@@ -16,6 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserProfile, saveUserProfile, UserProfile } from '@/services/storage';
+import { useProfileSync } from '@/hooks/useProfileSync';
 import { Sparkles, ArrowRight, ArrowLeft, Check, Target, Dumbbell, Heart, Zap, Brain, Shield, Moon, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -64,7 +65,9 @@ export function shouldShowProfileSetup(userId: string | undefined): boolean {
 export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSetupWizardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { pushProfile } = useProfileSync();
   const [step, setStep] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const [data, setData] = useState<WizardData>({
     name: '',
     age: 30,
@@ -153,7 +156,7 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
     else handleFinish();
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     const parsed = profileSchema.safeParse(data);
     if (!parsed.success) {
       toast({ title: 'Please review your inputs', variant: 'destructive' });
@@ -173,15 +176,23 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
       experience: parsed.data.experience,
       goals: goalLabels,
     };
+
+    setIsSaving(true);
     saveUserProfile(profile);
+
+    // Push to Supabase so it persists across devices and survives a localStorage clear
+    const synced = await pushProfile(profile);
 
     if (user?.id) {
       localStorage.setItem(`${STORAGE_FLAG}:${user.id}`, new Date().toISOString());
     }
+    setIsSaving(false);
 
     toast({
       title: '🎉 Profile ready',
-      description: 'Your dashboard and stack are now personalized.',
+      description: synced
+        ? 'Saved to the cloud — your stack and dosing are tuned to you.'
+        : 'Saved locally. Cloud sync will retry next time you open the app.',
     });
     onComplete?.();
     onOpenChange(false);
@@ -433,12 +444,16 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
               Skip for now
             </Button>
           )}
-          <Button onClick={handleNext} className="ml-auto gap-1.5" size="sm">
+          <Button onClick={handleNext} className="ml-auto gap-1.5" size="sm" disabled={isSaving}>
             {step === steps.length - 1 ? (
-              <>
-                <Check size={14} />
-                Finish
-              </>
+              isSaving ? (
+                <>Saving…</>
+              ) : (
+                <>
+                  <Check size={14} />
+                  Finish
+                </>
+              )
             ) : (
               <>
                 {step === 0 ? "Let's go" : 'Continue'}
