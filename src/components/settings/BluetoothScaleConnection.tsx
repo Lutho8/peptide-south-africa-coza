@@ -8,9 +8,10 @@ import { useBluetoothScale } from '@/hooks/useBluetoothScale';
 import { saveBodyCompositionEntry, BodyComposition, getBodyCompositionHistory } from '@/services/storage';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Scale, Bluetooth, BluetoothOff, Loader2, Info, AlertTriangle, Edit3, Save, X } from 'lucide-react';
+import { Scale, Bluetooth, BluetoothOff, Loader2, Info, AlertTriangle, Edit3, Save, X, HelpCircle, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function BluetoothScaleConnection() {
   const { t } = useTranslation();
