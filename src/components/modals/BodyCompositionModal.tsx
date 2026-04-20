@@ -121,6 +121,11 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
 
   const latest = history[0];
   const previous = history[1];
+  const recentBtEntry = history.find(
+    (h) =>
+      h.source === 'renpho' &&
+      Date.now() - new Date(h.date).getTime() < 24 * 60 * 60 * 1000
+  );
 
   const validateField = (field: keyof z.infer<typeof bodyCompositionSchema>, value: number | undefined) => {
     if (value === undefined) {
