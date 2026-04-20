@@ -159,8 +159,8 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
       toast({ title: 'Please review your inputs', variant: 'destructive' });
       return;
     }
-    const goalLabels = parsed.data.goals
-      .map((id) => GOALS.find((g) => g.id === id)?.label)
+    const goalLabels: string[] = parsed.data.goals
+      .map((id) => GOALS.find((g) => g.id === id)?.label as string | undefined)
       .filter((g): g is string => Boolean(g));
 
     const profile: UserProfile = {
