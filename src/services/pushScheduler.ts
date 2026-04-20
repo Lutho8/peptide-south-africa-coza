@@ -170,6 +170,53 @@ export async function clearAllRemindersFromIndexedDB(): Promise<void> {
   });
 }
 
+// Clear the fired-notifications de-dup store
+async function clearFiredNotificationsStore(): Promise<void> {
+  try {
+    const db = await openDB();
+    if (!db.objectStoreNames.contains('fired-notifications')) return;
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('fired-notifications', 'readwrite');
+      const store = tx.objectStore('fired-notifications');
+      const req = store.clear();
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => resolve();
+    });
+  } catch (err) {
+    console.warn('Failed to clear fired-notifications store:', err);
+  }
+}
+
+// Clear all scheduled reminders, fired-notification history,
+// and any currently displayed OS notifications. Used on sign-out.
+export async function clearAllScheduledNotifications(): Promise<void> {
+  try {
+    await clearAllRemindersFromIndexedDB();
+  } catch (err) {
+    console.warn('Failed to clear scheduled reminders:', err);
+  }
+
+  await clearFiredNotificationsStore();
+
+  // Close any currently displayed OS notification banners
+  try {
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration) {
+        const notifications = await registration.getNotifications();
+        notifications.forEach((n) => {
+          try { n.close(); } catch { /* noop */ }
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to close active notifications:', err);
+  }
+
+  // Notify the SW so it re-reads the now-empty store and stops scheduling
+  notifyServiceWorker('SYNC_REMINDERS');
+}
+
 // Sync reminders from localStorage to IndexedDB
 export async function syncRemindersToIndexedDB(): Promise<void> {
   try {
