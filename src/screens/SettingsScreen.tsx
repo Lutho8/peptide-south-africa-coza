@@ -8,6 +8,7 @@ import { NotificationSoundSettings } from '@/components/settings/NotificationSou
 import { BluetoothScaleConnection } from '@/components/settings/BluetoothScaleConnection';
 
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal';
+import { ProfileSetupWizard } from '@/components/onboarding/ProfileSetupWizard';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCloudSync } from '@/hooks/useCloudSync';
@@ -24,7 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   User, Bell, Download, Upload, Database, FileJson, FileSpreadsheet,
   Shield, Info, ExternalLink, ChevronRight, Settings2, Trash2,
-  Cloud, CloudOff, RefreshCw, LogOut, LogIn, Loader2
+  Cloud, CloudOff, RefreshCw, LogOut, LogIn, Loader2, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,7 @@ interface SettingsScreenProps {
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { t } = useTranslation();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   
   const [profile, setProfile] = useState(getUserProfile());
@@ -249,6 +251,25 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
             <ChevronRight size={20} className="text-muted-foreground" />
           </div>
         </GradientCard>
+
+        {/* Re-run Profile Setup Wizard */}
+        <GradientCard
+          className="p-3 mt-2 cursor-pointer hover:bg-muted/50 transition-colors border border-primary/20"
+          onClick={() => setWizardOpen(true)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Sparkles size={18} className="text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground text-sm">Update goals & body stats</h3>
+                <p className="text-xs text-muted-foreground">Re-run the onboarding wizard to refresh goals, weight & experience</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </div>
+        </GradientCard>
       </div>
 
       {/* Notifications Section */}
@@ -396,6 +417,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         open={profileModalOpen}
         onOpenChange={setProfileModalOpen}
         onProfileUpdate={handleProfileUpdate}
+      />
+      <ProfileSetupWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        onComplete={handleProfileUpdate}
       />
       <AuthModal 
         open={authModalOpen}

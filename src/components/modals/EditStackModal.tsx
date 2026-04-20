@@ -13,6 +13,7 @@ import { getUserProfile } from '@/services/storage';
 import { Plus, Trash2, X, FlaskConical, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export interface StackItem {
   peptideId: string;
