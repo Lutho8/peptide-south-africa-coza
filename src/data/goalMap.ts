@@ -50,3 +50,23 @@ export function getGoalLabels(goals: string[] | undefined): string[] {
   if (!goals?.length) return [];
   return goals.map(g => goalLabels[g] ?? g);
 }
+
+/**
+ * Reverse lookup — given a peptide category and the user's goals,
+ * return the human-readable goal labels that map to that category.
+ * Used by EditStackModal tooltips to explain why a peptide is recommended.
+ */
+export function getMatchingGoalsForCategory(
+  category: PeptideCategory,
+  userGoals: string[] | undefined,
+): string[] {
+  if (!userGoals?.length) return [];
+  const matches: string[] = [];
+  for (const goalId of userGoals) {
+    const cats = goalToCategories[goalId];
+    if (cats?.includes(category)) {
+      matches.push(goalLabels[goalId] ?? goalId);
+    }
+  }
+  return matches;
+}
