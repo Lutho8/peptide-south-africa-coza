@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -39,6 +39,7 @@ const BloodworkModal = lazy(() => import('@/components/modals/BloodworkModal').t
 const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').then(m => ({ default: m.InventoryModal })));
 const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
+const ProfileSetupWizard = lazy(() => import('@/components/onboarding/ProfileSetupWizard').then(m => ({ default: m.ProfileSetupWizard })));
 
 const ScreenLoaderHome = () => <HomeSkeleton />;
 const ScreenLoaderList = () => <ListSkeleton />;
@@ -63,6 +64,19 @@ const Index = () => {
   const [cycleManagementOpen, setCycleManagementOpen] = useState(false);
   const [bloodworkOpen, setBloodworkOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [profileSetupOpen, setProfileSetupOpen] = useState(false);
+
+  // Auto-open the profile setup wizard once per user
+  useEffect(() => {
+    if (!user) return;
+    import('@/components/onboarding/ProfileSetupWizard').then(({ shouldShowProfileSetup }) => {
+      if (shouldShowProfileSetup(user.id)) {
+        // Small delay so the dashboard renders behind it
+        const t = setTimeout(() => setProfileSetupOpen(true), 600);
+        return () => clearTimeout(t);
+      }
+    });
+  }, [user]);
 
   const handleMarkDoseAsTaken = useCallback((peptideName: string, dose: string, time: string) => {
     const doseMatch = dose.match(/^([\d.]+)(\w+)$/);
@@ -278,6 +292,12 @@ const Index = () => {
         {inventoryOpen && <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />}
         <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
+        {profileSetupOpen && (
+          <ProfileSetupWizard
+            open={profileSetupOpen}
+            onOpenChange={setProfileSetupOpen}
+          />
+        )}
       </Suspense>
     </div>
   );
