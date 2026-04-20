@@ -56,9 +56,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentUser = currentSession?.user ?? null;
       // Only apply scope changes after the first resolution, OR on actual user-id change.
       const prevId = prevUserIdRef.current;
-      if (!initializedRef.current || prevId !== (currentUser?.id ?? null)) {
+      const newId = currentUser?.id ?? null;
+      const wasInitialized = initializedRef.current;
+
+      if (!wasInitialized || prevId !== newId) {
         applyUserScope(currentUser, prevId);
-        prevUserIdRef.current = currentUser?.id ?? null;
+
+        // Welcome-back toast: only on a real sign-in transition
+        // (skip the initial session-restore on page load, skip sign-out)
+        if (wasInitialized && prevId === null && newId !== null && currentUser) {
+          const meta = currentUser.user_metadata as Record<string, unknown> | undefined;
+          const displayName =
+            (typeof meta?.display_name === 'string' && meta.display_name) ||
+            (typeof meta?.full_name === 'string' && meta.full_name) ||
+            currentUser.email?.split('@')[0] ||
+            'there';
+          toast.success(`Welcome back, ${displayName} — loading your data`, {
+            duration: 3500,
+          });
+        }
+
+        prevUserIdRef.current = newId;
         initializedRef.current = true;
       }
       setSession(currentSession);
