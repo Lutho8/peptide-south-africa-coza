@@ -120,6 +120,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear scheduled reminders + active OS notifications BEFORE auth sign-out
+    // so the previous user's reminders never fire for the next user.
+    try {
+      await clearAllScheduledNotifications();
+    } catch (err) {
+      console.warn('Failed to clear scheduled notifications on sign-out:', err);
+    }
     await supabase.auth.signOut();
   };
 
