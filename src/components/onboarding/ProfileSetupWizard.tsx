@@ -444,12 +444,16 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
               Skip for now
             </Button>
           )}
-          <Button onClick={handleNext} className="ml-auto gap-1.5" size="sm">
+          <Button onClick={handleNext} className="ml-auto gap-1.5" size="sm" disabled={isSaving}>
             {step === steps.length - 1 ? (
-              <>
-                <Check size={14} />
-                Finish
-              </>
+              isSaving ? (
+                <>Saving…</>
+              ) : (
+                <>
+                  <Check size={14} />
+                  Finish
+                </>
+              )
             ) : (
               <>
                 {step === 0 ? "Let's go" : 'Continue'}
