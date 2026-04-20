@@ -8,10 +8,11 @@ import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { peptides } from '@/data/peptides';
 import { getAllSelectablePeptides, findPeptideOrBlend } from '@/data/blendAdapters';
-import { getCategoriesForGoals, getGoalLabels } from '@/data/goalMap';
+import { getCategoriesForGoals, getGoalLabels, getMatchingGoalsForCategory } from '@/data/goalMap';
 import { getUserProfile } from '@/services/storage';
-import { Plus, Trash2, X, FlaskConical, Sparkles } from 'lucide-react';
+import { Plus, Trash2, X, FlaskConical, Sparkles, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -102,6 +103,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
   const otherBlends = availablePeptides.filter(p => p.isBlend && !recommendedIds.has(p.id));
 
   return (
+    <TooltipProvider delayDuration={200}>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto bg-card border-border">
         <DialogHeader>
@@ -222,14 +224,38 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
                             <Sparkles className="w-3 h-3" />
                             Recommended for your goals
                           </div>
-                          {recommendedPeptides.map(peptide => (
-                            <SelectItem key={peptide.id} value={peptide.id} className="bg-primary/5">
-                              <span className="flex items-center gap-1.5">
-                                {peptide.isBlend && <FlaskConical className="w-3 h-3 text-purple-400" />}
-                                {peptide.name}
-                              </span>
-                            </SelectItem>
-                          ))}
+                          {recommendedPeptides.map(peptide => {
+                            const matchingGoals = getMatchingGoalsForCategory(peptide.category, userGoals);
+                            return (
+                              <SelectItem key={peptide.id} value={peptide.id} className="bg-primary/5">
+                                <span className="flex items-center gap-1.5">
+                                  {peptide.isBlend && <FlaskConical className="w-3 h-3 text-purple-400" />}
+                                  {peptide.name}
+                                  {matchingGoals.length > 0 && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span
+                                          className="inline-flex items-center"
+                                          onClick={(e) => e.stopPropagation()}
+                                          onPointerDown={(e) => e.stopPropagation()}
+                                        >
+                                          <Info className="w-3 h-3 text-primary/70 hover:text-primary" />
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="right" className="max-w-[220px]">
+                                        <p className="text-xs">
+                                          Recommended because it targets:{' '}
+                                          <span className="font-semibold text-primary">
+                                            {matchingGoals.join(', ')}
+                                          </span>
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                </span>
+                              </SelectItem>
+                            );
+                          })}
                         </>
                       )}
                       {otherIndividual.length > 0 && (
@@ -312,5 +338,6 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
         </div>
       </DialogContent>
     </Dialog>
+    </TooltipProvider>
   );
 }

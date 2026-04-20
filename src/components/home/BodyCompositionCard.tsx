@@ -25,7 +25,9 @@ export function BodyCompositionCard({ onViewDetails }: BodyCompositionCardProps)
   }
 
   const targetBodyFat = 15;
-  const progressToGoal = ((19 - latest.bodyFat) / (19 - targetBodyFat)) * 100;
+  const currentBodyFat = latest.bodyFat ?? targetBodyFat;
+  const baseline = Math.max(currentBodyFat, targetBodyFat + 0.1);
+  const progressToGoal = ((baseline - currentBodyFat) / (baseline - targetBodyFat)) * 100;
 
   return (
     <GradientCard 
