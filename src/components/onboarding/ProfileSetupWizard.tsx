@@ -156,7 +156,7 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
     else handleFinish();
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     const parsed = profileSchema.safeParse(data);
     if (!parsed.success) {
       toast({ title: 'Please review your inputs', variant: 'destructive' });
@@ -176,15 +176,23 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
       experience: parsed.data.experience,
       goals: goalLabels,
     };
+
+    setIsSaving(true);
     saveUserProfile(profile);
+
+    // Push to Supabase so it persists across devices and survives a localStorage clear
+    const synced = await pushProfile(profile);
 
     if (user?.id) {
       localStorage.setItem(`${STORAGE_FLAG}:${user.id}`, new Date().toISOString());
     }
+    setIsSaving(false);
 
     toast({
       title: '🎉 Profile ready',
-      description: 'Your dashboard and stack are now personalized.',
+      description: synced
+        ? 'Saved to the cloud — your stack and dosing are tuned to you.'
+        : 'Saved locally. Cloud sync will retry next time you open the app.',
     });
     onComplete?.();
     onOpenChange(false);
