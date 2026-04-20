@@ -16,6 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserProfile, saveUserProfile, UserProfile } from '@/services/storage';
+import { useProfileSync } from '@/hooks/useProfileSync';
 import { Sparkles, ArrowRight, ArrowLeft, Check, Target, Dumbbell, Heart, Zap, Brain, Shield, Moon, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
