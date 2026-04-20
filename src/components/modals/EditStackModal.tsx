@@ -187,28 +187,76 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
               </div>
 
               <div className="space-y-3">
-              <div>
+                {/* Goal-tuned banner */}
+                {goalLabelList.length > 0 ? (
+                  <div className="flex items-start gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
+                    <Sparkles size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground mb-1">Tuned to your goals:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {goalLabelList.map(g => (
+                          <Badge key={g} variant="secondary" className="text-[10px] py-0 h-5">
+                            {g}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground p-2.5 rounded-lg bg-muted/40 border border-border">
+                    💡 Complete your profile in Settings to see peptides recommended for your goals.
+                  </div>
+                )}
+
+                <div>
                   <Label className="text-xs text-muted-foreground">Peptide / Blend</Label>
                   <Select value={newPeptideId} onValueChange={setNewPeptideId}>
                     <SelectTrigger className="bg-muted border-border">
                       <SelectValue placeholder="Select peptide or blend" />
                     </SelectTrigger>
                     <SelectContent>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Individual Peptides</div>
-                      {availablePeptides.filter(p => !p.isBlend).map(peptide => (
-                        <SelectItem key={peptide.id} value={peptide.id}>
-                          {peptide.name}
-                        </SelectItem>
-                      ))}
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1 pt-1.5">Blends & Stacks</div>
-                      {availablePeptides.filter(p => p.isBlend).map(peptide => (
-                        <SelectItem key={peptide.id} value={peptide.id}>
-                          <span className="flex items-center gap-1.5">
-                            <FlaskConical className="w-3 h-3 text-purple-400" />
-                            {peptide.name}
-                          </span>
-                        </SelectItem>
-                      ))}
+                      {recommendedPeptides.length > 0 && (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-primary flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3" />
+                            Recommended for your goals
+                          </div>
+                          {recommendedPeptides.map(peptide => (
+                            <SelectItem key={peptide.id} value={peptide.id} className="bg-primary/5">
+                              <span className="flex items-center gap-1.5">
+                                {peptide.isBlend && <FlaskConical className="w-3 h-3 text-purple-400" />}
+                                {peptide.name}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
+                      {otherIndividual.length > 0 && (
+                        <>
+                          <div className={cn(
+                            "px-2 py-1.5 text-xs font-semibold text-muted-foreground",
+                            recommendedPeptides.length > 0 && "border-t border-border mt-1 pt-1.5"
+                          )}>Individual Peptides</div>
+                          {otherIndividual.map(peptide => (
+                            <SelectItem key={peptide.id} value={peptide.id}>
+                              {peptide.name}
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
+                      {otherBlends.length > 0 && (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1 pt-1.5">Blends & Stacks</div>
+                          {otherBlends.map(peptide => (
+                            <SelectItem key={peptide.id} value={peptide.id}>
+                              <span className="flex items-center gap-1.5">
+                                <FlaskConical className="w-3 h-3 text-purple-400" />
+                                {peptide.name}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
