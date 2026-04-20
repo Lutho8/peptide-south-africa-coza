@@ -1,62 +1,55 @@
 
 
-## Plan: Goal-tuned stack picker, profile re-edit, and AI prompt verification
+## Plan: Goal banner on My Stack header, "Why recommended?" tooltips, and easier body composition + Bluetooth scale UX
 
-Three tightly-related improvements that lean on the goals collected in the Profile Setup wizard:
+Three connected enhancements:
 
-### 1. Goal-aware EditStackModal (`src/components/modals/EditStackModal.tsx`)
+### 1. "Tuned to your goals" chip banner on My Stack header
 
-Highlight peptides/blends that match the user's saved goals so a new member intuitively picks what aligns with their priorities.
+Add the same goal-chip banner used in `EditStackModal` directly to the profile header card in `src/screens/MyStackScreen.tsx`, so users see their goals reflected without opening the modal.
 
-- Read `profile.goals` from `getUserProfile()` on open.
-- Add a small `goalToCategories` map (in `src/data/entitySlugs.ts` or a new `src/data/goalMap.ts`) e.g.:
-  - `Fat Loss` → `weight-loss`, `metabolic`
-  - `Muscle Gain` → `gh-secretagogue`
-  - `Recovery & Healing` → `healing`, `immune`
-  - `Longevity` → `longevity`, `anti-aging`
-  - `Cognitive Edge` → `cognitive`
-  - `Energy & Performance` → `gh-secretagogue`, `metabolic`
-  - `Sleep Quality` → `gh-secretagogue`
-  - `Metabolic Health` → `metabolic`, `weight-loss`
-- In the Select dropdown, split `availablePeptides` into:
-  - **"Recommended for your goals"** group (matches user goal categories) — shown first, with a small `Sparkles` icon and pulse-tinted background.
-  - **All other peptides / blends** — existing groups below.
-- Add a one-line helper banner above the Select: `"Tuned to: Fat Loss, Recovery"` chips, mirroring the style already used in `AIAgentPanel`.
-- If the user has no goals yet, show a soft inline CTA: *"Complete your profile to see recommended peptides"* linking to Settings.
+- Read `profile.goals` (already in state) → resolve via `getGoalLabels()` from `src/data/goalMap.ts`.
+- Render below the activity/experience pills in the header card:
+  - If goals exist: small `Sparkles` icon + "Tuned to:" label + secondary `Badge` chips for each goal.
+  - If no goals: subtle CTA "Set your goals in Settings → Profile" linking to `/?screen=settings`.
 
-### 2. Edit Profile shortcut in Settings (`src/screens/SettingsScreen.tsx`)
+### 2. "Why recommended?" tooltip in EditStackModal
 
-Let users re-run the wizard anytime to refresh goals, weight, experience.
+For each peptide highlighted in the "Recommended for your goals" group, add a small info tooltip showing **which user goal(s) match the peptide's category**.
 
-- Add a new card in the existing **Profile** section: `"Update goals & body stats"` button.
-- Clicking opens `<ProfileSetupWizard open={...} onComplete={...} />` (same component already used in `Index.tsx`).
-- After completion, refresh local `profile` state via `getUserProfile()` so the avatar/age/activity line updates immediately.
-- Wizard already pushes to Supabase via `useProfileSync`, so cross-device sync is automatic.
+- In `src/data/goalMap.ts`, add a reverse helper `getMatchingGoalsForCategory(category, userGoals)` that returns the user-selected goal labels matching a peptide's category.
+- In `src/components/modals/EditStackModal.tsx`, wrap each recommended `SelectItem`'s label with a `Tooltip` (already available at `src/components/ui/tooltip.tsx`) showing e.g.:
+  > "Recommended because it targets: **Fat Loss, Metabolic Health**"
+- Add a tiny `Info` icon next to the peptide name inside recommended items to make the tooltip discoverable. Wrap the modal in `TooltipProvider`.
 
-### 3. Verify AI references the goals chips
+### 3. Easy body composition editing + clearer Bluetooth scale connection
 
-Audit only — no UI build, but confirm the wiring works end-to-end:
+Two improvements to make weight/body comp tracking effortless for Renpho (and other) users:
 
-- `MyStackScreen.tsx` already passes `userGoals={profile.goals}` to both `AIAgentPanel` modes (`recommend` + `optimize`). ✓
-- `usePeptideAI.ts` forwards `userProfile.goals` in the body. ✓
-- `peptide-ai-agent/index.ts` injects `Goals: ${userProfile.goals?.join(", ")}` into BOTH the recommend and optimize prompts. ✓
+**3a. Body Composition modal — quick edit on existing entries** (`src/components/modals/BodyCompositionModal.tsx`)
 
-The pipeline is intact. To make the AI **explicitly cite** goals (so users see them echoed back), tighten the system prompts:
+- Surface the **"Add New Entry"** button more prominently with a primary style (currently outline) and rename to **"Log / Update Today's Reading"**.
+- Auto-prefill the form with the latest reading values when expanded (so users edit rather than re-type), and overwrite today's entry via the existing `(user_id, date)` upsert.
+- Add a **"Connect Bluetooth Scale"** shortcut button at the top of the modal that opens Settings → Connected Devices section (or directly triggers `connectScale()` from `useBluetoothScale`).
+- Fix `BodyCompositionCard.tsx` hardcoded `19` placeholder so the home card uses real `latest.bodyFat` for the "to-go" calculation.
 
-- In `recommend` system prompt, add: *"Begin your response by acknowledging the user's selected goals verbatim, then explain how each recommendation maps to those goals."*
-- In `optimize` system prompt, add: *"Reference the user's stated goals throughout your analysis. For each suggestion, name which goal it advances."*
+**3b. Bluetooth scale UX polish** (`src/components/settings/BluetoothScaleConnection.tsx` + `src/hooks/useBluetoothScale.ts`)
 
-This guarantees the chips shown in the UI ("Tuned to: Fat Loss, Recovery") appear in the AI output, closing the loop.
+- Renpho support is already wired in `useBluetoothScale.ts` (`RENPHO_SCALE_SERVICE`). Verify works end-to-end and add an explicit **scale brand list** to the empty state: "Works with Renpho, Xiaomi, Eufy, Withings, Yunmai, and standard Bluetooth scales."
+- Add a **"Test Reading" / "Last Reading"** card showing the most recent BT-sourced weight with timestamp, so users get instant confirmation the connection is live.
+- Add an **iOS notice** (since Web Bluetooth doesn't work on iOS Safari) suggesting users open the app via the installed PWA on Android, or use manual entry on iOS.
+- Surface a "Connect Scale" CTA inside the Body Composition modal (links to Settings) when no Bluetooth-sourced entry exists yet.
 
 ### Files touched
 
 ```text
-src/components/modals/EditStackModal.tsx   ← goal-grouped Select + chips
-src/screens/SettingsScreen.tsx             ← Edit Profile card + wizard mount
-src/data/goalMap.ts                        ← NEW: goal → category map (small)
-supabase/functions/peptide-ai-agent/       ← prompt tightening (recommend + optimize)
-  index.ts
+src/screens/MyStackScreen.tsx                          ← goal chip banner in header
+src/data/goalMap.ts                                    ← add reverse helper
+src/components/modals/EditStackModal.tsx               ← Tooltip on recommended items
+src/components/modals/BodyCompositionModal.tsx        ← prominent edit, prefill, BT shortcut
+src/components/home/BodyCompositionCard.tsx          ← fix hardcoded body-fat baseline
+src/components/settings/BluetoothScaleConnection.tsx ← brand list, last reading, iOS notice
 ```
 
-No DB migrations. No new dependencies. ProfileSetupWizard, useProfileSync, and AIAgentPanel are reused as-is.
+No DB migrations. No new dependencies. Reuses existing `Tooltip`, `Badge`, `Sparkles`, `useBluetoothScale`, and the `(user_id, date)` upsert logic already in place.
 
