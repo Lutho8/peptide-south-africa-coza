@@ -100,7 +100,9 @@ Consider when making recommendations:
 - Experience level with peptides
 - Potential synergies between compounds
 - Proper cycling and timing protocols
-- Safety margins and risk mitigation`;
+- Safety margins and risk mitigation
+
+CRITICAL: Begin your response by acknowledging the user's selected goals verbatim (e.g., "Based on your goals of Fat Loss and Recovery..."), then explain how each recommendation maps directly to those specific goals. Reference the goals by name throughout your response.`;
 
       const profileContext = userProfile ? `
 User Profile:
@@ -133,7 +135,9 @@ When optimizing stacks:
 - Suggest optimal timing for each compound
 - Consider half-lives and receptor interactions
 - Balance effectiveness with safety margins
-- Account for individual response patterns`;
+- Account for individual response patterns
+
+CRITICAL: Reference the user's stated goals throughout your analysis. For each suggestion or change you propose, explicitly name which goal (e.g., Fat Loss, Recovery, Longevity) it advances. Open by restating the user's goals verbatim so they know the analysis is tailored to them.`;
 
       const stackContext = currentStack?.length 
         ? `Current Stack: ${currentStack.join(", ")}`
