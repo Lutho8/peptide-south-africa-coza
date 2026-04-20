@@ -128,8 +128,8 @@ export function BluetoothScaleConnection() {
               {t('bluetooth.title', 'Bluetooth Scale')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {isConnected 
-                ? `${deviceName} • ${t('bluetooth.connected', 'Connected')}${lastReading ? ` • ${t('settings.lastSync', 'Last sync')}: ${lastReading.toLocaleTimeString()}` : ''}`
+              {isConnected
+                ? `${brandLabel ? brandLabel + ' • ' : ''}${deviceName} • ${t('bluetooth.connected', 'Connected')}${lastReading ? ` • ${t('settings.lastSync', 'Last sync')}: ${lastReading.toLocaleTimeString()}` : ''}`
                 : t('bluetooth.notConnected', 'Not connected')
               }
             </p>
