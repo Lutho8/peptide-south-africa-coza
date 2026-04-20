@@ -3,6 +3,7 @@ import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { userProfile, stackOptimizations } from '@/data/userData';
+import { useAuth } from '@/contexts/AuthContext';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
 import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -284,6 +285,7 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
 
 // --- Main Screen ---
 export function MyStackScreen() {
+  const { user } = useAuth();
   const [activeStack, setActiveStack] = useState<StackItem[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profile, setProfile] = useState(userProfile);
@@ -294,6 +296,21 @@ export function MyStackScreen() {
     setProfile(getUserProfile());
     setCycles(getCycles());
   }, []);
+
+  // Resolve display name: stored profile → auth metadata → email → fallback.
+  const displayName =
+    (profile.name && profile.name.trim()) ||
+    user?.user_metadata?.display_name ||
+    user?.email?.split('@')[0] ||
+    'Welcome';
+  const initials = displayName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  const hasProfileDetails = profile.age > 0 && profile.height > 0 && profile.weight > 0;
 
   const handleSaveStack = (newStack: StackItem[]) => {
     setActiveStack(newStack);
@@ -342,16 +359,13 @@ export function MyStackScreen() {
   };
 
   const handleRestartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
-    // End any existing cycle for this peptide
     const existing = cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
     if (existing) {
       updateCycle({ ...existing, status: 'completed' as any });
     }
-    // Start fresh
     handleStartCycle(peptideId, peptideName, dose, frequency);
   };
 
-  // Map cycles to stack items
   const getCycleForPeptide = (peptideId: string): Cycle | undefined => {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
   };
@@ -363,21 +377,29 @@ export function MyStackScreen() {
         <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-primary/5 pointer-events-none" />
         <div className="relative flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary via-accent/50 to-primary/80 flex items-center justify-center text-background font-bold text-xl shadow-lg shadow-accent/20 luxury-shimmer">
-            {profile.name.split(' ').map(n => n[0]).join('')}
+            {initials}
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-foreground">{profile.name}</h2>
-            <p className="text-sm text-muted-foreground">
-              {profile.age} years • {profile.height}cm • {profile.weight}kg
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs px-2.5 py-1 rounded-full bg-accent/20 text-accent border border-accent/30">
-                {profile.activityLevel.charAt(0).toUpperCase() + profile.activityLevel.slice(1)}
-              </span>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/20">
-                {profile.experience.charAt(0).toUpperCase() + profile.experience.slice(1)}
-              </span>
-            </div>
+            <h2 className="text-xl font-bold text-foreground">{displayName}</h2>
+            {hasProfileDetails ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {profile.age} years • {profile.height}cm • {profile.weight}kg
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-accent/20 text-accent border border-accent/30">
+                    {profile.activityLevel.charAt(0).toUpperCase() + profile.activityLevel.slice(1)}
+                  </span>
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/20">
+                    {profile.experience.charAt(0).toUpperCase() + profile.experience.slice(1)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-1">
+                Add your stats in Settings → Profile to personalize your protocol.
+              </p>
+            )}
           </div>
         </div>
       </GradientCard>
@@ -459,31 +481,33 @@ export function MyStackScreen() {
         experienceLevel={profile.experience}
       />
 
-      {/* Stack Optimization Suggestions */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles size={18} className="text-accent" />
-          <h3 className="text-lg font-semibold text-foreground">Quick Optimizations</h3>
-        </div>
+      {/* Stack Optimization Suggestions — only when user has a stack */}
+      {activeStack.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={18} className="text-accent" />
+            <h3 className="text-lg font-semibold text-foreground">Quick Optimizations</h3>
+          </div>
 
-        <div className="space-y-2">
-          {stackOptimizations.map((opt, index) => (
-            <GradientCard key={index} className="p-3 premium-border">
-              <div className="flex items-start gap-3">
-                <div className={cn(
-                  "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
-                  opt.priority === 'high' ? 'bg-destructive' : 
-                  opt.priority === 'medium' ? 'bg-warning' : 'bg-longevity'
-                )} />
-                <div>
-                  <h4 className="text-sm font-medium text-foreground">{opt.title}</h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+          <div className="space-y-2">
+            {stackOptimizations.map((opt, index) => (
+              <GradientCard key={index} className="p-3 premium-border">
+                <div className="flex items-start gap-3">
+                  <div className={cn(
+                    "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
+                    opt.priority === 'high' ? 'bg-destructive' :
+                    opt.priority === 'medium' ? 'bg-warning' : 'bg-longevity'
+                  )} />
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">{opt.title}</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+                  </div>
                 </div>
-              </div>
-            </GradientCard>
-          ))}
+              </GradientCard>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Order Button */}
       <Button className="w-full gap-2" size="lg">
