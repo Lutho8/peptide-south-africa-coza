@@ -148,6 +148,27 @@ export function AIAgentPanel({
                 {mode === 'recommend' && 'Personalized protocol suggestions'}
                 {mode === 'optimize' && 'Stack synergy analysis'}
               </p>
+              {/* Show goals so users see their wizard selections power the AI */}
+              {(mode === 'recommend' || mode === 'optimize') && userGoals && userGoals.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  <span className="text-[10px] text-muted-foreground/80 self-center mr-0.5">
+                    Tuned to:
+                  </span>
+                  {userGoals.slice(0, 4).map((goal) => (
+                    <span
+                      key={goal}
+                      className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20"
+                    >
+                      {goal}
+                    </span>
+                  ))}
+                  {userGoals.length > 4 && (
+                    <span className="text-[10px] text-muted-foreground/70 self-center">
+                      +{userGoals.length - 4}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           
