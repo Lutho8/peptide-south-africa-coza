@@ -30,6 +30,7 @@ export function BluetoothScaleConnection() {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualWeight, setManualWeight] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showRenphoGuide, setShowRenphoGuide] = useState(false);
 
   const handleManualSave = async () => {
     const weight = parseFloat(manualWeight);
