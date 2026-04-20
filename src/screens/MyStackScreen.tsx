@@ -481,31 +481,33 @@ export function MyStackScreen() {
         experienceLevel={profile.experience}
       />
 
-      {/* Stack Optimization Suggestions */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles size={18} className="text-accent" />
-          <h3 className="text-lg font-semibold text-foreground">Quick Optimizations</h3>
-        </div>
+      {/* Stack Optimization Suggestions — only when user has a stack */}
+      {activeStack.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={18} className="text-accent" />
+            <h3 className="text-lg font-semibold text-foreground">Quick Optimizations</h3>
+          </div>
 
-        <div className="space-y-2">
-          {stackOptimizations.map((opt, index) => (
-            <GradientCard key={index} className="p-3 premium-border">
-              <div className="flex items-start gap-3">
-                <div className={cn(
-                  "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
-                  opt.priority === 'high' ? 'bg-destructive' : 
-                  opt.priority === 'medium' ? 'bg-warning' : 'bg-longevity'
-                )} />
-                <div>
-                  <h4 className="text-sm font-medium text-foreground">{opt.title}</h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+          <div className="space-y-2">
+            {stackOptimizations.map((opt, index) => (
+              <GradientCard key={index} className="p-3 premium-border">
+                <div className="flex items-start gap-3">
+                  <div className={cn(
+                    "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
+                    opt.priority === 'high' ? 'bg-destructive' :
+                    opt.priority === 'medium' ? 'bg-warning' : 'bg-longevity'
+                  )} />
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">{opt.title}</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+                  </div>
                 </div>
-              </div>
-            </GradientCard>
-          ))}
+              </GradientCard>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Order Button */}
       <Button className="w-full gap-2" size="lg">
