@@ -159,27 +159,45 @@ export function BluetoothScaleConnection() {
       {!isSupported && (
         <div className="flex items-start gap-2 p-2 rounded-lg bg-warning/10 text-xs text-warning">
           <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
-          <p>
-            {t('bluetooth.notSupported', 'Bluetooth is not supported on this browser. Try using Chrome on Android or desktop, or use manual entry below.')}
-          </p>
+          <div className="space-y-1">
+            <p>
+              {t('bluetooth.notSupported', 'Bluetooth is not supported on this browser.')}
+            </p>
+            <p className="text-warning/80">
+              On iPhone/iPad, Web Bluetooth is unavailable in Safari — install the app to your home screen and use the native version, or use manual entry below.
+            </p>
+          </div>
         </div>
       )}
 
       {!isConnected && isSupported && (
-        <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-          <Info size={14} className="flex-shrink-0 mt-0.5" />
-          <p>
-            {t('bluetooth.instructions', 'Step on your scale to wake it up, then click Connect. Make sure Bluetooth is enabled on your device.')}
+        <div className="space-y-2">
+          <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+            <Info size={14} className="flex-shrink-0 mt-0.5" />
+            <p>
+              {t('bluetooth.instructions', 'Step on your scale to wake it up, then click Connect. Make sure Bluetooth is enabled on your device.')}
+            </p>
+          </div>
+          <p className="text-[11px] text-muted-foreground/80 px-1">
+            ✓ Works with <span className="text-foreground font-medium">Renpho</span>, Xiaomi Mi Body, Eufy, Withings, Yunmai, and standard Bluetooth scales.
           </p>
         </div>
       )}
 
       {isConnected && (
-        <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/10 text-xs text-primary">
-          <Scale size={14} className="flex-shrink-0 mt-0.5" />
-          <p>
-            {t('bluetooth.readyToMeasure', 'Ready to receive measurements. Step on your scale and the reading will be saved automatically.')}
-          </p>
+        <div className="space-y-2">
+          <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/10 text-xs text-primary">
+            <Scale size={14} className="flex-shrink-0 mt-0.5" />
+            <p>
+              {t('bluetooth.readyToMeasure', 'Ready to receive measurements. Step on your scale and the reading will be saved automatically.')}
+            </p>
+          </div>
+          {lastReading && (
+            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/40 text-xs">
+              <span className="text-muted-foreground">Last reading received:</span>
+              <span className="text-foreground font-medium">{lastReading.toLocaleTimeString()}</span>
+            </div>
+          )}
         </div>
       )}
 

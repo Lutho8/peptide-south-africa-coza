@@ -12,7 +12,7 @@ import {
 import { BodyCompositionCharts } from '@/components/charts/BodyCompositionCharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, TrendingDown, TrendingUp, Minus, Activity, Droplets, Flame, Heart, Save, BarChart3, Grid3X3, AlertCircle } from 'lucide-react';
+import { Plus, TrendingDown, TrendingUp, Minus, Activity, Droplets, Flame, Heart, Save, BarChart3, Grid3X3, AlertCircle, Bluetooth, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -279,15 +279,38 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Add Entry Button */}
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            onClick={() => setShowAddEntry(!showAddEntry)}
-          >
-            <Plus size={16} />
-            Add New Entry
-          </Button>
+          {/* Quick action row */}
+          <div className="flex gap-2">
+            <Button
+              className="flex-1 gap-2"
+              onClick={() => {
+                if (!showAddEntry && latest) {
+                  // Prefill with latest values for easy editing
+                  setNewEntry({
+                    weight: latest.weight,
+                    bodyFat: latest.bodyFat,
+                    muscleMass: latest.muscleMass,
+                    visceralFat: latest.visceralFat,
+                  });
+                }
+                setShowAddEntry(!showAddEntry);
+              }}
+            >
+              {latest ? <Pencil size={16} /> : <Plus size={16} />}
+              {latest ? "Log / Update Today's Reading" : "Add First Entry"}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              title="Connect Bluetooth scale (in Settings)"
+              onClick={() => {
+                onOpenChange(false);
+                window.location.href = '/?screen=settings';
+              }}
+            >
+              <Bluetooth size={16} />
+            </Button>
+          </div>
 
           {/* Add Entry Form */}
           {showAddEntry && (
@@ -450,24 +473,32 @@ export function BodyCompositionModal({ open, onOpenChange }: BodyCompositionModa
           )}
 
           {/* Goal Progress */}
-          <GradientCard variant="primary">
-            <h3 className="font-medium text-foreground mb-2">Goal Progress</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Body Fat Target</span>
-                <span className="text-foreground">15% (Currently {latest.bodyFat}%)</span>
-              </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary rounded-full transition-all"
-                  style={{ width: `${Math.max(0, Math.min(100, ((19 - latest.bodyFat) / (19 - 15)) * 100))}%` }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {Math.max(0, (latest.bodyFat - 15)).toFixed(1)}% more to reach your target
-              </p>
-            </div>
-          </GradientCard>
+          {(() => {
+            const target = 15;
+            const current = latest.bodyFat ?? target;
+            const baseline = Math.max(current, target + 0.1);
+            const pct = Math.max(0, Math.min(100, ((baseline - current) / (baseline - target)) * 100));
+            return (
+              <GradientCard variant="primary">
+                <h3 className="font-medium text-foreground mb-2">Goal Progress</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Body Fat Target</span>
+                    <span className="text-foreground">{target}% (Currently {current}%)</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {Math.max(0, current - target).toFixed(1)}% more to reach your target
+                  </p>
+                </div>
+              </GradientCard>
+            );
+          })()}
 
           {/* History */}
           <div>
