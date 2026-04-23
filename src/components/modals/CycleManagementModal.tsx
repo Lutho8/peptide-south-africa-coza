@@ -1,23 +1,29 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Badge } from '@/components/ui/badge';
 import { CycleHistoryTimeline } from '@/components/doses/CycleHistoryTimeline';
 import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  getCycles, 
-  saveCycle, 
+import {
+  getCycles,
+  saveCycle,
   updateCycle,
-  Cycle 
+  Cycle
 } from '@/services/storage';
-import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell, FlaskConical, Calendar, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { BulkReminderModal } from './BulkReminderModal';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { buildWeeklyScheduleFromReport, expandDays, formatFrequencyFromDays, type ScheduleEntry } from '@/utils/bloodworkSchedule';
 
 interface CycleManagementModalProps {
   open: boolean;
