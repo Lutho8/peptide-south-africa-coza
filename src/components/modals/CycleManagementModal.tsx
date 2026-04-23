@@ -1,23 +1,29 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Badge } from '@/components/ui/badge';
 import { CycleHistoryTimeline } from '@/components/doses/CycleHistoryTimeline';
 import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  getCycles, 
-  saveCycle, 
+import {
+  getCycles,
+  saveCycle,
   updateCycle,
-  Cycle 
+  Cycle
 } from '@/services/storage';
-import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell, FlaskConical, Calendar, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { BulkReminderModal } from './BulkReminderModal';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { buildWeeklyScheduleFromReport, expandDays, formatFrequencyFromDays, type ScheduleEntry } from '@/utils/bloodworkSchedule';
 
 interface CycleManagementModalProps {
   open: boolean;
@@ -30,14 +36,78 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [newCycle, setNewCycle] = useState<Partial<Cycle>>({});
+  const [latestReport, setLatestReport] = useState<{ id: string; report_date: string | null; uploaded_at: string; extracted_biomarkers: any[] } | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
   const { toast } = useToast();
   const { bulkAddReminders } = useDoseReminders();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (open) {
       setCycles(getCycles());
+      if (user) loadLatestReport();
     }
-  }, [open]);
+  }, [open, user]);
+
+  const loadLatestReport = async () => {
+    if (!user) return;
+    setReportLoading(true);
+    const { data } = await supabase
+      .from('lab_reports')
+      .select('id, report_date, uploaded_at, extracted_biomarkers')
+      .eq('user_id', user.id)
+      .eq('status', 'completed')
+      .order('uploaded_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setLatestReport(data ? { ...data, extracted_biomarkers: Array.isArray(data.extracted_biomarkers) ? (data.extracted_biomarkers as any[]) : [] } : null);
+    setReportLoading(false);
+  };
+
+  const bloodworkSchedule: ScheduleEntry[] = latestReport
+    ? buildWeeklyScheduleFromReport(latestReport as any)
+    : [];
+
+  const handleSaveAsCycles = () => {
+    if (bloodworkSchedule.length === 0) return;
+    const reportDate = latestReport?.report_date || latestReport?.uploaded_at?.split('T')[0] || '';
+    const newCycles: Cycle[] = bloodworkSchedule.map((entry) => ({
+      id: `cycle-${Date.now()}-${entry.peptideId}`,
+      peptideId: entry.peptideId,
+      peptideName: entry.peptideName,
+      dose: entry.dose,
+      frequency: formatFrequencyFromDays(entry.days),
+      startDate: new Date().toISOString().split('T')[0],
+      plannedDuration: 60,
+      breakDuration: 30,
+      status: 'active',
+      notes: `Generated from bloodwork ${reportDate} · Goals: ${entry.goals.join(', ')}`,
+    }));
+    newCycles.forEach(saveCycle);
+    setCycles([...cycles, ...newCycles]);
+    toast({
+      title: 'Cycles saved',
+      description: `${newCycles.length} cycle${newCycles.length > 1 ? 's' : ''} added from your bloodwork.`,
+    });
+  };
+
+  const handleSaveAsReminders = async () => {
+    if (bloodworkSchedule.length === 0) return;
+    await bulkAddReminders(
+      bloodworkSchedule.map((entry) => ({
+        peptide_id: entry.peptideId,
+        peptide_name: entry.peptideName,
+        dose: entry.dose,
+        time: entry.time,
+        days: entry.days,
+        enabled: true,
+      }))
+    );
+    toast({
+      title: 'Reminders saved',
+      description: `${bloodworkSchedule.length} reminder${bloodworkSchedule.length > 1 ? 's' : ''} created from your bloodwork.`,
+    });
+  };
 
   const daysInMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1).getDay();
@@ -101,6 +171,17 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
     });
   };
 
+  const reportDateLabel = latestReport?.report_date || latestReport?.uploaded_at?.split('T')[0] || '';
+  const ALL_DAYS_LABELS = [
+    { key: 'mon', label: 'Mon' },
+    { key: 'tue', label: 'Tue' },
+    { key: 'wed', label: 'Wed' },
+    { key: 'thu', label: 'Thu' },
+    { key: 'fri', label: 'Fri' },
+    { key: 'sat', label: 'Sat' },
+    { key: 'sun', label: 'Sun' },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-background border-border">
@@ -108,7 +189,18 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
           <DialogTitle className="text-foreground">Cycle Management</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <Tabs defaultValue="cycles" className="w-full">
+          <TabsList className="w-full">
+            <TabsTrigger value="cycles" className="flex-1 gap-1.5">
+              <Calendar size={14} /> Cycles
+            </TabsTrigger>
+            <TabsTrigger value="bloodwork" className="flex-1 gap-1.5">
+              <FlaskConical size={14} /> From bloodwork
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="cycles" className="space-y-4 mt-4">
+
           {/* Month Navigation */}
           <div className="flex items-center justify-between">
             <Button 
@@ -357,7 +449,123 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
             <h3 className="font-medium text-foreground mb-3">Cycle Timeline</h3>
             <CycleHistoryTimeline cycles={cycles} />
           </div>
-        </div>
+          </TabsContent>
+
+          {/* From Bloodwork Tab */}
+          <TabsContent value="bloodwork" className="space-y-4 mt-4">
+            {reportLoading ? (
+              <GradientCard className="p-6 text-center">
+                <p className="text-sm text-muted-foreground">Loading your latest report…</p>
+              </GradientCard>
+            ) : !latestReport ? (
+              <GradientCard className="p-6 text-center space-y-3">
+                <FlaskConical size={28} className="mx-auto text-muted-foreground" />
+                <div>
+                  <h4 className="font-medium text-foreground mb-1">No completed lab report yet</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Upload your bloodwork PDF to generate a peptide schedule based on your biomarkers.
+                  </p>
+                  <Link to="/bloodwork" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <FlaskConical size={14} />
+                      Go to Bloodwork
+                    </Button>
+                  </Link>
+                </div>
+              </GradientCard>
+            ) : bloodworkSchedule.length === 0 ? (
+              <GradientCard className="p-6 text-center">
+                <Sparkles size={24} className="mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Your latest report ({reportDateLabel}) had no out-of-range biomarkers with peptide suggestions. Nothing to schedule.
+                </p>
+              </GradientCard>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="gap-1.5 text-xs">
+                    <FlaskConical size={11} className="text-primary" />
+                    Based on report from {reportDateLabel}
+                  </Badge>
+                </div>
+
+                {/* 7-day grid */}
+                <GradientCard className="p-3 overflow-x-auto">
+                  <div className="min-w-[520px]">
+                    <div className="grid grid-cols-[140px_repeat(7,1fr)] gap-1 mb-2">
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Peptide</div>
+                      {ALL_DAYS_LABELS.map(d => (
+                        <div key={d.key} className="text-[10px] font-semibold text-muted-foreground text-center uppercase">
+                          {d.label}
+                        </div>
+                      ))}
+                    </div>
+
+                    {bloodworkSchedule.map((entry) => {
+                      const activeDays = new Set(expandDays(entry.days));
+                      return (
+                        <div key={entry.peptideId} className="grid grid-cols-[140px_repeat(7,1fr)] gap-1 mb-2 items-center">
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-foreground truncate">{entry.peptideName}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{entry.dose} · {entry.time}</p>
+                          </div>
+                          {ALL_DAYS_LABELS.map(d => {
+                            const active = activeDays.has(d.key);
+                            return (
+                              <div
+                                key={d.key}
+                                className={cn(
+                                  "h-8 rounded-md flex items-center justify-center text-[10px] transition-colors",
+                                  active && entry.rank === 1 && "bg-primary/30 text-primary font-semibold",
+                                  active && entry.rank === 2 && "bg-primary/15 text-primary",
+                                  !active && "bg-muted/40 text-muted-foreground/40"
+                                )}
+                              >
+                                {active ? entry.time.split(':')[0] : '–'}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </GradientCard>
+
+                {/* Goal chips per peptide */}
+                <div className="space-y-2">
+                  {bloodworkSchedule.map((entry) => (
+                    <div key={`goals-${entry.peptideId}`} className="flex items-start gap-2 text-xs">
+                      <span className="font-semibold text-foreground min-w-0 flex-shrink-0">{entry.peptideName}:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {entry.goals.map((g) => (
+                          <Badge key={g} variant="outline" className="text-[10px] px-1.5 py-0">
+                            {g}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="gap-2" onClick={handleSaveAsCycles}>
+                    <Save size={14} />
+                    Save as cycles
+                  </Button>
+                  <Button variant="outline" className="gap-2 border-primary/50 text-primary hover:bg-primary/10" onClick={handleSaveAsReminders}>
+                    <Bell size={14} />
+                    Save reminders
+                  </Button>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground italic">
+                  Research-only suggestions. Review with a qualified provider before starting any protocol.
+                </p>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Bulk Reminder Modal */}
         <BulkReminderModal

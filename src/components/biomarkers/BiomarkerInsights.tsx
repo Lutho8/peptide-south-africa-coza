@@ -82,7 +82,7 @@ export function BiomarkerInsights() {
     setIsLoading(false);
   };
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (file: File, languageHint?: 'en' | 'de', existingReportId?: string) => {
     if (!user) { toast.error('Please sign in first'); return; }
     if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
       toast.error('Please upload an image or PDF'); return;
@@ -95,39 +95,50 @@ export function BiomarkerInsights() {
     setUploadProgress(10);
 
     try {
-      // Upload file to storage
-      const filePath = `${user.id}/${Date.now()}-${file.name}`;
-      setUploadProgress(30);
-      
-      const { error: uploadError } = await supabase.storage
-        .from('lab-reports')
-        .upload(filePath, file);
-      
-      if (uploadError) throw uploadError;
-      setUploadProgress(50);
+      let reportId = existingReportId;
+      let filePath: string;
+      let base64: string;
 
-      // Create report record
-      const { data: report, error: insertError } = await supabase
-        .from('lab_reports')
-        .insert({
-          user_id: user.id,
-          file_url: filePath,
-          file_name: file.name,
-          status: 'pending',
-        })
-        .select()
-        .single();
+      if (!reportId) {
+        // Upload file to storage
+        filePath = `${user.id}/${Date.now()}-${file.name}`;
+        setUploadProgress(30);
 
-      if (insertError) throw insertError;
-      setUploadProgress(60);
+        const { error: uploadError } = await supabase.storage
+          .from('lab-reports')
+          .upload(filePath, file);
 
-      // Convert to base64 for AI analysis
-      const base64 = await fileToBase64(file);
+        if (uploadError) throw uploadError;
+        setUploadProgress(50);
+
+        // Create report record
+        const { data: report, error: insertError } = await supabase
+          .from('lab_reports')
+          .insert({
+            user_id: user.id,
+            file_url: filePath,
+            file_name: file.name,
+            status: 'pending',
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        reportId = report.id;
+        setUploadProgress(60);
+
+        base64 = await fileToBase64(file);
+      } else {
+        // Re-analysis path: re-read base64 from the same File
+        setUploadProgress(50);
+        base64 = await fileToBase64(file);
+      }
+
       setUploadProgress(70);
 
       // Call AI analysis (PDF or image — backend resolves MIME)
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-lab-report', {
-        body: { reportId: report.id, imageBase64: base64, fileName: file.name, mimeType: file.type },
+        body: { reportId, imageBase64: base64, fileName: file.name, mimeType: file.type, languageHint },
       });
 
       setUploadProgress(90);
@@ -135,7 +146,26 @@ export function BiomarkerInsights() {
       if (analysisError) {
         toast.error('AI analysis failed, but your report was saved');
       } else {
-        toast.success('Lab report analyzed successfully!');
+        const detected = (analysisData as any)?.data?.detected_language as 'en' | 'de' | undefined;
+        if (detected === 'de') {
+          toast.success('Lab report analyzed (German detected — translated to English)', {
+            duration: 6000,
+            action: languageHint ? undefined : {
+              label: 'Re-analyze as English',
+              onClick: () => handleFileSelect(file, 'en', reportId),
+            },
+          });
+        } else if (detected === 'en') {
+          toast.success('Lab report analyzed (English detected)', {
+            duration: 5000,
+            action: languageHint ? undefined : {
+              label: 'Re-analyze as German',
+              onClick: () => handleFileSelect(file, 'de', reportId),
+            },
+          });
+        } else {
+          toast.success('Lab report analyzed successfully!');
+        }
       }
 
       setUploadProgress(100);

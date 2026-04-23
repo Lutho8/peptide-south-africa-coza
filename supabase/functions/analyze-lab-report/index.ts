@@ -25,7 +25,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { reportId, imageBase64, fileName, mimeType } = await req.json();
+    const { reportId, imageBase64, fileName, mimeType, languageHint } = await req.json();
     if (!reportId || !imageBase64) throw new Error("Missing reportId or imageBase64");
 
     // Determine MIME type — accept PDF or image. Default to JPEG for legacy callers.
@@ -96,7 +96,10 @@ Match biomarker names to these known IDs when possible: igf1, testosterone, free
 If the file is not a lab report or is unreadable, return:
 {"summary": "Unable to read lab report", "biomarkers": [], "insights": "The uploaded file could not be recognized as a lab report. Please upload a clear photo or PDF of your bloodwork results.", "report_date": null, "detected_language": "en", "recommended_peptides": []}`;
 
-    const userText = `Analyze this lab report (${fileName}). The file may be in English or German — translate findings to plain English. Extract all biomarker values, explain them in layman's terms, and recommend peptide protocols that could help optimize any out-of-range markers.`;
+    let userText = `Analyze this lab report (${fileName}). The file may be in English or German — translate findings to plain English. Extract all biomarker values, explain them in layman's terms, and recommend peptide protocols that could help optimize any out-of-range markers.`;
+    if (languageHint === 'en' || languageHint === 'de') {
+      userText += `\nUser has confirmed the document language is ${languageHint === 'de' ? 'German' : 'English'} — treat it accordingly and set detected_language to "${languageHint}".`;
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
