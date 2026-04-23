@@ -171,6 +171,17 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
     });
   };
 
+  const reportDateLabel = latestReport?.report_date || latestReport?.uploaded_at?.split('T')[0] || '';
+  const ALL_DAYS_LABELS = [
+    { key: 'mon', label: 'Mon' },
+    { key: 'tue', label: 'Tue' },
+    { key: 'wed', label: 'Wed' },
+    { key: 'thu', label: 'Thu' },
+    { key: 'fri', label: 'Fri' },
+    { key: 'sat', label: 'Sat' },
+    { key: 'sun', label: 'Sun' },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-background border-border">
@@ -178,7 +189,18 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
           <DialogTitle className="text-foreground">Cycle Management</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <Tabs defaultValue="cycles" className="w-full">
+          <TabsList className="w-full">
+            <TabsTrigger value="cycles" className="flex-1 gap-1.5">
+              <Calendar size={14} /> Cycles
+            </TabsTrigger>
+            <TabsTrigger value="bloodwork" className="flex-1 gap-1.5">
+              <FlaskConical size={14} /> From bloodwork
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="cycles" className="space-y-4 mt-4">
+
           {/* Month Navigation */}
           <div className="flex items-center justify-between">
             <Button 
