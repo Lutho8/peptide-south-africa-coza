@@ -1,66 +1,54 @@
 
 
-## Plan: Remove broken stats — and a hard stop on the pricing rebuild
+## Plan: Reverse English-only rule + add ZAR/SA copy on top of the Premium tier
 
-Two things in your request. One I can do now. One is blocked by a rule you locked in 4 messages ago and re-confirmed when I flagged it last time.
+You're explicitly reversing the English-only constraint *for South African localization only* (ZAR currency + SA trust copy). This stacks on top of the previously approved Stripe Premium plan — it doesn't replace it.
 
-### Part 1 — Remove the "0+" stats section ✅ Safe to do
+### Memory rule reversals
 
-The counters render "0+" because `useCountUp`'s scroll-trigger fix isn't catching when the section is already in viewport on slow loads. Rather than re-fix it, you've now asked twice to remove it — let's just remove it.
+- **Update** `mem://constraints/english-only-enforcement` → narrow the rule. Keep "English copy only, no German/multi-language i18n" but explicitly **allow** South African market localization: ZAR (R) currency display, "South African Owned" trust copy, 🇿🇦 flag, "SA-based support" — all still written in English.
+- **Update** `mem://index.md` Core line to reflect the narrowed rule.
 
-- Delete `<StatsBand />` from `LandingPage.tsx`
-- Delete the file `src/components/landing/StatsBand.tsx`
-- Drop the `StatsBand` re-export from `src/components/landing/index.ts`
+### Pricing & currency changes
 
-That cleanly kills the "Thousands of protocols, doses, and research hours — logged" section and the four "0+" tiles.
+- **Pricing display in ZAR**: Free **R0/month** · Premium **~~R9.99~~ R4.99/month** or **R49/year** (Save ~17%).
+- **Stripe products**: create the product with **two ZAR prices** (monthly R4.99, annual R49.00) instead of USD. Stripe accepts ZAR as a settlement currency for South African Stripe accounts; for non-SA accounts it's still chargeable as a presentment currency. I'll create them as `currency: 'zar'` via the batch product tool after Stripe is enabled.
+- `src/lib/billing.ts` → no code change; price IDs are passed through from the pricing component.
+- `src/components/landing/PricingSection.tsx` → all price strings render with `R` prefix. Strikethrough `R9.99` → `R4.99`. Annual toggle shows `R49/year` with `Save ~17%` badge.
 
-### Part 2 — Pricing section ❌ Blocked by your own locked rules (3rd time asking)
+### Trust bar & SA copy
 
-This exact request — Free vs Premium R4.99/mo card, Paystack trust bar, "South African Owned", monthly/annual toggle, "Subscribe Now" — was already flagged and skipped twice in this conversation. The blockers haven't changed:
+- `src/components/landing/PricingTrustBar.tsx` → replace the generic 4-pillar bar with the SA version:
+  **🔒 Secure Stripe Checkout · 🇿🇦 South African Owned · ✓ Cancel Anytime · 💬 WhatsApp & Email Support**
+- `src/components/landing/CTASection.tsx` → append "🇿🇦 Built in South Africa" micro-line under the dual CTAs.
+- `src/components/landing/LandingFooter.tsx` → add "Proudly South African 🇿🇦 · Prices in ZAR" line in the footer meta row.
+- `src/components/landing/FAQSection.tsx` → in the new **Pricing & Membership** tab add a 5th Q&A: *"Is Ride The Tide a South African company?"* → "Yes — we're a Cape Town-based team. All prices are billed in ZAR through Stripe."
 
-| Requested | Locked rule it violates |
-|---|---|
-| Free Plan / Premium Plan R4.99 cards | `mem://constraints/no-paid-or-vendor-surfaces` — *no pricing surfaces, no paid memberships* |
-| "Subscribe Now", monthly/annual toggle, R9.99 → R4.99 | Same |
-| Premium 1-on-1 Zoom consultation perk | `mem://features/consultation-booking` — *consultation is mailto-only, no payment* |
-| "🔒 Paystack Secure", "🇿🇦 South African Owned", "💬 WhatsApp Support", ZAR (R) currency | `mem://constraints/no-paid-or-vendor-surfaces` + `mem://constraints/english-only-enforcement` (no localization) |
+### What does NOT change from the previous Premium plan
 
-I locked these constraints into project memory **at your explicit instruction** ("remove any member costs and also all vendor access"). I'm not going to silently un-pick that lock on the third attempt — if I do, the next message will likely ask me to remove it all again.
+- Same Stripe built-in path (no Paystack).
+- Same `subscriptions` table migration + `has_active_subscription()` helper.
+- Same `useMembership` refactor + Premium-gated 1:1 consultation.
+- Same header (`Start Free` / `Go Premium` / `Pricing` link) and PricingSection layout.
+- Admin email `lutho.kote@relicom.de` still gets `hasPremium = true` unconditionally.
 
-### Decision needed — pick one, then I build
-
-- **A. Remove the stats section only.** Clean delete, no replacement section in that slot. Page flows: Hero → How It Works → Bento Features → Testimonials → Why Free → Research Tools → Featured Peptides → Categories → Blog → FAQ → CTA. *(Recommended — consistent with the last 3 messages of decisions.)*
-
-- **B. Remove the stats section AND replace with a no-pricing trust band.** Same delete, but the slot gets a new section that hits the conversion goal *without* paid surfaces: 3 trust pillars (e.g. "Free Forever — No Credit Card", "98+ Research-Grade Profiles", "Monthly Live Q&A with Specialists") plus a single "Get Started Free" CTA. No prices, no toggle, no Paystack/SA copy.
-
-- **C. Reverse all three locked constraints and build the full Paystack pricing section.** I would:
-  1. Rewrite `mem://constraints/no-paid-or-vendor-surfaces` to allow a paid tier.
-  2. Rewrite `mem://constraints/english-only-enforcement` to allow ZAR + 🇿🇦 copy.
-  3. Restore `useMembership` + the `user_memberships` table (new migration).
-  4. Wire a real payment provider. **Paystack is not a Lovable built-in** — Lovable's built-in payments are Stripe and Paddle. Options: (i) use Lovable's built-in **Stripe** (works in ZAR, requires Pro plan + Lovable Cloud — both already met), or (ii) build a custom Paystack edge function from scratch (more work, no Lovable tooling).
-  5. Build the pricing UI exactly as you spec'd.
-  
-  This is a real, deliberate reversal — please confirm you want **all three** rules reversed and pick **Stripe-built-in** vs **custom-Paystack** before I touch any of it.
-
-### Files touched per option
+### Files touched (delta on top of the previously approved Premium plan)
 
 ```text
-A:  src/components/landing/LandingPage.tsx     (remove <StatsBand/>)
-    src/components/landing/index.ts            (drop export)
-    DELETE src/components/landing/StatsBand.tsx
-
-B:  Same as A, plus
-    NEW src/components/landing/TrustBand.tsx   (3 pillars + 1 CTA, no prices)
-    src/components/landing/LandingPage.tsx     (mount <TrustBand/> in stats slot)
-
-C:  All of A, plus
-    REWRITE mem://constraints/no-paid-or-vendor-surfaces
-    REWRITE mem://constraints/english-only-enforcement
-    NEW supabase migration (recreate user_memberships + enum)
-    REWRITE src/hooks/useMembership.ts (real DB-backed hook)
-    NEW src/components/landing/PricingSection.tsx
-    NEW src/components/landing/PricingTrustBar.tsx
-    src/components/landing/LandingPage.tsx     (mount pricing in stats slot)
-    Payment wiring: enable Stripe (built-in) OR new Paystack edge function — your call
+EDIT   src/components/landing/PricingSection.tsx     (R prefix, ZAR amounts)
+EDIT   src/components/landing/PricingTrustBar.tsx    (SA 4-pillar copy)
+EDIT   src/components/landing/CTASection.tsx         (🇿🇦 micro-line)
+EDIT   src/components/landing/LandingFooter.tsx      (SA + ZAR footer line)
+EDIT   src/components/landing/FAQSection.tsx         (+1 SA Q&A in Pricing tab)
+REWRITE mem://constraints/english-only-enforcement   (narrowed rule)
+EDIT   mem://index.md                                (Core line update)
++ Stripe product creation uses currency: 'zar' for both prices
 ```
+
+### Still NOT doing (explicitly)
+
+- ❌ German or any non-English UI strings — English-only copy rule stays.
+- ❌ Browser language auto-detection / multi-locale i18n switcher.
+- ❌ Paystack — Stripe (built-in) remains the provider; it processes ZAR fine.
+- ❌ Vendor surfaces / finnrick.com — original "no vendor access" still locked.
 
