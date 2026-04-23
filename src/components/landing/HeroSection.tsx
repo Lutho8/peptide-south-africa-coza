@@ -1,175 +1,147 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, FlaskConical, Award, BookOpen, Video } from 'lucide-react';
-import { HeroCategoryBadges } from './HeroCategoryBadges';
-import { PeptideCategory } from '@/data/peptides';
-import { useCountUp } from '@/hooks/useCountUp';
+import { Video, ArrowRight, FlaskConical, Award, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-
-const stats = [
-  { label: 'Peptides', value: 98, suffix: '+', icon: FlaskConical },
-  { label: 'FDA Approved', value: 31, suffix: '', icon: Award },
-  { label: 'Categories', value: 11, suffix: '', icon: TrendingUp },
-  { label: 'Citations', value: 500, suffix: '+', icon: BookOpen },
-];
-
-// Floating particle component - reduced for mobile perf
-function FloatingParticle({ delay, duration, x, y }: { delay: number; duration: number; x: number; y: number }) {
-  return (
-    <motion.div
-      className="absolute w-2 h-2 rounded-full bg-primary/20 will-change-transform"
-      initial={{ opacity: 0, x, y }}
-      animate={{
-        opacity: [0, 0.6, 0],
-        y: [y, y - 100, y - 150],
-        x: [x, x + 20, x - 10],
-      }}
-      transition={{
-        duration,
-        delay,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      }}
-    />
-  );
-}
-
-// Stats card with count-up animation
-function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
-  const { formattedValue } = useCountUp({
-    end: stat.value,
-    duration: 2000,
-    delay: index * 150,
-    suffix: stat.suffix,
-    enableScrollTrigger: false,
-  });
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30, rotateX: -15 }}
-      animate={{ opacity: 1, y: 0, rotateX: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-      whileHover={{ 
-        scale: 1.05, 
-        rotateY: 5,
-        boxShadow: '0 20px 40px -15px hsl(var(--primary) / 0.2)',
-      }}
-      className="glass-card rounded-xl p-4 text-center group hover:border-accent/50 transition-all cursor-default"
-      style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
-    >
-      <stat.icon className="w-6 h-6 mx-auto mb-2 text-accent group-hover:scale-110 transition-transform" />
-      <div className="text-2xl md:text-3xl font-bold text-foreground">{formattedValue}</div>
-      <div className="text-sm text-muted-foreground">{stat.label}</div>
-    </motion.div>
-  );
-}
+import { PhoneMockup } from './PhoneMockup';
+import { FloatingStatCards } from './FloatingStatCards';
+import { HeroCategoryBadges } from './HeroCategoryBadges';
+import { PeptideCategory } from '@/data/peptides';
 
 interface HeroSectionProps {
   onCategoryClick?: (category: PeptideCategory) => void;
 }
 
+const socialProof = [
+  { icon: FlaskConical, label: '98+ peptides researched' },
+  { icon: Award, label: '17 FDA-approved compounds' },
+  { icon: BookOpen, label: '22+ scientific citations' },
+];
+
 export function HeroSection({ onCategoryClick }: HeroSectionProps) {
   const navigate = useNavigate();
 
-  // Reduced particles on mobile for performance
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const particleCount = isMobile ? 3 : 10;
-  const particles = Array.from({ length: particleCount }, (_, i) => ({
-    id: i,
-    delay: i * 0.8,
-    duration: 5 + Math.random() * 3,
-    x: Math.random() * 100 - 50,
-    y: Math.random() * 200,
-  }));
+  const scrollToPeptides = () => {
+    const el = document.getElementById('featured-peptides');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // fallback to categories section if featured isn't tagged
+      window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+    }
+  };
 
   return (
-    <section className="relative overflow-hidden py-16 lg:py-24">
-      {/* Animated Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5" />
-      
-      {/* Animated gradient orbs */}
+    <section className="relative overflow-hidden py-12 lg:py-20">
+      {/* Background gradient + orbs */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
       <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/10 rounded-full blur-3xl"
-        animate={{
-          scale: [1, 1.1, 1],
-          opacity: [0.2, 0.3, 0.2],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
+        className="absolute -left-32 top-0 h-[500px] w-[500px] rounded-full bg-primary/10 blur-3xl"
+        animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.6, 0.4] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-3xl"
-        animate={{
-          x: [0, 50, 0],
-          y: [0, -30, 0],
-          opacity: [0.15, 0.25, 0.15],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
+        className="absolute -right-32 bottom-0 h-[500px] w-[500px] rounded-full bg-accent/10 blur-3xl"
+        animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {particles.map((p) => (
-          <FloatingParticle key={p.id} {...p} />
-        ))}
-      </div>
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center max-w-4xl mx-auto">
-          {/* Main Heading - Static */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
+      <div className="container relative z-10 mx-auto px-4">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
+          {/* LEFT: Content (mobile order: 2) */}
+          <div className="order-2 text-center lg:order-1 lg:text-left">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+                </span>
                 Welcome to Ride The Tide
-              </span>
-            </h1>
-            <motion.p 
+              </div>
+
+              <h1 className="mt-5 text-balance text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+                Track, calculate &{' '}
+                <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
+                  optimize
+                </span>{' '}
+                your peptide protocols
+              </h1>
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg lg:mx-0"
+            >
+              Research-grade peptide database, dose calculators, protocol tracking, and free
+              monthly expert Q&A — all in one place. From research to results.
+            </motion.p>
+
+            {/* Dual CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-7 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center lg:justify-start"
+            >
+              <Button
+                size="lg"
+                onClick={() => navigate('/live-qna')}
+                className="h-12 gap-2 bg-gradient-to-r from-primary to-accent px-6 text-primary-foreground shadow-lg hover:opacity-90"
+              >
+                <Video className="h-5 w-5" />
+                Join free monthly Q&A
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={scrollToPeptides}
+                className="h-12 gap-2 border-2 px-6"
+              >
+                Explore peptides
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </motion.div>
+
+            {/* Social proof pills */}
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="mt-7 flex flex-wrap items-center justify-center gap-2 lg:justify-start"
             >
-              Your research-grade peptide database with 98+ peptides. 
-              Comprehensive research, mechanisms, clinical data, and scientific literature.
-            </motion.p>
-          </motion.div>
+              {socialProof.map((s) => (
+                <div
+                  key={s.label}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur"
+                >
+                  <s.icon className="h-3.5 w-3.5 text-accent" />
+                  {s.label}
+                </div>
+              ))}
+            </motion.div>
+          </div>
 
-          {/* Live Q&A CTA */}
+          {/* RIGHT: Phone mockup (mobile order: 1) */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="mb-8"
+            transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+            className="relative order-1 mx-auto flex w-full max-w-md items-center justify-center lg:order-2"
           >
-            <Button
-              size="lg"
-              onClick={() => navigate('/live-qna')}
-              className="bg-gradient-to-r from-accent to-primary hover:opacity-90 text-primary-foreground gap-2 px-6 shadow-lg"
-            >
-              <Video className="w-5 h-5" />
-              Join Free Monthly Q&A — Live on Zoom
-            </Button>
+            <div className="relative">
+              <PhoneMockup />
+              <FloatingStatCards />
+            </div>
           </motion.div>
+        </div>
 
-          {/* Stats Grid with Count-up Animation */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {stats.map((stat, index) => (
-              <StatCard key={stat.label} stat={stat} index={index} />
-            ))}
-          </div>
-
-          {/* Dynamic Category Badges */}
+        {/* Category badges below */}
+        <div className="mt-14">
           <HeroCategoryBadges onCategoryClick={onCategoryClick} />
         </div>
       </div>
