@@ -7,11 +7,11 @@ interface CTASectionProps {
 }
 
 const benefits = [
-  'Track your peptide protocols',
-  'Log body composition data',
-  'Set dose reminders',
-  'Access research library',
-  'Export detailed reports',
+  '98+ Peptide Profiles',
+  'Smart Calculators',
+  'Protocol Tracking',
+  'Monthly Expert Q&A',
+  'COA Verification',
 ];
 
 export function CTASection({ onSignInClick }: CTASectionProps) {
@@ -30,10 +30,10 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
           className="max-w-3xl mx-auto text-center"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Ready to Optimize Your Research?
+            Ready to Optimize Your Peptide Journey?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Join PeptidePro for personalized tracking, dose management, and comprehensive research tools.
+            Join Ride The Tide — research-grade data, protocol tracking, dose calculators, and expert Q&A. From research to results.
           </p>
 
           {/* Benefits List */}
