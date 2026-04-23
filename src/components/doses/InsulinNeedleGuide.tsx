@@ -21,6 +21,8 @@ interface BlendConcentration {
   concentrationMgPerMl: number;
 }
 
+type SyringeType = 'U-40' | 'U-100';
+
 function getBlendConcentration(peptideId?: string): BlendConcentration | null {
   if (!peptideId) return null;
   const blend = findBlendData(peptideId);
@@ -40,30 +42,70 @@ function getBlendConcentration(peptideId?: string): BlendConcentration | null {
   };
 }
 
-const U40_UNITS_PER_ML = 40;
+const QUICK_REF_DOSES = [0.25, 0.5, 1, 2];
 
-// Dynamic calculator section — U-40 only
-function ReconstitutionCalculator({ 
-  defaultTotalMg, 
+// Syringe type segmented toggle
+function SyringeTypeToggle({ value, onChange }: { value: SyringeType; onChange: (v: SyringeType) => void }) {
+  const options: SyringeType[] = ['U-40', 'U-100'];
+  return (
+    <div className="space-y-1.5">
+      <div className="relative flex rounded-lg border border-border bg-muted/50 p-0.5">
+        {options.map((opt) => {
+          const isActive = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => onChange(opt)}
+              className={cn(
+                "relative z-10 flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200",
+                isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="syringe-type-bg"
+                  className="absolute inset-0 bg-primary rounded-md"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">{opt}</span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-[11px] text-muted-foreground text-center">
+        Pick the syringe type printed on your barrel.
+      </p>
+    </div>
+  );
+}
+
+// Dynamic calculator section — uses active syringe type
+function ReconstitutionCalculator({
+  defaultTotalMg,
   defaultWaterMl,
-}: { 
-  defaultTotalMg: number; 
+  syringeType,
+  unitsPerMl,
+}: {
+  defaultTotalMg: number;
   defaultWaterMl: number;
+  syringeType: SyringeType;
+  unitsPerMl: number;
 }) {
   const [totalMg, setTotalMg] = useState(defaultTotalMg);
   const [waterMl, setWaterMl] = useState(defaultWaterMl);
 
   const concentrationMgPerMl = waterMl > 0 ? totalMg / waterMl : 0;
-  const mgPerUnit = concentrationMgPerMl > 0 ? concentrationMgPerMl / U40_UNITS_PER_ML : 0;
+  const mgPerUnit = concentrationMgPerMl > 0 ? concentrationMgPerMl / unitsPerMl : 0;
 
-  // Common peptide dose presets in mg (most peptides dose in fractions of a mg)
   const dosePresets = [0.25, 0.5, 1, 2];
 
   return (
     <div className="space-y-3 p-3 rounded-lg bg-muted/50 border border-border">
       <div className="text-sm font-semibold text-foreground flex items-center gap-1.5">
         <Syringe size={14} className="text-primary" />
-        Dynamic Calculator (U-40 Syringe)
+        Dynamic Calculator ({syringeType} Syringe)
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -99,7 +141,7 @@ function ReconstitutionCalculator({
               <div className="text-sm font-bold text-foreground">{concentrationMgPerMl.toFixed(2)} mg/mL</div>
             </div>
             <div className="p-2 rounded-md bg-background border border-border">
-              <div className="text-muted-foreground">1 unit (U-40)</div>
+              <div className="text-muted-foreground">1 unit ({syringeType})</div>
               <div className="text-sm font-bold text-primary">{mgPerUnit.toFixed(3)} mg</div>
             </div>
           </div>
@@ -108,14 +150,14 @@ function ReconstitutionCalculator({
             <TableHeader>
               <TableRow>
                 <TableHead className="h-8 text-xs">Target Dose</TableHead>
-                <TableHead className="h-8 text-xs">U-40 Units</TableHead>
+                <TableHead className="h-8 text-xs">{syringeType} Units</TableHead>
                 <TableHead className="h-8 text-xs">Volume (mL)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {dosePresets.map((doseMg) => {
                 const volumeMl = concentrationMgPerMl > 0 ? doseMg / concentrationMgPerMl : 0;
-                const units = volumeMl * U40_UNITS_PER_ML;
+                const units = volumeMl * unitsPerMl;
                 return (
                   <TableRow key={doseMg}>
                     <TableCell className="py-1.5 text-sm font-medium">{doseMg} mg</TableCell>
@@ -134,21 +176,23 @@ function ReconstitutionCalculator({
 
 export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: InsulinNeedleGuideProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [syringeType, setSyringeType] = useState<SyringeType>('U-40');
+
+  const unitsPerMl = syringeType === 'U-40' ? 40 : 100;
 
   const blendConc = useMemo(() => getBlendConcentration(peptideId), [peptideId]);
   const isBlend = !!blendConc;
   const blendData = useMemo(() => peptideId ? findBlendData(peptideId) : null, [peptideId]);
 
   // Standard reconstitution: 10mg vial + 2mL BAC water = 5 mg/mL
-  // 1 U-40 unit (0.025mL) = 0.125 mg → so 1mg = 8 units to draw
   const activeTotalMg = blendConc?.totalMg ?? 10;
   const activeWaterMl = blendConc?.waterMl ?? 2;
   const activeConcentrationMgPerMl = blendConc?.concentrationMgPerMl ?? (concentration ? concentration / 1000 : 5);
 
   // Convert dose to mg
-  const doseMg = unit === 'mg' ? dose : dose; // IU treated as mg equivalent for display
+  const doseMg = unit === 'mg' ? dose : dose;
   const volumeNeededMl = activeConcentrationMgPerMl > 0 ? doseMg / activeConcentrationMgPerMl : 0;
-  const u40Units = volumeNeededMl * U40_UNITS_PER_ML;
+  const drawUnits = volumeNeededMl * unitsPerMl;
 
   if (dose <= 0) return null;
 
@@ -161,7 +205,7 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
         <div className="flex items-center gap-2">
           <Syringe size={16} className="text-primary" />
           <span className="text-sm font-medium text-foreground">
-            {isBlend ? `${blendData?.shortName || 'Blend'} U-40 Dosage Guide` : 'U-40 Syringe Dosage Guide'}
+            {isBlend ? `${blendData?.shortName || 'Blend'} ${syringeType} Dosage Guide` : `${syringeType} Syringe Dosage Guide`}
           </span>
         </div>
         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -177,14 +221,17 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
             className="overflow-hidden"
           >
             <div className="p-3 pt-0 space-y-3">
+              {/* Syringe type selector */}
+              <SyringeTypeToggle value={syringeType} onChange={setSyringeType} />
+
               {/* Safety Warning for blends */}
               {isBlend && (
                 <Alert variant="destructive" className="border-destructive bg-destructive/10">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle className="text-sm font-bold">⚠️ SAFETY CORRECTION</AlertTitle>
                   <AlertDescription className="text-xs">
-                    Previous dosage values for this blend were <strong>incorrect and potentially dangerous</strong>. 
-                    The values below use the verified standard protocol ({activeTotalMg}mg vial + {activeWaterMl}mL BAC water). 
+                    Previous dosage values for this blend were <strong>incorrect and potentially dangerous</strong>.
+                    The values below use the verified standard protocol ({activeTotalMg}mg vial + {activeWaterMl}mL BAC water).
                     Always verify concentration based on YOUR reconstitution.
                   </AlertDescription>
                 </Alert>
@@ -199,11 +246,36 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                     {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {activeConcentrationMgPerMl.toFixed(2)} mg/mL
                   </div>
                   <div className="text-foreground font-medium">
-                    1 mg = {activeConcentrationMgPerMl > 0 ? (U40_UNITS_PER_ML / activeConcentrationMgPerMl).toFixed(1) : '0'} U-40 units
+                    1 mg = {activeConcentrationMgPerMl > 0 ? (unitsPerMl / activeConcentrationMgPerMl).toFixed(1) : '0'} {syringeType} units
                   </div>
                   <div>
-                    <span className="text-muted-foreground">1 U-40 unit = {(activeConcentrationMgPerMl / U40_UNITS_PER_ML).toFixed(3)} mg</span>
+                    <span className="text-muted-foreground">1 {syringeType} unit = {(activeConcentrationMgPerMl / unitsPerMl).toFixed(3)} mg</span>
                   </div>
+                </div>
+              </div>
+
+              {/* Quick reference strip */}
+              <div className="space-y-1.5">
+                <div className="text-xs font-semibold text-foreground">
+                  Quick reference (current vial settings)
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {QUICK_REF_DOSES.map((doseValue) => {
+                    const volMl = activeConcentrationMgPerMl > 0 ? doseValue / activeConcentrationMgPerMl : 0;
+                    const units = volMl * unitsPerMl;
+                    return (
+                      <div
+                        key={doseValue}
+                        className="p-2 rounded-lg bg-background border border-border text-center"
+                      >
+                        <div className="text-[11px] text-muted-foreground">{doseValue} mg</div>
+                        <div className="text-base font-bold text-primary leading-tight">
+                          {units.toFixed(1)}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">units · {volMl.toFixed(3)} mL</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -218,7 +290,7 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                       <TableRow>
                         <TableHead className="h-8 text-xs">Period</TableHead>
                         <TableHead className="h-8 text-xs">Daily Dose</TableHead>
-                        <TableHead className="h-8 text-xs">U-40 Units</TableHead>
+                        <TableHead className="h-8 text-xs">{syringeType} Units</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -234,14 +306,14 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                 </div>
               )}
 
-              {/* Current dose — U-40 only */}
+              {/* Current dose */}
               <div className="p-3 rounded-lg bg-muted/50 space-y-2">
                 <div className="text-sm font-medium text-foreground">
                   Your current dose: {dose} {unit}
                 </div>
                 <div className="p-3 rounded-md bg-background border border-border text-center">
-                  <div className="text-muted-foreground text-xs">U-40 Syringe</div>
-                  <div className="text-2xl font-bold text-primary">{u40Units.toFixed(1)}</div>
+                  <div className="text-muted-foreground text-xs">{syringeType} Syringe</div>
+                  <div className="text-2xl font-bold text-primary">{drawUnits.toFixed(1)}</div>
                   <div className="text-muted-foreground text-xs">units to draw</div>
                   <div className="text-muted-foreground text-[10px] mt-1">({volumeNeededMl.toFixed(3)} mL)</div>
                 </div>
@@ -251,6 +323,8 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
               <ReconstitutionCalculator
                 defaultTotalMg={activeTotalMg}
                 defaultWaterMl={activeWaterMl}
+                syringeType={syringeType}
+                unitsPerMl={unitsPerMl}
               />
             </div>
           </motion.div>
