@@ -56,7 +56,8 @@ function ReconstitutionCalculator({
   const concentrationMgPerMl = waterMl > 0 ? totalMg / waterMl : 0;
   const mgPerUnit = concentrationMgPerMl > 0 ? concentrationMgPerMl / U40_UNITS_PER_ML : 0;
 
-  const dosePresets = [2, 4, 6];
+  // Common peptide dose presets in mg (most peptides dose in fractions of a mg)
+  const dosePresets = [0.25, 0.5, 1, 2];
 
   return (
     <div className="space-y-3 p-3 rounded-lg bg-muted/50 border border-border">
@@ -138,9 +139,11 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
   const isBlend = !!blendConc;
   const blendData = useMemo(() => peptideId ? findBlendData(peptideId) : null, [peptideId]);
 
-  const activeTotalMg = blendConc?.totalMg ?? 5;
+  // Standard reconstitution: 10mg vial + 2mL BAC water = 5 mg/mL
+  // 1 U-40 unit (0.025mL) = 0.125 mg → so 1mg = 8 units to draw
+  const activeTotalMg = blendConc?.totalMg ?? 10;
   const activeWaterMl = blendConc?.waterMl ?? 2;
-  const activeConcentrationMgPerMl = blendConc?.concentrationMgPerMl ?? (concentration ? concentration / 1000 : 2.5);
+  const activeConcentrationMgPerMl = blendConc?.concentrationMgPerMl ?? (concentration ? concentration / 1000 : 5);
 
   // Convert dose to mg
   const doseMg = unit === 'mg' ? dose : dose; // IU treated as mg equivalent for display
@@ -190,11 +193,17 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
               {/* Concentration info */}
               <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
                 <Info size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                <div className="text-xs text-muted-foreground">
-                  <span className="text-foreground font-medium">Reconstitution: </span>
-                  {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {activeConcentrationMgPerMl.toFixed(2)} mg/mL
-                  <br />
-                  <span className="text-foreground font-medium">1 U-40 unit = {(activeConcentrationMgPerMl / U40_UNITS_PER_ML).toFixed(3)} mg</span>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div>
+                    <span className="text-foreground font-medium">Reconstitution: </span>
+                    {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {activeConcentrationMgPerMl.toFixed(2)} mg/mL
+                  </div>
+                  <div className="text-foreground font-medium">
+                    1 mg = {activeConcentrationMgPerMl > 0 ? (U40_UNITS_PER_ML / activeConcentrationMgPerMl).toFixed(1) : '0'} U-40 units
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">1 U-40 unit = {(activeConcentrationMgPerMl / U40_UNITS_PER_ML).toFixed(3)} mg</span>
+                  </div>
                 </div>
               </div>
 
