@@ -100,6 +100,33 @@ export const faqCategories = [
     ],
   },
   {
+    id: 'getting-started',
+    title: 'Getting Started',
+    icon: HelpCircle,
+    faqs: [
+      {
+        q: 'What does it cost to use Ride The Tide?',
+        a: 'Ride The Tide is free to use. You get full access to the peptide research database, dose and reconstitution calculators, blends and stacks tools, COA verification, protocol tracking, and the monthly group Q&A. There is no premium tier and no credit card required.',
+      },
+      {
+        q: 'How do I join the monthly Live Q&A?',
+        a: 'Reserve your seat from the home page or the "Live Q&A" link in the footer. Sessions run on Zoom on the first Saturday of each month and cover dosage, stacking, cycles, and protocol questions. Spots are limited per session.',
+      },
+      {
+        q: 'Can I book a 1-on-1 consultation?',
+        a: 'Yes. Use the "Book a Call" link in the app to email webinars@fintiba.com and schedule a 1-hour Zoom consultation. Booking is handled by email — no payment flow inside the app.',
+      },
+      {
+        q: 'Do I need an account to start?',
+        a: 'You can browse the research database, calculators, and FAQ without an account. To track protocols, log doses, set reminders, and sync data across devices, create a free account in under a minute.',
+      },
+      {
+        q: 'How is my data handled?',
+        a: 'Your protocol logs, doses, and biometrics are stored securely against your account and are private to you. See the Privacy Policy for full details.',
+      },
+    ],
+  },
+  {
     id: 'about',
     title: 'About Ride The Tide',
     icon: Info,
