@@ -116,9 +116,9 @@ export function BiomarkerInsights() {
       const base64 = await fileToBase64(file);
       setUploadProgress(70);
 
-      // Call AI analysis
+      // Call AI analysis (PDF or image — backend resolves MIME)
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-lab-report', {
-        body: { reportId: report.id, imageBase64: base64, fileName: file.name },
+        body: { reportId: report.id, imageBase64: base64, fileName: file.name, mimeType: file.type },
       });
 
       setUploadProgress(90);
@@ -273,7 +273,7 @@ export function BiomarkerInsights() {
         />
         
         <p className="text-xs text-muted-foreground mt-2">
-          Supports images (JPG, PNG) and PDFs up to 10MB
+          Supports PDF & images (JPG, PNG) in English or German · up to 10MB · explained in plain English with peptide suggestions
         </p>
       </GradientCard>
 

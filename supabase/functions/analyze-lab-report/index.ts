@@ -25,8 +25,18 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { reportId, imageBase64, fileName } = await req.json();
+    const { reportId, imageBase64, fileName, mimeType } = await req.json();
     if (!reportId || !imageBase64) throw new Error("Missing reportId or imageBase64");
+
+    // Determine MIME type — accept PDF or image. Default to JPEG for legacy callers.
+    const lowerName = (fileName || "").toLowerCase();
+    let resolvedMime = mimeType as string | undefined;
+    if (!resolvedMime) {
+      if (lowerName.endsWith(".pdf")) resolvedMime = "application/pdf";
+      else if (lowerName.endsWith(".png")) resolvedMime = "image/png";
+      else if (lowerName.endsWith(".webp")) resolvedMime = "image/webp";
+      else resolvedMime = "image/jpeg";
+    }
 
     // Update status to processing
     await supabase
@@ -35,30 +45,53 @@ serve(async (req) => {
       .eq("id", reportId)
       .eq("user_id", user.id);
 
-    const systemPrompt = `You are a medical lab report analyzer. Extract biomarker values from lab reports.
+    const systemPrompt = `You are a friendly medical lab report analyzer for a peptide research community. Lab reports may be in ENGLISH or GERMAN — auto-detect the language, but ALWAYS write your output in ENGLISH using simple layman's terms (avoid medical jargon, or explain it briefly in parentheses).
 
-IMPORTANT: Return ONLY a valid JSON object with this exact structure:
+Common German terms to recognize:
+- "Blutbild" = blood panel, "Leberwerte" = liver values, "Nierenwerte" = kidney values
+- "Schilddrüse" = thyroid, "Cholesterin" = cholesterol, "Nüchternblutzucker" = fasting glucose
+- "Referenzbereich"/"Normbereich" = reference range, "Einheit" = unit, "Wert" = value
+- "Gesamttestosteron" = total testosterone, "Östradiol" = estradiol, "Insulin" = insulin
+- Decimal commas (e.g. "5,4") should be parsed as decimal points (5.4)
+
+Return ONLY a valid JSON object with this exact structure:
 {
-  "summary": "Brief summary of the lab report",
+  "summary": "2-3 sentence plain-English overview a non-doctor can understand. Mention overall picture (e.g. 'Most values look healthy, but cholesterol is slightly high').",
   "report_date": "YYYY-MM-DD or null if not found",
+  "detected_language": "en" or "de",
   "biomarkers": [
     {
-      "name": "Biomarker full name",
+      "name": "Biomarker full name in English",
       "short_name": "Abbreviation (e.g. IGF-1, TSH, ALT)",
       "value": 123.4,
       "unit": "ng/mL",
       "reference_range": "100-300",
       "status": "normal|high|low|critical",
-      "category": "hormone|liver|kidney|lipid|metabolic|thyroid|inflammation"
+      "category": "hormone|liver|kidney|lipid|metabolic|thyroid|inflammation",
+      "layman_explanation": "1 sentence in plain English explaining what this marker means and what the result indicates."
     }
   ],
-  "insights": "AI analysis of the results including trends, concerns, and recommendations. Mention any values outside normal range and what they might indicate for someone on a peptide protocol."
+  "insights": "Markdown-formatted layman analysis with these sections:\\n\\n### What this means for you\\n(plain English summary of out-of-range values and what they typically indicate — no medical jargon)\\n\\n### Lifestyle suggestions\\n(diet, sleep, exercise tips relevant to the findings)\\n\\n### Peptide protocols to consider\\n(recommend specific peptides from the list below that may help optimize the out-of-range markers, with a 1-line reason for each. Frame as 'research-only' suggestions, not medical advice. Use bullet points.)\\n\\n### When to see a doctor\\n(red flags that warrant professional consultation)",
+  "recommended_peptides": ["peptide_id_1", "peptide_id_2"]
 }
+
+PEPTIDE OPTIMIZATION GUIDE — recommend from these IDs based on findings:
+- Low IGF-1 / poor recovery / aging concerns → ipamorelin, cjc1295, tesamorelin, mk677
+- High glucose / HbA1c / insulin resistance / weight → retatrutide, tirzepatide, semaglutide, motsc
+- High cholesterol / LDL / triglycerides → retatrutide, tirzepatide
+- Elevated liver enzymes (AST/ALT/GGT) / inflammation → bpc157, tb500
+- High CRP / chronic inflammation / immune issues → ta1 (thymosin alpha-1), bpc157, ghkcu
+- Low testosterone (men) → recommend bloodwork follow-up + lifestyle (no peptide directly raises T safely)
+- Poor sleep / cognition → dsip, selank, semax, epitalon
+- Joint/tendon issues / slow healing → bpc157, tb500, ghkcu
+- Mitochondrial / metabolic decline → motsc, ss31
 
 Match biomarker names to these known IDs when possible: igf1, testosterone, freeT, estradiol, ast, alt, ggt, totalCholesterol, ldl, hdl, triglycerides, fastingGlucose, hba1c, insulin, creatinine, bun, tsh, freeT4, crp, homocysteine.
 
-If the image is not a lab report or is unreadable, return:
-{"summary": "Unable to read lab report", "biomarkers": [], "insights": "The uploaded image could not be recognized as a lab report. Please upload a clear photo or PDF of your bloodwork results.", "report_date": null}`;
+If the file is not a lab report or is unreadable, return:
+{"summary": "Unable to read lab report", "biomarkers": [], "insights": "The uploaded file could not be recognized as a lab report. Please upload a clear photo or PDF of your bloodwork results.", "report_date": null, "detected_language": "en", "recommended_peptides": []}`;
+
+    const userText = `Analyze this lab report (${fileName}). The file may be in English or German — translate findings to plain English. Extract all biomarker values, explain them in layman's terms, and recommend peptide protocols that could help optimize any out-of-range markers.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -67,19 +100,16 @@ If the image is not a lab report or is unreadable, return:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           {
             role: "user",
             content: [
-              {
-                type: "text",
-                text: `Analyze this lab report image (${fileName}). Extract all biomarker values you can find and provide insights.`,
-              },
+              { type: "text", text: userText },
               {
                 type: "image_url",
-                image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
+                image_url: { url: `data:${resolvedMime};base64,${imageBase64}` },
               },
             ],
           },
