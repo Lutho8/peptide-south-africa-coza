@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
@@ -17,13 +17,12 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
   const { user } = useAuth();
 
   const navLinks = [
+    { label: 'Pricing', href: '#pricing' },
     { label: 'Free Course', href: '/free-course' },
     { label: 'COA Verified', href: '/coa-verification' },
     { label: 'Browse', href: '#browse' },
     { label: 'Blends', href: '#tools' },
     { label: 'Stacks', href: '#stacks' },
-    { label: 'Calculator', href: '#calc' },
-    { label: 'Quiz', href: '#quiz' },
     { label: 'Research', href: '#research' },
   ];
 
@@ -34,6 +33,14 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToPricing = () => {
+    setMobileMenuOpen(false);
+    const el = document.getElementById('pricing');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   return (
@@ -80,28 +87,52 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
             </div>
           </form>
 
-          {/* CTA Button */}
+          {/* CTA Buttons */}
           <div className="flex items-center gap-2">
             {user ? (
-              <Button
-                variant="outline"
-                className="border-primary text-primary hover:bg-primary/10"
-              >
-                My Dashboard
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:inline-flex border-border hover:border-primary hover:text-primary"
+                >
+                  Dashboard
+                </Button>
+                <Button
+                  onClick={scrollToPricing}
+                  size="sm"
+                  className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:opacity-95"
+                >
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                  Go Premium
+                </Button>
+              </>
             ) : (
-              <Button
-                onClick={onSignInClick}
-                className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:shadow-lg hover:opacity-95 transition-all"
-              >
-                Members
-              </Button>
+              <>
+                <Button
+                  onClick={onSignInClick}
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:inline-flex border-border hover:border-primary hover:text-primary"
+                >
+                  Start Free
+                </Button>
+                <Button
+                  onClick={scrollToPricing}
+                  size="sm"
+                  className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:opacity-95"
+                >
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                  Go Premium
+                </Button>
+              </>
             )}
 
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 text-muted-foreground hover:text-foreground"
+              aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -144,6 +175,17 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
                     {link.label}
                   </a>
                 )
+              )}
+              {!user && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onSignInClick();
+                  }}
+                  className="mt-2 px-3 py-2 text-sm font-medium text-left text-foreground border border-border rounded-lg hover:border-primary hover:text-primary transition-colors"
+                >
+                  Start Free
+                </button>
               )}
             </nav>
           </div>

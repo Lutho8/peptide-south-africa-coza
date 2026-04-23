@@ -4,6 +4,7 @@ import { HeroSection } from './HeroSection';
 import { HowItWorks } from './HowItWorks';
 import { BentoFeatures } from './BentoFeatures';
 import { Testimonials } from './Testimonials';
+import { PricingSection } from './PricingSection';
 import { WhyFreeBand } from './WhyFreeBand';
 import { ResearchTools } from './ResearchTools';
 import { FeaturedPeptides } from './FeaturedPeptides';
@@ -72,6 +73,7 @@ export function LandingPage() {
         <HowItWorks />
         <BentoFeatures />
         <Testimonials />
+        <PricingSection />
         <WhyFreeBand onPrimaryClick={handleSignInClick} />
         <ResearchTools 
           onBlendsClick={() => setBlendsOpen(true)}

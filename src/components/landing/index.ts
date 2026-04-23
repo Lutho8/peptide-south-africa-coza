@@ -4,6 +4,8 @@ export { HeroSection } from './HeroSection';
 export { HowItWorks } from './HowItWorks';
 export { BentoFeatures } from './BentoFeatures';
 export { Testimonials } from './Testimonials';
+export { PricingSection } from './PricingSection';
+export { PricingTrustBar } from './PricingTrustBar';
 export { WhyFreeBand } from './WhyFreeBand';
 export { HeroCategoryBadges } from './HeroCategoryBadges';
 export { ResearchTools } from './ResearchTools';

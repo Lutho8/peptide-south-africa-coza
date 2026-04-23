@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CTASectionProps {
@@ -15,6 +15,11 @@ const benefits = [
 ];
 
 export function CTASection({ onSignInClick }: CTASectionProps) {
+  const scrollToPricing = () => {
+    const el = document.getElementById('pricing');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <section className="py-16 lg:py-24 relative overflow-hidden">
       {/* Background Effects */}
@@ -33,7 +38,7 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
             Ready to Optimize Your Peptide Journey?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Join Ride The Tide — research-grade data, protocol tracking, dose calculators, and expert Q&A. From research to results.
+            Start free with research-grade data, dose calculators, and protocol tracking. Upgrade to Premium for 1:1 expert calls and AI-powered bloodwork insights.
           </p>
 
           {/* Benefits List */}
@@ -53,17 +58,31 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <Button
-            onClick={onSignInClick}
-            size="lg"
-            className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 transition-opacity group"
-          >
-            Get Started Free
-            <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          {/* Dual CTA */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button
+              onClick={onSignInClick}
+              size="lg"
+              variant="outline"
+              className="border-border hover:border-primary hover:text-primary group w-full sm:w-auto"
+            >
+              Get Started Free
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            <Button
+              onClick={scrollToPricing}
+              size="lg"
+              className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 shadow-lg shadow-primary/25 group w-full sm:w-auto"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Unlock Premium
+            </Button>
+          </div>
           <p className="text-sm text-muted-foreground mt-4">
-            Free forever. No credit card required.
+            Free forever tier · Premium from R4.99/month · Cancel anytime
+          </p>
+          <p className="text-xs text-muted-foreground/70 mt-2">
+            🇿🇦 Built in South Africa
           </p>
         </motion.div>
       </div>
