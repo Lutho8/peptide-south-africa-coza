@@ -449,7 +449,123 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
             <h3 className="font-medium text-foreground mb-3">Cycle Timeline</h3>
             <CycleHistoryTimeline cycles={cycles} />
           </div>
-        </div>
+          </TabsContent>
+
+          {/* From Bloodwork Tab */}
+          <TabsContent value="bloodwork" className="space-y-4 mt-4">
+            {reportLoading ? (
+              <GradientCard className="p-6 text-center">
+                <p className="text-sm text-muted-foreground">Loading your latest report…</p>
+              </GradientCard>
+            ) : !latestReport ? (
+              <GradientCard className="p-6 text-center space-y-3">
+                <FlaskConical size={28} className="mx-auto text-muted-foreground" />
+                <div>
+                  <h4 className="font-medium text-foreground mb-1">No completed lab report yet</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Upload your bloodwork PDF to generate a peptide schedule based on your biomarkers.
+                  </p>
+                  <Link to="/bloodwork" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <FlaskConical size={14} />
+                      Go to Bloodwork
+                    </Button>
+                  </Link>
+                </div>
+              </GradientCard>
+            ) : bloodworkSchedule.length === 0 ? (
+              <GradientCard className="p-6 text-center">
+                <Sparkles size={24} className="mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Your latest report ({reportDateLabel}) had no out-of-range biomarkers with peptide suggestions. Nothing to schedule.
+                </p>
+              </GradientCard>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="gap-1.5 text-xs">
+                    <FlaskConical size={11} className="text-primary" />
+                    Based on report from {reportDateLabel}
+                  </Badge>
+                </div>
+
+                {/* 7-day grid */}
+                <GradientCard className="p-3 overflow-x-auto">
+                  <div className="min-w-[520px]">
+                    <div className="grid grid-cols-[140px_repeat(7,1fr)] gap-1 mb-2">
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Peptide</div>
+                      {ALL_DAYS_LABELS.map(d => (
+                        <div key={d.key} className="text-[10px] font-semibold text-muted-foreground text-center uppercase">
+                          {d.label}
+                        </div>
+                      ))}
+                    </div>
+
+                    {bloodworkSchedule.map((entry) => {
+                      const activeDays = new Set(expandDays(entry.days));
+                      return (
+                        <div key={entry.peptideId} className="grid grid-cols-[140px_repeat(7,1fr)] gap-1 mb-2 items-center">
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-foreground truncate">{entry.peptideName}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{entry.dose} · {entry.time}</p>
+                          </div>
+                          {ALL_DAYS_LABELS.map(d => {
+                            const active = activeDays.has(d.key);
+                            return (
+                              <div
+                                key={d.key}
+                                className={cn(
+                                  "h-8 rounded-md flex items-center justify-center text-[10px] transition-colors",
+                                  active && entry.rank === 1 && "bg-primary/30 text-primary font-semibold",
+                                  active && entry.rank === 2 && "bg-primary/15 text-primary",
+                                  !active && "bg-muted/40 text-muted-foreground/40"
+                                )}
+                              >
+                                {active ? entry.time.split(':')[0] : '–'}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </GradientCard>
+
+                {/* Goal chips per peptide */}
+                <div className="space-y-2">
+                  {bloodworkSchedule.map((entry) => (
+                    <div key={`goals-${entry.peptideId}`} className="flex items-start gap-2 text-xs">
+                      <span className="font-semibold text-foreground min-w-0 flex-shrink-0">{entry.peptideName}:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {entry.goals.map((g) => (
+                          <Badge key={g} variant="outline" className="text-[10px] px-1.5 py-0">
+                            {g}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="gap-2" onClick={handleSaveAsCycles}>
+                    <Save size={14} />
+                    Save as cycles
+                  </Button>
+                  <Button variant="outline" className="gap-2 border-primary/50 text-primary hover:bg-primary/10" onClick={handleSaveAsReminders}>
+                    <Bell size={14} />
+                    Save reminders
+                  </Button>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground italic">
+                  Research-only suggestions. Review with a qualified provider before starting any protocol.
+                </p>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Bulk Reminder Modal */}
         <BulkReminderModal
