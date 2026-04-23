@@ -7,7 +7,6 @@ import { PeptideCategories } from './PeptideCategories';
 import { BlogSection } from './BlogSection';
 import { CTASection } from './CTASection';
 import { LandingFooter } from './LandingFooter';
-import { VendorShowcase } from './VendorShowcase';
 import { FAQSection, faqCategories } from './FAQSection';
 import { LiveQnAPopup } from './LiveQnAPopup';
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,7 +66,6 @@ export function LandingPage() {
       <main>
         <HeroSection onCategoryClick={handleCategoryClick} />
         <FAQSection />
-        <VendorShowcase onSignInClick={handleSignInClick} />
         <ResearchTools 
           onBlendsClick={() => setBlendsOpen(true)}
           onQuizClick={() => setQuizOpen(true)}

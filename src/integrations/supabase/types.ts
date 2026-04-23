@@ -542,54 +542,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_memberships: {
-        Row: {
-          cancelled_at: string | null
-          created_at: string
-          currency: string
-          expires_at: string | null
-          id: string
-          paypal_payer_id: string | null
-          paypal_subscription_id: string | null
-          plan_id: string | null
-          price_amount: number
-          started_at: string | null
-          status: Database["public"]["Enums"]["membership_status"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          cancelled_at?: string | null
-          created_at?: string
-          currency?: string
-          expires_at?: string | null
-          id?: string
-          paypal_payer_id?: string | null
-          paypal_subscription_id?: string | null
-          plan_id?: string | null
-          price_amount?: number
-          started_at?: string | null
-          status?: Database["public"]["Enums"]["membership_status"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          cancelled_at?: string | null
-          created_at?: string
-          currency?: string
-          expires_at?: string | null
-          id?: string
-          paypal_payer_id?: string | null
-          paypal_subscription_id?: string | null
-          plan_id?: string | null
-          price_amount?: number
-          started_at?: string | null
-          status?: Database["public"]["Enums"]["membership_status"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -684,7 +636,6 @@ export type Database = {
         Args: { encryption_key: string; plain_text: string }
         Returns: string
       }
-      has_active_membership: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -695,7 +646,6 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      membership_status: "active" | "cancelled" | "expired" | "pending"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -824,7 +774,6 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      membership_status: ["active", "cancelled", "expired", "pending"],
     },
   },
 } as const
