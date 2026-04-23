@@ -1,7 +1,6 @@
 export { LandingPage } from './LandingPage';
 export { LandingHeader } from './LandingHeader';
 export { HeroSection } from './HeroSection';
-export { StatsBand } from './StatsBand';
 export { HowItWorks } from './HowItWorks';
 export { BentoFeatures } from './BentoFeatures';
 export { Testimonials } from './Testimonials';

@@ -1,7 +1,6 @@
 import { useState, lazy, Suspense } from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
-import { StatsBand } from './StatsBand';
 import { HowItWorks } from './HowItWorks';
 import { BentoFeatures } from './BentoFeatures';
 import { Testimonials } from './Testimonials';
@@ -70,7 +69,6 @@ export function LandingPage() {
       
       <main>
         <HeroSection onCategoryClick={handleCategoryClick} />
-        <StatsBand />
         <HowItWorks />
         <BentoFeatures />
         <Testimonials />
