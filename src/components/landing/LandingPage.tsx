@@ -1,6 +1,8 @@
 import { useState, lazy, Suspense } from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
+import { StatsBand } from './StatsBand';
+import { WhyFreeBand } from './WhyFreeBand';
 import { ResearchTools } from './ResearchTools';
 import { FeaturedPeptides } from './FeaturedPeptides';
 import { PeptideCategories } from './PeptideCategories';
@@ -65,6 +67,8 @@ export function LandingPage() {
       
       <main>
         <HeroSection onCategoryClick={handleCategoryClick} />
+        <StatsBand />
+        <WhyFreeBand onPrimaryClick={handleSignInClick} />
         <FAQSection />
         <ResearchTools 
           onBlendsClick={() => setBlendsOpen(true)}
@@ -73,7 +77,9 @@ export function LandingPage() {
           onStackClick={() => setStackBuilderOpen(true)}
           onCalculatorClick={() => setCalculatorOpen(true)}
         />
-        <FeaturedPeptides />
+        <div id="featured-peptides">
+          <FeaturedPeptides />
+        </div>
         <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
         <BlogSection />
         <CTASection onSignInClick={handleSignInClick} />
