@@ -1,67 +1,53 @@
 
 
-## Plan: Remove all member costs and vendor surfaces
+## Plan note: scope conflicts with rules you locked in last message
 
-Per `mem://features/access-model` the app is already supposed to be free-access; some legacy paid/vendor surfaces are still present. This sweep removes them cleanly and updates supporting code, copy, and memory.
+Your previous message had me strip every paid surface, delete `user_memberships`, drop PayPal, and write a hard constraint into project memory. This new spec asks me to put **most of that back**, plus add new South-Africa-specific paid surfaces. I'm not going to silently undo work you approved 5 minutes ago — flagging the conflicts so you can decide.
 
-### 1. Remove vendor surfaces (UI + data)
+### What conflicts with locked rules
 
-**Delete files**
-- `src/data/vendors.ts`
-- `src/components/home/VendorListCard.tsx`
-- `src/components/landing/VendorShowcase.tsx`
+| Requested | Conflicts with |
+|---|---|
+| "Go Premium — R4.99/mo" navbar CTA | Core: *no paywalls, no €/$ pricing anywhere* |
+| Free vs Premium tier comparison band | Constraint: *no paid memberships, no pricing surfaces* |
+| Premium upsell in Q&A modal | Constraint: *consultation booking is mailto-only, no payment* |
+| "Unlock Premium" sticky bottom bar | Same as above |
+| Paystack / Stripe SA payment integration | Constraint: *no paid flows* |
+| "1-on-1 Zoom for Premium members" | Constraint: *consultation is free mailto only* |
+| ZAR localization (R4.99, SAST, "SA support team") | Core: *English only, no localization* |
+| "Add to Home Screen" PWA banner | Already exists (`InstallBanner.tsx`) — not a conflict, just noting |
 
-**Edit references**
-- `src/screens/HomeScreen.tsx` — remove `VendorListCard` import + the "Verified Vendors" motion block.
-- `src/components/landing/LandingPage.tsx` — remove `VendorShowcase` import + the `<VendorShowcase onSignInClick=…/>` render in the landing flow.
-- `src/components/landing/index.ts` — drop the `VendorShowcase` re-export.
-- `src/pages/Disclaimer.tsx` — leave the existing "Do not endorse any specific vendors…" line; that's a legal disclaimer, not a vendor surface.
+### What I CAN build from your spec (no conflicts)
 
-### 2. Remove member costs (paywall, PayPal, €9.99 references)
+1. **New benefit-driven Hero layout** — split layout (text left, phone mockup + floating cards right), stacked on mobile.
+2. **New H1 + subheadline** — "Track, Calculate & Optimize Your Peptide Protocols" + research-grade subhead. (Reword to drop "South Africa" per English-only rule, keep generic.)
+3. **Dual CTA row** — "Join Free Monthly Q&A" (existing flow) + "Explore Peptides" (scrolls to categories).
+4. **Social proof micro-bar** — 98+ peptides / 17 FDA-approved / 22+ citations pills under CTAs.
+5. **Phone mockup with floating glassmorphism cards** — Protocol Adherence 92%, Current Weight, Active Protocols. Decorative gradient orb + 5★ rating badge.
+6. **Below-fold stats band** — "Thousands of Protocols, Doses, Research Hours — Logged" with 3 animated counters (Protocols Created, Doses Calculated, Research Queries).
+7. **"Why Ride The Tide" feature band** (replaces the Free vs Premium block) — 6 free-feature tiles: research database, dose calculator, blends/stacks, COA verification, Q&A access, protocol tracking. All "Free Forever". One CTA: "Start Free".
+8. **Hero on-load animation sequence** — navbar fade, H1 stagger, CTA slide-up, phone scale-in, floating cards stagger.
+9. **Scroll-triggered counter animation** — reuses existing `useCountUp`.
+10. **Glassmorphic navbar on scroll** — backdrop-blur after 50px (already partially present in `LandingHeader`).
 
-**Booking section — strip pay flow, keep the booking CTA as a free request**
-- `src/components/booking/BookCallSection.tsx`:
-  - Remove `PAYPAL_EMAIL`, `CALL_PRICE`, `handlePayPalPayment`, the price block (`€{CALL_PRICE}`), the "Pay with PayPal" button, and the "Secure payment via PayPal" footnote.
-  - Replace the CTA with a plain "Request a Call" button that opens a `mailto:webinars@fintiba.com` link with subject "1:1 Peptide Consultation Request" (consistent with `mem://features/consultation-booking`).
-  - Update copy: "Premium Consultation" badge → "1:1 Consultation"; remove "one-time" price tag.
+### Decision needed
 
-**Membership hook + admin surface**
-- `src/hooks/useMembership.ts`: replace contents with a stub that exports the same `useMembership` shape but always returns `{ membership: null, hasMembership: true, isLoading: false, error: null, refetch: noop, createPendingMembership: noop, activateMembership: noop, cancelMembership: noop }`. This keeps any stray imports working without DB calls. (Free-access model = `hasMembership: true`.)
-- `src/pages/AdminDashboard.tsx`:
-  - Drop the "Members / Revenue" stats query against `user_memberships`.
-  - Replace the Members tab with a simple **Users** tab that lists `profiles` (display_name, created_at) — admin still gets a member overview, just without billing fields.
-  - Remove the `Crown`/revenue tile, `price_amount` column, `€9.99` fallback, and the `Membership` types.
-  - Keep CRM, Vial Label, COA admin tabs untouched.
+Pick one — I won't proceed until you confirm:
 
-**Terms of Service**
-- `src/pages/TermsOfService.tsx`: rewrite section 6 ("Account & Membership") to "Account" only — keep account responsibility / accuracy bullets, remove the "€9.99/month", "cancel subscription", and "refund policy" lines.
+- **A. Build only the no-conflict items** (recommended). You get the new hero, phone mockup, floating cards, stats band, and a Free-tier feature band. No pricing, no premium tier, no ZAR. This stays consistent with the constraint memory you just approved.
+- **B. Reverse the no-paid constraint and rebuild the paid surfaces.** I'd update `mem://constraints/no-paid-or-vendor-surfaces` to allow a R4.99/mo SA premium tier, restore a membership table, wire Paystack, and add the localization. This undoes last message's work — confirm explicitly if that's the intent.
+- **C. Hybrid**: build the hero + stats now (option A), and you raise the paid-tier decision as a separate, deliberate request later.
 
-### 3. Database — drop the membership table
-
-Migration: `DROP TABLE IF EXISTS public.user_memberships CASCADE;` plus `DROP TYPE IF EXISTS public.membership_status;`. Types regenerate automatically. No other table references it (verified via search).
-
-### 4. Memory updates
-
-- Update `mem://features/vendor-showcase` → mark removed, or replace with a `mem://constraints/no-vendor-surfaces` rule: "No vendor lists, ratings, or finnrick.com references anywhere in the app."
-- Update `mem://features/consultation-booking` to reflect mailto-only flow (no PayPal).
-- Add a one-liner to Core in `mem://index.md`: "No vendor surfaces. No paid/PayPal flows — booking is mailto only."
-
-### Files touched
+### Files I'd touch (option A)
 
 ```text
-DELETE  src/data/vendors.ts
-DELETE  src/components/home/VendorListCard.tsx
-DELETE  src/components/landing/VendorShowcase.tsx
-EDIT    src/screens/HomeScreen.tsx
-EDIT    src/components/landing/LandingPage.tsx
-EDIT    src/components/landing/index.ts
-EDIT    src/components/booking/BookCallSection.tsx
-EDIT    src/hooks/useMembership.ts          (stub, free-access)
-EDIT    src/pages/AdminDashboard.tsx        (drop billing/members table)
-EDIT    src/pages/TermsOfService.tsx        (rewrite §6)
-NEW     supabase migration                  (drop user_memberships + enum)
-EDIT    mem://index.md, mem://features/vendor-showcase, mem://features/consultation-booking
+src/components/landing/HeroSection.tsx          ← rewrite (split layout, mockup, cards)
+src/components/landing/LandingPage.tsx          ← insert new <StatsBand/> + <WhyFreeBand/>
+src/components/landing/StatsBand.tsx            ← NEW (count-up trio)
+src/components/landing/WhyFreeBand.tsx          ← NEW (6 free-feature tiles)
+src/components/landing/PhoneMockup.tsx          ← NEW (iPhone frame + dashboard SVG)
+src/components/landing/FloatingStatCards.tsx    ← NEW (glass cards)
 ```
 
-No new dependencies. No new routes. No paywalls remain anywhere.
+No changes to navbar pricing, no Stripe/Paystack, no membership DB, no ZAR strings.
 
