@@ -72,13 +72,22 @@ export function useCountUp({
 
     if (!node) return;
 
+    // If element is already in view on mount, start immediately.
+    const rect = node.getBoundingClientRect();
+    const inView =
+      rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.bottom > 0;
+    if (inView && !hasStarted) {
+      setTimeout(animate, delay);
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasStarted) {
           animate();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.01, rootMargin: '0px 0px -10% 0px' }
     );
 
     observer.observe(node);
