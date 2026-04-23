@@ -68,12 +68,17 @@ Return ONLY a valid JSON object with this exact structure:
       "reference_range": "100-300",
       "status": "normal|high|low|critical",
       "category": "hormone|liver|kidney|lipid|metabolic|thyroid|inflammation",
-      "layman_explanation": "1 sentence in plain English explaining what this marker means and what the result indicates."
+      "layman_explanation": "1 sentence in plain English explaining what this marker means and what the result indicates.",
+      "suggested_peptides": [
+        { "id": "ipamorelin", "name": "Ipamorelin", "rank": 1, "reason": "1-line research-only rationale tied to THIS marker (e.g. 'May support IGF-1 by stimulating GH pulses')." }
+      ]
     }
   ],
   "insights": "Markdown-formatted layman analysis with these sections:\\n\\n### What this means for you\\n(plain English summary of out-of-range values and what they typically indicate — no medical jargon)\\n\\n### Lifestyle suggestions\\n(diet, sleep, exercise tips relevant to the findings)\\n\\n### Peptide protocols to consider\\n(recommend specific peptides from the list below that may help optimize the out-of-range markers, with a 1-line reason for each. Frame as 'research-only' suggestions, not medical advice. Use bullet points.)\\n\\n### When to see a doctor\\n(red flags that warrant professional consultation)",
   "recommended_peptides": ["peptide_id_1", "peptide_id_2"]
 }
+
+For EACH biomarker, populate "suggested_peptides" with 0–3 entries ranked by relevance (rank 1 = best match). Only include peptides for markers that are out of range (high/low/critical) OR that the peptide is well-known to optimize. For "normal" markers with no clear optimization angle, return an empty array. Use only peptide IDs from the list below.
 
 PEPTIDE OPTIMIZATION GUIDE — recommend from these IDs based on findings:
 - Low IGF-1 / poor recovery / aging concerns → ipamorelin, cjc1295, tesamorelin, mk677
