@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, HelpCircle, Shield, FlaskConical, Wrench, Info } from 'lucide-react';
+import { ChevronDown, HelpCircle, Shield, FlaskConical, Wrench, Info, CreditCard } from 'lucide-react';
 
 export const faqCategories = [
   {
@@ -123,6 +123,33 @@ export const faqCategories = [
       {
         q: 'How is my data handled?',
         a: 'Your protocol logs, doses, and biometrics are stored securely against your account and are private to you. See the Privacy Policy for full details.',
+      },
+    ],
+  },
+  {
+    id: 'pricing',
+    title: 'Pricing & Membership',
+    icon: CreditCard,
+    faqs: [
+      {
+        q: "What's included in the free tier?",
+        a: 'The free tier gives you full access to the peptide research database (98+ profiles), reconstitution and dose calculators, the stack and blend builder, COA verification, protocol tracking, and the monthly group Q&A. No credit card required, free forever.',
+      },
+      {
+        q: 'What does Premium add?',
+        a: 'Premium (R4.99/month or R49/year) unlocks 1:1 expert consultation calls, AI-powered bloodwork insights, advanced cycle planning with safety alerts, priority WhatsApp and email support, and early access to new tools as they launch.',
+      },
+      {
+        q: 'How do I cancel my Premium subscription?',
+        a: 'You can cancel anytime from your account settings — no questions asked, no retention calls. Your Premium access remains active until the end of your current billing period, then you automatically revert to the free tier with all your data intact.',
+      },
+      {
+        q: "What's your refund policy?",
+        a: "If something is genuinely wrong with the service in your first 14 days, email us at contact@ridethetide.app and we'll make it right. Because Premium is priced at R4.99/month, the easiest path is usually to simply cancel — you won't be billed again.",
+      },
+      {
+        q: 'Is Ride The Tide South African?',
+        a: "Yes 🇿🇦 — Ride The Tide is built and operated from South Africa, with prices in ZAR (South African Rand) and local WhatsApp + email support. We serve a global research community but we're proudly local.",
       },
     ],
   },

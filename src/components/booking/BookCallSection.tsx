@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Video, CheckCircle2, ArrowRight, Sparkles, Mail } from 'lucide-react';
+import { Calendar, Clock, Video, CheckCircle2, ArrowRight, Sparkles, Mail, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { cn } from '@/lib/utils';
+import { useMembership } from '@/hooks/useMembership';
 
 const BOOKING_EMAIL = 'webinars@fintiba.com';
 const CALL_DURATION = 60;
@@ -20,12 +21,19 @@ const benefits = [
 ];
 
 export function BookCallSection({ className }: BookCallSectionProps) {
+  const { hasPremium, isLoading } = useMembership();
+
   const handleRequestCall = () => {
-    const subject = encodeURIComponent('1:1 Peptide Consultation Request');
+    const subject = encodeURIComponent('Premium 1:1 Peptide Consultation Request');
     const body = encodeURIComponent(
-      "Hi,\n\nI'd like to book a 1:1 peptide consultation call.\n\nPreferred date/time:\nTimezone:\nTopics I want to cover:\n\nThanks!"
+      "Hi,\n\nI'm a Premium member and I'd like to book my 1:1 peptide consultation call.\n\nPreferred date/time:\nTimezone:\nTopics I want to cover:\n\nThanks!"
     );
     window.location.href = `mailto:${BOOKING_EMAIL}?subject=${subject}&body=${body}`;
+  };
+
+  const handleUpgrade = () => {
+    // Pricing lives on the landing page
+    window.location.href = '/#pricing';
   };
 
   return (
@@ -44,7 +52,7 @@ export function BookCallSection({ className }: BookCallSectionProps) {
           className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-accent text-sm font-medium"
         >
           <Sparkles className="w-4 h-4" />
-          1:1 Consultation
+          Premium 1:1 Consultation
         </motion.div>
         <h2 className="text-2xl font-bold text-foreground">Book a 1:1 Call</h2>
         <p className="text-muted-foreground max-w-md mx-auto">
@@ -100,27 +108,50 @@ export function BookCallSection({ className }: BookCallSectionProps) {
             </ul>
           </div>
 
-          {/* Request Call Button */}
+          {/* CTA — Premium-gated */}
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              onClick={handleRequestCall}
-              className={cn(
-                "w-full h-14 text-lg font-semibold relative overflow-hidden",
-                "bg-primary hover:bg-primary/90",
-                "text-primary-foreground border-0 shadow-lg shadow-primary/30"
-              )}
-            >
-              <Mail className="w-5 h-5 mr-2" />
-              <span>Request a Call</span>
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+            {hasPremium ? (
+              <Button
+                onClick={handleRequestCall}
+                disabled={isLoading}
+                className={cn(
+                  "w-full h-14 text-lg font-semibold relative overflow-hidden",
+                  "bg-primary hover:bg-primary/90",
+                  "text-primary-foreground border-0 shadow-lg shadow-primary/30"
+                )}
+              >
+                <Mail className="w-5 h-5 mr-2" />
+                <span>Book Premium 1:1 Call</span>
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <Button
+                  disabled
+                  className="w-full h-14 text-lg font-semibold opacity-60 cursor-not-allowed"
+                >
+                  <Lock className="w-5 h-5 mr-2" />
+                  Available with Premium
+                </Button>
+                <Button
+                  onClick={handleUpgrade}
+                  variant="outline"
+                  className="w-full border-primary/40 text-primary hover:bg-primary/10"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Upgrade to Premium — from R4.99/month
+                </Button>
+              </div>
+            )}
           </motion.div>
 
           {/* Footnote */}
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Mail className="w-4 h-4" />
-            <span>Sends an email to {BOOKING_EMAIL}</span>
-          </div>
+          {hasPremium && (
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Mail className="w-4 h-4" />
+              <span>Sends an email to {BOOKING_EMAIL}</span>
+            </div>
+          )}
         </div>
       </GradientCard>
 

@@ -112,6 +112,9 @@ export function LandingFooter() {
               <Link to="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>
             </div>
           </div>
+          <p className="text-center text-xs text-muted-foreground/70 mt-4">
+            Proudly South African 🇿🇦 · Prices in ZAR
+          </p>
         </div>
       </div>
     </footer>
