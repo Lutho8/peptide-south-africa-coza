@@ -36,14 +36,78 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [newCycle, setNewCycle] = useState<Partial<Cycle>>({});
+  const [latestReport, setLatestReport] = useState<{ id: string; report_date: string | null; uploaded_at: string; extracted_biomarkers: any[] } | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
   const { toast } = useToast();
   const { bulkAddReminders } = useDoseReminders();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (open) {
       setCycles(getCycles());
+      if (user) loadLatestReport();
     }
-  }, [open]);
+  }, [open, user]);
+
+  const loadLatestReport = async () => {
+    if (!user) return;
+    setReportLoading(true);
+    const { data } = await supabase
+      .from('lab_reports')
+      .select('id, report_date, uploaded_at, extracted_biomarkers')
+      .eq('user_id', user.id)
+      .eq('status', 'completed')
+      .order('uploaded_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setLatestReport(data ? { ...data, extracted_biomarkers: Array.isArray(data.extracted_biomarkers) ? (data.extracted_biomarkers as any[]) : [] } : null);
+    setReportLoading(false);
+  };
+
+  const bloodworkSchedule: ScheduleEntry[] = latestReport
+    ? buildWeeklyScheduleFromReport(latestReport as any)
+    : [];
+
+  const handleSaveAsCycles = () => {
+    if (bloodworkSchedule.length === 0) return;
+    const reportDate = latestReport?.report_date || latestReport?.uploaded_at?.split('T')[0] || '';
+    const newCycles: Cycle[] = bloodworkSchedule.map((entry) => ({
+      id: `cycle-${Date.now()}-${entry.peptideId}`,
+      peptideId: entry.peptideId,
+      peptideName: entry.peptideName,
+      dose: entry.dose,
+      frequency: formatFrequencyFromDays(entry.days),
+      startDate: new Date().toISOString().split('T')[0],
+      plannedDuration: 60,
+      breakDuration: 30,
+      status: 'active',
+      notes: `Generated from bloodwork ${reportDate} · Goals: ${entry.goals.join(', ')}`,
+    }));
+    newCycles.forEach(saveCycle);
+    setCycles([...cycles, ...newCycles]);
+    toast({
+      title: 'Cycles saved',
+      description: `${newCycles.length} cycle${newCycles.length > 1 ? 's' : ''} added from your bloodwork.`,
+    });
+  };
+
+  const handleSaveAsReminders = async () => {
+    if (bloodworkSchedule.length === 0) return;
+    await bulkAddReminders(
+      bloodworkSchedule.map((entry) => ({
+        peptide_id: entry.peptideId,
+        peptide_name: entry.peptideName,
+        dose: entry.dose,
+        time: entry.time,
+        days: entry.days,
+        enabled: true,
+      }))
+    );
+    toast({
+      title: 'Reminders saved',
+      description: `${bloodworkSchedule.length} reminder${bloodworkSchedule.length > 1 ? 's' : ''} created from your bloodwork.`,
+    });
+  };
 
   const daysInMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1).getDay();
