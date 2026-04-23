@@ -16,6 +16,13 @@ import { cn } from '@/lib/utils';
 import { biomarkers, getBiomarkerStatus, biomarkerCategories } from '@/data/bloodwork';
 import ReactMarkdown from 'react-markdown';
 
+interface SuggestedPeptide {
+  id: string;
+  name: string;
+  rank: number;
+  reason: string;
+}
+
 interface ExtractedBiomarker {
   name: string;
   short_name: string;
@@ -24,6 +31,8 @@ interface ExtractedBiomarker {
   reference_range: string;
   status: 'normal' | 'high' | 'low' | 'critical';
   category: string;
+  layman_explanation?: string;
+  suggested_peptides?: SuggestedPeptide[];
 }
 
 interface LabReport {
@@ -319,23 +328,60 @@ export function BiomarkerInsights() {
                 )}
 
                 {/* Extracted Biomarkers */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
                   {selectedReport.extracted_biomarkers.map((bm, i) => (
                     <GradientCard key={i} className="p-3">
-                      <div className="flex items-start justify-between mb-1">
-                        <span className="text-xs font-medium text-muted-foreground">{bm.short_name}</span>
-                        {getStatusIcon(bm.status)}
+                      <div className="flex items-start justify-between mb-1.5">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-semibold text-foreground truncate">{bm.name}</span>
+                            <span className="text-[10px] text-muted-foreground">({bm.short_name})</span>
+                          </div>
+                          <div className="flex items-baseline gap-1.5 mt-0.5">
+                            <span className="text-lg font-bold text-foreground">{bm.value}</span>
+                            <span className="text-xs text-muted-foreground">{bm.unit}</span>
+                            <span className="text-[10px] text-muted-foreground/70">· Ref: {bm.reference_range}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {getStatusIcon(bm.status)}
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getStatusColor(bm.status))}>
+                            {bm.status}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-lg font-bold text-foreground">{bm.value}</span>
-                        <span className="text-xs text-muted-foreground">{bm.unit}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground/60 mt-0.5">
-                        Ref: {bm.reference_range}
-                      </p>
-                      <Badge variant="outline" className={cn("mt-1 text-[10px] px-1.5 py-0", getStatusColor(bm.status))}>
-                        {bm.status}
-                      </Badge>
+
+                      {bm.layman_explanation && (
+                        <p className="text-xs text-muted-foreground mt-1 leading-snug">
+                          {bm.layman_explanation}
+                        </p>
+                      )}
+
+                      {bm.suggested_peptides && bm.suggested_peptides.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-border/50">
+                          <div className="flex items-center gap-1 mb-1.5">
+                            <Sparkles size={11} className="text-primary" />
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+                              Suggested peptides (research-only)
+                            </span>
+                          </div>
+                          <ol className="space-y-1">
+                            {[...bm.suggested_peptides]
+                              .sort((a, b) => a.rank - b.rank)
+                              .map((p) => (
+                                <li key={p.id} className="flex gap-2 text-xs">
+                                  <span className="shrink-0 w-4 h-4 rounded-full bg-primary/15 text-primary font-bold text-[10px] flex items-center justify-center">
+                                    {p.rank}
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <span className="font-semibold text-foreground">{p.name}</span>
+                                    <span className="text-muted-foreground"> — {p.reason}</span>
+                                  </div>
+                                </li>
+                              ))}
+                          </ol>
+                        </div>
+                      )}
                     </GradientCard>
                   ))}
                 </div>
