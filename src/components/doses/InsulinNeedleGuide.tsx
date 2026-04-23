@@ -56,7 +56,8 @@ function ReconstitutionCalculator({
   const concentrationMgPerMl = waterMl > 0 ? totalMg / waterMl : 0;
   const mgPerUnit = concentrationMgPerMl > 0 ? concentrationMgPerMl / U40_UNITS_PER_ML : 0;
 
-  const dosePresets = [2, 4, 6];
+  // Common peptide dose presets in mg (most peptides dose in fractions of a mg)
+  const dosePresets = [0.25, 0.5, 1, 2];
 
   return (
     <div className="space-y-3 p-3 rounded-lg bg-muted/50 border border-border">
