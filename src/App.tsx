@@ -21,6 +21,7 @@ const LiveQnA = lazy(() => import("./pages/LiveQnA"));
 const PeptideEntityPage = lazy(() => import("./pages/PeptideEntityPage"));
 const CategoryHubPage = lazy(() => import("./pages/CategoryHubPage"));
 const GuidePage = lazy(() => import("./pages/GuidePage"));
+const BloodworkPage = lazy(() => import("./pages/BloodworkPage"));
 
 // Initialize i18n
 import '@/i18n';
@@ -53,6 +54,7 @@ const App = () => {
                 <Route path="/peptides/:slug" element={<PeptideEntityPage />} />
                 <Route path="/categories/:slug" element={<CategoryHubPage />} />
                 <Route path="/guides/:slug" element={<GuidePage />} />
+                <Route path="/bloodwork" element={<BloodworkPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
