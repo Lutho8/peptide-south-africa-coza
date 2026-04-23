@@ -1,53 +1,55 @@
 
 
-## Plan note: scope conflicts with rules you locked in last message
+## Plan note: the same paid-tier conflict you locked in 2 messages ago
 
-Your previous message had me strip every paid surface, delete `user_memberships`, drop PayPal, and write a hard constraint into project memory. This new spec asks me to put **most of that back**, plus add new South-Africa-specific paid surfaces. I'm not going to silently undo work you approved 5 minutes ago — flagging the conflicts so you can decide.
+This request asks me to add R4.99/month Premium pricing, Paystack, sticky "Go Premium" CTAs, premium-only features, and ZAR localization. **All of those were explicitly removed** in your "remove any member costs and also all vendor access" message and locked into `mem://constraints/no-paid-or-vendor-surfaces.md` as a hard rule. Same English-only constraint blocks "South African owned", "ZAR billing", "🇿🇦", etc.
 
-### What conflicts with locked rules
+I'm not going to silently undo that constraint. Same fork as last time — pick one before I build.
+
+### What's blocked by your locked rules
 
 | Requested | Conflicts with |
 |---|---|
-| "Go Premium — R4.99/mo" navbar CTA | Core: *no paywalls, no €/$ pricing anywhere* |
-| Free vs Premium tier comparison band | Constraint: *no paid memberships, no pricing surfaces* |
-| Premium upsell in Q&A modal | Constraint: *consultation booking is mailto-only, no payment* |
-| "Unlock Premium" sticky bottom bar | Same as above |
-| Paystack / Stripe SA payment integration | Constraint: *no paid flows* |
-| "1-on-1 Zoom for Premium members" | Constraint: *consultation is free mailto only* |
-| ZAR localization (R4.99, SAST, "SA support team") | Core: *English only, no localization* |
-| "Add to Home Screen" PWA banner | Already exists (`InstallBanner.tsx`) — not a conflict, just noting |
+| Pricing section (Free vs Premium R4.99) | `no-paid-or-vendor-surfaces` — no pricing surfaces |
+| "Go Premium R4.99/mo" navbar + sticky CTA | Same |
+| Premium Perks showcase (1-on-1 paid Zoom) | Same — consultation is mailto-only |
+| Paystack trust bar, ZAR billing copy | Same + `english-only-enforcement` |
+| FAQ "Pricing & Membership" tab | Same |
+| "South African owned / SA-based support" | `english-only-enforcement` (no localization) |
+| Testimonials with named SA people + locations | Risk: fabricated testimonials with real-sounding names is deceptive. I won't generate those. Generic role-based quotes are OK if you want them. |
 
-### What I CAN build from your spec (no conflicts)
+### What I CAN build right now (no rule conflicts)
 
-1. **New benefit-driven Hero layout** — split layout (text left, phone mockup + floating cards right), stacked on mobile.
-2. **New H1 + subheadline** — "Track, Calculate & Optimize Your Peptide Protocols" + research-grade subhead. (Reword to drop "South Africa" per English-only rule, keep generic.)
-3. **Dual CTA row** — "Join Free Monthly Q&A" (existing flow) + "Explore Peptides" (scrolls to categories).
-4. **Social proof micro-bar** — 98+ peptides / 17 FDA-approved / 22+ citations pills under CTAs.
-5. **Phone mockup with floating glassmorphism cards** — Protocol Adherence 92%, Current Weight, Active Protocols. Decorative gradient orb + 5★ rating badge.
-6. **Below-fold stats band** — "Thousands of Protocols, Doses, Research Hours — Logged" with 3 animated counters (Protocols Created, Doses Calculated, Research Queries).
-7. **"Why Ride The Tide" feature band** (replaces the Free vs Premium block) — 6 free-feature tiles: research database, dose calculator, blends/stacks, COA verification, Q&A access, protocol tracking. All "Free Forever". One CTA: "Start Free".
-8. **Hero on-load animation sequence** — navbar fade, H1 stagger, CTA slide-up, phone scale-in, floating cards stagger.
-9. **Scroll-triggered counter animation** — reuses existing `useCountUp`.
-10. **Glassmorphic navbar on scroll** — backdrop-blur after 50px (already partially present in `LandingHeader`).
+1. **Fix stats counters** — counters already say 2,100 / 8,500 / 14,000 in code. The "0+" you're seeing means the scroll-trigger isn't firing in your viewport. Fix: add an immediate-start fallback when the section is already in view on load, plus add the 4th stat ("1,200+ Monthly Research Queries"). Keep generic "Trusted by researchers worldwide" microcopy (not SA-specific).
+2. **Fix CTA branding** — replace "Join PeptidePro" with "Join Ride The Tide" copy in `CTASection.tsx`. Update headline/subtext/feature pills to match the new wording (minus any premium pricing).
+3. **"How It Works" 4-step section** — Research → Build Protocol → Track Doses → Consult (free monthly Q&A). No paid 1-on-1 framing. Alternating layout with mini UI cards, numbered circles, connecting line.
+4. **Bento feature grid** — 6 free-feature tiles (Research Database large, Smart Calculators, Protocol Tracking, COA Verification, Blends & Stacks, Expert Q&A). No "Premium Only" badge.
+5. **Generic testimonials section** — 6 quote cards with role-based attributions only ("Online Coach", "Wellness Practitioner", "TRT Patient"), no fabricated full names or city pins. Header reworded to "Trusted by researchers worldwide".
+6. **Final CTA fix** — "Ready to Optimize Your Peptide Journey?" with feature pills, single "Get Started Free" CTA. Drop the second "Unlock Premium" button.
+7. **FAQ tweak** — Add a "Getting Started" tab (not "Pricing") with questions about what's free, how to join the Q&A, and how the consultation booking works.
+8. **Section reorder** in `LandingPage.tsx`: Hero → Stats → How It Works → Bento Features → Testimonials → ResearchTools → FeaturedPeptides → FAQ → CTA.
 
-### Decision needed
+Skipped vs your spec: pricing section, premium perks band, sticky mobile premium bar, Paystack trust bar, navbar premium CTA, FAQ pricing tab, ZAR/SA copy.
 
-Pick one — I won't proceed until you confirm:
+### Decision needed — pick one
 
-- **A. Build only the no-conflict items** (recommended). You get the new hero, phone mockup, floating cards, stats band, and a Free-tier feature band. No pricing, no premium tier, no ZAR. This stays consistent with the constraint memory you just approved.
-- **B. Reverse the no-paid constraint and rebuild the paid surfaces.** I'd update `mem://constraints/no-paid-or-vendor-surfaces` to allow a R4.99/mo SA premium tier, restore a membership table, wire Paystack, and add the localization. This undoes last message's work — confirm explicitly if that's the intent.
-- **C. Hybrid**: build the hero + stats now (option A), and you raise the paid-tier decision as a separate, deliberate request later.
+- **A. Build the no-conflict items only** (recommended). You get fixed stats, How It Works, bento grid, generic testimonials, fixed CTA branding, FAQ "Getting Started" tab. No pricing, no premium tier, no ZAR. Memory constraint stays intact.
+- **B. Reverse the no-paid constraint and rebuild paid surfaces.** I'd rewrite `mem://constraints/no-paid-or-vendor-surfaces`, restore the `user_memberships` table, wire a payment provider (Paystack isn't a Lovable built-in — would need a custom edge function; or switch to Stripe/Paddle), restore `useMembership`, and add the Premium tier UI. The English-only rule still blocks the SA localization copy unless you also reverse `mem://constraints/english-only-enforcement`. Confirm explicitly that you want both constraints reversed.
+- **C. Hybrid** — build A now, treat the paid tier as a separate, deliberate decision later (recommended if you want to keep momentum without re-litigating last week's policy).
 
 ### Files I'd touch (option A)
 
 ```text
-src/components/landing/HeroSection.tsx          ← rewrite (split layout, mockup, cards)
-src/components/landing/LandingPage.tsx          ← insert new <StatsBand/> + <WhyFreeBand/>
-src/components/landing/StatsBand.tsx            ← NEW (count-up trio)
-src/components/landing/WhyFreeBand.tsx          ← NEW (6 free-feature tiles)
-src/components/landing/PhoneMockup.tsx          ← NEW (iPhone frame + dashboard SVG)
-src/components/landing/FloatingStatCards.tsx    ← NEW (glass cards)
+src/components/landing/StatsBand.tsx          ← fix count-up trigger, add 4th stat
+src/components/landing/CTASection.tsx         ← rebrand "PeptidePro" → "Ride The Tide"
+src/components/landing/HowItWorks.tsx         ← NEW (4-step section)
+src/components/landing/BentoFeatures.tsx      ← NEW (6-tile grid)
+src/components/landing/Testimonials.tsx       ← NEW (6 generic quote cards)
+src/components/landing/FAQSection.tsx         ← add "Getting Started" tab
+src/components/landing/LandingPage.tsx        ← wire new sections, reorder
+src/components/landing/index.ts               ← export new components
+src/hooks/useCountUp.ts                       ← read-only; only touch if scroll trigger fix needs it
 ```
 
-No changes to navbar pricing, no Stripe/Paystack, no membership DB, no ZAR strings.
+No DB migrations. No payment integration. No new dependencies.
 
