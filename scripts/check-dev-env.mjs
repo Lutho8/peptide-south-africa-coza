@@ -34,9 +34,7 @@ const checks = [
   {
     name: "@vitejs/plugin-react-swc",
     test: () =>
-      require.resolve("@vitejs/plugin-react-swc/package.json", {
-        paths: [root],
-      }),
+      require.resolve("@vitejs/plugin-react-swc", { paths: [root] }),
   },
 ];
 
