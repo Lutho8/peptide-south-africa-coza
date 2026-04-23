@@ -1,6 +1,8 @@
 export { LandingPage } from './LandingPage';
 export { LandingHeader } from './LandingHeader';
 export { HeroSection } from './HeroSection';
+export { StatsBand } from './StatsBand';
+export { WhyFreeBand } from './WhyFreeBand';
 export { HeroCategoryBadges } from './HeroCategoryBadges';
 export { ResearchTools } from './ResearchTools';
 export { FeaturedPeptides } from './FeaturedPeptides';
