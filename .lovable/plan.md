@@ -1,44 +1,53 @@
 
 
-## Plan: Quick example row + U-40/U-100 syringe selector
+## Plan: Diagnose the actual dev server failure first
 
-Two enhancements to `src/components/doses/InsulinNeedleGuide.tsx` to make unit conversions clearer and support both common insulin syringe types.
+Before designing new infrastructure, I need to flag something important: the three requested features (startup health check, auto-restart with backoff, log-tail UI) describe **dev-server / sandbox daemon behavior** — that layer is owned by the Lovable platform itself, not by your project's source code. Nothing you add to `src/`, `vite.config.ts`, or a Vite plugin can supervise the daemon that *runs* Vite, restart it, or render UI when Vite is down (the UI can't render if the dev server isn't up).
 
-### 1. Syringe type selector (U-40 vs U-100)
+So the practical path forward is two-part: **(A) actually fix the current crash**, and **(B) add the lightweight pieces that *are* in your control** to make future failures easier to diagnose.
 
-Add a small toggle at the top of the guide so users can switch between the two standard insulin syringe markings. All downstream calculations recompute automatically.
+### A. Diagnose & fix the current "Process exited with code 1" crash
 
-- Promote the `syringeType: 'U-40' | 'U-100'` state to the top-level `InsulinNeedleGuide` component (so both the "current dose" panel and the dynamic calculator share it).
-- Replace the constant `U40_UNITS_PER_ML = 40` with a derived `unitsPerMl = syringeType === 'U-40' ? 40 : 100`.
-- UI: a 2-button segmented toggle (styled like the existing `UnitToggle` pattern) placed right under the header inside the expanded section:
-  - `[ U-40 ]  [ U-100 ]` — primary fill on the active option, ghost on the other.
-  - Small helper text underneath: *"Pick the syringe type printed on your barrel."*
-- Update the header label and all "U-40 units" copy to use the active type dynamically (e.g. `"{syringeType} Syringe Dosage Guide"`, `"1 mg = X {syringeType} units"`, `"1 {syringeType} unit = Y mg"`, `"{syringeType} Units"` table column).
-- The big "Your current dose" result card relabels to the chosen type and recomputes `units = volumeNeededMl * unitsPerMl`.
+The earlier `rm -rf node_modules && bun install` recovery is a symptom-fix, not a root cause. The crash returned, which means something in the repo is making Vite exit on boot. I'll investigate in this order once we switch to default mode:
 
-### 2. Quick example row for 0.25 / 0.5 / 1 / 2 mg
+1. Read `/tmp/dev-server-logs/dev-server.log` (last 200 lines + grep for `error|failed|Cannot find|SyntaxError`) to get the actual Vite/esbuild stack trace.
+2. Check the most recently edited files for syntax/import errors:
+   - `src/components/doses/InsulinNeedleGuide.tsx` (last large edit)
+   - `src/components/biomarkers/BiomarkerInsights.tsx`
+   - `src/contexts/AuthContext.tsx`
+   - `src/services/pushScheduler.ts`
+3. Run `bunx tsc --noEmit` to surface type/parse errors that crash Vite's transform pipeline.
+4. Verify `node_modules/vite/package.json` and `node_modules/esbuild/bin/esbuild` exist; reinstall only if missing.
+5. Apply the targeted fix (most likely a syntax error in one of the recently edited files — that's the typical cause of "exit 1" loops after a feature edit).
 
-The dynamic calculator already renders a presets table — but the current 10mg/2mL default values aren't surfaced as a prominent **"Quick reference"** card outside the calculator. Add a compact, always-visible quick-reference strip just under the concentration info box so users see the four key conversions at a glance without expanding the calculator.
+### B. In-repo diagnostics you *can* own
 
-- New section: **"Quick reference (current vial settings)"**
-- Renders a 4-column grid (responsive: 2-col on narrow screens) of pill-style cards, one per preset mg value `[0.25, 0.5, 1, 2]`:
+These are the parts of your three requests that make sense at the project level:
 
-  ```text
-  ┌──────────┬──────────┬──────────┬──────────┐
-  │  0.25 mg │  0.5 mg  │   1 mg   │   2 mg   │
-  │  X units │  X units │  X units │  X units │
-  └──────────┴──────────┴──────────┴──────────┘
-  ```
+1. **Startup sanity check script** — `scripts/check-dev-env.mjs`:
+   - Verifies `node_modules/vite/package.json` and `node_modules/esbuild` exist.
+   - Verifies `@vitejs/plugin-react-swc` resolves.
+   - Prints actionable remediation (`rm -rf node_modules && bun install`) when something is missing.
+   - Wired into `package.json` as a `predev` script so `bun run dev` runs it first and fails fast with a clear message instead of a generic "exit 1".
 
-- Each card: top line = dose in mg (muted), big middle line = units (primary color, bold), tiny bottom line = volume in mL.
-- Recalculates on every syringe-type change and reflects the active vial concentration (uses `activeConcentrationMgPerMl` and the active `unitsPerMl`).
-- Keeps the existing detailed presets table inside the dynamic calculator as the "expanded" view.
+2. **Vite boot-error logger plugin** — small inline plugin in `vite.config.ts`:
+   - Hooks `configResolved` and `buildStart` to log a one-line "Vite booted OK at <time>" marker.
+   - Wraps the config in a try/catch so any boot-time throw is logged with file + line before the process exits, making the dev-server log far more useful.
 
-### Files touched
+3. **In-app "dev server unhealthy" surface** — **not feasible**. If Vite is down, the React app isn't running, so there's no UI to render the link in. The correct surface for that is the Lovable platform's existing build-error panel (which is already what you're seeing). I'll skip this rather than build something that can't work.
+
+4. **Auto-restart with exponential backoff** — **not feasible from inside the repo**. The sandbox daemon already restarts the process (you can see `restarts=5` in the error). Backoff policy lives in the platform supervisor, not in your code. I'll skip this.
+
+### What I'll deliver
 
 ```text
-src/components/doses/InsulinNeedleGuide.tsx   ← syringe selector, quick-reference strip, dynamic re-labeling
+1. Read dev-server.log + recently-edited files, identify the real crash, and fix it.
+2. scripts/check-dev-env.mjs                   ← preflight check, actionable output
+3. package.json                                ← add "predev": "node scripts/check-dev-env.mjs"
+4. vite.config.ts                              ← add boot-logger plugin with try/catch
 ```
 
-No new dependencies. No DB changes. Reuses existing `Button`/styling patterns and the current calculator structure.
+### Honest scope note
+
+I'm explicitly **not** going to fabricate a "daemon restart with exponential backoff" or a "log-tail link in the UI" — those would be theater. Fixing the real boot crash + adding the preflight check is what will actually stop this from recurring. If you want platform-level supervisor changes, that's a Lovable support request, not a code change.
 
