@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Crown, Calendar, Mail, Shield, GraduationCap, Tag, Upload } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,17 +14,10 @@ import CRMEnrollmentsTable from '@/components/admin/CRMEnrollmentsTable';
 import VialLabelMaker from '@/components/admin/VialLabelMaker';
 import COAUploadManager from '@/components/admin/COAUploadManager';
 
-interface MemberData {
+interface UserRow {
   id: string;
-  user_id: string;
-  status: 'active' | 'cancelled' | 'expired' | 'pending';
-  started_at: string | null;
-  expires_at: string | null;
-  price_amount: number;
-  currency: string;
-  profile?: {
-    display_name: string | null;
-  };
+  display_name: string | null;
+  created_at: string;
 }
 
 export default function AdminDashboard() {
@@ -32,13 +25,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [members, setMembers] = useState<MemberData[]>([]);
-  const [stats, setStats] = useState({
-    totalMembers: 0,
-    activeMembers: 0,
-    cancelledMembers: 0,
-    revenue: 0,
-  });
+  const [users, setUsers] = useState<UserRow[]>([]);
 
   useEffect(() => {
     checkAdminAccess();
@@ -53,7 +40,7 @@ export default function AdminDashboard() {
     try {
       const { data, error } = await supabase.rpc('has_role', {
         _user_id: user.id,
-        _role: 'admin'
+        _role: 'admin',
       });
 
       if (error) throw error;
@@ -65,7 +52,7 @@ export default function AdminDashboard() {
       }
 
       setIsAdmin(true);
-      await loadMemberData();
+      await loadUsers();
     } catch (err) {
       console.error('Admin check failed:', err);
       toast.error('Failed to verify admin access');
@@ -75,60 +62,18 @@ export default function AdminDashboard() {
     }
   };
 
-  const loadMemberData = async () => {
+  const loadUsers = async () => {
     try {
-      const { data: memberships, error } = await supabase
-        .from('user_memberships')
-        .select('id, user_id, status, started_at, expires_at, price_amount, currency')
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, created_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      const memberIds = memberships?.map(m => m.user_id) || [];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, display_name')
-        .in('id', memberIds);
-
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-
-      const enrichedMembers = (memberships || []).map(m => ({
-        ...m,
-        profile: profileMap.get(m.user_id),
-      }));
-
-      setMembers(enrichedMembers);
-
-      const active = enrichedMembers.filter(m => m.status === 'active').length;
-      const cancelled = enrichedMembers.filter(m => m.status === 'cancelled').length;
-      const revenue = enrichedMembers
-        .filter(m => m.status === 'active')
-        .reduce((sum, m) => sum + (m.price_amount || 9.99), 0);
-
-      setStats({
-        totalMembers: enrichedMembers.length,
-        activeMembers: active,
-        cancelledMembers: cancelled,
-        revenue,
-      });
+      setUsers((data as UserRow[]) || []);
     } catch (err) {
-      console.error('Failed to load member data:', err);
-      toast.error('Failed to load member data');
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-500/20 text-green-500 border-green-500/30">Active</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive">Cancelled</Badge>;
-      case 'expired':
-        return <Badge variant="secondary">Expired</Badge>;
-      case 'pending':
-        return <Badge variant="outline">Pending</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+      console.error('Failed to load users:', err);
+      toast.error('Failed to load users');
     }
   };
 
@@ -159,16 +104,16 @@ export default function AdminDashboard() {
             </div>
           </div>
           <Badge variant="outline" className="text-primary border-primary">
-            <Crown className="h-3 w-3 mr-1" />
+            <Shield className="h-3 w-3 mr-1" />
             Administrator
           </Badge>
         </div>
 
-        <Tabs defaultValue="members" className="space-y-6">
+        <Tabs defaultValue="users" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="members" className="gap-1.5">
+            <TabsTrigger value="users" className="gap-1.5">
               <Users className="h-4 w-4" />
-              Members
+              Users
             </TabsTrigger>
             <TabsTrigger value="crm" className="gap-1.5">
               <GraduationCap className="h-4 w-4" />
@@ -184,13 +129,13 @@ export default function AdminDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="members" className="space-y-6">
+          <TabsContent value="users" className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Total Members</CardDescription>
-                  <CardTitle className="text-3xl">{stats.totalMembers}</CardTitle>
+                  <CardDescription>Total Users</CardDescription>
+                  <CardTitle className="text-3xl">{users.length}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Users className="h-4 w-4 text-muted-foreground" />
@@ -198,84 +143,54 @@ export default function AdminDashboard() {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Active Subscriptions</CardDescription>
-                  <CardTitle className="text-3xl text-green-500">{stats.activeMembers}</CardTitle>
+                  <CardDescription>New (Last 30 Days)</CardDescription>
+                  <CardTitle className="text-3xl text-primary">
+                    {
+                      users.filter(
+                        (u) => new Date(u.created_at).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000
+                      ).length
+                    }
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Crown className="h-4 w-4 text-green-500" />
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Cancelled</CardDescription>
-                  <CardTitle className="text-3xl text-destructive">{stats.cancelledMembers}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Calendar className="h-4 w-4 text-destructive" />
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Monthly Revenue</CardDescription>
-                  <CardTitle className="text-3xl">€{stats.revenue.toFixed(2)}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <span className="text-sm text-muted-foreground">Recurring</span>
+                  <Calendar className="h-4 w-4 text-primary" />
                 </CardContent>
               </Card>
             </div>
 
-            {/* Members Table */}
+            {/* Users Table */}
             <Card>
               <CardHeader>
-                <CardTitle>All Members</CardTitle>
-                <CardDescription>Overview of all registered members and their subscription status</CardDescription>
+                <CardTitle>All Users</CardTitle>
+                <CardDescription>Free-access overview of all registered users</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Member</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Started</TableHead>
-                      <TableHead>Expires</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Joined</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {members.length === 0 ? (
+                    {users.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                          No members found
+                        <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                          No users found
                         </TableCell>
                       </TableRow>
                     ) : (
-                      members.map((member) => (
-                        <TableRow key={member.id}>
+                      users.map((u) => (
+                        <TableRow key={u.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                                 <Mail className="h-4 w-4 text-primary" />
                               </div>
-                              <span className="font-medium">
-                                {member.profile?.display_name || 'Unknown User'}
-                              </span>
+                              <span className="font-medium">{u.display_name || 'Unknown User'}</span>
                             </div>
                           </TableCell>
-                          <TableCell>{getStatusBadge(member.status)}</TableCell>
-                          <TableCell>
-                            {member.started_at
-                              ? format(new Date(member.started_at), 'MMM d, yyyy')
-                              : '-'}
-                          </TableCell>
-                          <TableCell>
-                            {member.expires_at
-                              ? format(new Date(member.expires_at), 'MMM d, yyyy')
-                              : 'Never'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            €{member.price_amount?.toFixed(2) || '9.99'}/{member.currency || 'EUR'}
-                          </TableCell>
+                          <TableCell>{format(new Date(u.created_at), 'MMM d, yyyy')}</TableCell>
                         </TableRow>
                       ))
                     )}

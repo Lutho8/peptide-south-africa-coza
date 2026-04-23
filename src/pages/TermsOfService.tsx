@@ -85,16 +85,14 @@ export default function TermsOfService() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">6. Account & Membership</h2>
+            <h2 className="text-xl font-semibold mb-4">6. Account</h2>
             <p className="text-muted-foreground mb-4">
-              When you create an account or subscribe to our membership:
+              Ride The Tide is provided free of charge. When you create an account:
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li>You must provide accurate and complete information</li>
               <li>You are responsible for maintaining the security of your account</li>
-              <li>Membership subscriptions are billed monthly at €9.99</li>
-              <li>You may cancel your subscription at any time through your account settings</li>
-              <li>Refunds are subject to our refund policy</li>
+              <li>You may delete your account at any time through your account settings</li>
             </ul>
           </section>
 

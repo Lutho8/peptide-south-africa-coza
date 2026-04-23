@@ -13,5 +13,3 @@ export { PeptideBlends } from './PeptideBlends';
 export { PeptideSearch } from './PeptideSearch';
 export { StackBuilder } from './StackBuilder';
 export { ReconstitutionCalculator } from './ReconstitutionCalculator';
-
-export { VendorShowcase } from './VendorShowcase';
