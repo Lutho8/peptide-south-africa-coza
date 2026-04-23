@@ -193,11 +193,17 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
               {/* Concentration info */}
               <div className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
                 <Info size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                <div className="text-xs text-muted-foreground">
-                  <span className="text-foreground font-medium">Reconstitution: </span>
-                  {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {activeConcentrationMgPerMl.toFixed(2)} mg/mL
-                  <br />
-                  <span className="text-foreground font-medium">1 U-40 unit = {(activeConcentrationMgPerMl / U40_UNITS_PER_ML).toFixed(3)} mg</span>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div>
+                    <span className="text-foreground font-medium">Reconstitution: </span>
+                    {activeTotalMg}mg vial + {activeWaterMl}mL BAC water = {activeConcentrationMgPerMl.toFixed(2)} mg/mL
+                  </div>
+                  <div className="text-foreground font-medium">
+                    1 mg = {activeConcentrationMgPerMl > 0 ? (U40_UNITS_PER_ML / activeConcentrationMgPerMl).toFixed(1) : '0'} U-40 units
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">1 U-40 unit = {(activeConcentrationMgPerMl / U40_UNITS_PER_ML).toFixed(3)} mg</span>
+                  </div>
                 </div>
               </div>
 
