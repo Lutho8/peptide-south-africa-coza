@@ -138,9 +138,11 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
   const isBlend = !!blendConc;
   const blendData = useMemo(() => peptideId ? findBlendData(peptideId) : null, [peptideId]);
 
-  const activeTotalMg = blendConc?.totalMg ?? 5;
+  // Standard reconstitution: 10mg vial + 2mL BAC water = 5 mg/mL
+  // 1 U-40 unit (0.025mL) = 0.125 mg → so 1mg = 8 units to draw
+  const activeTotalMg = blendConc?.totalMg ?? 10;
   const activeWaterMl = blendConc?.waterMl ?? 2;
-  const activeConcentrationMgPerMl = blendConc?.concentrationMgPerMl ?? (concentration ? concentration / 1000 : 2.5);
+  const activeConcentrationMgPerMl = blendConc?.concentrationMgPerMl ?? (concentration ? concentration / 1000 : 5);
 
   // Convert dose to mg
   const doseMg = unit === 'mg' ? dose : dose; // IU treated as mg equivalent for display
