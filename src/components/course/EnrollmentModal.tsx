@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
+import { captureLead } from '@/lib/crm';
 
 interface EnrollmentModalProps {
   open: boolean;
@@ -59,6 +60,17 @@ export function EnrollmentModal({ open, onEnrolled }: EnrollmentModalProps) {
       );
 
       if (error) throw error;
+
+      captureLead({
+        email: trimmedEmail,
+        firstName: trimmedName.split(' ')[0],
+        lastName: trimmedName.split(' ').slice(1).join(' ') || undefined,
+        phone: smsConsent ? phone.trim() || undefined : undefined,
+        source: 'free_course_enrollment',
+        planInterest: 'free',
+        activityType: 'course_start',
+        activityData: { sms_consent: smsConsent },
+      });
 
       toast.success('Welcome aboard! 🚀', { description: 'Your course access is ready.' });
       onEnrolled(trimmedName, trimmedEmail);

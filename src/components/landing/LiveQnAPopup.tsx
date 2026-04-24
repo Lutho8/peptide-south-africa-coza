@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Video, Calendar } from 'lucide-react';
+import { X, Lock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { captureLead } from '@/lib/crm';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMembership } from '@/hooks/useMembership';
 
 export function LiveQnAPopup() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { hasPremium } = useMembership();
 
   useEffect(() => {
-    // Don't show if already dismissed this session
     if (sessionStorage.getItem('qna-popup-dismissed')) {
       setDismissed(true);
       return;
@@ -40,7 +42,20 @@ export function LiveQnAPopup() {
     sessionStorage.setItem('qna-popup-dismissed', 'true');
   };
 
-  if (dismissed) return null;
+  const handleUpgrade = () => {
+    captureLead({
+      email: user?.email ?? null,
+      source: 'qna_popup_upgrade',
+      planInterest: 'premium',
+      activityType: 'premium_click',
+      activityData: { surface: 'live_qna_popup' },
+    });
+    dismiss();
+    const el = document.getElementById('pricing');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  if (dismissed || hasPremium) return null;
 
   return (
     <AnimatePresence>
@@ -53,27 +68,38 @@ export function LiveQnAPopup() {
           className="fixed bottom-6 right-6 z-50 max-w-sm w-full"
         >
           <div className="relative rounded-xl border border-accent/40 bg-card/95 backdrop-blur-md shadow-2xl p-5">
-            <button onClick={dismiss} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors">
+            <button
+              onClick={dismiss}
+              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Dismiss"
+            >
               <X className="w-4 h-4" />
             </button>
 
             <div className="flex items-start gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
-                <Video className="w-5 h-5 text-accent" />
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <h4 className="font-bold text-foreground text-sm">Free Live Peptide Q&A</h4>
-                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                  <Calendar className="w-3 h-3" /> Monthly on Zoom · Limited Spots
+                <h4 className="font-bold text-foreground text-sm">
+                  Premium Monthly Live Q&A
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Exclusive to Premium members · R4.99/mo
                 </p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Get free consultation on dosage, stacking, cycles & more from an expert — live every month.
+              Live monthly Zoom session with a peptide expert. Get protocol reviews, dosage guidance, and stacking advice — only for Premium members.
             </p>
             <div className="flex gap-2">
-              <Button size="sm" className="flex-1" onClick={() => { dismiss(); navigate('/live-qna'); }}>
-                Reserve My Spot
+              <Button
+                size="sm"
+                className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95"
+                onClick={handleUpgrade}
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1" />
+                Unlock with Premium
               </Button>
               <Button size="sm" variant="ghost" onClick={dismiss}>
                 Not Now

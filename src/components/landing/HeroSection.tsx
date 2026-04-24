@@ -1,11 +1,14 @@
 import { motion } from 'framer-motion';
-import { Video, ArrowRight, FlaskConical, Award, BookOpen } from 'lucide-react';
+import { Lock, ArrowRight, FlaskConical, Award, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { PhoneMockup } from './PhoneMockup';
 import { FloatingStatCards } from './FloatingStatCards';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
+import { useMembership } from '@/hooks/useMembership';
+import { useAuth } from '@/contexts/AuthContext';
+import { captureLead } from '@/lib/crm';
 
 interface HeroSectionProps {
   onCategoryClick?: (category: PeptideCategory) => void;
@@ -19,14 +22,35 @@ const socialProof = [
 
 export function HeroSection({ onCategoryClick }: HeroSectionProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { hasPremium } = useMembership();
 
   const scrollToPeptides = () => {
     const el = document.getElementById('featured-peptides');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
-      // fallback to categories section if featured isn't tagged
       window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+    }
+  };
+
+  const scrollToPricing = () => {
+    const el = document.getElementById('pricing');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleQnaCta = () => {
+    captureLead({
+      email: user?.email ?? null,
+      source: 'hero_qa_cta',
+      planInterest: 'premium',
+      activityType: 'qa_signup',
+      activityData: { hasPremium },
+    });
+    if (hasPremium) {
+      navigate('/live-qna');
+    } else {
+      scrollToPricing();
     }
   };
 
@@ -90,11 +114,11 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
             >
               <Button
                 size="lg"
-                onClick={() => navigate('/live-qna')}
+                onClick={handleQnaCta}
                 className="h-12 gap-2 bg-gradient-to-r from-primary to-accent px-6 text-primary-foreground shadow-lg hover:opacity-90"
               >
-                <Video className="h-5 w-5" />
-                Join free monthly Q&A
+                <Lock className="h-4 w-4" />
+                {hasPremium ? 'Join Premium Monthly Q&A' : 'Unlock Premium Monthly Q&A'}
               </Button>
               <Button
                 size="lg"

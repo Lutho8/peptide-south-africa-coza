@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { useAuth } from '@/contexts/AuthContext';
+import { captureLead } from '@/lib/crm';
 
 interface LandingHeaderProps {
   onSignInClick: () => void;
@@ -37,6 +38,12 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
 
   const scrollToPricing = () => {
     setMobileMenuOpen(false);
+    captureLead({
+      email: user?.email ?? null,
+      source: 'header_go_premium',
+      planInterest: 'premium',
+      activityType: 'premium_click',
+    });
     const el = document.getElementById('pricing');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });

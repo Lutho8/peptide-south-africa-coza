@@ -26,9 +26,9 @@ const steps = [
   {
     n: '04',
     title: 'Consult & Optimize',
-    desc: 'Join our free monthly group Q&A on Zoom to refine your protocol with expert input.',
+    desc: 'Premium members join the monthly group Q&A on Zoom to refine their protocol with expert input.',
     icon: Video,
-    preview: 'Live Q&A · 1st Saturday · Free seat',
+    preview: 'Premium Q&A · 1st Saturday · Members only',
   },
 ];
 

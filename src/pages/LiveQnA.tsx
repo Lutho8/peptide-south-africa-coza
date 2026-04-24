@@ -7,10 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Video, Calendar, Users, Clock, CheckCircle2, ArrowLeft, Shield, Zap, BookOpen } from 'lucide-react';
+import { Video, Calendar, Users, Clock, CheckCircle2, ArrowLeft, Shield, Zap, BookOpen, Lock, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import { useMembership } from '@/hooks/useMembership';
+import { useAuth } from '@/contexts/AuthContext';
+import { captureLead } from '@/lib/crm';
 
 const COUNTRY_CODES = [
   { code: '+1', label: 'US (+1)' },
@@ -67,6 +70,8 @@ function getSessionMonth() {
 
 export default function LiveQnA() {
   const { toast } = useToast();
+  const { hasPremium, isLoading: membershipLoading } = useMembership();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [form, setForm] = useState({
@@ -125,6 +130,18 @@ export default function LiveQnA() {
         }
       } else {
         setRegistered(true);
+        captureLead({
+          email: form.email.trim().toLowerCase(),
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          phone: form.whatsappNumber.trim()
+            ? `${form.whatsappCountryCode}${form.whatsappNumber.trim().replace(/\D/g, '')}`
+            : undefined,
+          source: 'live_qna_registration',
+          planInterest: 'premium',
+          activityType: 'consultation_booked',
+          activityData: { session_month: sessionMonth, experience_level: form.experienceLevel },
+        });
         toast({ title: 'Registration confirmed! 🎉', description: `You're in for the ${sessionMonth} Live Q&A. Check your email for details.` });
       }
     } catch {
@@ -132,6 +149,16 @@ export default function LiveQnA() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpgradeClick = () => {
+    captureLead({
+      email: user?.email ?? null,
+      source: 'live_qna_premium_gate',
+      planInterest: 'premium',
+      activityType: 'premium_click',
+      activityData: { surface: 'live_qna_page' },
+    });
   };
 
   return (
@@ -159,15 +186,15 @@ export default function LiveQnA() {
           <div className="text-center max-w-3xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <Badge className="mb-4 bg-accent/20 text-accent border-accent/30 text-sm px-4 py-1">
-                <Video className="w-4 h-4 mr-2" /> Monthly Live on Zoom
+                <Lock className="w-4 h-4 mr-2" /> Premium · Monthly Live on Zoom
               </Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
                 <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
-                  Free Peptide Q&A
+                  Premium Peptide Q&A
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto">
-                Join me live every month for a free consultation session. Ask anything about peptides — from beginner basics to advanced stacking protocols.
+                Exclusive monthly group consultation for Premium members. Ask anything about peptides — from beginner basics to advanced stacking protocols.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground mb-8">
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4 text-accent" /> {sessionDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
@@ -223,7 +250,27 @@ export default function LiveQnA() {
 
           {/* Registration Form */}
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-            {registered ? (
+            {!membershipLoading && !hasPremium ? (
+              <Card className="border-primary/40 shadow-lg overflow-hidden">
+                <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
+                <CardContent className="p-8 text-center space-y-5">
+                  <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <Lock className="w-7 h-7 text-accent" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground">Premium members only</h3>
+                  <p className="text-muted-foreground">
+                    The monthly Live Q&A is exclusive to Premium members. Upgrade for just <strong className="text-foreground">R4.99/month</strong> (or R49/year) to reserve your seat and unlock 1:1 calls, AI bloodwork insights, and more.
+                  </p>
+                  <Link to="/#pricing" onClick={handleUpgradeClick} className="block">
+                    <Button size="lg" className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 shadow-lg shadow-primary/25">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Unlock with Premium
+                    </Button>
+                  </Link>
+                  <p className="text-xs text-muted-foreground">Cancel anytime · Prices in ZAR · 🇿🇦 Built in South Africa</p>
+                </CardContent>
+              </Card>
+            ) : registered ? (
               <Card className="border-accent/50 bg-accent/5">
                 <CardContent className="p-8 text-center space-y-4">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }}>
@@ -241,8 +288,8 @@ export default function LiveQnA() {
               <Card className="border-primary/30 shadow-lg">
                 <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary rounded-t-lg" />
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-foreground mb-1">Reserve Your Spot</h3>
-                  <p className="text-sm text-muted-foreground mb-6">Free · {sessionMonth} Session · Via Zoom</p>
+                  <h3 className="text-xl font-bold text-foreground mb-1">Reserve Your Premium Spot</h3>
+                  <p className="text-sm text-muted-foreground mb-6">Premium members only · {sessionMonth} Session · Via Zoom</p>
 
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Email */}

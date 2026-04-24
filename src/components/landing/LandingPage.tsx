@@ -71,9 +71,9 @@ export function LandingPage() {
       <main>
         <HeroSection onCategoryClick={handleCategoryClick} />
         <HowItWorks />
+        <PricingSection />
         <BentoFeatures />
         <Testimonials />
-        <PricingSection />
         <WhyFreeBand onPrimaryClick={handleSignInClick} />
         <ResearchTools 
           onBlendsClick={() => setBlendsOpen(true)}
