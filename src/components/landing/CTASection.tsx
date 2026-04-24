@@ -10,7 +10,7 @@ const benefits = [
   '98+ Peptide Profiles',
   'Smart Calculators',
   'Protocol Tracking',
-  'Monthly Expert Q&A',
+  'Premium Monthly Q&A',
   'COA Verification',
 ];
 

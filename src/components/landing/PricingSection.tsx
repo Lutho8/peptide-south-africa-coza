@@ -15,11 +15,12 @@ const freeFeatures = [
   'Reconstitution & dose calculators',
   'Stack & blend builder',
   'COA verification lookup',
-  'Monthly group Q&A access',
+  'Protocol tracking & reminders',
 ];
 
 const premiumFeatures = [
   'Everything in Free',
+  'Exclusive monthly Q&A on Zoom',
   '1:1 expert consultation calls',
   'AI-powered bloodwork insights',
   'Advanced cycle planning & alerts',

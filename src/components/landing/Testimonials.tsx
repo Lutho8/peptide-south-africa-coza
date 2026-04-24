@@ -29,7 +29,7 @@ const testimonials = [
   {
     role: 'Men’s Health Consultant',
     quote:
-      'The monthly Q&A alone is worth showing up for. Getting expert feedback on protocol stacks has sharpened my recommendations.',
+      'The Premium monthly Q&A alone is worth the upgrade. Getting expert feedback on protocol stacks has sharpened my recommendations.',
     initials: 'MH',
   },
   {

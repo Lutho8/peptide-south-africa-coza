@@ -50,11 +50,11 @@ const features = [
   },
   {
     title: 'Expert Q&A',
-    desc: 'Free monthly group Q&A on Zoom — bring your protocol questions to a peptide specialist.',
+    desc: 'Exclusive monthly Zoom session for Premium members — bring your protocol questions to a peptide specialist.',
     icon: Video,
     className: 'bg-card border border-border/60',
     iconWrap: 'bg-accent/10 text-accent',
-    badge: 'Live monthly',
+    badge: 'Premium · Live monthly',
   },
 ];
 

@@ -4,7 +4,7 @@ import {
   Calculator,
   Layers,
   ShieldCheck,
-  Video,
+  ClipboardList,
   Activity,
   ArrowRight,
 } from 'lucide-react';
@@ -32,14 +32,14 @@ const features = [
     desc: 'Look up lab certificates of analysis by batch number.',
   },
   {
-    icon: Video,
-    title: 'Live monthly Q&A',
-    desc: 'Free Zoom session with an expert — first Saturday of every month.',
+    icon: ClipboardList,
+    title: 'Free protocol tracking',
+    desc: 'Log doses, set reminders, and view adherence — no credit card.',
   },
   {
     icon: Activity,
-    title: 'Protocol tracking',
-    desc: 'Log doses, view adherence, and track cycles end-to-end.',
+    title: 'Cycle insights',
+    desc: 'Visualize cycles end-to-end with pre/post bloodwork hints.',
   },
 ];
 

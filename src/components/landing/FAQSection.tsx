@@ -106,11 +106,11 @@ export const faqCategories = [
     faqs: [
       {
         q: 'What does it cost to use Ride The Tide?',
-        a: 'Ride The Tide is free to use. You get full access to the peptide research database, dose and reconstitution calculators, blends and stacks tools, COA verification, protocol tracking, and the monthly group Q&A. There is no premium tier and no credit card required.',
+        a: 'Ride The Tide is free to start. The free tier gives you full access to the peptide research database, dose and reconstitution calculators, blends and stacks tools, COA verification, and protocol tracking. The monthly group Q&A on Zoom and 1:1 expert calls are exclusive to Premium members (R4.99/month or R49/year, ZAR).',
       },
       {
         q: 'How do I join the monthly Live Q&A?',
-        a: 'Reserve your seat from the home page or the "Live Q&A" link in the footer. Sessions run on Zoom on the first Saturday of each month and cover dosage, stacking, cycles, and protocol questions. Spots are limited per session.',
+        a: 'The monthly Q&A is exclusive to Premium members. Upgrade from the Pricing section, then reserve your seat from the home page or the "Live Q&A" link in the footer. Sessions run on Zoom on the first Saturday of each month and cover dosage, stacking, cycles, and protocol questions.',
       },
       {
         q: 'Can I book a 1-on-1 consultation?',
@@ -133,11 +133,11 @@ export const faqCategories = [
     faqs: [
       {
         q: "What's included in the free tier?",
-        a: 'The free tier gives you full access to the peptide research database (98+ profiles), reconstitution and dose calculators, the stack and blend builder, COA verification, protocol tracking, and the monthly group Q&A. No credit card required, free forever.',
+        a: 'The free tier gives you full access to the peptide research database (98+ profiles), reconstitution and dose calculators, the stack and blend builder, COA verification, and protocol tracking. No credit card required, free forever. The monthly group Q&A and 1:1 calls are Premium-only.',
       },
       {
         q: 'What does Premium add?',
-        a: 'Premium (R4.99/month or R49/year) unlocks 1:1 expert consultation calls, AI-powered bloodwork insights, advanced cycle planning with safety alerts, priority WhatsApp and email support, and early access to new tools as they launch.',
+        a: 'Premium (R4.99/month or R49/year) unlocks the exclusive monthly group Q&A on Zoom, 1:1 expert consultation calls, AI-powered bloodwork insights, advanced cycle planning with safety alerts, priority WhatsApp and email support, and early access to new tools as they launch.',
       },
       {
         q: 'How do I cancel my Premium subscription?',
