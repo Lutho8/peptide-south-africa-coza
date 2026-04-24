@@ -7,10 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Video, Calendar, Users, Clock, CheckCircle2, ArrowLeft, Shield, Zap, BookOpen } from 'lucide-react';
+import { Video, Calendar, Users, Clock, CheckCircle2, ArrowLeft, Shield, Zap, BookOpen, Lock, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import { useMembership } from '@/hooks/useMembership';
+import { useAuth } from '@/contexts/AuthContext';
+import { captureLead } from '@/lib/crm';
 
 const COUNTRY_CODES = [
   { code: '+1', label: 'US (+1)' },
@@ -67,6 +70,8 @@ function getSessionMonth() {
 
 export default function LiveQnA() {
   const { toast } = useToast();
+  const { hasPremium, isLoading: membershipLoading } = useMembership();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [form, setForm] = useState({
@@ -125,6 +130,18 @@ export default function LiveQnA() {
         }
       } else {
         setRegistered(true);
+        captureLead({
+          email: form.email.trim().toLowerCase(),
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          phone: form.whatsappNumber.trim()
+            ? `${form.whatsappCountryCode}${form.whatsappNumber.trim().replace(/\D/g, '')}`
+            : undefined,
+          source: 'live_qna_registration',
+          planInterest: 'premium',
+          activityType: 'consultation_booked',
+          activityData: { session_month: sessionMonth, experience_level: form.experienceLevel },
+        });
         toast({ title: 'Registration confirmed! 🎉', description: `You're in for the ${sessionMonth} Live Q&A. Check your email for details.` });
       }
     } catch {
@@ -132,6 +149,16 @@ export default function LiveQnA() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpgradeClick = () => {
+    captureLead({
+      email: user?.email ?? null,
+      source: 'live_qna_premium_gate',
+      planInterest: 'premium',
+      activityType: 'premium_click',
+      activityData: { surface: 'live_qna_page' },
+    });
   };
 
   return (
