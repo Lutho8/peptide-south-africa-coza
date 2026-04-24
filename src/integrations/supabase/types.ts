@@ -488,6 +488,39 @@ export type Database = {
         }
         Relationships: []
       }
+      protocol_adherence: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          item_key: string
+          item_label: string
+          lab_report_id: string
+          section: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          item_key: string
+          item_label: string
+          lab_report_id: string
+          section: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          item_key?: string
+          item_label?: string
+          lab_report_id?: string
+          section?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       qna_registrations: {
         Row: {
           created_at: string
