@@ -25,10 +25,24 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { reportId, imageBase64, fileName, mimeType, languageHint } = await req.json();
+    const body = await req.json();
+    const {
+      reportId,
+      imageBase64,
+      fileName,
+      mimeType,
+      languageHint,
+      scanType = "baseline",
+      age,
+      sex,
+      goals = [],
+      peptideHistoryUsed,
+      peptideHistoryNotes,
+    } = body || {};
+
     if (!reportId || !imageBase64) throw new Error("Missing reportId or imageBase64");
 
-    // Determine MIME type — accept PDF or image. Default to JPEG for legacy callers.
+    // Resolve MIME
     const lowerName = (fileName || "").toLowerCase();
     let resolvedMime = mimeType as string | undefined;
     if (!resolvedMime) {
@@ -38,68 +52,113 @@ serve(async (req) => {
       else resolvedMime = "image/jpeg";
     }
 
-    // Update status to processing
+    // Update status & save patient context
     await supabase
       .from("lab_reports")
-      .update({ status: "processing" })
+      .update({
+        status: "processing",
+        scan_type: scanType === "deep" ? "deep" : "baseline",
+        patient_age: age ? Number(age) : null,
+        patient_sex: sex || null,
+        goals: Array.isArray(goals) ? goals : [],
+        peptide_history_used: typeof peptideHistoryUsed === "boolean" ? peptideHistoryUsed : null,
+        peptide_history_notes: peptideHistoryNotes || null,
+      })
       .eq("id", reportId)
       .eq("user_id", user.id);
 
-    const systemPrompt = `You are a friendly medical lab report analyzer for a peptide research community. Lab reports may be in ENGLISH or GERMAN — auto-detect the language, but ALWAYS write your output in ENGLISH using simple layman's terms (avoid medical jargon, or explain it briefly in parentheses).
+    const isDeep = scanType === "deep";
 
-Common German terms to recognize:
-- "Blutbild" = blood panel, "Leberwerte" = liver values, "Nierenwerte" = kidney values
-- "Schilddrüse" = thyroid, "Cholesterin" = cholesterol, "Nüchternblutzucker" = fasting glucose
-- "Referenzbereich"/"Normbereich" = reference range, "Einheit" = unit, "Wert" = value
-- "Gesamttestosteron" = total testosterone, "Östradiol" = estradiol, "Insulin" = insulin
-- Decimal commas (e.g. "5,4") should be parsed as decimal points (5.4)
+    const systemPrompt = `You are a friendly medical lab report analyzer for the "Ride The Tide" peptide research community.
+
+The user is requesting a ${isDeep ? "DEEP DECODE" : "BASELINE"} scan.
+${isDeep ? "Expand each protocol section to include up to 32 biomarkers across 8 panels and add 4 follow-up retest milestones over 12 months." : "Provide a concise but complete protocol (under 60 seconds of reading)."}
+
+Lab reports may be in ENGLISH or GERMAN — auto-detect, but ALWAYS write your output in ENGLISH using simple layman's terms.
+
+Common German terms: Blutbild=blood panel, Leberwerte=liver values, Nierenwerte=kidney values, Schilddrüse=thyroid, Cholesterin=cholesterol, Nüchternblutzucker=fasting glucose, Referenzbereich/Normbereich=reference range, Einheit=unit, Wert=value, Gesamttestosteron=total testosterone, Östradiol=estradiol, Insulin=insulin. Decimal commas (5,4) → decimal points (5.4).
+
+Personalise the recommendations using the user's age, sex, goals, and peptide history.
 
 Return ONLY a valid JSON object with this exact structure:
 {
-  "summary": "2-3 sentence plain-English overview a non-doctor can understand. Mention overall picture (e.g. 'Most values look healthy, but cholesterol is slightly high').",
-  "report_date": "YYYY-MM-DD or null if not found",
+  "summary": "2-3 sentence plain-English overview.",
+  "report_date": "YYYY-MM-DD or null",
   "detected_language": "en" or "de",
+  "health_score": 0-100 (overall health considering all biomarkers and goals),
   "biomarkers": [
     {
-      "name": "Biomarker full name in English",
-      "short_name": "Abbreviation (e.g. IGF-1, TSH, ALT)",
+      "name": "Full English name",
+      "short_name": "Abbreviation",
       "value": 123.4,
       "unit": "ng/mL",
       "reference_range": "100-300",
       "status": "normal|high|low|critical",
-      "category": "hormone|liver|kidney|lipid|metabolic|thyroid|inflammation",
-      "layman_explanation": "1 sentence in plain English explaining what this marker means and what the result indicates.",
-      "suggested_peptides": [
-        { "id": "ipamorelin", "name": "Ipamorelin", "rank": 1, "reason": "1-line research-only rationale tied to THIS marker (e.g. 'May support IGF-1 by stimulating GH pulses')." }
-      ]
+      "category": "hormone|liver|kidney|lipid|metabolic|thyroid|inflammation|other",
+      "layman_explanation": "1 sentence plain English."
     }
   ],
-  "insights": "Markdown-formatted layman analysis with these sections:\\n\\n### What this means for you\\n(plain English summary of out-of-range values and what they typically indicate — no medical jargon)\\n\\n### Lifestyle suggestions\\n(diet, sleep, exercise tips relevant to the findings)\\n\\n### Peptide protocols to consider\\n(recommend specific peptides from the list below that may help optimize the out-of-range markers, with a 1-line reason for each. Frame as 'research-only' suggestions, not medical advice. Use bullet points.)\\n\\n### When to see a doctor\\n(red flags that warrant professional consultation)",
-  "recommended_peptides": ["peptide_id_1", "peptide_id_2"]
+  "insights": ["6 to 8 plain-English findings, each one short sentence, ordered by importance"],
+  "protocol": {
+    "stack_summary": "1-2 sentence overview of the recommended peptide stack and why it fits the user's goals.",
+    "stack": [
+      {
+        "name": "Peptide name (e.g. Retatrutide)",
+        "slug": "retatrutide",
+        "priority": "high|medium|low",
+        "goals": ["Weight Loss", "Cardiovascular Health"],
+        "rationale": "2-3 sentence research-only rationale tied to this user's biomarkers and goals.",
+        "dosing": "Typical research dosing line, e.g. '4mg subcutaneous once weekly, 8-12 week cycle'."
+      }
+    ],
+    "supplements": [
+      { "name": "Omega-3", "dose": "2g/day", "what_it_is": "Marine fatty acids EPA/DHA.", "why_it_matters": "Lowers triglycerides and inflammation.", "how_to_take": "Take with a meal containing fat." }
+    ],
+    "nutrition": [
+      { "title": "Mediterranean-style eating", "what_it_looks_like": "Olive oil, fish, vegetables, legumes.", "why_adopt": "Improves lipid panel and insulin sensitivity.", "examples": "Salmon + greens + olive oil 4x/week." }
+    ],
+    "exercise": [{ "title": "Zone-2 cardio 3x/week", "body": "30-45 min nasal-breathing pace to improve mitochondrial density." }],
+    "stress": [{ "title": "Daily 10-min nasal breathing", "body": "Down-regulates cortisol; do before bed." }],
+    "environment": [{ "title": "Morning sunlight 10 min", "body": "Sets circadian rhythm; supports testosterone and sleep quality." }],
+    "retest": [
+      { "marker": "HbA1c, fasting glucose", "when": "8 weeks", "why": "Confirm metabolic improvements." }${isDeep ? `,
+      { "marker": "Lipid panel", "when": "12 weeks", "why": "Track cholesterol response." },
+      { "marker": "IGF-1, hormones", "when": "6 months", "why": "Mid-protocol checkpoint." },
+      { "marker": "Full panel", "when": "12 months", "why": "Annual review and protocol adjustment." }` : ""}
+    ]
+  },
+  "recommended_stack_peptides": ["retatrutide", "bpc157"]
 }
 
-For EACH biomarker, populate "suggested_peptides" with 0–3 entries ranked by relevance (rank 1 = best match). Only include peptides for markers that are out of range (high/low/critical) OR that the peptide is well-known to optimize. For "normal" markers with no clear optimization angle, return an empty array. Use only peptide IDs from the list below.
-
-PEPTIDE OPTIMIZATION GUIDE — recommend from these IDs based on findings:
-- Low IGF-1 / poor recovery / aging concerns → ipamorelin, cjc1295, tesamorelin, mk677
+PEPTIDE GUIDE — recommend by biomarker pattern:
+- Low IGF-1 / poor recovery / aging → ipamorelin, cjc1295, tesamorelin, mk677
 - High glucose / HbA1c / insulin resistance / weight → retatrutide, tirzepatide, semaglutide, motsc
 - High cholesterol / LDL / triglycerides → retatrutide, tirzepatide
-- Elevated liver enzymes (AST/ALT/GGT) / inflammation → bpc157, tb500
-- High CRP / chronic inflammation / immune issues → ta1 (thymosin alpha-1), bpc157, ghkcu
-- Low testosterone (men) → recommend bloodwork follow-up + lifestyle (no peptide directly raises T safely)
+- Elevated AST/ALT/GGT / inflammation → bpc157, tb500
+- High CRP / chronic inflammation → ta1, bpc157, ghkcu
 - Poor sleep / cognition → dsip, selank, semax, epitalon
-- Joint/tendon issues / slow healing → bpc157, tb500, ghkcu
-- Mitochondrial / metabolic decline → motsc, ss31
+- Joint/tendon issues → bpc157, tb500, ghkcu
+- Mitochondrial decline → motsc, ss31
 
-Match biomarker names to these known IDs when possible: igf1, testosterone, freeT, estradiol, ast, alt, ggt, totalCholesterol, ldl, hdl, triglycerides, fastingGlucose, hba1c, insulin, creatinine, bun, tsh, freeT4, crp, homocysteine.
+If the file is unreadable, return:
+{"summary":"Unable to read lab report","report_date":null,"detected_language":"en","health_score":null,"biomarkers":[],"insights":["The uploaded file could not be recognised as a lab report."],"protocol":{"stack":[],"supplements":[],"nutrition":[],"exercise":[],"stress":[],"environment":[],"retest":[]},"recommended_stack_peptides":[]}`;
 
-If the file is not a lab report or is unreadable, return:
-{"summary": "Unable to read lab report", "biomarkers": [], "insights": "The uploaded file could not be recognized as a lab report. Please upload a clear photo or PDF of your bloodwork results.", "report_date": null, "detected_language": "en", "recommended_peptides": []}`;
-
-    let userText = `Analyze this lab report (${fileName}). The file may be in English or German — translate findings to plain English. Extract all biomarker values, explain them in layman's terms, and recommend peptide protocols that could help optimize any out-of-range markers.`;
-    if (languageHint === 'en' || languageHint === 'de') {
-      userText += `\nUser has confirmed the document language is ${languageHint === 'de' ? 'German' : 'English'} — treat it accordingly and set detected_language to "${languageHint}".`;
-    }
+    const userText = [
+      `Analyze this lab report (${fileName}).`,
+      `Scan type: ${isDeep ? "Deep Decode" : "Baseline"}.`,
+      age ? `Patient age: ${age}.` : "",
+      sex && sex !== "na" ? `Patient sex: ${sex}.` : "",
+      Array.isArray(goals) && goals.length ? `Goals: ${goals.join(", ")}.` : "",
+      typeof peptideHistoryUsed === "boolean"
+        ? peptideHistoryUsed
+          ? `Prior peptide use: yes${peptideHistoryNotes ? ` — ${peptideHistoryNotes}` : ""}.`
+          : "Prior peptide use: no."
+        : "",
+      languageHint === "en" || languageHint === "de"
+        ? `Document language confirmed: ${languageHint === "de" ? "German" : "English"}.`
+        : "",
+      "Personalise the protocol to these inputs and return the structured JSON.",
+    ].filter(Boolean).join(" ");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -115,10 +174,7 @@ If the file is not a lab report or is unreadable, return:
             role: "user",
             content: [
               { type: "text", text: userText },
-              {
-                type: "image_url",
-                image_url: { url: `data:${resolvedMime};base64,${imageBase64}` },
-              },
+              { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${imageBase64}` } },
             ],
           },
         ],
@@ -141,32 +197,54 @@ If the file is not a lab report or is unreadable, return:
     const aiData = await response.json();
     const content = aiData.choices?.[0]?.message?.content || "";
 
-    // Parse JSON from response (handle markdown code blocks)
-    let parsed;
+    let parsed: any;
     try {
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, content];
       parsed = JSON.parse(jsonMatch[1]!.trim());
     } catch {
-      parsed = { summary: "Failed to parse AI response", biomarkers: [], insights: content, report_date: null };
+      parsed = {
+        summary: "Failed to parse AI response",
+        biomarkers: [],
+        insights: [content?.slice(0, 400) || "Parsing error"],
+        report_date: null,
+        health_score: null,
+        protocol: { stack: [], supplements: [], nutrition: [], exercise: [], stress: [], environment: [], retest: [] },
+        recommended_stack_peptides: [],
+      };
     }
 
-    // Update the report with extracted data
+    // Coerce insights to array
+    let insightsArr: string[] = [];
+    if (Array.isArray(parsed.insights)) insightsArr = parsed.insights.map((s: any) => String(s));
+    else if (typeof parsed.insights === "string") insightsArr = parsed.insights.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
+
+    const healthScore =
+      typeof parsed.health_score === "number" && parsed.health_score >= 0 && parsed.health_score <= 100
+        ? Math.round(parsed.health_score)
+        : null;
+
     await supabase
       .from("lab_reports")
       .update({
         status: "completed",
-        ai_summary: parsed.summary,
+        ai_summary: parsed.summary || null,
         extracted_biomarkers: parsed.biomarkers || [],
-        ai_insights: parsed.insights,
+        ai_insights: insightsArr.join("\n"),
         report_date: parsed.report_date || null,
+        health_score: healthScore,
+        protocol: parsed.protocol || null,
+        recommended_stack_peptides: Array.isArray(parsed.recommended_stack_peptides)
+          ? parsed.recommended_stack_peptides
+          : [],
         updated_at: new Date().toISOString(),
       })
       .eq("id", reportId)
       .eq("user_id", user.id);
 
-    return new Response(JSON.stringify({ success: true, data: parsed }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ success: true, data: { ...parsed, insights: insightsArr, health_score: healthScore } }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (e) {
     console.error("analyze-lab-report error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {

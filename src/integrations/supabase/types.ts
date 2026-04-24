@@ -292,8 +292,17 @@ export type Database = {
           extracted_biomarkers: Json | null
           file_name: string
           file_url: string
+          goals: string[]
+          health_score: number | null
           id: string
+          patient_age: number | null
+          patient_sex: string | null
+          peptide_history_notes: string | null
+          peptide_history_used: boolean | null
+          protocol: Json | null
+          recommended_stack_peptides: string[]
           report_date: string | null
+          scan_type: string
           status: string
           updated_at: string
           uploaded_at: string
@@ -306,8 +315,17 @@ export type Database = {
           extracted_biomarkers?: Json | null
           file_name: string
           file_url: string
+          goals?: string[]
+          health_score?: number | null
           id?: string
+          patient_age?: number | null
+          patient_sex?: string | null
+          peptide_history_notes?: string | null
+          peptide_history_used?: boolean | null
+          protocol?: Json | null
+          recommended_stack_peptides?: string[]
           report_date?: string | null
+          scan_type?: string
           status?: string
           updated_at?: string
           uploaded_at?: string
@@ -320,8 +338,17 @@ export type Database = {
           extracted_biomarkers?: Json | null
           file_name?: string
           file_url?: string
+          goals?: string[]
+          health_score?: number | null
           id?: string
+          patient_age?: number | null
+          patient_sex?: string | null
+          peptide_history_notes?: string | null
+          peptide_history_used?: boolean | null
+          protocol?: Json | null
+          recommended_stack_peptides?: string[]
           report_date?: string | null
+          scan_type?: string
           status?: string
           updated_at?: string
           uploaded_at?: string
