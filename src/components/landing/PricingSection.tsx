@@ -1,10 +1,11 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Sparkles, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { startCheckout, type Plan } from '@/lib/billing';
 import { PricingTrustBar } from './PricingTrustBar';
+import { captureLead } from '@/lib/crm';
 
 const AuthModal = lazy(() =>
   import('@/components/auth/AuthModal').then((m) => ({ default: m.AuthModal }))
@@ -36,10 +37,35 @@ export function PricingSection() {
   const { user } = useAuth();
   const [billing, setBilling] = useState<Plan>('monthly');
   const [authOpen, setAuthOpen] = useState(false);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const trackedRef = useRef(false);
 
   const monthly = 4.99;
   const annual = 49;
   const annualMonthlyEquivalent = annual / 12;
+
+  // Track pricing_view once when section enters viewport.
+  useEffect(() => {
+    if (!sectionRef.current || trackedRef.current) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting && !trackedRef.current) {
+            trackedRef.current = true;
+            captureLead({
+              email: user?.email ?? null,
+              source: 'pricing_section',
+              planInterest: 'undecided',
+              activityType: 'pricing_view',
+            });
+          }
+        });
+      },
+      { threshold: 0.3 },
+    );
+    obs.observe(sectionRef.current);
+    return () => obs.disconnect();
+  }, [user?.email]);
 
   const handleFreeCta = () => {
     if (user) {
@@ -50,11 +76,19 @@ export function PricingSection() {
   };
 
   const handlePremiumCta = async () => {
+    captureLead({
+      email: user?.email ?? null,
+      source: 'pricing_premium_cta',
+      planInterest: 'premium',
+      activityType: 'premium_click',
+      activityData: { plan: billing },
+    });
     await startCheckout(billing, user?.email ?? null);
   };
 
   return (
     <section
+      ref={sectionRef}
       id="pricing"
       className="relative py-20 lg:py-28 overflow-hidden"
       aria-labelledby="pricing-heading"

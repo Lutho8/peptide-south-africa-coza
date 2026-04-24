@@ -9,6 +9,7 @@ import { lovable } from '@/integrations/lovable';
 import { toast } from 'sonner';
 import { Loader2, Mail, Lock, User } from 'lucide-react';
 import { z } from 'zod';
+import { captureLead } from '@/lib/crm';
 
 interface AuthModalProps {
   open: boolean;
@@ -85,6 +86,14 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
       } else {
         const { error } = await signUp(email, password, displayName);
         if (error) throw error;
+        captureLead({
+          email,
+          firstName: displayName || undefined,
+          source: 'auth_modal_signup',
+          planInterest: 'free',
+          activityType: 'course_start',
+          activityData: { method: 'email' },
+        });
         toast.success('Account created! You can now sign in.');
         onOpenChange(false);
       }

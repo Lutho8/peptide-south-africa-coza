@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Filter, ChevronDown, FlaskConical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ import {
 import { peptides, Peptide, PeptideCategory } from '@/data/peptides';
 import { cn } from '@/lib/utils';
 import { PeptideDetailModal } from '@/components/modals/PeptideDetailModal';
+import { captureLead } from '@/lib/crm';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PeptideSearchProps {
   open: boolean;
@@ -55,6 +57,22 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
   const [sortBy, setSortBy] = useState<'name' | 'score'>('name');
   const [selectedPeptide, setSelectedPeptide] = useState<Peptide | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const { user } = useAuth();
+
+  // Debounced peptide_search activity capture (auth users only).
+  useEffect(() => {
+    if (!open || !query || query.length < 3 || !user?.email) return;
+    const t = setTimeout(() => {
+      captureLead({
+        email: user.email,
+        source: 'peptide_search',
+        planInterest: 'undecided',
+        activityType: 'peptide_search',
+        activityData: { query: query.slice(0, 80) },
+      });
+    }, 800);
+    return () => clearTimeout(t);
+  }, [open, query, user?.email]);
 
   const filteredPeptides = useMemo(() => {
     let results = [...peptides];

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calculator, Droplets, Syringe, FlaskConical, Info, Copy, Check, Tag, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ReconstitutionGuide } from './ReconstitutionGuide';
+import { captureLead } from '@/lib/crm';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ReconstitutionCalculatorProps {
   open: boolean;
@@ -45,6 +47,18 @@ export function ReconstitutionCalculator({ open, onClose }: ReconstitutionCalcul
   const [calcMode, setCalcMode] = useState<'concentration' | 'desired-units'>('concentration');
   const [desiredUnits, setDesiredUnits] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const { user } = useAuth();
+
+  // Capture calculator_use once per open session (auth users only).
+  useEffect(() => {
+    if (!open || !user?.email) return;
+    captureLead({
+      email: user.email,
+      source: 'reconstitution_calculator',
+      planInterest: 'free',
+      activityType: 'calculator_use',
+    });
+  }, [open, user?.email]);
 
   const clearForm = () => {
     setSelectedPeptide('');
