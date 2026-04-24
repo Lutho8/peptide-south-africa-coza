@@ -186,15 +186,15 @@ export default function LiveQnA() {
           <div className="text-center max-w-3xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <Badge className="mb-4 bg-accent/20 text-accent border-accent/30 text-sm px-4 py-1">
-                <Video className="w-4 h-4 mr-2" /> Monthly Live on Zoom
+                <Lock className="w-4 h-4 mr-2" /> Premium · Monthly Live on Zoom
               </Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
                 <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
-                  Free Peptide Q&A
+                  Premium Peptide Q&A
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto">
-                Join me live every month for a free consultation session. Ask anything about peptides — from beginner basics to advanced stacking protocols.
+                Exclusive monthly group consultation for Premium members. Ask anything about peptides — from beginner basics to advanced stacking protocols.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground mb-8">
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4 text-accent" /> {sessionDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
