@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,6 +14,9 @@ import { ScanForm, ScanFormState, isFormReady } from '@/components/bloodwork/Sca
 import { ScanTierCards } from '@/components/bloodwork/ScanTierCards';
 import { BloodworkResults, BloodworkScanResult } from '@/components/bloodwork/BloodworkResults';
 import { PremiumGate } from '@/components/bloodwork/PremiumGate';
+import { ScanProgress } from '@/components/bloodwork/ScanProgress';
+import { ScanError } from '@/components/bloodwork/ScanError';
+import { useScanProgress } from '@/hooks/useScanProgress';
 import { exportBloodworkProtocolPDF } from '@/utils/bloodworkProtocolPdf';
 
 const DISCLAIMER =
@@ -28,6 +31,18 @@ const INITIAL_STATE: ScanFormState = {
   peptideHistoryNotes: '',
 };
 
+function mapScanError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e ?? '');
+  if (/abort/i.test(msg)) return '';
+  if (/429|rate/i.test(msg)) return 'Too many scans right now. Wait 30 seconds and try again.';
+  if (/402|credit/i.test(msg)) return 'Premium scan credits exhausted for this hour. Try again shortly.';
+  if (/parse|empty|json/i.test(msg))
+    return "We couldn't read this lab report. Try a clearer scan or a different file format (PDF, JPG, PNG).";
+  if (/upload|storage|network|fetch/i.test(msg))
+    return 'Something went wrong on our side. Try again — your file is still saved.';
+  return msg || 'Unexpected error during scan.';
+}
+
 export default function BloodworkPage() {
   const { user } = useAuth();
   const { hasPremium, isLoading: membershipLoading } = useMembership();
@@ -35,6 +50,11 @@ export default function BloodworkPage() {
   const [form, setForm] = useState<ScanFormState>(INITIAL_STATE);
   const [running, setRunning] = useState<'baseline' | 'deep' | null>(null);
   const [result, setResult] = useState<BloodworkScanResult | null>(null);
+  const [labReportId, setLabReportId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const lastTierRef = useRef<'baseline' | 'deep' | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const progress = useScanProgress();
 
   const fileToBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -48,12 +68,16 @@ export default function BloodworkPage() {
     async (tier: 'baseline' | 'deep') => {
       if (!user || !form.file) return;
       if (form.file.size > 10 * 1024 * 1024) {
-        toast.error('File must be under 10MB');
+        setError('File must be under 10MB. Please upload a smaller file.');
         return;
       }
 
       setRunning(tier);
       setResult(null);
+      setError(null);
+      lastTierRef.current = tier;
+      progress.start();
+      abortRef.current = new AbortController();
 
       void captureLead({
         email: user.email,
@@ -66,7 +90,7 @@ export default function BloodworkPage() {
       try {
         const filePath = `${user.id}/${Date.now()}-${form.file.name}`;
         const { error: uploadError } = await supabase.storage.from('lab-reports').upload(filePath, form.file);
-        if (uploadError) throw uploadError;
+        if (uploadError) throw new Error(`upload: ${uploadError.message}`);
 
         const { data: report, error: insertError } = await supabase
           .from('lab_reports')
@@ -78,11 +102,15 @@ export default function BloodworkPage() {
           })
           .select()
           .single();
-        if (insertError) throw insertError;
+        if (insertError) throw new Error(`upload: ${insertError.message}`);
+
+        setLabReportId(report.id);
+        progress.advance('extract');
 
         const base64 = await fileToBase64(form.file);
+        progress.advance('generate');
 
-        const { data, error } = await supabase.functions.invoke('analyze-lab-report', {
+        const { data, error: fnError } = await supabase.functions.invoke('analyze-lab-report', {
           body: {
             reportId: report.id,
             imageBase64: base64,
@@ -97,9 +125,16 @@ export default function BloodworkPage() {
           },
         });
 
-        if (error) throw error;
+        if (abortRef.current?.signal.aborted) {
+          progress.reset();
+          return;
+        }
+
+        if (fnError) throw new Error(fnError.message || 'AI analysis failed');
         const payload = (data as any)?.data;
         if (!payload) throw new Error('Empty AI response');
+
+        progress.advance('finalize');
 
         const scanResult: BloodworkScanResult = {
           scan_type: tier,
@@ -113,19 +148,55 @@ export default function BloodworkPage() {
           protocol: payload.protocol || {},
           goals: form.goals,
         };
+        progress.complete();
+        // Brief delay so users see the 100% state
+        await new Promise((r) => setTimeout(r, 350));
         setResult(scanResult);
         toast.success(`${tier === 'deep' ? 'Deep Decode' : 'Baseline'} scan complete`);
         setTimeout(() => {
           document.getElementById('bloodwork-results-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Scan failed');
+        const mapped = mapScanError(e);
+        progress.fail();
+        if (mapped) {
+          setError(mapped);
+          void captureLead({
+            email: user.email,
+            source: 'bloodwork_scan_failed',
+            planInterest: 'premium',
+            activityType: 'calculator_use',
+            activityData: { tier, reason: e instanceof Error ? e.message : String(e) },
+          });
+        } else {
+          progress.reset();
+        }
       } finally {
         setRunning(null);
+        abortRef.current = null;
       }
     },
-    [user, form]
+    [user, form, progress]
   );
+
+  const handleCancel = useCallback(() => {
+    abortRef.current?.abort();
+    progress.reset();
+    setRunning(null);
+    setError(null);
+  }, [progress]);
+
+  const handleRetry = useCallback(() => {
+    setError(null);
+    progress.reset();
+    if (lastTierRef.current) void runScan(lastTierRef.current);
+  }, [progress, runScan]);
+
+  const handleResetUpload = useCallback(() => {
+    setError(null);
+    progress.reset();
+    setForm((s) => ({ ...s, file: null }));
+  }, [progress]);
 
   const handleDownload = useCallback(() => {
     if (!result) return;
@@ -141,11 +212,7 @@ export default function BloodworkPage() {
 
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link
-            to="/"
-            className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors"
-            aria-label="Back"
-          >
+          <Link to="/" className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors" aria-label="Back">
             <ArrowLeft size={20} className="text-foreground" />
           </Link>
           <div className="flex-1 min-w-0">
@@ -175,8 +242,19 @@ export default function BloodworkPage() {
                 <div>
                   <ScanForm state={form} onChange={setForm} disabled={running !== null} />
                 </div>
-                <div>
-                  <ScanTierCards ready={isFormReady(form)} running={running} onRun={runScan} />
+                <div className="space-y-4 lg:sticky lg:top-20 self-start">
+                  {error ? (
+                    <ScanError message={error} onRetry={handleRetry} onReset={handleResetUpload} />
+                  ) : running ? (
+                    <ScanProgress
+                      stage={progress.stage}
+                      label={progress.label}
+                      percent={progress.percent}
+                      onCancel={handleCancel}
+                    />
+                  ) : (
+                    <ScanTierCards ready={isFormReady(form)} running={running} onRun={runScan} />
+                  )}
                 </div>
               </div>
             )}
@@ -185,12 +263,15 @@ export default function BloodworkPage() {
               <div className="mt-2">
                 <button
                   type="button"
-                  onClick={() => setResult(null)}
+                  onClick={() => {
+                    setResult(null);
+                    setLabReportId(null);
+                  }}
                   className="mb-6 text-xs uppercase tracking-wider text-muted-foreground hover:text-primary"
                 >
                   ← Run another scan
                 </button>
-                <BloodworkResults result={result} onDownload={handleDownload} />
+                <BloodworkResults result={result} onDownload={handleDownload} labReportId={labReportId} />
               </div>
             )}
           </main>

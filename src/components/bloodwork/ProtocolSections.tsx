@@ -1,7 +1,9 @@
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { StackPeptideCard, StackPeptide } from './StackPeptideCard';
+import { AdherenceChecklist } from './AdherenceChecklist';
 import { captureLead } from '@/lib/crm';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProtocolAdherence } from '@/hooks/useProtocolAdherence';
 
 export interface SupplementItem {
   name: string;
@@ -43,10 +45,12 @@ export interface Protocol {
 interface Props {
   protocol: Protocol;
   goals: string[];
+  labReportId: string | null;
 }
 
-export function ProtocolSections({ protocol, goals }: Props) {
+export function ProtocolSections({ protocol, goals, labReportId }: Props) {
   const { user } = useAuth();
+  const adherence = useProtocolAdherence(labReportId);
 
   const handleBuyStack = () => {
     void captureLead({
@@ -57,6 +61,18 @@ export function ProtocolSections({ protocol, goals }: Props) {
       activityData: { goals, peptides: protocol.stack?.map((p) => p.name) ?? [] },
     });
   };
+
+  const supplementItems = (protocol.supplements ?? []).map((s) => ({
+    title: s.name,
+    meta: s.dose,
+    body: [s.what_it_is, s.why_it_matters, s.how_to_take].filter(Boolean).join(' · '),
+  }));
+  const nutritionItems = (protocol.nutrition ?? []).map((n) => ({
+    title: n.title,
+    body: [n.what_it_looks_like, n.why_adopt, n.examples].filter(Boolean).join(' · '),
+  }));
+  const exerciseItems = protocol.exercise ?? [];
+  const stressItems = protocol.stress ?? [];
 
   return (
     <div className="space-y-12">
@@ -95,48 +111,65 @@ export function ProtocolSections({ protocol, goals }: Props) {
       )}
 
       {/* SUPPLEMENTS */}
-      {protocol.supplements && protocol.supplements.length > 0 && (
-        <ProtocolBlock num="05" title="Supplements">
-          <ol className="space-y-5">
-            {protocol.supplements.map((s, i) => (
-              <li key={i} className="border-l-2 border-primary/40 pl-4">
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="font-mono text-[10px] text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>
-                  <h4 className="text-sm font-semibold text-foreground">{s.name}</h4>
-                  {s.dose && <span className="text-xs text-muted-foreground">— {s.dose}</span>}
-                </div>
-                <SubBlock label="What it is" body={s.what_it_is} />
-                <SubBlock label="Why it matters" body={s.why_it_matters} />
-                <SubBlock label="How to take it" body={s.how_to_take} />
-              </li>
-            ))}
-          </ol>
+      {supplementItems.length > 0 && (
+        <ProtocolBlock num="05" title="Supplements — track adherence">
+          <AdherenceChecklist
+            section="supplements"
+            items={supplementItems}
+            isDone={adherence.isDone}
+            toggle={adherence.toggle}
+            resetSection={adherence.resetSection}
+            progress={adherence.sectionProgress('supplements', supplementItems.length)}
+          />
         </ProtocolBlock>
       )}
 
       {/* NUTRITION */}
-      {protocol.nutrition && protocol.nutrition.length > 0 && (
-        <ProtocolBlock num="06" title="Nutrition">
-          <ol className="space-y-5">
-            {protocol.nutrition.map((n, i) => (
-              <li key={i} className="border-l-2 border-primary/40 pl-4">
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="font-mono text-[10px] text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>
-                  <h4 className="text-sm font-semibold text-foreground">{n.title}</h4>
-                </div>
-                <SubBlock label="What it looks like" body={n.what_it_looks_like} />
-                <SubBlock label="Why adopt this" body={n.why_adopt} />
-                <SubBlock label="Examples" body={n.examples} />
-              </li>
-            ))}
-          </ol>
+      {nutritionItems.length > 0 && (
+        <ProtocolBlock num="06" title="Nutrition — track adherence">
+          <AdherenceChecklist
+            section="nutrition"
+            items={nutritionItems}
+            isDone={adherence.isDone}
+            toggle={adherence.toggle}
+            resetSection={adherence.resetSection}
+            progress={adherence.sectionProgress('nutrition', nutritionItems.length)}
+          />
         </ProtocolBlock>
       )}
 
-      {/* EXERCISE / STRESS / ENVIRONMENT */}
-      {protocol.exercise && <NumberedBlock num="07" title="Exercise" items={protocol.exercise} />}
-      {protocol.stress && <NumberedBlock num="08" title="Stress" items={protocol.stress} />}
-      {protocol.environment && <NumberedBlock num="09" title="Environment" items={protocol.environment} />}
+      {/* EXERCISE */}
+      {exerciseItems.length > 0 && (
+        <ProtocolBlock num="07" title="Exercise — track adherence">
+          <AdherenceChecklist
+            section="exercise"
+            items={exerciseItems}
+            isDone={adherence.isDone}
+            toggle={adherence.toggle}
+            resetSection={adherence.resetSection}
+            progress={adherence.sectionProgress('exercise', exerciseItems.length)}
+          />
+        </ProtocolBlock>
+      )}
+
+      {/* STRESS */}
+      {stressItems.length > 0 && (
+        <ProtocolBlock num="08" title="Stress — track adherence">
+          <AdherenceChecklist
+            section="stress"
+            items={stressItems}
+            isDone={adherence.isDone}
+            toggle={adherence.toggle}
+            resetSection={adherence.resetSection}
+            progress={adherence.sectionProgress('stress', stressItems.length)}
+          />
+        </ProtocolBlock>
+      )}
+
+      {/* ENVIRONMENT (read-only — no adherence) */}
+      {protocol.environment && protocol.environment.length > 0 && (
+        <NumberedBlock num="09" title="Environment" items={protocol.environment} />
+      )}
 
       {/* RETEST */}
       {protocol.retest && protocol.retest.length > 0 && (
@@ -190,15 +223,5 @@ function NumberedBlock({ num, title, items }: { num: string; title: string; item
         ))}
       </ol>
     </ProtocolBlock>
-  );
-}
-
-function SubBlock({ label, body }: { label: string; body?: string }) {
-  if (!body) return null;
-  return (
-    <div className="mt-2">
-      <p className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold">{label}</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">{body}</p>
-    </div>
   );
 }

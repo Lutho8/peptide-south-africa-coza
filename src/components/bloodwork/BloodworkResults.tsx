@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, AlertTriangle, CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { Download, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtocolSections, Protocol } from './ProtocolSections';
 
@@ -35,13 +35,60 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
+type StatusFilter = 'all' | 'normal' | 'high' | 'low' | 'critical';
+
 interface Props {
   result: BloodworkScanResult;
   onDownload: () => void;
+  labReportId: string | null;
 }
 
-export function BloodworkResults({ result, onDownload }: Props) {
-  const grouped = groupByCategory(result.biomarkers);
+export function BloodworkResults({ result, onDownload, labReportId }: Props) {
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Debounce search 150ms
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(search.trim().toLowerCase()), 150);
+    return () => window.clearTimeout(t);
+  }, [search]);
+
+  // Keyboard: '/' focuses, Esc clears
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === 'Escape' && document.activeElement === searchRef.current) {
+        setSearch('');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const statusCounts = useMemo(() => {
+    const c = { normal: 0, high: 0, low: 0, critical: 0 };
+    for (const bm of result.biomarkers) c[bm.status] = (c[bm.status] ?? 0) + 1;
+    return c;
+  }, [result.biomarkers]);
+
+  const filtered = useMemo(() => {
+    return result.biomarkers.filter((bm) => {
+      if (statusFilter !== 'all' && bm.status !== statusFilter) return false;
+      if (debouncedSearch) {
+        const hay = `${bm.name} ${bm.short_name ?? ''}`.toLowerCase();
+        if (!hay.includes(debouncedSearch)) return false;
+      }
+      return true;
+    });
+  }, [result.biomarkers, debouncedSearch, statusFilter]);
+
+  const grouped = groupByCategory(filtered);
+  const visibleCategories = CATEGORY_ORDER.filter((c) => grouped[c]?.length);
+  const hasFilter = debouncedSearch !== '' || statusFilter !== 'all';
 
   return (
     <div className="space-y-12" id="bloodwork-results-root">
@@ -76,18 +123,92 @@ export function BloodworkResults({ result, onDownload }: Props) {
           <span className="font-mono text-[11px] tracking-widest text-muted-foreground">02 —</span>
           <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Biomarker panel</h2>
         </div>
-        <div className="space-y-6">
-          {CATEGORY_ORDER.filter((c) => grouped[c]?.length).map((cat) => (
-            <div key={cat}>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{CATEGORY_LABELS[cat]}</p>
-              <div className="rounded-xl border border-border/50 overflow-hidden">
-                {grouped[cat].map((bm, i) => (
-                  <BiomarkerRow key={`${cat}-${i}`} bm={bm} last={i === grouped[cat].length - 1} />
-                ))}
-              </div>
+
+        {/* FILTER BAR */}
+        <div className="sticky top-16 z-20 -mx-2 px-2 py-3 mb-4 bg-background/85 backdrop-blur-md rounded-lg border border-border/40">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="relative flex-1 min-w-0">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <input
+                ref={searchRef}
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search biomarkers… (press / to focus)"
+                className="w-full pl-9 pr-9 py-2 rounded-lg bg-card/40 border border-border/60 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                aria-label="Search biomarkers"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-muted text-muted-foreground"
+                  aria-label="Clear search"
+                >
+                  <X size={12} />
+                </button>
+              )}
             </div>
-          ))}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(['all', 'normal', 'low', 'high', 'critical'] as StatusFilter[]).map((s) => (
+                <FilterChip
+                  key={s}
+                  label={s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+                  count={s === 'all' ? result.biomarkers.length : statusCounts[s]}
+                  active={statusFilter === s}
+                  status={s}
+                  onClick={() => setStatusFilter(statusFilter === s ? 'all' : s)}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+            <span className="tabular-nums">
+              {filtered.length}/{result.biomarkers.length} shown
+            </span>
+            {hasFilter && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('all');
+                }}
+                className="uppercase tracking-wider hover:text-primary transition-colors"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
         </div>
+
+        {filtered.length === 0 ? (
+          <div className="rounded-xl border border-border/40 bg-card/30 p-8 text-center">
+            <p className="text-sm text-muted-foreground">No biomarkers match this filter.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setStatusFilter('all');
+              }}
+              className="mt-2 text-xs uppercase tracking-wider text-primary hover:underline"
+            >
+              Reset filters
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {visibleCategories.map((cat) => (
+              <div key={cat}>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{CATEGORY_LABELS[cat]}</p>
+                <div className="rounded-xl border border-border/50 overflow-hidden">
+                  {grouped[cat].map((bm, i) => (
+                    <BiomarkerRow key={`${cat}-${i}`} bm={bm} last={i === grouped[cat].length - 1} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* INSIGHTS */}
@@ -109,8 +230,48 @@ export function BloodworkResults({ result, onDownload }: Props) {
       )}
 
       {/* PROTOCOL */}
-      <ProtocolSections protocol={result.protocol} goals={result.goals} />
+      <ProtocolSections protocol={result.protocol} goals={result.goals} labReportId={labReportId} />
     </div>
+  );
+}
+
+function FilterChip({
+  label,
+  count,
+  active,
+  status,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  status: StatusFilter;
+  onClick: () => void;
+}) {
+  const tone =
+    status === 'normal'
+      ? 'data-[active=true]:bg-green-500/15 data-[active=true]:text-green-500 data-[active=true]:border-green-500/30'
+      : status === 'high'
+      ? 'data-[active=true]:bg-red-500/15 data-[active=true]:text-red-500 data-[active=true]:border-red-500/30'
+      : status === 'low'
+      ? 'data-[active=true]:bg-yellow-500/15 data-[active=true]:text-yellow-600 data-[active=true]:border-yellow-500/30'
+      : status === 'critical'
+      ? 'data-[active=true]:bg-red-600/20 data-[active=true]:text-red-600 data-[active=true]:border-red-600/40'
+      : 'data-[active=true]:bg-primary/15 data-[active=true]:text-primary data-[active=true]:border-primary/40';
+  return (
+    <button
+      type="button"
+      data-active={active}
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold uppercase tracking-wider transition-all',
+        'border-border/60 bg-card/40 text-muted-foreground hover:border-primary/40',
+        tone
+      )}
+    >
+      {label}
+      <span className="text-[10px] font-mono tabular-nums opacity-80">{count}</span>
+    </button>
   );
 }
 

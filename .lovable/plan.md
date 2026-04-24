@@ -1,119 +1,181 @@
+## Plan: Adherence checklists + biomarker search/filter + staged scan progress
 
+Three additive enhancements to `/bloodwork`. No breaking changes to existing scan flow.
 
-## Plan: Premium Bloodwork — Vril-inspired flow with two scan tiers, store CTA, and disclaimer
+---
 
-Transform `/bloodwork` from a single-tool upload into a Premium-gated, multi-step protocol-generation experience modeled on the Vril screenshots you shared. Non-Premium users see an upgrade gate; Premium users get the full flow.
+### Part 1 — Adherence checklists (Nutrition · Exercise · Stress · Supplements)
 
-### The new flow (match the screenshots)
+**DB migration — new table `protocol_adherence`:**
 
-**Hero** — *"From bloodwork to protocol."* — 3-step explainer (`01 Upload your bloodwork → 02 Receive your analysis → 03 Execute your protocol`).
+```sql
+create table public.protocol_adherence (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  lab_report_id uuid not null,
+  section text not null check (section in ('supplements','nutrition','exercise','stress')),
+  item_key text not null,           -- stable hash of "section:index:title"
+  item_label text not null,         -- denormalized for history view
+  completed_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  unique (user_id, lab_report_id, section, item_key)
+);
 
-**Two-column scan picker** (left = form, right = scan tier cards):
+alter table public.protocol_adherence enable row level security;
+create policy "Users view own adherence" on public.protocol_adherence for select using (auth.uid() = user_id);
+create policy "Users insert own adherence" on public.protocol_adherence for insert with check (auth.uid() = user_id);
+create policy "Users delete own adherence" on public.protocol_adherence for delete using (auth.uid() = user_id);
 
-- **Left form (sticky on desktop, stacked on mobile):**
-  - `01 — BLOODWORK FILE` — drag-drop / click upload (PDF or image, ≤10MB). "↓ Download sample spec" link.
-  - `02 — PATIENT INFO` — Age (number) + Sex (Male/Female/Prefer not to say) underline-style inputs.
-  - `03 — GOALS — select at least one` — 8 chip toggles: Longevity, Performance, Cardiovascular Health, Hormone Optimization, Weight Loss, Cognitive Enhancement, Muscle Building, Recovery.
-  - `04 — PEPTIDE HISTORY — have you used peptides before?` — Yes / No toggle. If Yes, a textarea appears: *"Which peptides, doses, and how long?"* (e.g. "Retatrutide, Tesamorellin, KLOW, Kisspeptin-10. I have just started 1 month ago").
-  - Footer: *"For informational purposes only — not medical advice."*
+create index protocol_adherence_user_report_idx on public.protocol_adherence (user_id, lab_report_id);
+create index protocol_adherence_user_section_completed_idx on public.protocol_adherence (user_id, section, completed_at desc);
+```
 
-- **Right column (two stacked tier cards):**
-  - **Baseline Scan** (Free with Premium) — *"Instant biomarker extraction across all panels, personalised health insights, and a curated peptide stack. Ready in under 60 seconds."* CTA: **RUN BASELINE SCAN →** (disabled until file + ≥1 goal selected; shows hint "Upload bloodwork or use your saved file to continue").
-  - **Deep Decode** (Premium add-on, single-click) — *"32 biomarkers across 8 panels. Full health report scored by category, with a personalised optimisation protocol. Includes 4 follow-ups over 12 months."* CTA: **RUN DEEP DECODE →**.
-  - Both tiers run the same backend analyzer; "Deep Decode" stores `scan_type: 'deep'` flag for richer prompt depth + future follow-up scheduling.
+**Why this shape:** toggle = insert row, untoggle = delete row. The `completed_at` column doubles as the adherence timeline ("you completed X 4 days in a row"). Cycling completion off then on simply leaves a fresh `completed_at`.
 
-**Results screen (post-scan):**
+**New hook — `src/hooks/useProtocolAdherence.ts`:**
+- Fetches all rows for `(user_id, lab_report_id)` once on mount, returns `Set<itemKey>`.
+- `toggle(section, index, label)` → optimistic update, then `insert` or `delete` accordingly.
+- Exposes `progress(section, totalItems)` → `{ done, total, pct }` for section headers.
+- Stable `itemKey` = `${section}:${index}:${slug(label)}` so re-running a scan with the same protocol keeps prior toggles aligned.
 
-1. **Header** — *"Baseline Scan"* eyebrow + *"Your Bloodwork Results"* title + circular **Health Score** (0–100, green ring) + biomarker count + **↓ Download PDF** button.
-2. **Biomarker Panel** — grouped by category (HORMONES, LIPIDS, METABOLIC, LIVER, KIDNEY, INFLAMMATION, THYROID, OTHER). Each row: name + ref range below + value + unit + status badge (NORMAL / HIGH / LOW / CRITICAL).
-3. **INSIGHTS** — numbered list of 6–8 plain-English findings.
-4. **PEPTIDE STACK** section:
-   - Goal-aware paragraph summarizing the recommended stack and rationale.
-   - **Primary CTA: `BUY THIS STACK ON RIDETHETIDE.SITE/SHOP →`** — links to `https://www.ridethetide.site/shop` (new tab, `rel="noopener noreferrer"`, fires `crm.captureLead({ activityType: 'premium_click', source: 'bloodwork_stack_buy', planInterest: 'premium', activityData: { goals, stackPeptides } })`).
-   - Per-peptide cards: name + priority badge (HIGH / MEDIUM / LOW) + goal tags + 2–3 sentence rationale + `DOSING:` line + **VIEW ON SHOP →** link (each links to `https://www.ridethetide.site/shop?q=<peptide-slug>`).
-5. **SUPPLEMENTS** — numbered list. Each item: name + dose + 3 sub-sections: `WHAT IT IS`, `WHY IT MATTERS`, `HOW TO TAKE IT`.
-6. **NUTRITION** — numbered list. Each item: title + `WHAT IT LOOKS LIKE` / `WHY ADOPT THIS` / `EXAMPLES`.
-7. **EXERCISE** — numbered list of training prescriptions.
-8. **STRESS** — numbered list of stress-management practices.
-9. **ENVIRONMENT** — numbered list of environmental optimizations.
-10. **DIAGNOSTICS — RETEST** (new) — list of suggested follow-up labs and timing windows.
+**New component — `src/components/bloodwork/AdherenceChecklist.tsx`:**
+- Wraps the existing list rendering inside `ProtocolSections.tsx` with a checkbox column.
+- Section header shows `{done}/{total} done` + a thin progress bar.
+- Toggle uses `Checkbox` from shadcn UI; checked rows fade `text-muted-foreground line-through` on the title only (rationale stays readable).
+- A small "Reset section" link (only visible when `done > 0`) bulk-deletes that section's rows for the report.
 
-**Footer disclaimer** (page bottom, exact copy):
+**Wire-in — `ProtocolSections.tsx`:**
+- Pass `labReportId` from `BloodworkPage` → `BloodworkResults` → `ProtocolSections`.
+- `SUPPLEMENTS`, `NUTRITION`, `EXERCISE`, `STRESS` blocks render via `<AdherenceChecklist section="..." items={...} labReportId={...} />`.
+- `PEPTIDE STACK` and `RETEST` keep current rendering (no adherence — stack adherence is tracked in the existing dose-logging system; retest is a future scheduling concern).
 
-> *This analysis is for educational and informational purposes only. It does not constitute medical advice. Consult a qualified healthcare provider before making any changes to your health regimen, including peptide protocols, supplements, or diagnostic testing.*
+**CRM tracking:**
+- On every toggle-on: fire `crm.captureLead({ activityType: 'calculator_use', source: 'bloodwork_adherence', planInterest: 'premium', activityData: { section, item: label } })` (debounced 1s/section so a flurry of toggles only sends one event per second).
 
-### Premium gate
+**PDF export update — `src/utils/bloodworkProtocolPdf.ts`:**
+- Accept an optional `completedKeys: Set<string>` param; checked items render with a `[x]` prefix in the PDF.
 
-Wrap the entire page (`/bloodwork`) in `useMembership().hasPremium`:
+---
 
-- **If not signed in** → CTA card "Sign in & upgrade to Premium" → opens AuthModal.
-- **If signed in but not Premium** → Premium upgrade card with feature bullets ("AI-decoded biomarkers", "Personalised peptide stack", "12-month optimisation protocol") + **Unlock Premium → R4.99/mo** button → smooth-scrolls to `/#pricing`. Fires `crm.captureLead({ activityType: 'premium_click', source: 'bloodwork_gate', planInterest: 'premium' })`.
-- **If admin or Premium** → renders the full flow above.
+### Part 2 — Biomarker search & status filter on results screen
 
-### Backend changes (single migration + edge function update)
+**Edits to `src/components/bloodwork/BloodworkResults.tsx`:**
 
-1. **Migration** — add columns to `lab_reports`:
-   - `scan_type text not null default 'baseline'` (`'baseline' | 'deep'`)
-   - `patient_age integer`
-   - `patient_sex text`
-   - `goals text[] not null default '{}'`
-   - `peptide_history_used boolean`
-   - `peptide_history_notes text`
-   - `health_score integer` (0–100)
-   - `protocol jsonb` (structured: `{ stack: [...], supplements: [...], nutrition: [...], exercise: [...], stress: [...], environment: [...], retest: [...] }`)
-   - `recommended_stack_peptides text[]`
+Add a sticky filter bar above the biomarker panel:
 
-2. **`analyze-lab-report` edge function** — extend the prompt:
-   - Accept new params: `scanType`, `age`, `sex`, `goals`, `peptideHistoryUsed`, `peptideHistoryNotes`.
-   - Add to system prompt: *"Use the user's age, sex, goals, and peptide history to personalise the recommendations. If `scanType` is `deep`, expand each section to include 32 biomarkers where possible and add 4 follow-up retest milestones over 12 months."*
-   - Return JSON with new keys: `health_score`, `protocol: { stack, supplements, nutrition, exercise, stress, environment, retest }`, `recommended_stack_peptides`.
-   - Save the new fields back to `lab_reports`.
+```text
+[ 🔍 search biomarkers… ]   [ All ] [ Normal ] [ Low ] [ High ] [ Critical ]   12/24 shown
+```
 
-3. **PDF export** — keep existing report-PDF path; the "Download PDF" button uses `utils/exportReport.ts` (already present) and we'll add a `bloodworkProtocolPdf` helper that renders the full protocol to PDF.
+- Search input is debounced 150ms; matches `name` OR `short_name` (case-insensitive, substring).
+- Status chips are toggleable (single-select; clicking the active chip returns to "All"). Counts per status shown as small superscript: `Normal⁹  High⁴  Low²  Critical¹`.
+- Filtering is computed via `useMemo` over `result.biomarkers`; categories with zero matches are hidden entirely (no empty section headers).
+- "X/Y shown" indicator updates live.
+- Empty state: "No biomarkers match this filter." with a reset button.
+- URL deeplink support: `?bm=<query>&status=<status>` — read on mount, write via `replaceState` so back-button isn't polluted.
+- Keyboard: `/` focuses the search input; `Esc` clears.
 
-### CRM tracking added
+No new components — keep the filter UI inline at the top of the existing biomarker section so it stays sticky-friendly.
 
-| Trigger | activityType | source | planInterest |
+---
+
+### Part 3 — Staged scan progress UI with graceful errors
+
+**New hook — `src/hooks/useScanProgress.ts`:**
+
+Drives a 4-stage progress simulator (the AI call itself is a single fetch — no streaming — so we model perceived progress with an asymptotic curve):
+
+| Stage | Label | Target % | Min duration |
 |---|---|---|---|
-| Premium gate viewed (non-Premium) | `pricing_view` | `bloodwork_gate` | `premium` |
-| "Unlock Premium" click on gate | `premium_click` | `bloodwork_gate` | `premium` |
-| Baseline scan run | `calculator_use` | `bloodwork_baseline` | `premium` |
-| Deep Decode scan run | `calculator_use` | `bloodwork_deep` | `premium` |
-| "Buy This Stack on RideTheTide.site/shop" click | `premium_click` | `bloodwork_stack_buy` | `premium` |
-| Per-peptide "View on shop" click | `peptide_search` | `bloodwork_peptide_shop` | `premium` |
+| 1 | "Uploading bloodwork…" | 15 | 0.4s |
+| 2 | "Extracting biomarkers…" | 50 | 4s (asymptotes if AI takes longer) |
+| 3 | "Generating personalised protocol…" | 90 | 6s asymptote |
+| 4 | "Finalising results…" | 100 | snaps when the fetch resolves |
+
+API: `const { stage, label, percent, start, advance, complete, fail, reset } = useScanProgress();`
+- `start()` → stage 1, kicks off interval.
+- `advance('extract'|'generate')` called explicitly from `BloodworkPage` after upload + DB-insert resolves and again right before the AI call resolves.
+- `complete()` → snap to 100, then fade.
+- `fail()` → freezes percent and surfaces error state.
+- Internal interval ticks every 200ms with `next = current + (target - current) * 0.08` (eased asymptote, never overruns target).
+
+**New component — `src/components/bloodwork/ScanProgress.tsx`:**
+
+Renders inline between the form and tier cards (replaces the spinner inside `ScanTierCards` while running):
+
+```text
+┌────────────────────────────────────────────┐
+│  ●●●○  Generating personalised protocol…   │
+│  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░  72%               │
+│  Usually completes in 30-60 seconds.       │
+│  [ Cancel ]                                 │
+└────────────────────────────────────────────┘
+```
+
+- 4 dot indicators (filled = complete, ring = active w/ pulse, hollow = pending).
+- Stage label rotates with subtle `framer-motion` slide-up.
+- Progress bar uses `bg-primary` with a shimmer sweep (matches existing luxury animation memory).
+- "Cancel" button calls `AbortController.abort()` on the in-flight `supabase.functions.invoke` — onClick: confirms, then `reset()` + clears the upload state but keeps the form intact.
+
+**Error handling — new error card:**
+
+When the scan fails (network, 429, 402, 500, parse error), the tier cards swap for an inline error block:
+
+```text
+⚠️  We couldn't decode this report
+   <plain-English mapped from edge function response>
+
+   [ Try again ]   [ Upload a different file ]   [ Contact support ]
+```
+
+Mapping table (handled in `BloodworkPage`):
+
+| Failure | User-facing copy |
+|---|---|
+| 429 | "Too many scans right now. Wait 30 seconds and try again." |
+| 402 | "Premium scan credits exhausted for this hour. Try again shortly." |
+| 500 / network | "Something went wrong on our side. Try again — your file is still saved." |
+| Parse / empty AI response | "We couldn't read this lab report. Try a clearer scan or a different file format (PDF, JPG, PNG)." |
+| File >10MB (client) | (already handled, but extend to show the error card not just a toast) |
+| AbortError | (silently reset — no error card) |
+
+CRM: on failure → `crm.captureLead({ activityType: 'calculator_use', source: 'bloodwork_scan_failed', planInterest: 'premium', activityData: { tier, reason } })` so we can monitor failure rates.
+
+**Wire-up in `BloodworkPage.tsx`:**
+- Add `progress` hook + `error` state + `abortRef`.
+- `runScan` becomes:
+  1. `progress.start()` → upload file → `progress.advance('extract')` once `lab_reports` row inserted
+  2. `progress.advance('generate')` immediately before `functions.invoke`
+  3. On success → `progress.complete()` → 350ms delay → render results
+  4. On error → `progress.fail()` → set error state → render error card
+- Replace the existing `running` loader inside `ScanTierCards` with the new `ScanProgress` component. The form stays mounted but greys out (`disabled` prop already supported).
+- After results render, dismiss the progress UI.
+
+---
 
 ### Files touched
 
 ```text
-NEW    src/components/bloodwork/BloodworkHero.tsx           (3-step "From bloodwork to protocol")
-NEW    src/components/bloodwork/ScanForm.tsx                (file + age/sex + goals + history)
-NEW    src/components/bloodwork/ScanTierCards.tsx           (Baseline + Deep Decode CTAs)
-NEW    src/components/bloodwork/BloodworkResults.tsx        (Health Score + biomarker panel)
-NEW    src/components/bloodwork/ProtocolSections.tsx        (Stack + Supplements + Nutrition + Exercise + Stress + Environment + Retest)
-NEW    src/components/bloodwork/StackPeptideCard.tsx        (per-peptide card with shop link)
-NEW    src/components/bloodwork/PremiumGate.tsx             (signed-out + non-Premium gate)
-NEW    src/utils/bloodworkProtocolPdf.ts                    (PDF export of full protocol)
-EDIT   src/pages/BloodworkPage.tsx                          (wire gate + new flow + disclaimer)
-EDIT   src/components/biomarkers/BiomarkerInsights.tsx     (refactor: extract upload to ScanForm; results render via new components — keep History tab)
-EDIT   supabase/functions/analyze-lab-report/index.ts      (extend prompt + accept new params + return protocol JSON)
-NEW    supabase/migration                                   (lab_reports columns: scan_type, patient_age/sex, goals, peptide_history_*, health_score, protocol, recommended_stack_peptides)
+NEW    supabase/migration                                  (protocol_adherence table + RLS)
+NEW    src/hooks/useProtocolAdherence.ts                   (toggle/progress/reset helpers)
+NEW    src/hooks/useScanProgress.ts                        (4-stage asymptotic progress)
+NEW    src/components/bloodwork/AdherenceChecklist.tsx     (checkbox-wrapped list w/ progress bar)
+NEW    src/components/bloodwork/ScanProgress.tsx           (4-dot indicator + bar + cancel)
+NEW    src/components/bloodwork/ScanError.tsx              (error card w/ retry / different file)
+EDIT   src/components/bloodwork/ProtocolSections.tsx       (use AdherenceChecklist for 4 sections; pass labReportId)
+EDIT   src/components/bloodwork/BloodworkResults.tsx       (search input + status filter + counts; pass labReportId down)
+EDIT   src/pages/BloodworkPage.tsx                         (wire progress hook, AbortController, error mapping, pass labReportId to results)
+EDIT   src/utils/bloodworkProtocolPdf.ts                   (accept completedKeys; render [x] prefix)
+EDIT   src/integrations/supabase/types.ts                  (auto-regenerated by migration)
 ```
-
-### Visual style
-
-- Keep the current dark + glassmorphism brand (Ride The Tide), **not** a verbatim Vril clone — same layout/structure as the screenshots, our colors (#3B82F6 primary, dark surfaces, subtle gradients, monospace `01 — SECTION` eyebrows in muted tracking-wide).
-- Section dividers use `border-border/50` thin lines like the screenshots.
-- Status badges: NORMAL = green, HIGH/CRITICAL = red, LOW = yellow.
-- Health Score ring uses SVG circle with green stroke, animated count-up on mount.
 
 ### Explicitly NOT doing
 
-- ❌ Building a full vrilpeptides.com-style storefront — single CTA links out to `https://www.ridethetide.site/shop`.
-- ❌ Auto-scheduling the 4 Deep Decode follow-ups (column captured; scheduling is a follow-up task once Tagadapay is wired and we know billing periods).
-- ❌ A separate `vril`-style marketing landing page — flow lives at `/bloodwork`.
-- ❌ Touching the unrelated `BiomarkerInsights` History/Trends tabs beyond the refactor needed for the new flow.
+- ❌ Streaming AI responses — gateway endpoint is non-streaming; staged progress is a perceptual simulation only (this is industry-standard for non-streaming AI UX).
+- ❌ Adherence streaks/badges UI — the schema supports it (`completed_at` timestamps), but the visual streak component is a follow-up once we have a few weeks of data to test against.
+- ❌ Touching peptide STACK or RETEST sections with checklists — peptide adherence is the existing dose-logging system's job; retest is a future scheduling task.
+- ❌ Server-side biomarker filtering — payload is small (~30 markers max), client-side `useMemo` is the right call.
 
-### After approval
+### Migration first, then code
 
-I'll run the DB migration first (extends `lab_reports`), then ship the page + edge function in one pass. No new secrets needed — this uses existing `LOVABLE_API_KEY` (Lovable AI Gateway) and the Supabase storage bucket `lab-reports` that's already provisioned.
-
+After approval I'll run the `protocol_adherence` migration first (regenerates `types.ts`), then ship all 6 new/edited files in one pass. No new secrets needed.
