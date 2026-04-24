@@ -250,7 +250,27 @@ export default function LiveQnA() {
 
           {/* Registration Form */}
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-            {registered ? (
+            {!membershipLoading && !hasPremium ? (
+              <Card className="border-primary/40 shadow-lg overflow-hidden">
+                <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
+                <CardContent className="p-8 text-center space-y-5">
+                  <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <Lock className="w-7 h-7 text-accent" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground">Premium members only</h3>
+                  <p className="text-muted-foreground">
+                    The monthly Live Q&A is exclusive to Premium members. Upgrade for just <strong className="text-foreground">R4.99/month</strong> (or R49/year) to reserve your seat and unlock 1:1 calls, AI bloodwork insights, and more.
+                  </p>
+                  <Link to="/#pricing" onClick={handleUpgradeClick} className="block">
+                    <Button size="lg" className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 shadow-lg shadow-primary/25">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Unlock with Premium
+                    </Button>
+                  </Link>
+                  <p className="text-xs text-muted-foreground">Cancel anytime · Prices in ZAR · 🇿🇦 Built in South Africa</p>
+                </CardContent>
+              </Card>
+            ) : registered ? (
               <Card className="border-accent/50 bg-accent/5">
                 <CardContent className="p-8 text-center space-y-4">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }}>
@@ -268,8 +288,8 @@ export default function LiveQnA() {
               <Card className="border-primary/30 shadow-lg">
                 <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary rounded-t-lg" />
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-foreground mb-1">Reserve Your Spot</h3>
-                  <p className="text-sm text-muted-foreground mb-6">Free · {sessionMonth} Session · Via Zoom</p>
+                  <h3 className="text-xl font-bold text-foreground mb-1">Reserve Your Premium Spot</h3>
+                  <p className="text-sm text-muted-foreground mb-6">Premium members only · {sessionMonth} Session · Via Zoom</p>
 
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Email */}
