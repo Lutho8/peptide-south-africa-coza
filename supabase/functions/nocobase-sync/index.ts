@@ -11,6 +11,11 @@ const corsHeaders = {
 const NOCOBASE_API_URL = Deno.env.get('NOCOBASE_API_URL');
 const NOCOBASE_API_TOKEN = Deno.env.get('NOCOBASE_API_TOKEN');
 
+// Admin email — every lead capture is also surfaced to this address.
+// Email delivery requires the Lovable Email domain to be configured;
+// until then, the admin payload is logged + mirrored into NocoBase only.
+const ADMIN_EMAIL = 'lutho.kote@relicom.de';
+
 type ActivityType =
   | 'page_view'
   | 'qa_signup'
@@ -249,9 +254,27 @@ Deno.serve(async (req) => {
         pageUrl: payload.pageUrl,
         sessionId: payload.sessionId,
       });
+
+      // Admin notification — surfaced to lutho.kote@relicom.de.
+      // Visible immediately in edge function logs (grep for ADMIN_NOTIFY).
+      // Once the Lovable Email domain is configured, this same payload
+      // will also be sent as a transactional email to ADMIN_EMAIL.
+      const adminPayload = {
+        admin: ADMIN_EMAIL,
+        leadId,
+        email,
+        firstName: payload.firstName ?? null,
+        source: payload.source,
+        planInterest,
+        activityType: payload.activityType,
+        pageUrl: payload.pageUrl ?? null,
+        scoreDelta,
+        capturedAt: new Date().toISOString(),
+      };
+      console.log('ADMIN_NOTIFY', JSON.stringify(adminPayload));
     }
 
-    return new Response(JSON.stringify({ ok: true, leadId }), {
+    return new Response(JSON.stringify({ ok: true, leadId, admin: ADMIN_EMAIL }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
