@@ -1,181 +1,58 @@
-## Plan: Adherence checklists + biomarker search/filter + staged scan progress
+## Context: most of this is already built
 
-Three additive enhancements to `/bloodwork`. No breaking changes to existing scan flow.
+Your project already has a working NocoBase lead-capture pipeline. Before adding anything new, here's what exists today:
 
----
+- **`src/lib/crm.ts`** — exposes `captureLead({ email, firstName, lastName, phone, source, planInterest, activityType, activityData })`. Includes a stable `getSessionId()` (sessionStorage UUID) and silent error handling. Already imported in 17+ surfaces.
+- **`supabase/functions/nocobase-sync/index.ts`** — server-side edge function that handles upsert-by-email, lead-score deltas (qa_signup = +15, premium_click = +25, pricing_view = +10, etc.), status derivation (new → nurturing → qualified), and writes an `Activities` row in the same call. Reads `NOCOBASE_API_URL` + `NOCOBASE_API_TOKEN` as **server-side secrets** (already configured).
+- **`src/pages/LiveQnA.tsx`** — the actual "Reserve Your Premium Spot" form **already calls** `captureLead` after a successful Supabase insert (lines 133–144) with `source: 'live_qna_registration'`, `planInterest: 'premium'`, `activityType: 'consultation_booked'`, plus `firstName`, `lastName`, `phone`, and `session_month`/`experience_level` in `activityData`.
+- **`src/components/landing/LiveQnAPopup.tsx`** — the bottom-right popup teaser also calls `captureLead` on the upgrade click.
 
-### Part 1 — Adherence checklists (Nutrition · Exercise · Stress · Supplements)
+## Why I won't ship the spec as written
 
-**DB migration — new table `protocol_adherence`:**
+The pasted instructions describe a **Next.js**, browser-side NocoBase client (`process.env.NEXT_PUBLIC_*`, direct `fetch` to NocoBase from the browser). That doesn't fit this codebase and would be a regression:
 
-```sql
-create table public.protocol_adherence (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null,
-  lab_report_id uuid not null,
-  section text not null check (section in ('supplements','nutrition','exercise','stress')),
-  item_key text not null,           -- stable hash of "section:index:title"
-  item_label text not null,         -- denormalized for history view
-  completed_at timestamptz not null default now(),
-  created_at timestamptz not null default now(),
-  unique (user_id, lab_report_id, section, item_key)
-);
+1. **This is Vite, not Next.js.** `process.env.NEXT_PUBLIC_*` doesn't exist; the Vite equivalent would be `import.meta.env.VITE_*`.
+2. **Exposing the NocoBase token to the browser is a security downgrade.** Anyone could read `VITE_NOCOBASE_TOKEN` from the bundle and write/read your CRM directly. Today the token lives only in the edge function — exactly where it should.
+3. **It would duplicate logic.** Score table, upsert-by-email, status derivation, and activity creation are already implemented in `nocobase-sync`. Re-doing them client-side means two sources of truth that will drift.
+4. **The "Reserve My Spot" button already captures the lead.** The instruction's main behavioural ask is a no-op against current code.
 
-alter table public.protocol_adherence enable row level security;
-create policy "Users view own adherence" on public.protocol_adherence for select using (auth.uid() = user_id);
-create policy "Users insert own adherence" on public.protocol_adherence for insert with check (auth.uid() = user_id);
-create policy "Users delete own adherence" on public.protocol_adherence for delete using (auth.uid() = user_id);
+## What I'll actually change
 
-create index protocol_adherence_user_report_idx on public.protocol_adherence (user_id, lab_report_id);
-create index protocol_adherence_user_section_completed_idx on public.protocol_adherence (user_id, section, completed_at desc);
-```
+Two small, targeted improvements that deliver the *intent* of the request (capture Q&A signups + activity + optional Premium interest) without the regressions:
 
-**Why this shape:** toggle = insert row, untoggle = delete row. The `completed_at` column doubles as the adherence timeline ("you completed X 4 days in a row"). Cycling completion off then on simply leaves a fresh `completed_at`.
+### 1. Add an "I'm also interested in Premium" checkbox to the Q&A form
 
-**New hook — `src/hooks/useProtocolAdherence.ts`:**
-- Fetches all rows for `(user_id, lab_report_id)` once on mount, returns `Set<itemKey>`.
-- `toggle(section, index, label)` → optimistic update, then `insert` or `delete` accordingly.
-- Exposes `progress(section, totalItems)` → `{ done, total, pct }` for section headers.
-- Stable `itemKey` = `${section}:${index}:${slug(label)}` so re-running a scan with the same protocol keeps prior toggles aligned.
+In `src/pages/LiveQnA.tsx`:
+- Add `premiumInterest: boolean` to the form state.
+- Render a checkbox below the consent block: *"I'm also interested in Premium membership — send me details."*
+- In `handleSubmit`, change the existing `captureLead` call so `planInterest` is `'premium'` when the box is ticked, otherwise `'undecided'` (today it's always hardcoded to `'premium'`, which inflates lead quality).
+- Keep `source: 'live_qna_registration'` and `activityType: 'consultation_booked'`.
 
-**New component — `src/components/bloodwork/AdherenceChecklist.tsx`:**
-- Wraps the existing list rendering inside `ProtocolSections.tsx` with a checkbox column.
-- Section header shows `{done}/{total} done` + a thin progress bar.
-- Toggle uses `Checkbox` from shadcn UI; checked rows fade `text-muted-foreground line-through` on the title only (rationale stays readable).
-- A small "Reset section" link (only visible when `done > 0`) bulk-deletes that section's rows for the report.
+### 2. Add a dedicated `qa_signup` activity ping
 
-**Wire-in — `ProtocolSections.tsx`:**
-- Pass `labReportId` from `BloodworkPage` → `BloodworkResults` → `ProtocolSections`.
-- `SUPPLEMENTS`, `NUTRITION`, `EXERCISE`, `STRESS` blocks render via `<AdherenceChecklist section="..." items={...} labReportId={...} />`.
-- `PEPTIDE STACK` and `RETEST` keep current rendering (no adherence — stack adherence is tracked in the existing dose-logging system; retest is a future scheduling concern).
+Right now the Q&A registration sends `activityType: 'consultation_booked'` (worth +40 score). The spec asks for a `qa_signup` event (worth +15). Both are useful — `qa_signup` for funnel analytics, `consultation_booked` for conversion tracking.
 
-**CRM tracking:**
-- On every toggle-on: fire `crm.captureLead({ activityType: 'calculator_use', source: 'bloodwork_adherence', planInterest: 'premium', activityData: { section, item: label } })` (debounced 1s/section so a flurry of toggles only sends one event per second).
+- Fire **two** `captureLead` calls on successful registration:
+  - `activityType: 'qa_signup'` (lighter intent signal, fires first)
+  - `activityType: 'consultation_booked'` (existing, kept as-is)
+- The edge function already deduplicates by email and accumulates score, so this is safe.
 
-**PDF export update — `src/utils/bloodworkProtocolPdf.ts`:**
-- Accept an optional `completedKeys: Set<string>` param; checked items render with a `[x]` prefix in the PDF.
+### 3. (Optional) `qa_modal` source label
 
----
+If you want the popup teaser (`LiveQnAPopup.tsx`) to be tracked separately from the full `/live-qna` page, I'll change its `source` from `'qna_popup_upgrade'` to `'qa_modal'` to match the spec's vocabulary. Tell me yes/no.
 
-### Part 2 — Biomarker search & status filter on results screen
+## Files touched
 
-**Edits to `src/components/bloodwork/BloodworkResults.tsx`:**
+- `src/pages/LiveQnA.tsx` — add premium-interest checkbox + dual `captureLead` call.
+- `src/components/landing/LiveQnAPopup.tsx` — only if you approve item 3.
 
-Add a sticky filter bar above the biomarker panel:
+## Files NOT created (and why)
 
-```text
-[ 🔍 search biomarkers… ]   [ All ] [ Normal ] [ Low ] [ High ] [ Critical ]   12/24 shown
-```
+- ❌ `src/lib/nocobase.ts` — would duplicate `src/lib/crm.ts` and leak the API token to the browser.
+- ❌ `NEXT_PUBLIC_NOCOBASE_TOKEN` secret — wrong runtime (Vite, not Next), wrong scope (must stay server-side). The existing `NOCOBASE_API_URL` + `NOCOBASE_API_TOKEN` edge-function secrets already cover this.
 
-- Search input is debounced 150ms; matches `name` OR `short_name` (case-insensitive, substring).
-- Status chips are toggleable (single-select; clicking the active chip returns to "All"). Counts per status shown as small superscript: `Normal⁹  High⁴  Low²  Critical¹`.
-- Filtering is computed via `useMemo` over `result.biomarkers`; categories with zero matches are hidden entirely (no empty section headers).
-- "X/Y shown" indicator updates live.
-- Empty state: "No biomarkers match this filter." with a reset button.
-- URL deeplink support: `?bm=<query>&status=<status>` — read on mount, write via `replaceState` so back-button isn't polluted.
-- Keyboard: `/` focuses the search input; `Esc` clears.
+## If you really want a browser-side client
 
-No new components — keep the filter UI inline at the top of the existing biomarker section so it stays sticky-friendly.
+Say the word and I'll build it, but I'd recommend keeping the token server-side. The only legitimate reason to bypass the edge function would be to remove the Supabase round-trip for latency — and even then I'd proxy through a thin edge function to keep the token hidden.
 
----
-
-### Part 3 — Staged scan progress UI with graceful errors
-
-**New hook — `src/hooks/useScanProgress.ts`:**
-
-Drives a 4-stage progress simulator (the AI call itself is a single fetch — no streaming — so we model perceived progress with an asymptotic curve):
-
-| Stage | Label | Target % | Min duration |
-|---|---|---|---|
-| 1 | "Uploading bloodwork…" | 15 | 0.4s |
-| 2 | "Extracting biomarkers…" | 50 | 4s (asymptotes if AI takes longer) |
-| 3 | "Generating personalised protocol…" | 90 | 6s asymptote |
-| 4 | "Finalising results…" | 100 | snaps when the fetch resolves |
-
-API: `const { stage, label, percent, start, advance, complete, fail, reset } = useScanProgress();`
-- `start()` → stage 1, kicks off interval.
-- `advance('extract'|'generate')` called explicitly from `BloodworkPage` after upload + DB-insert resolves and again right before the AI call resolves.
-- `complete()` → snap to 100, then fade.
-- `fail()` → freezes percent and surfaces error state.
-- Internal interval ticks every 200ms with `next = current + (target - current) * 0.08` (eased asymptote, never overruns target).
-
-**New component — `src/components/bloodwork/ScanProgress.tsx`:**
-
-Renders inline between the form and tier cards (replaces the spinner inside `ScanTierCards` while running):
-
-```text
-┌────────────────────────────────────────────┐
-│  ●●●○  Generating personalised protocol…   │
-│  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░  72%               │
-│  Usually completes in 30-60 seconds.       │
-│  [ Cancel ]                                 │
-└────────────────────────────────────────────┘
-```
-
-- 4 dot indicators (filled = complete, ring = active w/ pulse, hollow = pending).
-- Stage label rotates with subtle `framer-motion` slide-up.
-- Progress bar uses `bg-primary` with a shimmer sweep (matches existing luxury animation memory).
-- "Cancel" button calls `AbortController.abort()` on the in-flight `supabase.functions.invoke` — onClick: confirms, then `reset()` + clears the upload state but keeps the form intact.
-
-**Error handling — new error card:**
-
-When the scan fails (network, 429, 402, 500, parse error), the tier cards swap for an inline error block:
-
-```text
-⚠️  We couldn't decode this report
-   <plain-English mapped from edge function response>
-
-   [ Try again ]   [ Upload a different file ]   [ Contact support ]
-```
-
-Mapping table (handled in `BloodworkPage`):
-
-| Failure | User-facing copy |
-|---|---|
-| 429 | "Too many scans right now. Wait 30 seconds and try again." |
-| 402 | "Premium scan credits exhausted for this hour. Try again shortly." |
-| 500 / network | "Something went wrong on our side. Try again — your file is still saved." |
-| Parse / empty AI response | "We couldn't read this lab report. Try a clearer scan or a different file format (PDF, JPG, PNG)." |
-| File >10MB (client) | (already handled, but extend to show the error card not just a toast) |
-| AbortError | (silently reset — no error card) |
-
-CRM: on failure → `crm.captureLead({ activityType: 'calculator_use', source: 'bloodwork_scan_failed', planInterest: 'premium', activityData: { tier, reason } })` so we can monitor failure rates.
-
-**Wire-up in `BloodworkPage.tsx`:**
-- Add `progress` hook + `error` state + `abortRef`.
-- `runScan` becomes:
-  1. `progress.start()` → upload file → `progress.advance('extract')` once `lab_reports` row inserted
-  2. `progress.advance('generate')` immediately before `functions.invoke`
-  3. On success → `progress.complete()` → 350ms delay → render results
-  4. On error → `progress.fail()` → set error state → render error card
-- Replace the existing `running` loader inside `ScanTierCards` with the new `ScanProgress` component. The form stays mounted but greys out (`disabled` prop already supported).
-- After results render, dismiss the progress UI.
-
----
-
-### Files touched
-
-```text
-NEW    supabase/migration                                  (protocol_adherence table + RLS)
-NEW    src/hooks/useProtocolAdherence.ts                   (toggle/progress/reset helpers)
-NEW    src/hooks/useScanProgress.ts                        (4-stage asymptotic progress)
-NEW    src/components/bloodwork/AdherenceChecklist.tsx     (checkbox-wrapped list w/ progress bar)
-NEW    src/components/bloodwork/ScanProgress.tsx           (4-dot indicator + bar + cancel)
-NEW    src/components/bloodwork/ScanError.tsx              (error card w/ retry / different file)
-EDIT   src/components/bloodwork/ProtocolSections.tsx       (use AdherenceChecklist for 4 sections; pass labReportId)
-EDIT   src/components/bloodwork/BloodworkResults.tsx       (search input + status filter + counts; pass labReportId down)
-EDIT   src/pages/BloodworkPage.tsx                         (wire progress hook, AbortController, error mapping, pass labReportId to results)
-EDIT   src/utils/bloodworkProtocolPdf.ts                   (accept completedKeys; render [x] prefix)
-EDIT   src/integrations/supabase/types.ts                  (auto-regenerated by migration)
-```
-
-### Explicitly NOT doing
-
-- ❌ Streaming AI responses — gateway endpoint is non-streaming; staged progress is a perceptual simulation only (this is industry-standard for non-streaming AI UX).
-- ❌ Adherence streaks/badges UI — the schema supports it (`completed_at` timestamps), but the visual streak component is a follow-up once we have a few weeks of data to test against.
-- ❌ Touching peptide STACK or RETEST sections with checklists — peptide adherence is the existing dose-logging system's job; retest is a future scheduling task.
-- ❌ Server-side biomarker filtering — payload is small (~30 markers max), client-side `useMemo` is the right call.
-
-### Migration first, then code
-
-After approval I'll run the `protocol_adherence` migration first (regenerates `types.ts`), then ship all 6 new/edited files in one pass. No new secrets needed.
+**Approve and I'll ship items 1 + 2. Tell me yes/no on item 3.**
