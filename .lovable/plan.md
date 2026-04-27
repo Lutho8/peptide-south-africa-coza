@@ -1,65 +1,114 @@
-## Context: most of this is already wired
+# Q&A → NocoBase Lead Capture: Test Definition + Zoom & Admin Wiring
 
-Before paving new road, here's what already works in your codebase:
+## Why nothing is showing up in NocoBase today
 
-- **`#pricing` IntersectionObserver tracking** — `src/components/landing/PricingSection.tsx` (lines 40–68) already wraps the section in `id="pricing"`, watches it with an `IntersectionObserver` at 30% threshold, and fires `captureLead({ activityType: 'pricing_view' })` once on first entry.
-- **"Go Premium" tracking** — every Premium CTA already calls `captureLead({ activityType: 'premium_click' })`:
-  - `LandingHeader.tsx` (header button, both desktop + mobile via `scrollToPricing`)
-  - `PricingSection.tsx` (pricing card CTA via `handlePremiumCta`)
-  - `LiveQnAPopup.tsx` (popup teaser)
-  - `bloodwork/PremiumGate.tsx` (bloodwork gate)
-  - `LiveQnA.tsx` (page-level upgrade)
-- **Server-side scoring + status thresholds** — `supabase/functions/nocobase-sync/index.ts` already does exactly what `updateLeadScore` was supposed to do: looks up by email, adds the activity-specific delta (`premium_click` = +25, `pricing_view` = +10, `qa_signup` = +15), caps at 100, and derives `leadStatus` (`new` → `nurturing` at ≥30, `qualified` at ≥60 or any `premium_click`). Re-doing this client-side would create two sources of truth.
-- **Q&A confirmation card** — `LiveQnA.tsx` already swaps the form for a "You're Registered!" success card on submit.
+The edge function logs show the live `NOCOBASE_API_URL` secret is literally:
 
-## Why I won't paste the spec verbatim
+```
+https://[your-nocobase-domain]/api
+```
 
-Same reasons as last round: it assumes a Next.js `lib/nocobase.ts` with a browser-side token, plus a `useLeadTracking` hook that duplicates code already living in the Pricing component. Shipping it would:
+That placeholder fails at `new URL(...)` before any HTTP call goes out. The real base URL is `https://a-zr3nluc60rf.v13.demo.nocobase.com/api`. This is the single biggest blocker — every Q&A submit is silently failing today.
 
-1. Leak `NOCOBASE_API_TOKEN` into the browser bundle.
-2. Duplicate the score/threshold logic that's already authoritative in the edge function.
-3. Add a `useLeadTracking` abstraction over a single existing call site.
+---
 
-## What I'll actually change
+## The Acceptance Test (the "definition of done")
 
-Two small, useful improvements that fill genuine gaps in the request:
+We will use this exact end-to-end test to confirm the system works. Both of us should agree on it before changes go in.
 
-### 1. Enrich the Q&A "Reserve My Spot" confirmation
+**Test name:** Q&A modal submission creates a NocoBase lead
 
-The current success card is a 2-line confirmation. I'll upgrade it to spell out **what the user will receive and when**, matching the request's intent ("…tells users their request was saved and what we'll send next"):
+**Steps:**
+1. Open `https://peptide-mastery.lovable.app/live-qa` in a fresh incognito window (no prior session).
+2. Click **Reserve My Spot**.
+3. In the modal, enter:
+   - First name: `Test`
+   - Email: `qa-test+<timestamp>@ridethetide.info` (unique each run)
+   - Check the consent box
+   - Optionally check "I'm also interested in Premium"
+4. Submit.
 
-In `src/pages/LiveQnA.tsx` — replace the existing success block with a structured card:
-- Big animated check + "You're confirmed for the {sessionMonth} Live Q&A".
-- A "What happens next" list with three timeline items, each with an icon:
-  - **Right now** — Confirmation email on its way (check spam if you don't see it in 5 min).
-  - **Day before** — Zoom link + calendar invite (and a WhatsApp reminder if you provided a number).
-  - **Saturday 7:00 PM CET** — We go live. Bring your questions.
-- A "Add to calendar" `.ics` download button (generated client-side, no extra deps) for the next session date.
-- Keeps the existing "Explore Peptides" link.
-- If `premiumInterest` was checked, also shows a subtle "We'll send Premium details separately" note.
+**Expected results (all must pass):**
+- ✅ UI shows the "What happens next" confirmation card (already implemented).
+- ✅ A new row appears in the NocoBase **leads** collection within 5 seconds with: `email`, `firstName=Test`, `source=qa_modal`, `planInterest=undecided` (or `premium` if checked), `leadStatus=nurturing` (because qa_signup = 15 pts, but if combined with premium intent, status escalates), `leadScore≥15`.
+- ✅ A new row appears in the NocoBase **activities** collection with `activityType=qa_signup`, `pageUrl` set, and a `leadEmail` reference back to the lead.
+- ✅ Submitting the same email a second time **updates** the existing lead (no duplicate row), bumps `leadScore`, and adds a second activity row.
+- ✅ Edge function logs (`nocobase-sync`) show no errors for the request.
+- ✅ Admin notification email arrives at `lutho.kote@relicom.de` within 1 minute summarising the new lead.
 
-### 2. Last-captured-email fallback for anonymous Premium clicks
+If any of those six checks fail, the feature is not done.
 
-Right now, when an anonymous (logged-out) visitor clicks "Go Premium", `user?.email` is `null` and the `captureLead` call no-ops silently — even if that same visitor registered for the Q&A 30 seconds earlier. The spec's "userEmail comes from auth state, localStorage, or the last captured lead email" line is the only valuable behavioural change in the request.
+---
 
-In `src/lib/crm.ts`:
-- Add `LAST_LEAD_EMAIL_KEY = 'rtd-last-lead-email'` in `localStorage`.
-- Export `getLastLeadEmail()`.
-- In `captureLead`: if no explicit email is passed, fall back to `getLastLeadEmail()`. If an explicit email *is* passed, persist it to `localStorage` for future calls.
-- Result: a visitor who registers for Q&A then clicks "Go Premium" anonymously gets attributed to the correct lead, and the edge function bumps their score from `qa_signup` (+15) → `premium_click` (+25) → status flips to `qualified` automatically.
+## What we will change
 
-Zero new components, zero new hooks, zero new files. Existing CTAs benefit immediately because they all already call `captureLead`.
+### 1. Fix the broken NocoBase URL (the actual blocker)
 
-## What I will NOT do
+Update the `NOCOBASE_API_URL` Supabase secret from the placeholder to:
 
-- ❌ Create `src/lib/nocobase.ts` — would leak the CRM token and duplicate the edge function.
-- ❌ Create `src/hooks/useLeadTracking.ts` — `usePricingTracking` already lives inline in `PricingSection.tsx` (5 lines, used in one place). `useCTATracking` would be a one-line wrapper around an existing one-line `captureLead` call. Abstraction cost > benefit.
-- ❌ Add client-side `updateLeadScore` — the edge function already does this server-side, atomically, with the canonical score table.
-- ❌ Add `trackAnonymousEvent` (a `console.log` stub) — adds noise without behaviour.
+```
+https://a-zr3nluc60rf.v13.demo.nocobase.com/api
+```
 
-## Files touched
+No code change needed — only the secret value. After updating, the existing `nocobase-sync` function will start working immediately. We will then run the acceptance test above to confirm.
 
-- `src/lib/crm.ts` — export `getLastLeadEmail`, add localStorage persistence + fallback inside `captureLead`.
-- `src/pages/LiveQnA.tsx` — replace the success card with the richer "What happens next" confirmation + .ics download.
+### 2. Make `lutho.kote@relicom.de` the admin recipient for all lead activity
 
-**Approve and I'll ship both.**
+Add a small notification step inside `supabase/functions/nocobase-sync/index.ts` so that whenever a lead is captured or activity logged, an email is sent to `lutho.kote@relicom.de` summarising:
+- Lead email + name
+- Source (e.g. `qa_modal`)
+- Plan interest
+- Activity type + page URL
+- Current lead score and status
+- Direct link to the lead record in NocoBase
+
+Implementation:
+- Define a constant `ADMIN_EMAIL = 'lutho.kote@relicom.de'` at the top of the function.
+- Send the email via the existing **Resend** integration (already used elsewhere in the project for transactional mail). If Resend isn't yet configured for this project we'll add the `RESEND_API_KEY` secret.
+- Wrap the send in `try/catch` so a failed email never blocks the NocoBase write.
+
+### 3. Connect Zoom for live Q&A sessions
+
+The Q&A copy already promises "Zoom link will be emailed 24 hours before the session." Today that link is manual. To make it automatic and admin-controlled by `lutho.kote@relicom.de`:
+
+**Option A — Recommended: connect Zoom via Lovable's standard Zoom-style flow using the connector gateway**
+There is currently no first-party Zoom connector in the standard connector list, so we will use a per-account API token approach:
+
+1. In your Zoom account (signed in as `lutho.kote@relicom.de`), create a **Server-to-Server OAuth app** in the Zoom Marketplace.
+2. Copy the **Account ID**, **Client ID**, and **Client Secret**.
+3. Add three Supabase secrets: `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`.
+4. Create a new edge function `zoom-create-meeting` that:
+   - Exchanges the client credentials for a short-lived access token.
+   - Creates a recurring monthly Zoom webinar (1st Saturday, 7 PM CET) under the host `lutho.kote@relicom.de`.
+   - Returns the join URL, registration URL, and meeting ID.
+5. Store the resulting meeting metadata in a new Supabase table `live_qa_sessions` (date, zoom_join_url, zoom_meeting_id, host_email).
+6. The Q&A registration flow then:
+   - Pulls the next session's Zoom URL from `live_qa_sessions`.
+   - Includes it in the confirmation email and the `.ics` calendar file (replacing the current "link will be sent later" placeholder).
+   - Mirrors the registration into NocoBase as today.
+
+If you'd rather skip the Zoom API and just keep emailing a static link manually, tell me and I'll drop step 3 — but the lead capture + admin email parts still ship.
+
+---
+
+## Files & infra touched
+
+- **Secret update (no code):** `NOCOBASE_API_URL` → real URL.
+- **Edited:** `supabase/functions/nocobase-sync/index.ts` — add admin email notification.
+- **New (if Zoom approved):** `supabase/functions/zoom-create-meeting/index.ts`, table `live_qa_sessions`, secrets `ZOOM_ACCOUNT_ID` / `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`, plus `RESEND_API_KEY` if not already set.
+- **Edited (if Zoom approved):** `src/pages/LiveQnA.tsx` — read next-session Zoom URL from DB and inject into the `.ics` and confirmation card.
+
+## Order of operations
+
+1. You approve this plan.
+2. I update the `NOCOBASE_API_URL` secret to the real value.
+3. I add the admin-email notification to `nocobase-sync` and deploy.
+4. We run the acceptance test together. ✅ = NocoBase lead capture is officially "working."
+5. Then we tackle the Zoom integration (needs your Zoom Server-to-Server OAuth credentials and Resend API key — I'll request them via the secrets prompt at that point, not now).
+
+---
+
+## Two things I need from you before step 5
+
+- Confirm you want the **automated Zoom webinar creation** (Option A) vs. continuing to email a static Zoom link manually.
+- Confirm `lutho.kote@relicom.de` is the Zoom host account (so meetings are created under it).
