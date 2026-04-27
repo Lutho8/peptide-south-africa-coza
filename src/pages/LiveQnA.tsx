@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Video, Calendar, Users, Clock, CheckCircle2, ArrowLeft, Shield, Zap, BookOpen, Lock, Sparkles } from 'lucide-react';
+import { Video, Calendar, Users, Clock, CheckCircle2, ArrowLeft, Shield, Zap, BookOpen, Lock, Sparkles, Mail, Bell, CalendarPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
@@ -289,17 +289,119 @@ export default function LiveQnA() {
                 </CardContent>
               </Card>
             ) : registered ? (
-              <Card className="border-accent/50 bg-accent/5">
-                <CardContent className="p-8 text-center space-y-4">
-                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }}>
-                    <CheckCircle2 className="w-16 h-16 text-accent mx-auto" />
-                  </motion.div>
-                  <h3 className="text-2xl font-bold text-foreground">You're Registered!</h3>
-                  <p className="text-muted-foreground">Check your inbox for confirmation. The Zoom link will be sent 24 hours before the session.</p>
-                  {form.whatsappNumber && <p className="text-sm text-muted-foreground">You'll also receive a WhatsApp reminder.</p>}
-                  <Link to="/">
-                    <Button variant="outline" className="mt-4">Explore Peptides</Button>
-                  </Link>
+              <Card className="border-accent/50 bg-accent/5 overflow-hidden">
+                <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
+                <CardContent className="p-7 space-y-6">
+                  {/* Header */}
+                  <div className="text-center space-y-3">
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                      className="mx-auto w-16 h-16 rounded-full bg-accent/15 flex items-center justify-center"
+                    >
+                      <CheckCircle2 className="w-9 h-9 text-accent" />
+                    </motion.div>
+                    <h3 className="text-2xl font-bold text-foreground">
+                      You're confirmed for the {sessionMonth} Live Q&amp;A
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Saved to <strong className="text-foreground">{form.email.trim().toLowerCase()}</strong>. Here's what to expect next.
+                    </p>
+                  </div>
+
+                  {/* What happens next */}
+                  <div className="space-y-3">
+                    {[
+                      {
+                        icon: Mail,
+                        when: 'Right now',
+                        what: `A confirmation email is on its way. If you don't see it within 5 minutes, check your spam folder.`,
+                      },
+                      {
+                        icon: Bell,
+                        when: 'Day before',
+                        what: form.whatsappNumber.trim()
+                          ? 'Zoom link, calendar invite, and a WhatsApp reminder.'
+                          : 'Zoom link and a calendar invite straight to your inbox.',
+                      },
+                      {
+                        icon: Video,
+                        when: `${sessionDate.toLocaleDateString('en-US', { weekday: 'long' })} 7:00 PM CET`,
+                        what: 'We go live on Zoom. Bring your protocol questions — no question is too basic.',
+                      },
+                    ].map((step, i) => (
+                      <motion.div
+                        key={step.when}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.15 + i * 0.1 }}
+                        className="flex gap-3 p-3 rounded-lg bg-card/60 border border-border/40"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                          <step.icon className="w-4 h-4 text-accent" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-xs font-semibold text-accent uppercase tracking-wide">{step.when}</p>
+                          <p className="text-sm text-foreground/90 mt-0.5">{step.what}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {form.premiumInterest && (
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                      <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      <p className="text-xs text-muted-foreground">
+                        We'll also send Premium membership details separately so you can decide before the session.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                    <Button
+                      variant="default"
+                      className="flex-1"
+                      onClick={() => {
+                        const dt = (d: Date) =>
+                          d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                        const start = new Date(sessionDate);
+                        start.setHours(18, 0, 0, 0); // 7 PM CET ≈ 18:00 UTC (winter); good enough for ICS hint
+                        const end = new Date(start.getTime() + 60 * 60 * 1000);
+                        const ics = [
+                          'BEGIN:VCALENDAR',
+                          'VERSION:2.0',
+                          'PRODID:-//Ride The Tide//Live Q&A//EN',
+                          'BEGIN:VEVENT',
+                          `UID:rtd-qna-${start.getTime()}@ridethetide`,
+                          `DTSTAMP:${dt(new Date())}`,
+                          `DTSTART:${dt(start)}`,
+                          `DTEND:${dt(end)}`,
+                          `SUMMARY:Ride The Tide — ${sessionMonth} Live Peptide Q&A`,
+                          'DESCRIPTION:Zoom link will be emailed 24 hours before the session.',
+                          'LOCATION:Zoom (link sent by email)',
+                          'END:VEVENT',
+                          'END:VCALENDAR',
+                        ].join('\r\n');
+                        const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `ride-the-tide-qna-${sessionMonth.replace(/\s+/g, '-').toLowerCase()}.ics`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      <CalendarPlus className="w-4 h-4 mr-2" />
+                      Add to calendar
+                    </Button>
+                    <Link to="/" className="flex-1">
+                      <Button variant="outline" className="w-full">Explore Peptides</Button>
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             ) : (

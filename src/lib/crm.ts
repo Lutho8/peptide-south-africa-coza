@@ -28,6 +28,30 @@ export interface CaptureLeadInput {
 }
 
 const SESSION_KEY = 'rtd-session-id';
+const LAST_LEAD_EMAIL_KEY = 'rtd-last-lead-email';
+
+/**
+ * Last email captured by any surface in this browser. Used as a fallback so
+ * anonymous Premium CTAs can still be attributed to a known lead (e.g. a
+ * visitor who registered for the Q&A then clicked "Go Premium" without
+ * signing in).
+ */
+export function getLastLeadEmail(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(LAST_LEAD_EMAIL_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function rememberLeadEmail(email: string) {
+  try {
+    localStorage.setItem(LAST_LEAD_EMAIL_KEY, email);
+  } catch {
+    /* noop */
+  }
+}
 
 function getSessionId(): string {
   if (typeof window === 'undefined') return 'server';
@@ -46,9 +70,12 @@ function getSessionId(): string {
 }
 
 export async function captureLead(input: CaptureLeadInput): Promise<void> {
-  const email = (input.email ?? '').trim().toLowerCase();
-  // Skip silently if no email (anonymous calculator/search calls).
+  const explicitEmail = (input.email ?? '').trim().toLowerCase();
+  // Fall back to the last captured lead email so anonymous Premium clicks
+  // still attach to the correct CRM record.
+  const email = explicitEmail || (getLastLeadEmail() ?? '');
   if (!email) return;
+  if (explicitEmail) rememberLeadEmail(explicitEmail);
 
   try {
     const pageUrl = typeof window !== 'undefined' ? window.location.href : undefined;
