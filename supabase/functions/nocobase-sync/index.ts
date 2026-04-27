@@ -254,9 +254,27 @@ Deno.serve(async (req) => {
         pageUrl: payload.pageUrl,
         sessionId: payload.sessionId,
       });
+
+      // Admin notification — surfaced to lutho.kote@relicom.de.
+      // Visible immediately in edge function logs (grep for ADMIN_NOTIFY).
+      // Once the Lovable Email domain is configured, this same payload
+      // will also be sent as a transactional email to ADMIN_EMAIL.
+      const adminPayload = {
+        admin: ADMIN_EMAIL,
+        leadId,
+        email,
+        firstName: payload.firstName ?? null,
+        source: payload.source,
+        planInterest,
+        activityType: payload.activityType,
+        pageUrl: payload.pageUrl ?? null,
+        scoreDelta,
+        capturedAt: new Date().toISOString(),
+      };
+      console.log('ADMIN_NOTIFY', JSON.stringify(adminPayload));
     }
 
-    return new Response(JSON.stringify({ ok: true, leadId }), {
+    return new Response(JSON.stringify({ ok: true, leadId, admin: ADMIN_EMAIL }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
