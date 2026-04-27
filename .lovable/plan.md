@@ -1,114 +1,101 @@
-# Q&A → NocoBase Lead Capture: Test Definition + Zoom & Admin Wiring
+# Plan: Prepare "Ride The Tide" for Google Play Production Release
 
-## Why nothing is showing up in NocoBase today
-
-The edge function logs show the live `NOCOBASE_API_URL` secret is literally:
-
-```
-https://[your-nocobase-domain]/api
-```
-
-That placeholder fails at `new URL(...)` before any HTTP call goes out. The real base URL is `https://a-zr3nluc60rf.v13.demo.nocobase.com/api`. This is the single biggest blocker — every Q&A submit is silently failing today.
+## Decisions confirmed
+- **App ID:** `info.ridethetide.app` (permanent)
+- **Track:** Production (skipping internal testing)
+- **Content rating:** 18+ (Adult / Mature)
 
 ---
 
-## The Acceptance Test (the "definition of done")
+## Codebase changes I'll make
 
-We will use this exact end-to-end test to confirm the system works. Both of us should agree on it before changes go in.
+### 1. `capacitor.config.ts` — production-ready config
+- `appId`: `info.ridethetide.app`
+- `appName`: `Ride The Tide`
+- **Remove the `server.url` block** (this points to the Lovable sandbox — it MUST be removed for a production Play Store build, otherwise the published app would just be a webview of the dev preview)
+- Keep LocalNotifications + PushNotifications plugin config
 
-**Test name:** Q&A modal submission creates a NocoBase lead
+### 2. `public/manifest.json`
+- Already correctly branded — no change needed
 
-**Steps:**
-1. Open `https://peptide-mastery.lovable.app/live-qa` in a fresh incognito window (no prior session).
-2. Click **Reserve My Spot**.
-3. In the modal, enter:
-   - First name: `Test`
-   - Email: `qa-test+<timestamp>@ridethetide.info` (unique each run)
-   - Check the consent box
-   - Optionally check "I'm also interested in Premium"
-4. Submit.
+### 3. Create `RELEASE_GUIDE.md` in project root
+A complete step-by-step guide you'll follow on your local machine, covering:
 
-**Expected results (all must pass):**
-- ✅ UI shows the "What happens next" confirmation card (already implemented).
-- ✅ A new row appears in the NocoBase **leads** collection within 5 seconds with: `email`, `firstName=Test`, `source=qa_modal`, `planInterest=undecided` (or `premium` if checked), `leadStatus=nurturing` (because qa_signup = 15 pts, but if combined with premium intent, status escalates), `leadScore≥15`.
-- ✅ A new row appears in the NocoBase **activities** collection with `activityType=qa_signup`, `pageUrl` set, and a `leadEmail` reference back to the lead.
-- ✅ Submitting the same email a second time **updates** the existing lead (no duplicate row), bumps `leadScore`, and adds a second activity row.
-- ✅ Edge function logs (`nocobase-sync`) show no errors for the request.
-- ✅ Admin notification email arrives at `lutho.kote@relicom.de` within 1 minute summarising the new lead.
+**Part A — Local build (one-time setup)**
+1. Export project to GitHub → `git pull` locally
+2. `npm install`
+3. `npx cap add android`
+4. `npm run build`
+5. `npx cap sync android`
+6. `npx cap open android` (opens Android Studio)
 
-If any of those six checks fail, the feature is not done.
+**Part B — Generate signing key (one-time, CRITICAL)**
+- `keytool` command to create `ride-the-tide-release.keystore`
+- Store keystore + passwords in a password manager (losing this = locked out of Play Store updates forever)
 
----
+**Part C — Configure release signing in Android Studio**
+- Edit `android/app/build.gradle` with signing config
+- Set `versionCode: 1`, `versionName: "1.0.0"`
+- Build → Generate Signed Bundle → AAB (Android App Bundle, required by Play Store)
 
-## What we will change
+**Part D — Google Play Console submission**
+1. Go to https://play.google.com/console → Create app
+2. App name: **Ride The Tide**
+3. Default language: English (US)
+4. App or game: App
+5. Free or paid: Free
+6. Declarations: confirm policies
 
-### 1. Fix the broken NocoBase URL (the actual blocker)
+**Part E — Required store listing assets** (you'll need to prepare/upload):
+- App icon: 512×512 PNG (use existing `/icon-512.png`)
+- Feature graphic: 1024×500 PNG (I'll provide design spec)
+- Phone screenshots: minimum 2, recommended 4–8 (1080×1920)
+- Short description (80 chars)
+- Full description (4000 chars)
+- Privacy policy URL: `https://ridethetide.info/privacy` ✓ (already exists)
 
-Update the `NOCOBASE_API_URL` Supabase secret from the placeholder to:
+**Part F — Content rating questionnaire**
+- Category: Reference, News, or Educational
+- Confirm: References to drugs/medication for educational purposes → **Mature 17+ / 18+**
 
-```
-https://a-zr3nluc60rf.v13.demo.nocobase.com/api
-```
+**Part G — Data safety form**
+- Data collected: email, name, health & fitness data
+- Encrypted in transit: Yes
+- Users can request deletion: Yes
 
-No code change needed — only the secret value. After updating, the existing `nocobase-sync` function will start working immediately. We will then run the acceptance test above to confirm.
+**Part H — Upload AAB & submit for review**
+- Production track → Create new release → Upload `.aab`
+- Review timeline: typically 1–7 days for first submission
 
-### 2. Make `lutho.kote@relicom.de` the admin recipient for all lead activity
-
-Add a small notification step inside `supabase/functions/nocobase-sync/index.ts` so that whenever a lead is captured or activity logged, an email is sent to `lutho.kote@relicom.de` summarising:
-- Lead email + name
-- Source (e.g. `qa_modal`)
-- Plan interest
-- Activity type + page URL
-- Current lead score and status
-- Direct link to the lead record in NocoBase
-
-Implementation:
-- Define a constant `ADMIN_EMAIL = 'lutho.kote@relicom.de'` at the top of the function.
-- Send the email via the existing **Resend** integration (already used elsewhere in the project for transactional mail). If Resend isn't yet configured for this project we'll add the `RESEND_API_KEY` secret.
-- Wrap the send in `try/catch` so a failed email never blocks the NocoBase write.
-
-### 3. Connect Zoom for live Q&A sessions
-
-The Q&A copy already promises "Zoom link will be emailed 24 hours before the session." Today that link is manual. To make it automatic and admin-controlled by `lutho.kote@relicom.de`:
-
-**Option A — Recommended: connect Zoom via Lovable's standard Zoom-style flow using the connector gateway**
-There is currently no first-party Zoom connector in the standard connector list, so we will use a per-account API token approach:
-
-1. In your Zoom account (signed in as `lutho.kote@relicom.de`), create a **Server-to-Server OAuth app** in the Zoom Marketplace.
-2. Copy the **Account ID**, **Client ID**, and **Client Secret**.
-3. Add three Supabase secrets: `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`.
-4. Create a new edge function `zoom-create-meeting` that:
-   - Exchanges the client credentials for a short-lived access token.
-   - Creates a recurring monthly Zoom webinar (1st Saturday, 7 PM CET) under the host `lutho.kote@relicom.de`.
-   - Returns the join URL, registration URL, and meeting ID.
-5. Store the resulting meeting metadata in a new Supabase table `live_qa_sessions` (date, zoom_join_url, zoom_meeting_id, host_email).
-6. The Q&A registration flow then:
-   - Pulls the next session's Zoom URL from `live_qa_sessions`.
-   - Includes it in the confirmation email and the `.ics` calendar file (replacing the current "link will be sent later" placeholder).
-   - Mirrors the registration into NocoBase as today.
-
-If you'd rather skip the Zoom API and just keep emailing a static link manually, tell me and I'll drop step 3 — but the lead capture + admin email parts still ship.
+### 4. Create `STORE_LISTING.md` with ready-to-paste copy
+- App title (30 char): **Ride The Tide: Peptide Tracker**
+- Short description (80 char): **Track peptide protocols, doses, cycles & bloodwork. Research-grade tools.**
+- Full description (4000 char): polished marketing copy emphasizing research/educational use, safety disclaimers, key features (stack builder, dose reminders, bloodwork tracking, cycle protocols, reconstitution calculator)
+- Keywords / categories: **Health & Fitness** (primary), **Medical** (secondary)
+- Content rating answers pre-filled
 
 ---
 
-## Files & infra touched
-
-- **Secret update (no code):** `NOCOBASE_API_URL` → real URL.
-- **Edited:** `supabase/functions/nocobase-sync/index.ts` — add admin email notification.
-- **New (if Zoom approved):** `supabase/functions/zoom-create-meeting/index.ts`, table `live_qa_sessions`, secrets `ZOOM_ACCOUNT_ID` / `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`, plus `RESEND_API_KEY` if not already set.
-- **Edited (if Zoom approved):** `src/pages/LiveQnA.tsx` — read next-session Zoom URL from DB and inject into the `.ics` and confirmation card.
-
-## Order of operations
-
-1. You approve this plan.
-2. I update the `NOCOBASE_API_URL` secret to the real value.
-3. I add the admin-email notification to `nocobase-sync` and deploy.
-4. We run the acceptance test together. ✅ = NocoBase lead capture is officially "working."
-5. Then we tackle the Zoom integration (needs your Zoom Server-to-Server OAuth credentials and Resend API key — I'll request them via the secrets prompt at that point, not now).
+## What you'll need to do (I cannot do these for you)
+1. Export project to your GitHub
+2. Run the build commands locally (requires Android Studio installed)
+3. Create the signing keystore
+4. Create Google Play Console developer account ($25 one-time, if not done)
+5. Upload screenshots + feature graphic
+6. Submit for review
 
 ---
 
-## Two things I need from you before step 5
+## What happens after approval
+- App goes live on Google Play under your developer account (`8427019085313968947`)
+- Users worldwide can install it
+- Future updates: bump `versionCode`, rebuild AAB, upload new release
 
-- Confirm you want the **automated Zoom webinar creation** (Option A) vs. continuing to email a static Zoom link manually.
-- Confirm `lutho.kote@relicom.de` is the Zoom host account (so meetings are created under it).
+---
+
+## Notes
+- **iOS / Apple App Store**: Not in scope for this plan. Requires a Mac + Xcode + $99/yr Apple Developer account. Happy to do a separate plan when you're ready.
+- **App ID is permanent**: `info.ridethetide.app` cannot be changed after first upload — confirmed.
+- **Server URL removal is critical**: without removing it, the Play Store build would just load the Lovable preview, which would fail review.
+
+Approve and I'll switch to build mode, update the Capacitor config, and generate both guide files.
