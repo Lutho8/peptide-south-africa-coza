@@ -11,6 +11,11 @@ const corsHeaders = {
 const NOCOBASE_API_URL = Deno.env.get('NOCOBASE_API_URL');
 const NOCOBASE_API_TOKEN = Deno.env.get('NOCOBASE_API_TOKEN');
 
+// Admin email — every lead capture is also surfaced to this address.
+// Email delivery requires the Lovable Email domain to be configured;
+// until then, the admin payload is logged + mirrored into NocoBase only.
+const ADMIN_EMAIL = 'lutho.kote@relicom.de';
+
 type ActivityType =
   | 'page_view'
   | 'qa_signup'
