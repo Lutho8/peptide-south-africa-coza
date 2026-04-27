@@ -83,6 +83,7 @@ export default function LiveQnA() {
     experienceLevel: 'beginner',
     topics: [] as string[],
     consent: false,
+    premiumInterest: false,
   });
 
   const sessionDate = getNextSessionDate();
@@ -130,17 +131,34 @@ export default function LiveQnA() {
         }
       } else {
         setRegistered(true);
-        captureLead({
-          email: form.email.trim().toLowerCase(),
+        const normalizedEmail = form.email.trim().toLowerCase();
+        const normalizedPhone = form.whatsappNumber.trim()
+          ? `${form.whatsappCountryCode}${form.whatsappNumber.trim().replace(/\D/g, '')}`
+          : undefined;
+        const planInterest = form.premiumInterest ? 'premium' : 'undecided';
+        const baseLead = {
+          email: normalizedEmail,
           firstName: form.firstName.trim(),
           lastName: form.lastName.trim(),
-          phone: form.whatsappNumber.trim()
-            ? `${form.whatsappCountryCode}${form.whatsappNumber.trim().replace(/\D/g, '')}`
-            : undefined,
+          phone: normalizedPhone,
+          planInterest,
+          activityData: {
+            session_month: sessionMonth,
+            experience_level: form.experienceLevel,
+            premium_interest: form.premiumInterest,
+          },
+        } as const;
+        // Funnel signal — Q&A signup intent (+15 score)
+        captureLead({
+          ...baseLead,
+          source: 'qa_signup',
+          activityType: 'qa_signup',
+        });
+        // Conversion signal — confirmed registration (+40 score)
+        captureLead({
+          ...baseLead,
           source: 'live_qna_registration',
-          planInterest: 'premium',
           activityType: 'consultation_booked',
-          activityData: { session_month: sessionMonth, experience_level: form.experienceLevel },
         });
         toast({ title: 'Registration confirmed! 🎉', description: `You're in for the ${sessionMonth} Live Q&A. Check your email for details.` });
       }
@@ -354,6 +372,21 @@ export default function LiveQnA() {
                       <Link to="/privacy" className="text-xs text-primary hover:underline mt-2 block">
                         Click here to know how we use and protect your data.
                       </Link>
+                    </div>
+
+                    {/* Premium interest */}
+                    <div className="border border-accent/30 rounded-lg p-4 bg-accent/5">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <Checkbox
+                          checked={form.premiumInterest}
+                          onCheckedChange={(checked) => setForm(p => ({ ...p, premiumInterest: checked === true }))}
+                          className="mt-0.5"
+                        />
+                        <span className="text-sm text-foreground leading-relaxed flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-accent shrink-0" />
+                          I'm also interested in Premium membership — send me details.
+                        </span>
+                      </label>
                     </div>
 
                     <Button 
