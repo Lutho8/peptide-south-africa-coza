@@ -1,101 +1,72 @@
-# Plan: Prepare "Ride The Tide" for Google Play Production Release
+## Goal
+Get you from "Node not recognized" to a signed `.aab` file ready for Google Play, with as little manual terminal work as possible.
 
-## Decisions confirmed
-- **App ID:** `info.ridethetide.app` (permanent)
-- **Track:** Production (skipping internal testing)
-- **Content rating:** 18+ (Adult / Mature)
+Important constraint up front: I (Lovable) **cannot** run anything on your Windows PC. I can't fix your PATH, I can't generate the `android/` folder on your machine, and I can't run Android Studio. The `android/` folder MUST be created on your computer because it contains Windows file paths and is intentionally git-ignored by Capacitor convention.
 
----
-
-## Codebase changes I'll make
-
-### 1. `capacitor.config.ts` — production-ready config
-- `appId`: `info.ridethetide.app`
-- `appName`: `Ride The Tide`
-- **Remove the `server.url` block** (this points to the Lovable sandbox — it MUST be removed for a production Play Store build, otherwise the published app would just be a webview of the dev preview)
-- Keep LocalNotifications + PushNotifications plugin config
-
-### 2. `public/manifest.json`
-- Already correctly branded — no change needed
-
-### 3. Create `RELEASE_GUIDE.md` in project root
-A complete step-by-step guide you'll follow on your local machine, covering:
-
-**Part A — Local build (one-time setup)**
-1. Export project to GitHub → `git pull` locally
-2. `npm install`
-3. `npx cap add android`
-4. `npm run build`
-5. `npx cap sync android`
-6. `npx cap open android` (opens Android Studio)
-
-**Part B — Generate signing key (one-time, CRITICAL)**
-- `keytool` command to create `ride-the-tide-release.keystore`
-- Store keystore + passwords in a password manager (losing this = locked out of Play Store updates forever)
-
-**Part C — Configure release signing in Android Studio**
-- Edit `android/app/build.gradle` with signing config
-- Set `versionCode: 1`, `versionName: "1.0.0"`
-- Build → Generate Signed Bundle → AAB (Android App Bundle, required by Play Store)
-
-**Part D — Google Play Console submission**
-1. Go to https://play.google.com/console → Create app
-2. App name: **Ride The Tide**
-3. Default language: English (US)
-4. App or game: App
-5. Free or paid: Free
-6. Declarations: confirm policies
-
-**Part E — Required store listing assets** (you'll need to prepare/upload):
-- App icon: 512×512 PNG (use existing `/icon-512.png`)
-- Feature graphic: 1024×500 PNG (I'll provide design spec)
-- Phone screenshots: minimum 2, recommended 4–8 (1080×1920)
-- Short description (80 chars)
-- Full description (4000 chars)
-- Privacy policy URL: `https://ridethetide.info/privacy` ✓ (already exists)
-
-**Part F — Content rating questionnaire**
-- Category: Reference, News, or Educational
-- Confirm: References to drugs/medication for educational purposes → **Mature 17+ / 18+**
-
-**Part G — Data safety form**
-- Data collected: email, name, health & fitness data
-- Encrypted in transit: Yes
-- Users can request deletion: Yes
-
-**Part H — Upload AAB & submit for review**
-- Production track → Create new release → Upload `.aab`
-- Review timeline: typically 1–7 days for first submission
-
-### 4. Create `STORE_LISTING.md` with ready-to-paste copy
-- App title (30 char): **Ride The Tide: Peptide Tracker**
-- Short description (80 char): **Track peptide protocols, doses, cycles & bloodwork. Research-grade tools.**
-- Full description (4000 char): polished marketing copy emphasizing research/educational use, safety disclaimers, key features (stack builder, dose reminders, bloodwork tracking, cycle protocols, reconstitution calculator)
-- Keywords / categories: **Health & Fitness** (primary), **Medical** (secondary)
-- Content rating answers pre-filled
+What I CAN do is make the process on your side as close to "double-click and wait" as possible.
 
 ---
 
-## What you'll need to do (I cannot do these for you)
-1. Export project to your GitHub
-2. Run the build commands locally (requires Android Studio installed)
-3. Create the signing keystore
-4. Create Google Play Console developer account ($25 one-time, if not done)
-5. Upload screenshots + feature graphic
-6. Submit for review
+## What I'll add to your project
+
+### 1. `scripts/setup-android.bat` — one-click Windows script
+A double-clickable Windows batch file. You put it in your project folder, double-click it, and it will:
+
+1. Check if Node.js is installed and on PATH. If not, print a clear message with the download link and stop.
+2. Check if Java JDK 17+ is installed. If not, print download link and stop.
+3. Run `npm install`
+4. Run `npm run build`
+5. Run `npx cap add android` (only if `android/` folder doesn't exist yet)
+6. Run `npx cap sync android`
+7. Print "DONE — now open Android Studio and File → Open the `android` folder"
+8. Pause so the window stays open and you can read any errors
+
+You will not need to type any commands. Just double-click the file.
+
+### 2. `scripts/build-release-aab.bat` — one-click rebuild script
+For every future release. Double-click to:
+1. `npm run build`
+2. `npx cap sync android`
+3. Print "Now in Android Studio: Build → Generate Signed Bundle → AAB"
+
+### 3. `SETUP_CHECKLIST.md` — plain-English checklist
+A short, non-technical checklist in your project root with screenshots-style numbered steps:
+
+- [ ] Install Node.js LTS (link, with the "Add to PATH" checkbox highlighted)
+- [ ] Install Java JDK 17 (link)
+- [ ] Install Android Studio (link)
+- [ ] Double-click `scripts/setup-android.bat`
+- [ ] Open the new `android` folder in Android Studio
+- [ ] Generate signing keystore (exact `keytool` command, copy-paste)
+- [ ] Configure signing in Android Studio (with the exact menu path)
+- [ ] Build → Generate Signed Bundle → AAB
+- [ ] Upload `.aab` to Play Console
+
+Each step has a "If this fails, do X" note.
+
+### 4. `scripts/fix-node-path.md` — PATH troubleshooting card
+A focused doc just for your current blocker. Three options ranked easiest to hardest:
+- **Option A (easiest):** Uninstall Node.js → reinstall and tick "Automatically install necessary tools" + confirm "Add to PATH" is checked
+- **Option B:** Manually add `C:\Program Files\nodejs\` to System PATH (with the exact Win11 click path: Settings → System → About → Advanced system settings → Environment Variables)
+- **Option C:** Use the full path workaround: `"C:\Program Files\nodejs\npm.cmd" install` etc.
 
 ---
 
-## What happens after approval
-- App goes live on Google Play under your developer account (`8427019085313968947`)
-- Users worldwide can install it
-- Future updates: bump `versionCode`, rebuild AAB, upload new release
+## What this will NOT do
+- It will not auto-install Node.js or Android Studio for you (Windows blocks scripts from doing that without admin prompts and code-signing). The script detects them and tells you what to install.
+- It will not generate the keystore for you — that has to happen on your machine for security (the keystore is your private signing identity).
+- It will not upload to Google Play — that's a manual web upload.
 
 ---
 
-## Notes
-- **iOS / Apple App Store**: Not in scope for this plan. Requires a Mac + Xcode + $99/yr Apple Developer account. Happy to do a separate plan when you're ready.
-- **App ID is permanent**: `info.ridethetide.app` cannot be changed after first upload — confirmed.
-- **Server URL removal is critical**: without removing it, the Play Store build would just load the Lovable preview, which would fail review.
+## Your next steps after I switch to build mode
+1. I create the 4 files above and commit them.
+2. You pull the latest changes in GitHub Desktop (Fetch origin → Pull origin).
+3. Open the project folder in Windows File Explorer (`Documents\GitHub\peptide-mastery` or wherever you cloned it).
+4. Double-click `scripts\setup-android.bat`.
+5. Follow whatever it tells you (most likely: "install Node.js first").
+6. Double-click it again after installing Node.js.
+7. The `android` folder appears. Open it in Android Studio.
+8. Follow `SETUP_CHECKLIST.md` for the keystore + signed AAB steps.
 
-Approve and I'll switch to build mode, update the Capacitor config, and generate both guide files.
+Approve and I'll create the files.
