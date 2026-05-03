@@ -291,16 +291,33 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
 // --- Main Screen ---
 export function MyStackScreen() {
   const { user } = useAuth();
+  const { syncActiveStack } = useCloudSync();
   const [activeStack, setActiveStack] = useState<StackItem[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profile, setProfile] = useState(userProfile);
   const [cycles, setCycles] = useState<Cycle[]>([]);
 
-  useEffect(() => {
+  // Start-cycle date picker dialog state
+  const [startCycleDialogOpen, setStartCycleDialogOpen] = useState(false);
+  const [pendingCycle, setPendingCycle] = useState<{ peptideId: string; peptideName: string; dose: string; frequency: string } | null>(null);
+  const [pendingStartDate, setPendingStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  const refreshFromStorage = () => {
     setActiveStack(getActiveStack());
     setProfile(getUserProfile());
     setCycles(getCycles());
+  };
+
+  useEffect(() => {
+    refreshFromStorage();
   }, [user?.id]);
+
+  // When cloud sync finishes hydrating local storage, refresh the screen
+  useEffect(() => {
+    const handler = () => refreshFromStorage();
+    window.addEventListener('rtd:cloud-hydrated', handler);
+    return () => window.removeEventListener('rtd:cloud-hydrated', handler);
+  }, []);
 
   // Resolve display name: stored profile → auth metadata → email → fallback.
   const displayName =
@@ -320,6 +337,10 @@ export function MyStackScreen() {
   const handleSaveStack = (newStack: StackItem[]) => {
     setActiveStack(newStack);
     saveActiveStack(newStack);
+    // Persist to cloud immediately so it survives across devices/logins
+    if (user) {
+      void syncActiveStack().catch(() => {/* surfaced via toast inside hook on syncAll only */});
+    }
   };
 
   const handleStartBreak = (cycle: Cycle) => {
@@ -328,7 +349,13 @@ export function MyStackScreen() {
     setCycles(getCycles());
   };
 
-  const handleStartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
+  const openStartCycleDialog = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
+    setPendingCycle({ peptideId, peptideName, dose, frequency });
+    setPendingStartDate(new Date().toISOString().split('T')[0]);
+    setStartCycleDialogOpen(true);
+  };
+
+  const handleStartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string, startDateOverride?: string) => {
     const suggestion = getCycleSuggestion(peptideId);
     const protocol = suggestion?.protocols?.[0];
     const cycleDuration = protocol?.cycleDuration || 60;
@@ -340,7 +367,7 @@ export function MyStackScreen() {
       peptideName,
       dose,
       frequency,
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: startDateOverride || new Date().toISOString().split('T')[0],
       plannedDuration: cycleDuration,
       breakDuration,
       status: 'active',
@@ -349,8 +376,15 @@ export function MyStackScreen() {
     setCycles(getCycles());
     toast({
       title: '🚀 Cycle Started',
-      description: `${peptideName} — ${cycleDuration}-day cycle with ${breakDuration}-day break.`,
+      description: `${peptideName} — started ${newCycle.startDate} • ${cycleDuration}-day cycle.`,
     });
+  };
+
+  const confirmStartCycle = () => {
+    if (!pendingCycle) return;
+    handleStartCycle(pendingCycle.peptideId, pendingCycle.peptideName, pendingCycle.dose, pendingCycle.frequency, pendingStartDate);
+    setStartCycleDialogOpen(false);
+    setPendingCycle(null);
   };
 
   const handleEndCycle = (cycle: Cycle) => {
@@ -368,7 +402,7 @@ export function MyStackScreen() {
     if (existing) {
       updateCycle({ ...existing, status: 'completed' as any });
     }
-    handleStartCycle(peptideId, peptideName, dose, frequency);
+    openStartCycleDialog(peptideId, peptideName, dose, frequency);
   };
 
   const getCycleForPeptide = (peptideId: string): Cycle | undefined => {
