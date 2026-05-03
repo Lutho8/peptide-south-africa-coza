@@ -155,3 +155,64 @@ Typically 1–7 days for the first submission. You'll get an email.
 | `scripts\fix-node-path.md` | Fix "node is not recognized". |
 | `RELEASE_GUIDE.md` | Detailed reference for every step. |
 | `STORE_LISTING.md` | Copy-paste store listing text. |
+
+---
+
+## Appendix — Generate the `android/` folder (Capacitor bootstrap)
+
+The native `android/` project is **not** stored in Lovable — it lives only on
+your Windows machine. You generate it once, then commit it (optional) so you
+can keep building `.aab` files in Android Studio.
+
+### One-click
+
+After `git pull`, double-click:
+
+```
+scripts\add-android.bat
+```
+
+It runs all five steps (install → build → cap add → cap sync → open Studio)
+and tells you exactly which step failed if anything goes wrong.
+
+### Manual equivalent
+
+If you prefer to type each command in Command Prompt (from the project root):
+
+```cmd
+git pull
+npm install
+npm run build
+npx cap add android
+npx cap sync android
+npx cap open android
+```
+
+### Verify it worked
+
+After `npx cap add android` finishes, you should see:
+
+```
+android\
+  app\
+    build.gradle      <-- this file = success
+    src\main\AndroidManifest.xml
+  build.gradle
+  settings.gradle
+  gradlew.bat
+```
+
+If that file exists, Android Studio's **Build → Generate Signed Bundle / APK**
+menu will produce your release `.aab`.
+
+### Re-syncing after future code changes
+
+You only run `npx cap add android` **once**. From then on, after any code
+change just run:
+
+```cmd
+npm run build
+npx cap sync android
+```
+
+…then rebuild in Android Studio.
