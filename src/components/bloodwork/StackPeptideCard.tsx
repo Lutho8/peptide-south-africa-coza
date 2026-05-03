@@ -75,7 +75,7 @@ export function StackPeptideCard({ peptide, index }: Props) {
         onClick={handleClick}
         className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary hover:underline"
       >
-        View on shop <ExternalLink size={11} />
+        Buy Peptides <ExternalLink size={11} />
       </a>
     </div>
   );
