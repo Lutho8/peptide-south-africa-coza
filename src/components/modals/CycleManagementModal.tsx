@@ -334,6 +334,16 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                   />
                 </div>
                 <div className="space-y-1">
+                  <Label className="text-xs">Start date</Label>
+                  <Input
+                    type="date"
+                    className="bg-muted"
+                    max={new Date().toISOString().split('T')[0]}
+                    value={newCycle.startDate || new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setNewCycle({ ...newCycle, startDate: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
                   <Label className="text-xs">Duration (days)</Label>
                   <Input 
                     type="number" 
