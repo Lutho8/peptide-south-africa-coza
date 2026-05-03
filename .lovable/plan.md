@@ -1,72 +1,50 @@
-## Goal
-Get you from "Node not recognized" to a signed `.aab` file ready for Google Play, with as little manual terminal work as possible.
+Problem being solved
+- Your stack is getting wiped because the app currently clears all user-scoped local data whenever auth state changes.
+- The backend stack table already exists, but it is only synced manually from Settings, so most users never save their stack there.
+- Cycle creation currently hardcodes the start date to today.
+- Some purchase CTAs still say “Order from Supplier” / “Order Now” instead of pointing to your shop consistently.
 
-Important constraint up front: I (Lovable) **cannot** run anything on your Windows PC. I can't fix your PATH, I can't generate the `android/` folder on your machine, and I can't run Android Studio. The `android/` folder MUST be created on your computer because it contains Windows file paths and is intentionally git-ignored by Capacitor convention.
+Plan
+1. Preserve user data per account instead of deleting it on login/logout
+- Update the auth scope logic so switching users no longer deletes every saved user namespace from local storage.
+- Keep the privacy-safe behavior by switching storage scope to the current user/guest, rather than globally wiping prior users’ saved data.
+- This will stop the app from “forgetting” stack/cycle data on the same device.
 
-What I CAN do is make the process on your side as close to "double-click and wait" as possible.
+2. Make stack persistence automatic for logged-in users
+- Keep using the existing backend-backed stack storage already protected per user.
+- Change stack save flows so editing the stack immediately syncs to the backend instead of requiring a manual “Sync now” press in Settings.
+- Ensure login hydration pulls the saved stack before the screen settles, so each user sees their own stack after signing in.
+- Handle the empty-backend case safely so a truly new user still starts with an empty stack.
 
----
+3. Support custom cycle start dates
+- Add an optional “Started on” date field to cycle creation flows, defaulting to today.
+- Use that selected date when creating a cycle instead of always forcing today’s date.
+- Apply this to the main cycle entry points so the behavior is consistent wherever a cycle can be started.
+- Keep all progress/timeline/break calculations based on the chosen start date.
 
-## What I'll add to your project
+4. Rename and relink purchase CTAs
+- Replace “Order from Supplier” and “Order Now” with “Buy Peptides”.
+- Point those buttons to https://www.ridethetide.site and open in a new tab.
+- Standardize related shop CTAs where it makes sense so the wording is consistent across the app.
 
-### 1. `scripts/setup-android.bat` — one-click Windows script
-A double-clickable Windows batch file. You put it in your project folder, double-click it, and it will:
+Files likely involved
+- src/contexts/AuthContext.tsx
+- src/services/storage.ts
+- src/hooks/useCloudSync.ts
+- src/screens/MyStackScreen.tsx
+- src/components/modals/CycleManagementModal.tsx
+- src/components/modals/DoseTrackerModal.tsx
+- src/components/modals/PeptideDetailModal.tsx
+- src/components/bloodwork/StackPeptideCard.tsx
 
-1. Check if Node.js is installed and on PATH. If not, print a clear message with the download link and stop.
-2. Check if Java JDK 17+ is installed. If not, print download link and stop.
-3. Run `npm install`
-4. Run `npm run build`
-5. Run `npx cap add android` (only if `android/` folder doesn't exist yet)
-6. Run `npx cap sync android`
-7. Print "DONE — now open Android Studio and File → Open the `android` folder"
-8. Pause so the window stays open and you can read any errors
+Technical notes
+- No new backend table is required for stack persistence; the existing per-user stack table and access rules are already in place.
+- I checked the current data and the stack table has no rows yet, which matches the current manual-sync-only behavior.
+- The cycle date change should not require a migration unless we decide to move cycle storage into the backend as a separate improvement later.
+- Side effect of the auth/storage fix: user-specific locally saved cycle data will also stop being erased on auth changes.
 
-You will not need to type any commands. Just double-click the file.
-
-### 2. `scripts/build-release-aab.bat` — one-click rebuild script
-For every future release. Double-click to:
-1. `npm run build`
-2. `npx cap sync android`
-3. Print "Now in Android Studio: Build → Generate Signed Bundle → AAB"
-
-### 3. `SETUP_CHECKLIST.md` — plain-English checklist
-A short, non-technical checklist in your project root with screenshots-style numbered steps:
-
-- [ ] Install Node.js LTS (link, with the "Add to PATH" checkbox highlighted)
-- [ ] Install Java JDK 17 (link)
-- [ ] Install Android Studio (link)
-- [ ] Double-click `scripts/setup-android.bat`
-- [ ] Open the new `android` folder in Android Studio
-- [ ] Generate signing keystore (exact `keytool` command, copy-paste)
-- [ ] Configure signing in Android Studio (with the exact menu path)
-- [ ] Build → Generate Signed Bundle → AAB
-- [ ] Upload `.aab` to Play Console
-
-Each step has a "If this fails, do X" note.
-
-### 4. `scripts/fix-node-path.md` — PATH troubleshooting card
-A focused doc just for your current blocker. Three options ranked easiest to hardest:
-- **Option A (easiest):** Uninstall Node.js → reinstall and tick "Automatically install necessary tools" + confirm "Add to PATH" is checked
-- **Option B:** Manually add `C:\Program Files\nodejs\` to System PATH (with the exact Win11 click path: Settings → System → About → Advanced system settings → Environment Variables)
-- **Option C:** Use the full path workaround: `"C:\Program Files\nodejs\npm.cmd" install` etc.
-
----
-
-## What this will NOT do
-- It will not auto-install Node.js or Android Studio for you (Windows blocks scripts from doing that without admin prompts and code-signing). The script detects them and tells you what to install.
-- It will not generate the keystore for you — that has to happen on your machine for security (the keystore is your private signing identity).
-- It will not upload to Google Play — that's a manual web upload.
-
----
-
-## Your next steps after I switch to build mode
-1. I create the 4 files above and commit them.
-2. You pull the latest changes in GitHub Desktop (Fetch origin → Pull origin).
-3. Open the project folder in Windows File Explorer (`Documents\GitHub\peptide-mastery` or wherever you cloned it).
-4. Double-click `scripts\setup-android.bat`.
-5. Follow whatever it tells you (most likely: "install Node.js first").
-6. Double-click it again after installing Node.js.
-7. The `android` folder appears. Open it in Android Studio.
-8. Follow `SETUP_CHECKLIST.md` for the keystore + signed AAB steps.
-
-Approve and I'll create the files.
+Validation after implementation
+- Create a stack while logged in, refresh, sign out, sign back in, and confirm the same stack returns.
+- Sign in as a different user and confirm they do not see another user’s stack.
+- Start a cycle with an earlier date and verify timeline/progress/break timing reflect that date.
+- Confirm every updated CTA says “Buy Peptides” and opens your shop URL.
