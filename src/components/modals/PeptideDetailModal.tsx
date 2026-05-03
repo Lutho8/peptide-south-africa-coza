@@ -469,10 +469,12 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
                 <p className="text-2xl font-bold text-foreground">${peptide.supplier.price}</p>
               </div>
             </div>
-            <Button className="w-full gap-2">
-              <ShoppingCart size={16} />
-              Order Now
-              <ExternalLink size={14} />
+            <Button className="w-full gap-2" asChild>
+              <a href="https://www.ridethetide.site" target="_blank" rel="noopener noreferrer">
+                <ShoppingCart size={16} />
+                Buy Peptides
+                <ExternalLink size={14} />
+              </a>
             </Button>
           </GradientCard>
 
