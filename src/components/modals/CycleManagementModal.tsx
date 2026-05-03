@@ -129,7 +129,7 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
       peptideName: newCycle.peptideName || '',
       dose: newCycle.dose || '',
       frequency: newCycle.frequency || 'Daily',
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: newCycle.startDate || new Date().toISOString().split('T')[0],
       plannedDuration: newCycle.plannedDuration || 90,
       breakDuration: newCycle.breakDuration || 30,
       status: 'active',
