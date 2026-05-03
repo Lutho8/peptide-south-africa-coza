@@ -581,11 +581,17 @@ export function MyStackScreen() {
         </div>
       )}
 
-      {/* Order Button */}
-      <Button className="w-full gap-2" size="lg">
-        <ShoppingCart size={18} />
-        Order from Supplier
-        <ExternalLink size={14} />
+      {/* Buy Peptides */}
+      <Button
+        className="w-full gap-2"
+        size="lg"
+        asChild
+      >
+        <a href="https://www.ridethetide.site" target="_blank" rel="noopener noreferrer">
+          <ShoppingCart size={18} />
+          Buy Peptides
+          <ExternalLink size={14} />
+        </a>
       </Button>
 
       {/* Active Cycles Summary */}
