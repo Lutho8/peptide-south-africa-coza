@@ -129,7 +129,7 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
       peptideName: newCycle.peptideName || '',
       dose: newCycle.dose || '',
       frequency: newCycle.frequency || 'Daily',
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: newCycle.startDate || new Date().toISOString().split('T')[0],
       plannedDuration: newCycle.plannedDuration || 90,
       breakDuration: newCycle.breakDuration || 30,
       status: 'active',
@@ -331,6 +331,16 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                     className="bg-muted"
                     value={newCycle.frequency || ''}
                     onChange={(e) => setNewCycle({ ...newCycle, frequency: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Start date</Label>
+                  <Input
+                    type="date"
+                    className="bg-muted"
+                    max={new Date().toISOString().split('T')[0]}
+                    value={newCycle.startDate || new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setNewCycle({ ...newCycle, startDate: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
