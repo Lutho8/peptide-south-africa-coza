@@ -644,6 +644,39 @@ export function MyStackScreen() {
         currentStack={activeStack}
         onSave={handleSaveStack}
       />
+
+      {/* Start Cycle dialog — lets users backdate when they actually started */}
+      <Dialog open={startCycleDialogOpen} onOpenChange={setStartCycleDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon size={18} className="text-primary" />
+              Start cycle{pendingCycle ? ` — ${pendingCycle.peptideName}` : ''}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label htmlFor="cycle-start-date" className="text-sm">
+              When did you start this cycle?
+            </Label>
+            <Input
+              id="cycle-start-date"
+              type="date"
+              value={pendingStartDate}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={(e) => setPendingStartDate(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Defaults to today. Pick an earlier date if you already started this peptide.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setStartCycleDialogOpen(false)}>Cancel</Button>
+            <Button onClick={confirmStartCycle} className="gap-2">
+              <Play size={14} /> Start cycle
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
