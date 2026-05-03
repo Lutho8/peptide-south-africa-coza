@@ -234,7 +234,15 @@ export function useCloudSync() {
           frequency: item.frequency,
         }));
         saveActiveStack(stack);
+      } else {
+        // Cloud is empty for this user — make sure the local namespace
+        // doesn't show another user's seeded data.
+        saveActiveStack([]);
       }
+      // Notify listeners (e.g. MyStackScreen) that local storage now reflects cloud
+      try {
+        window.dispatchEvent(new CustomEvent('rtd:cloud-hydrated'));
+      } catch { /* noop */ }
     } catch (err) {
       console.error('Error loading from cloud:', err);
     }
