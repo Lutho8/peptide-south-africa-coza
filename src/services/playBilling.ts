@@ -1,14 +1,18 @@
-// Per-platform billing wrapper.
-// - Native (Capacitor Android/iOS): routes to Google Play Billing / App Store IAP.
-//   Real plugin (@capacitor-community/in-app-purchases) installation + Play Console
-//   SKU setup is a follow-up task. Until then, calling purchaseSubscription on
-//   native throws a clear configuration error.
-// - Web/PWA: routes to Tagadapay checkout via existing src/lib/billing.ts.
+// Per-platform billing router.
+// - Native (Capacitor Android/iOS): RevenueCat → Google Play Billing / App Store IAP.
+// - Web/PWA: Tagadapay checkout via src/lib/billing.ts.
+//
+// React components should prefer the `useSubscription` hook. This module exists
+// for non-React callers and as the single place that knows which provider runs
+// on which platform.
 import { Capacitor } from '@capacitor/core';
 import { startCheckout } from '@/lib/billing';
+import {
+  purchaseWeekly,
+  restorePurchases as rcRestore,
+  checkSubscriptionStatus as rcStatus,
+} from '@/lib/revenuecat';
 import { toast } from 'sonner';
-
-const PREMIUM_SKU = 'premium_weekly_trial';
 
 export function isNativeBilling(): boolean {
   try {
@@ -20,12 +24,23 @@ export function isNativeBilling(): boolean {
 
 export async function purchaseSubscription(): Promise<void> {
   if (isNativeBilling()) {
-    // TODO: Wire @capacitor-community/in-app-purchases once the SKU
-    // `premium_weekly_trial` is configured in Google Play Console.
-    toast.error('Play Billing not yet configured', {
-      description: `Configure SKU "${PREMIUM_SKU}" in Play Console, then install @capacitor-community/in-app-purchases.`,
-    });
-    throw new Error('Play Billing SKU not configured');
+    const result = await purchaseWeekly();
+    if (!result.ok) {
+      if (result.reason === 'cancelled') return;
+      if (result.reason === 'no-key') {
+        toast.error('Billing not configured', {
+          description: 'RevenueCat API key missing. Add VITE_REVENUECAT_ANDROID_KEY in Project Settings.',
+        });
+      } else if (result.reason === 'no-offering') {
+        toast.error('Subscription unavailable', {
+          description: 'Could not load the Premium offering from the store. Try again shortly.',
+        });
+      } else {
+        toast.error('Purchase failed', { description: result.error ?? 'Please try again.' });
+      }
+      throw new Error(result.error ?? `Purchase failed (${result.reason})`);
+    }
+    return;
   }
   // Web fallback — Tagadapay (currently stubbed)
   await startCheckout('monthly');
@@ -33,12 +48,20 @@ export async function purchaseSubscription(): Promise<void> {
 
 export async function restorePurchases(): Promise<void> {
   if (isNativeBilling()) {
-    toast.info('Restore purchases', {
-      description: 'Play Billing not yet configured. Once SKUs are live, this will restore an existing subscription.',
-    });
+    const result = await rcRestore();
+    if (result.ok) {
+      toast.success(result.isPremium ? 'Premium restored' : 'No active purchases found');
+      return;
+    }
+    toast.error('Restore failed', { description: result.error ?? 'Please try again.' });
     return;
   }
   toast.info('Restore not available on web', {
     description: 'Sign in with the account that purchased Premium to restore access.',
   });
+}
+
+export async function checkSubscriptionStatus(): Promise<{ isPremium: boolean }> {
+  if (isNativeBilling()) return rcStatus();
+  return { isPremium: false };
 }
