@@ -4,7 +4,8 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { useTeaserMode } from '@/hooks/useTeaserMode';
-import { purchaseSubscription, restorePurchases, isNativeBilling } from '@/services/playBilling';
+import { useSubscription } from '@/hooks/useSubscription';
+import { isNativeBilling } from '@/services/playBilling';
 
 /**
  * Hard paywall — first screen shown to any unauthenticated visitor on every
@@ -14,15 +15,14 @@ import { purchaseSubscription, restorePurchases, isNativeBilling } from '@/servi
  */
 export function PaywallScreen() {
   const { enableTeaser } = useTeaserMode();
+  const { purchase, restore } = useSubscription();
   const [busy, setBusy] = useState<'continue' | 'restore' | null>(null);
   const native = isNativeBilling();
 
   const handleContinue = async () => {
     setBusy('continue');
     try {
-      await purchaseSubscription();
-    } catch {
-      /* error toasted in service */
+      await purchase();
     } finally {
       setBusy(null);
     }
@@ -31,7 +31,7 @@ export function PaywallScreen() {
   const handleRestore = async () => {
     setBusy('restore');
     try {
-      await restorePurchases();
+      await restore();
     } finally {
       setBusy(null);
     }
