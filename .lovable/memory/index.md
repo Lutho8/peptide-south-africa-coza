@@ -5,8 +5,8 @@ Updated: today
 
 ## Core
 English-only UI; no multi-language i18n. ZAR currency + 🇿🇦 SA copy allowed.
-Two-tier access: Free + Premium (R4.99/mo or R49/yr, ZAR via Tagadapay).
-Payment provider is Tagadapay only — never Stripe, Paddle, or Paystack.
+Hard paywall (PaywallScreen) is first screen on every cold start (web/PWA/native). Browse Free → limited preview (3 peptides, research tools locked).
+Two-tier access: Free + Premium (R4.99/mo or R49/yr, ZAR). Web → Tagadapay; native → Google Play Billing (SKU pending).
 1:1 consultation = Premium-gated entitlement (mailto webinars@fintiba.com).
 No vendor surfaces (no vendor lists, ratings, or finnrick.com references).
 Brand: Ride The Tide. Primary #3B82F6. Glassmorphism, luxury Framer Motion.
