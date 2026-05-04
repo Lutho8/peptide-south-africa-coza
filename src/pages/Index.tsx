@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { useProfileSync } from '@/hooks/useProfileSync';
 import { useScreenTransition } from '@/hooks/useScreenTransition';
+import { useTeaserMode } from '@/hooks/useTeaserMode';
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -31,6 +32,7 @@ const ResearchLibraryScreen = lazy(() => import('@/screens/ResearchLibraryScreen
 const TransformationScreen = lazy(() => import('@/screens/TransformationScreen').then(m => ({ default: m.TransformationScreen })));
 const SettingsScreen = lazy(() => import('@/screens/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m => ({ default: m.LandingPage })));
+const PaywallScreen = lazy(() => import('@/components/PaywallScreen').then(m => ({ default: m.PaywallScreen })));
 
 // Lazy load modals
 const BodyCompositionModal = lazy(() => import('@/components/modals/BodyCompositionModal').then(m => ({ default: m.BodyCompositionModal })));
@@ -55,6 +57,7 @@ const Index = () => {
   const { isLoading: accessLoading } = useAccessControl();
   const { hydrated: profileHydrated } = useProfileSync();
   const { getDirection, getTransitionVariants } = useScreenTransition();
+  const { teaser } = useTeaserMode();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [showSettings, setShowSettings] = useState(false);
@@ -199,15 +202,15 @@ const Index = () => {
     );
   }
 
-  // Landing page for unauthenticated users
+  // Hard paywall (first launch) → limited preview if user taps Browse Free
   if (!user) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-        <LandingPage />
+        {teaser ? <LandingPage /> : <PaywallScreen />}
       </Suspense>
     );
   }
-  
+
   // Landing page for authenticated users browsing public content
   if (showLandingPage) {
     return (

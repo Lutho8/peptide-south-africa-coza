@@ -15,6 +15,8 @@ import { LandingFooter } from './LandingFooter';
 import { FAQSection, faqCategories } from './FAQSection';
 import { LiveQnAPopup } from './LiveQnAPopup';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTeaserMode } from '@/hooks/useTeaserMode';
+import { PremiumLockOverlay } from '@/components/paywall/PremiumLockOverlay';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd, buildOrganizationSchema, buildWebSiteSchema, buildFAQSchema } from '@/components/seo/JsonLd';
 
@@ -31,6 +33,7 @@ const ReconstitutionCalculator = lazy(() => import('./ReconstitutionCalculator')
 
 export function LandingPage() {
   const { user } = useAuth();
+  const { teaser } = useTeaserMode();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [blendsOpen, setBlendsOpen] = useState(false);
@@ -75,15 +78,30 @@ export function LandingPage() {
         <BentoFeatures />
         <Testimonials />
         <WhyFreeBand onPrimaryClick={handleSignInClick} />
-        <ResearchTools 
-          onBlendsClick={() => setBlendsOpen(true)}
-          onQuizClick={() => setQuizOpen(true)}
-          onSearchClick={() => setSearchOpen(true)}
-          onStackClick={() => setStackBuilderOpen(true)}
-          onCalculatorClick={() => setCalculatorOpen(true)}
-        />
-        <div id="featured-peptides">
-          <FeaturedPeptides />
+        <div className="relative">
+          <ResearchTools 
+            onBlendsClick={() => teaser ? null : setBlendsOpen(true)}
+            onQuizClick={() => teaser ? null : setQuizOpen(true)}
+            onSearchClick={() => teaser ? null : setSearchOpen(true)}
+            onStackClick={() => teaser ? null : setStackBuilderOpen(true)}
+            onCalculatorClick={() => teaser ? null : setCalculatorOpen(true)}
+          />
+          {teaser && (
+            <PremiumLockOverlay
+              title="Research tools are Premium"
+              description="Unlock the stack builder, reconstitution calculator, blends, quiz, and search."
+            />
+          )}
+        </div>
+        <div id="featured-peptides" className="relative">
+          <FeaturedPeptides limit={teaser ? 3 : undefined} />
+          {teaser && (
+            <div className="container mx-auto px-4 -mt-4 pb-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                Showing 3 of {`50+`} peptides — unlock Premium to view all.
+              </p>
+            </div>
+          )}
         </div>
         <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
         <BlogSection />
