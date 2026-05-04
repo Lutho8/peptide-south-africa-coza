@@ -1,83 +1,110 @@
-## Hard Paywall Screen — first-launch gate
 
-A new `PaywallScreen` becomes the first screen any unauthenticated visitor sees on web, PWA, and native (Android/iOS). It pushes Premium (existing R4.99/month or R49/year), with a "Browse Free" escape into a **limited preview** mode.
+## Goal
 
-### What gets built
+Replace the stubbed Play Billing wrapper with a working RevenueCat integration on Android (via `@revenuecat/purchases-capacitor`), expose it through a clean `useSubscription` React hook, and rewire `PaywallScreen` + the existing `playBilling` service to use it.
 
-**1. `src/components/PaywallScreen.tsx`** — exported component
+## Conflicts to resolve before I build (please confirm)
 
-Layout (centered, generous padding, dark gradient bg `from-[#0F172A] via-[#0F172A] to-[#1E293B]`):
+1. **File path conflict.** You asked for `lib/billing.ts`, but `src/lib/billing.ts` already exists and is the Tagadapay (web) checkout stub. Overwriting it will break the web Continue button in `PaywallScreen` and `TeaserMode`. **My plan puts RevenueCat in `src/lib/revenuecat.ts`** and keeps `src/lib/billing.ts` as the web/Tagadapay path. The existing `src/services/playBilling.ts` becomes a thin router (native → RevenueCat, web → Tagadapay). If you'd rather I literally overwrite `src/lib/billing.ts`, say so and I'll merge both providers into one file.
 
-```text
-        [Animated Logo, lg]
-         Unlock Premium        ← 2xl bold
-       Full access to Ride The Tide
+2. **Env var name.** `NEXT_PUBLIC_*` is a Next.js convention; this project is Vite, so the equivalent is `VITE_REVENUECAT_ANDROID_KEY`. Vite only exposes vars prefixed with `VITE_` to client code. RevenueCat issues **separate public SDK keys per platform** (one for Android `goog_…`, one for iOS `appl_…`) — there isn't a single key. I'll use `VITE_REVENUECAT_ANDROID_KEY` (and leave room for `VITE_REVENUECAT_IOS_KEY` later). The `.env` file is auto-managed; you'll need to add the key in **Project Settings → Environment Variables** after I scaffold the code.
 
-        ┌───────────────────┐
-        │   R4.99 / month   │  ← 5xl bold, primary color, hero
-        │   3 days free     │  ← sm muted
-        │  Cancel anytime   │  ← xs muted
-        └───────────────────┘
+3. **Pricing string mismatch.** Memory + `PaywallScreen` show **R4.99 / month**. The product ID you provided is `info.ridethetide.app.premium.weekly`. RevenueCat returns the real price string from Play Console at runtime, so the UI will display whatever you configure for that SKU in Play Console (e.g. `R4.99/week`). I won't hardcode a price — I'll display `pkg.product.priceString` once the offering loads. If Play Console says weekly and the screen still says "/ month", that's a Play Console pricing decision, not a code change.
 
-   [        Continue        ]   ← full-width primary, h-14
-        Restore Purchase        ← text link, sm
-       ─────────────────
-          Browse Free           ← ghost button
+## What I'll build
+
+### 1. New: `src/lib/revenuecat.ts` (native-only RevenueCat wrapper)
+
+Pure functions, no React. Each function is wrapped in try/catch and returns a typed result rather than throwing — never crashes the app. Web calls short-circuit to `{ ok: false, reason: 'not-native' }`.
+
+```ts
+initializeBilling(userId: string): Promise<{ ok: boolean; error?: string }>
+getOffering(): Promise<PurchasesPackage | null>          // offering 'default', package matching PRODUCT_ID
+purchaseWeekly(): Promise<{ ok: boolean; isPremium: boolean; error?: string }>
+restorePurchases(): Promise<{ ok: boolean; isPremium: boolean; error?: string }>
+checkSubscriptionStatus(): Promise<{ isPremium: boolean }>
 ```
 
-No feature list, no monthly/annual toggle, no clutter — per spec, but using existing ZAR pricing per user's pricing answer.
+Constants (top of file, easy to change):
+- `PRODUCT_ID = 'info.ridethetide.app.premium.weekly'`
+- `OFFERING_ID = 'default'`
+- `ENTITLEMENT_ID = 'premium'`
 
-**2. Wire it into `src/pages/Index.tsx` as the first unauthenticated screen**
+Implementation detail: `checkSubscriptionStatus` reads `customerInfo.entitlements.active['premium']`. `purchaseWeekly` calls `Purchases.purchasePackage` on the package whose `product.identifier === PRODUCT_ID` from offering `default`.
 
-Replace the current `if (!user) return <LandingPage />` branch with:
+### 2. Rewire `src/services/playBilling.ts`
 
-```text
-if (!user && !teaserMode) → <PaywallScreen onContinue onRestore onBrowseFree />
-if (!user && teaserMode)  → <LandingPage /> in limited-preview mode
+Becomes the single platform router used by the rest of the app:
+
+```ts
+isNativeBilling()           // unchanged
+purchaseSubscription()      // native → revenuecat.purchaseWeekly(); web → startCheckout('monthly')
+restorePurchases()          // native → revenuecat.restorePurchases(); web → toast "sign in instead"
+checkSubscriptionStatus()   // native → revenuecat; web → false (web premium status comes from Supabase membership, not RC)
 ```
 
-`teaserMode` is stored in `sessionStorage` (`rtt_teaser_mode`) so it doesn't survive a fresh launch — every cold start re-shows the paywall, matching "first screen on app launch".
+Removes the "not configured" toast — that's no longer true once RC is wired.
 
-**3. Limited preview gating**
+### 3. New: `src/hooks/useSubscription.ts`
 
-Add a tiny `useTeaserMode()` hook + `<TeaserGate>` wrapper. In teaser mode:
-- Landing page shows only the **first 3 peptides** in `FeaturedPeptides`
-- `ReconstitutionCalculator`, `StackBuilder`, `PeptideQuiz` render a locked overlay with a "Unlock Premium" CTA that returns to `PaywallScreen`
-- Auth modal still works (sign-in routes to dashboard normally; signup is allowed)
+```ts
+const { isPremium, isLoading, error, purchase, restore, refresh } = useSubscription();
+```
 
-**4. Continue button behavior (per-platform)**
+Behavior:
+- On mount: reads `useAuth().user.id`, calls `initializeBilling(userId)` (native only), then `checkSubscriptionStatus()`.
+- `isPremium`: boolean, defaults to `false` while loading.
+- `isLoading`: true during init + status check.
+- `error`: string | null — set from any failed call, never throws.
+- `purchase()`: calls `purchaseWeekly()`, refreshes status on success.
+- `restore()`: calls `restorePurchases()`, refreshes status.
+- `refresh()`: re-runs `checkSubscriptionStatus()`.
+- Web behavior: `isPremium = false`, `purchase()` falls through to Tagadapay via `playBilling.purchaseSubscription()`. The hook works on web without crashing, just doesn't talk to RC.
+- Re-runs init when `user.id` changes (login/logout).
 
-- **Android (Capacitor native)**: launches Google Play Billing via a new wrapper `src/services/playBilling.ts` using `@capacitor-community/in-app-purchases` (to be added). For this plan, the wrapper exposes `purchaseSubscription('premium_weekly_trial')` and `restorePurchases()` — actual SKU configuration in Play Console is a follow-up the user does outside the codebase.
-- **Web / PWA**: opens Tagadapay checkout (existing `src/lib/billing.ts` flow) since Play Billing isn't available.
-- **iOS** (future): same wrapper falls back to App Store IAP via the same plugin.
+### 4. Update `src/components/PaywallScreen.tsx`
 
-`Restore Purchase` only appears on native; hidden on web (no IAP to restore).
+Swap direct `playBilling` imports for `useSubscription()`. If `isPremium === true` on mount (e.g. user reinstalled and restored), auto-skip the paywall by calling `enableTeaser()` + a parent signal — actually simpler: just call `restore()` silently in the background and let the existing auth/access flow detect Premium on next render.
 
-**5. Memory updates**
+### 5. Install + Capacitor config
 
-- Update **Core** in `mem://index.md`: drop "Free-access model; no paywalls or PayPal" → replace with "Hard paywall on first launch (all platforms). Free teaser via Browse Free. Premium = existing ZAR pricing (Tagadapay web, Google Play Billing on Android)."
-- Update `mem://features/access-model.md` and `mem://features/premium-tier-allowed.md` to reflect the hard paywall + IAP override.
-- Add new `mem://features/hard-paywall.md` documenting the first-launch gate, teaser mode rules, and per-platform billing routing.
+- `bun add @revenuecat/purchases-capacitor`
+- Add to `capacitor.config.ts` plugins block (RevenueCat needs no special config but I'll add a comment marker).
+- After install, instructions for the user to run `npx cap sync android` locally (sandbox can't run a real Android build).
 
-### Files touched
+### 6. `.env` / secrets
 
-- **new** `src/components/PaywallScreen.tsx`
-- **new** `src/hooks/useTeaserMode.ts`
-- **new** `src/components/paywall/PremiumLockOverlay.tsx`
-- **new** `src/services/playBilling.ts` (stub wrapper; real plugin install happens during build)
-- **edit** `src/pages/Index.tsx` (paywall gate before LandingPage)
-- **edit** `src/components/landing/LandingPage.tsx` (consume teaser mode, slice featured peptides)
-- **edit** `src/components/landing/StackBuilder.tsx`, `ReconstitutionCalculator.tsx`, `PeptideQuiz.tsx` (lock overlays in teaser mode)
-- **edit** `mem://index.md`, `mem://features/access-model.md`, `mem://features/premium-tier-allowed.md`
-- **new** `mem://features/hard-paywall.md`
+`.env` is auto-managed; I'll add a `.env.example` entry and tell you where to paste the key in Project Settings. The Android RevenueCat public SDK key (`goog_…`) is safe to expose client-side — that's what RC's "public SDK key" means.
 
-### Out of scope (call out to the user)
+## Files
 
-- Adding the actual `@capacitor-community/in-app-purchases` package and wiring real Google Play SKU IDs — needs Play Console product setup first; the `playBilling.ts` wrapper will throw a clear "Configure Play Billing SKU" error until then.
-- Switching to USD $3.99/week pricing (user chose to keep existing R4.99/month + R49/year).
-- Receipt validation edge function for Google Play purchases — needs to be a follow-up task once SKUs exist.
+**Created**
+- `src/lib/revenuecat.ts`
+- `src/hooks/useSubscription.ts`
+- `.env.example` (add `VITE_REVENUECAT_ANDROID_KEY=goog_xxx`)
 
-### Risks
+**Modified**
+- `src/services/playBilling.ts` — wires to revenuecat.ts on native
+- `src/components/PaywallScreen.tsx` — uses `useSubscription()`
+- `package.json` — adds `@revenuecat/purchases-capacitor`
+- `.lovable/memory/features/hard-paywall.md` — note RC is now wired
 
-- A hard paywall reverses a long-standing project rule. Memory + several existing components (`PricingSection`, `WhyFreeBand`, `BentoFeatures` "free forever" copy) still advertise free access. This plan does **not** rewrite that marketing copy — flag whether you want a follow-up pass to update landing page messaging to match the new paywall stance.
-- Google Play policy requires the paywall to clearly disclose trial→paid conversion price and cancellation steps before purchase. The `Continue` flow will need a confirmation sheet before calling `purchaseSubscription` — included in `PaywallScreen` as a small disclosure line above the button.
+**Not touched**
+- `src/lib/billing.ts` (Tagadapay web path stays)
+- `src/components/TeaserMode.tsx` (already calls `startCheckout` via lib/billing)
+
+## Out of scope
+
+- Server-side receipt validation (RC handles entitlement verification client-side; full server validation is a follow-up).
+- iOS App Store IAP (key + plugin already supports it; we just don't have an iOS key yet).
+- Syncing RC `customerInfo` into your Supabase `subscriptions` table (RC has webhooks for this — separate task).
+- Actually creating the SKU `info.ridethetide.app.premium.weekly` and offering `default` in Play Console + RevenueCat dashboard — you have to do that manually.
+
+## What you need to do after I ship
+
+1. Create the product `info.ridethetide.app.premium.weekly` in Google Play Console.
+2. In RevenueCat: create entitlement `premium`, attach the product, put it in offering `default`.
+3. Add `VITE_REVENUECAT_ANDROID_KEY=goog_xxx` in Project Settings → Environment Variables.
+4. Locally: `git pull && npm install && npx cap sync android && npx cap run android`.
+
+Confirm the three conflicts above (especially #1 — file location) and I'll build it.
