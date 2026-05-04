@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { useProfileSync } from '@/hooks/useProfileSync';
 import { useScreenTransition } from '@/hooks/useScreenTransition';
+import { useTeaserMode } from '@/hooks/useTeaserMode';
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -56,6 +57,7 @@ const Index = () => {
   const { isLoading: accessLoading } = useAccessControl();
   const { hydrated: profileHydrated } = useProfileSync();
   const { getDirection, getTransitionVariants } = useScreenTransition();
+  const { teaser } = useTeaserMode();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [showSettings, setShowSettings] = useState(false);
