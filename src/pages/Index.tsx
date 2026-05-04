@@ -31,6 +31,7 @@ const ResearchLibraryScreen = lazy(() => import('@/screens/ResearchLibraryScreen
 const TransformationScreen = lazy(() => import('@/screens/TransformationScreen').then(m => ({ default: m.TransformationScreen })));
 const SettingsScreen = lazy(() => import('@/screens/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m => ({ default: m.LandingPage })));
+const PaywallScreen = lazy(() => import('@/components/PaywallScreen').then(m => ({ default: m.PaywallScreen })));
 
 // Lazy load modals
 const BodyCompositionModal = lazy(() => import('@/components/modals/BodyCompositionModal').then(m => ({ default: m.BodyCompositionModal })));
