@@ -113,6 +113,7 @@ export function DosageScreen() {
   // Load reminders and notification status on mount
   useEffect(() => {
     setReminders(getScheduledReminders());
+    setPresets(getDosagePresets());
     const permission = getNotificationPermission();
     const settings = getNotificationSettings();
     setNotificationsEnabled(permission === 'granted' && settings.enabled);
