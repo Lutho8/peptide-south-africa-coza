@@ -248,6 +248,10 @@ export function useDoseReminders() {
       saveLocalReminders(updated);
 
       toast.success(`${remindersWithIds.length} reminder${remindersWithIds.length > 1 ? 's' : ''} created`);
+
+      await ensureNotificationsReady();
+      await forceSyncAndCheck();
+
       return remindersWithIds;
     } catch (error) {
       console.error('Error bulk adding reminders:', error);
