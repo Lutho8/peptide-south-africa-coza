@@ -283,6 +283,20 @@ export function useDoseReminders() {
       );
       setReminders(updated);
       saveLocalReminders(updated);
+
+      const updatedReminder = updated.find(r => r.id === id);
+      if (updatedReminder) {
+        await saveReminderToIndexedDB({
+          id: updatedReminder.id,
+          peptideId: updatedReminder.peptide_id,
+          peptideName: updatedReminder.peptide_name,
+          dose: updatedReminder.dose,
+          time: updatedReminder.time,
+          days: updatedReminder.days || [],
+          enabled: updatedReminder.enabled,
+        });
+      }
+      await forceSyncAndCheck();
     } catch (error) {
       console.error('Error updating reminder:', error);
       throw error;
