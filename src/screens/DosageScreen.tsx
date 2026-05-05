@@ -188,6 +188,111 @@ export function DosageScreen() {
   // Calculate doses per vial
   const dosesPerVial = targetMg > 0 ? Math.floor(vialMg / targetMg) : 0;
 
+  // ----- Validation messages -----
+  type ValidationMsg = { level: 'error' | 'warn' | 'info'; text: string };
+  const validationMessages: ValidationMsg[] = useMemo(() => {
+    const out: ValidationMsg[] = [];
+    if (vialMg <= 0 || waterMl <= 0) {
+      out.push({ level: 'info', text: 'Enter a vial size and BAC water amount to calculate.' });
+      return out;
+    }
+    if (targetMg <= 0) {
+      out.push({ level: 'info', text: 'Enter a target dose to see units.' });
+    }
+    if (targetMg > vialMg) {
+      out.push({ level: 'error', text: `Target dose (${targetMg} mg) is larger than the entire vial (${vialMg} mg). Reduce the dose or increase vial size.` });
+    }
+    if (syringeUnits > selectedSyringe.unitsPerMl) {
+      out.push({ level: 'error', text: `This dose needs ${syringeUnits.toFixed(1)} units on a ${selectedSyringe.label} syringe (max ${selectedSyringe.unitsPerMl}). Add more BAC water, choose a higher-capacity syringe (e.g. U-100), or split the dose.` });
+    } else if (syringeUnits > 0 && syringeUnits < 2) {
+      out.push({ level: 'warn', text: `Only ${syringeUnits.toFixed(1)} units on a ${selectedSyringe.label} syringe — hard to draw accurately. Use less BAC water or a U-100 syringe.` });
+    }
+    if (concentrationMgPerMl > 20) {
+      out.push({ level: 'warn', text: `Concentration is very high (${concentrationMgPerMl.toFixed(2)} mg/ml). Consider adding more BAC water for easier dosing.` });
+    } else if (concentrationMgPerMl > 0 && concentrationMgPerMl < 0.1) {
+      out.push({ level: 'warn', text: `Concentration is very low (${concentrationMgPerMl.toFixed(3)} mg/ml). Consider using less BAC water.` });
+    }
+    return out;
+  }, [vialMg, waterMl, targetMg, syringeUnits, selectedSyringe, concentrationMgPerMl]);
+
+  // ----- Manual override detection -----
+  const expectedDefaults = useMemo(() => {
+    if (selectedPeptideForCalc) {
+      const peptide = peptides.find(p => p.id === selectedPeptideForCalc);
+      const vs = PEPTIDE_VIAL_DEFAULTS[selectedPeptideForCalc] ?? '5';
+      const bw = '2';
+      let td = '';
+      if (peptide) {
+        const m = peptide.dosing.beginner.match(/(\d+(?:\.\d+)?)\s*(mcg|mg|IU)/i);
+        if (m) {
+          const v = parseFloat(m[1]);
+          td = String(m[2].toLowerCase() === 'mcg' ? v / 1000 : v);
+        }
+      }
+      return { vs, bw, td, name: peptide?.shortName ?? '' };
+    }
+    if (selectedBlendForCalc && selectedBlendData) {
+      const mgMatch = selectedBlendData.vialSize.match(/([\d.]+)\s*mg/i);
+      const waterMatch = selectedBlendData.quickstart.reconstitute.match(/([\d.]+)\s*mL/i);
+      return {
+        vs: mgMatch?.[1] ?? '',
+        bw: waterMatch?.[1] ?? '',
+        td: '',
+        name: selectedBlendData.shortName,
+      };
+    }
+    return null;
+  }, [selectedPeptideForCalc, selectedBlendForCalc, selectedBlendData]);
+
+  const manualOverride = !!expectedDefaults && (
+    vialSize !== expectedDefaults.vs ||
+    bacWater !== expectedDefaults.bw ||
+    (expectedDefaults.td !== '' && targetDose !== expectedDefaults.td)
+  );
+
+  const resetToDefaults = () => {
+    if (selectedPeptideForCalc) handlePeptideSelect(selectedPeptideForCalc);
+    else if (selectedBlendForCalc) handleBlendSelect(selectedBlendForCalc);
+  };
+
+  // ----- Presets -----
+  const handleSavePreset = () => {
+    const defaultName = expectedDefaults?.name || 'Custom preset';
+    const name = window.prompt('Name this preset:', defaultName);
+    if (!name) return;
+    const preset: DosagePreset = {
+      id: `preset-${Date.now()}`,
+      name: name.trim(),
+      peptideId: selectedPeptideForCalc || undefined,
+      blendId: selectedBlendForCalc || undefined,
+      vialSize,
+      bacWater,
+      targetDose,
+      syringeType,
+      createdAt: new Date().toISOString(),
+    };
+    saveDosagePreset(preset);
+    setPresets(getDosagePresets());
+    toast.success(`Preset "${preset.name}" saved`);
+  };
+
+  const handleLoadPreset = (preset: DosagePreset) => {
+    setVialSize(preset.vialSize);
+    setBacWater(preset.bacWater);
+    setTargetDose(preset.targetDose);
+    setSyringeType(preset.syringeType);
+    setSelectedPeptideForCalc(preset.peptideId ?? '');
+    setSelectedBlendForCalc(preset.blendId ?? '');
+    toast.success(`Loaded "${preset.name}"`);
+  };
+
+  const handleDeletePreset = (id: string, name: string) => {
+    deleteDosagePreset(id);
+    setPresets(getDosagePresets());
+    toast.info(`Deleted "${name}"`);
+  };
+
+
   // Get schedule for selected peptide
   const schedulePeptide = useMemo(() => 
     findPeptideOrBlend(selectedSchedulePeptide), 
