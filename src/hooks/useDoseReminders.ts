@@ -13,6 +13,9 @@ import {
   bulkSaveReminders, 
   deleteReminderFromIndexedDB,
   saveReminderToIndexedDB,
+  forceSyncAndCheck,
+  registerServiceWorker,
+  requestPushPermission,
   type ScheduledReminder 
 } from '@/services/pushScheduler';
 
