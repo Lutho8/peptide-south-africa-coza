@@ -326,15 +326,36 @@ export function DosageScreen() {
           <h2 className="text-base sm:text-lg font-semibold text-foreground">Reconstitution Calculator</h2>
         </div>
 
-        {/* Blend Quick-Fill Selector */}
+        {/* Quick-Fill Selector */}
         <div className="mb-4 space-y-1.5">
-          <Label className="text-xs sm:text-sm text-muted-foreground">Quick-Fill from Blend/Stack</Label>
-          <Select value={selectedBlendForCalc} onValueChange={handleBlendSelect}>
+          <Label className="text-xs sm:text-sm text-muted-foreground">Quick-Fill from Peptide / Blend / Stack</Label>
+          <Select
+            value={selectedPeptideForCalc || selectedBlendForCalc}
+            onValueChange={(v) => {
+              if (v === 'custom') {
+                setSelectedBlendForCalc('');
+                setSelectedPeptideForCalc('');
+                return;
+              }
+              if (peptides.some(p => p.id === v)) handlePeptideSelect(v);
+              else handleBlendSelect(v);
+            }}
+          >
             <SelectTrigger className="bg-muted border-border h-10">
-              <SelectValue placeholder="Select a blend to auto-fill..." />
+              <SelectValue placeholder="Select a peptide or blend to auto-fill..." />
             </SelectTrigger>
-            <SelectContent className="bg-card border-border z-50 max-h-60">
-              <SelectItem value="custom">Custom / Individual Peptide</SelectItem>
+            <SelectContent className="bg-card border-border z-50 max-h-72">
+              <SelectItem value="custom">Custom / Manual entry</SelectItem>
+              <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">Individual Peptides</div>
+              {peptides.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  <span className="flex items-center gap-1.5">
+                    <FlaskConical className="w-3 h-3 text-primary/70" />
+                    {p.shortName}
+                  </span>
+                </SelectItem>
+              ))}
+              <div className="px-2 py-1 mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">Blends &amp; Stacks</div>
               {allBlends.map((blend) => (
                 <SelectItem key={blend.id} value={blend.id}>
                   <span className="flex items-center gap-1.5">
