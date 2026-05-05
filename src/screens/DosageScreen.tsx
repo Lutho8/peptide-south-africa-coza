@@ -479,6 +479,59 @@ export function DosageScreen() {
           </Select>
         </div>
 
+        {/* Manual override pill */}
+        {manualOverride && expectedDefaults && (
+          <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
+            <span className="text-foreground">
+              Using custom values for <strong>{expectedDefaults.name}</strong>
+            </span>
+            <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={resetToDefaults}>
+              Reset to defaults
+            </Button>
+          </div>
+        )}
+
+        {/* Dosage Presets */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <Label className="text-xs sm:text-sm text-muted-foreground">Presets</Label>
+            <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" onClick={handleSavePreset}>
+              <Save size={12} /> Save current
+            </Button>
+          </div>
+          {presets.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground italic">No presets yet. Save your current setup to reuse it.</p>
+          ) : (
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {presets.map((preset) => (
+                <div
+                  key={preset.id}
+                  className="flex-shrink-0 flex items-center gap-1 rounded-full border border-border bg-muted/50 pl-3 pr-1 py-1 text-xs hover:bg-muted transition-colors"
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleLoadPreset(preset)}
+                    className="flex flex-col items-start text-left"
+                  >
+                    <span className="font-medium text-foreground leading-tight">{preset.name}</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">
+                      {preset.vialSize}mg / {preset.bacWater}ml · {preset.syringeType.toUpperCase()}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePreset(preset.id, preset.name)}
+                    className="ml-1 rounded-full w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    aria-label={`Delete preset ${preset.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Blend Safety Warning */}
         {selectedBlendData && (
           <Alert variant="destructive" className="mb-4 border-destructive bg-destructive/10">
