@@ -164,7 +164,7 @@ export function DailyLogScreen() {
     }
   };
 
-  const handleEditSave = async (doseId: string, updates: { time?: string; notes?: string }) => {
+  const handleEditSave = async (doseId: string, updates: { time?: string; notes?: string; dose?: number; unit?: 'mg' | 'IU' | 'units' }) => {
     try {
       await updateDose(doseId, updates);
       toast({
