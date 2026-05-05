@@ -108,6 +108,7 @@ export function DosageScreen() {
   const [reminders, setReminders] = useState<ScheduledReminder[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [presets, setPresets] = useState<DosagePreset[]>([]);
 
   // Load reminders and notification status on mount
   useEffect(() => {
