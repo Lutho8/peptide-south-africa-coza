@@ -22,7 +22,11 @@ import {
   saveScheduledReminder, 
   deleteScheduledReminder,
   ScheduledReminder,
-  getNotificationSettings 
+  getNotificationSettings,
+  getDosagePresets,
+  saveDosagePreset,
+  deleteDosagePreset,
+  DosagePreset,
 } from '@/services/storage';
 import { 
   requestNotificationPermission, 
@@ -104,10 +108,12 @@ export function DosageScreen() {
   const [reminders, setReminders] = useState<ScheduledReminder[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [presets, setPresets] = useState<DosagePreset[]>([]);
 
   // Load reminders and notification status on mount
   useEffect(() => {
     setReminders(getScheduledReminders());
+    setPresets(getDosagePresets());
     const permission = getNotificationPermission();
     const settings = getNotificationSettings();
     setNotificationsEnabled(permission === 'granted' && settings.enabled);
@@ -181,6 +187,111 @@ export function DosageScreen() {
 
   // Calculate doses per vial
   const dosesPerVial = targetMg > 0 ? Math.floor(vialMg / targetMg) : 0;
+
+  // ----- Validation messages -----
+  type ValidationMsg = { level: 'error' | 'warn' | 'info'; text: string };
+  const validationMessages: ValidationMsg[] = useMemo(() => {
+    const out: ValidationMsg[] = [];
+    if (vialMg <= 0 || waterMl <= 0) {
+      out.push({ level: 'info', text: 'Enter a vial size and BAC water amount to calculate.' });
+      return out;
+    }
+    if (targetMg <= 0) {
+      out.push({ level: 'info', text: 'Enter a target dose to see units.' });
+    }
+    if (targetMg > vialMg) {
+      out.push({ level: 'error', text: `Target dose (${targetMg} mg) is larger than the entire vial (${vialMg} mg). Reduce the dose or increase vial size.` });
+    }
+    if (syringeUnits > selectedSyringe.unitsPerMl) {
+      out.push({ level: 'error', text: `This dose needs ${syringeUnits.toFixed(1)} units on a ${selectedSyringe.label} syringe (max ${selectedSyringe.unitsPerMl}). Add more BAC water, choose a higher-capacity syringe (e.g. U-100), or split the dose.` });
+    } else if (syringeUnits > 0 && syringeUnits < 2) {
+      out.push({ level: 'warn', text: `Only ${syringeUnits.toFixed(1)} units on a ${selectedSyringe.label} syringe — hard to draw accurately. Use less BAC water or a U-100 syringe.` });
+    }
+    if (concentrationMgPerMl > 20) {
+      out.push({ level: 'warn', text: `Concentration is very high (${concentrationMgPerMl.toFixed(2)} mg/ml). Consider adding more BAC water for easier dosing.` });
+    } else if (concentrationMgPerMl > 0 && concentrationMgPerMl < 0.1) {
+      out.push({ level: 'warn', text: `Concentration is very low (${concentrationMgPerMl.toFixed(3)} mg/ml). Consider using less BAC water.` });
+    }
+    return out;
+  }, [vialMg, waterMl, targetMg, syringeUnits, selectedSyringe, concentrationMgPerMl]);
+
+  // ----- Manual override detection -----
+  const expectedDefaults = useMemo(() => {
+    if (selectedPeptideForCalc) {
+      const peptide = peptides.find(p => p.id === selectedPeptideForCalc);
+      const vs = PEPTIDE_VIAL_DEFAULTS[selectedPeptideForCalc] ?? '5';
+      const bw = '2';
+      let td = '';
+      if (peptide) {
+        const m = peptide.dosing.beginner.match(/(\d+(?:\.\d+)?)\s*(mcg|mg|IU)/i);
+        if (m) {
+          const v = parseFloat(m[1]);
+          td = String(m[2].toLowerCase() === 'mcg' ? v / 1000 : v);
+        }
+      }
+      return { vs, bw, td, name: peptide?.shortName ?? '' };
+    }
+    if (selectedBlendForCalc && selectedBlendData) {
+      const mgMatch = selectedBlendData.vialSize.match(/([\d.]+)\s*mg/i);
+      const waterMatch = selectedBlendData.quickstart.reconstitute.match(/([\d.]+)\s*mL/i);
+      return {
+        vs: mgMatch?.[1] ?? '',
+        bw: waterMatch?.[1] ?? '',
+        td: '',
+        name: selectedBlendData.shortName,
+      };
+    }
+    return null;
+  }, [selectedPeptideForCalc, selectedBlendForCalc, selectedBlendData]);
+
+  const manualOverride = !!expectedDefaults && (
+    vialSize !== expectedDefaults.vs ||
+    bacWater !== expectedDefaults.bw ||
+    (expectedDefaults.td !== '' && targetDose !== expectedDefaults.td)
+  );
+
+  const resetToDefaults = () => {
+    if (selectedPeptideForCalc) handlePeptideSelect(selectedPeptideForCalc);
+    else if (selectedBlendForCalc) handleBlendSelect(selectedBlendForCalc);
+  };
+
+  // ----- Presets -----
+  const handleSavePreset = () => {
+    const defaultName = expectedDefaults?.name || 'Custom preset';
+    const name = window.prompt('Name this preset:', defaultName);
+    if (!name) return;
+    const preset: DosagePreset = {
+      id: `preset-${Date.now()}`,
+      name: name.trim(),
+      peptideId: selectedPeptideForCalc || undefined,
+      blendId: selectedBlendForCalc || undefined,
+      vialSize,
+      bacWater,
+      targetDose,
+      syringeType,
+      createdAt: new Date().toISOString(),
+    };
+    saveDosagePreset(preset);
+    setPresets(getDosagePresets());
+    toast.success(`Preset "${preset.name}" saved`);
+  };
+
+  const handleLoadPreset = (preset: DosagePreset) => {
+    setVialSize(preset.vialSize);
+    setBacWater(preset.bacWater);
+    setTargetDose(preset.targetDose);
+    setSyringeType(preset.syringeType);
+    setSelectedPeptideForCalc(preset.peptideId ?? '');
+    setSelectedBlendForCalc(preset.blendId ?? '');
+    toast.success(`Loaded "${preset.name}"`);
+  };
+
+  const handleDeletePreset = (id: string, name: string) => {
+    deleteDosagePreset(id);
+    setPresets(getDosagePresets());
+    toast.info(`Deleted "${name}"`);
+  };
+
 
   // Get schedule for selected peptide
   const schedulePeptide = useMemo(() => 
@@ -368,6 +479,59 @@ export function DosageScreen() {
           </Select>
         </div>
 
+        {/* Manual override pill */}
+        {manualOverride && expectedDefaults && (
+          <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
+            <span className="text-foreground">
+              Using custom values for <strong>{expectedDefaults.name}</strong>
+            </span>
+            <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={resetToDefaults}>
+              Reset to defaults
+            </Button>
+          </div>
+        )}
+
+        {/* Dosage Presets */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <Label className="text-xs sm:text-sm text-muted-foreground">Presets</Label>
+            <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" onClick={handleSavePreset}>
+              <Save size={12} /> Save current
+            </Button>
+          </div>
+          {presets.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground italic">No presets yet. Save your current setup to reuse it.</p>
+          ) : (
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {presets.map((preset) => (
+                <div
+                  key={preset.id}
+                  className="flex-shrink-0 flex items-center gap-1 rounded-full border border-border bg-muted/50 pl-3 pr-1 py-1 text-xs hover:bg-muted transition-colors"
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleLoadPreset(preset)}
+                    className="flex flex-col items-start text-left"
+                  >
+                    <span className="font-medium text-foreground leading-tight">{preset.name}</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">
+                      {preset.vialSize}mg / {preset.bacWater}ml · {preset.syringeType.toUpperCase()}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePreset(preset.id, preset.name)}
+                    className="ml-1 rounded-full w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    aria-label={`Delete preset ${preset.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Blend Safety Warning */}
         {selectedBlendData && (
           <Alert variant="destructive" className="mb-4 border-destructive bg-destructive/10">
@@ -475,6 +639,26 @@ export function DosageScreen() {
                 → {targetMg}&nbsp;mg dose = <span className="text-primary font-medium">{syringeUnits.toFixed(1)} units</span> on a {selectedSyringe.label} syringe
               </p>
             )}
+          </div>
+        )}
+
+        {/* Validation messages */}
+        {validationMessages.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {validationMessages.map((msg, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "flex items-start gap-2 p-2.5 rounded-lg text-xs",
+                  msg.level === 'error' && "bg-destructive/15 text-destructive border border-destructive/30",
+                  msg.level === 'warn' && "bg-yellow-500/15 text-yellow-300 border border-yellow-500/30",
+                  msg.level === 'info' && "bg-muted/50 text-muted-foreground border border-border"
+                )}
+              >
+                <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                <span>{msg.text}</span>
+              </div>
+            ))}
           </div>
         )}
 
