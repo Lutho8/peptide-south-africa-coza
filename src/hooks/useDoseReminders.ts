@@ -344,6 +344,11 @@ export function useDoseReminders() {
         cancelNotification(notificationId);
       }
       await forceSyncAndCheck();
+    } catch (error) {
+      console.error('Error toggling reminder:', error);
+      throw error;
+    }
+  }, [user, reminders, ensureNotificationsReady]);
 
   const deleteReminder = useCallback(async (id: string) => {
     try {
