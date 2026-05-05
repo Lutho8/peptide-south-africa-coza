@@ -325,17 +325,25 @@ export function useDoseReminders() {
       setReminders(updated);
       saveLocalReminders(updated);
 
-      // Cancel or reschedule notification
-      if (!newEnabled) {
+      // Push the new enabled state into IDB so the SW reschedules immediately.
+      await saveReminderToIndexedDB({
+        id: reminder.id,
+        peptideId: reminder.peptide_id,
+        peptideName: reminder.peptide_name,
+        dose: reminder.dose,
+        time: reminder.time,
+        days: reminder.days || [],
+        enabled: newEnabled,
+      });
+
+      if (newEnabled) {
+        await ensureNotificationsReady();
+      } else {
         const today = new Date();
         const notificationId = `${id}-${reminder.time}-${today.toDateString()}`;
         cancelNotification(notificationId);
       }
-    } catch (error) {
-      console.error('Error toggling reminder:', error);
-      throw error;
-    }
-  }, [user, reminders]);
+      await forceSyncAndCheck();
 
   const deleteReminder = useCallback(async (id: string) => {
     try {
