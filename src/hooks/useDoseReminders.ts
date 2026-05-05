@@ -149,6 +149,29 @@ export function useDoseReminders() {
     scheduleRemindersForToday();
   }, [scheduleRemindersForToday]);
 
+  // Ensure browser notification permission has been requested and the SW is
+  // registered, so reminders saved here actually fire later. Returns true if
+  // notifications can be delivered.
+  const ensureNotificationsReady = useCallback(async (): Promise<boolean> => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return false;
+    try {
+      await registerServiceWorker();
+    } catch {
+      // ignore — sw may already be registered
+    }
+    if (Notification.permission === 'default') {
+      const granted = await requestPushPermission();
+      if (!granted) {
+        toast.error('Enable notifications in your browser to receive dose reminders');
+        return false;
+      }
+    } else if (Notification.permission === 'denied') {
+      toast.error('Notifications blocked. Enable them in your browser settings.');
+      return false;
+    }
+    return true;
+  }, []);
+
   const addReminder = useCallback(async (reminder: Omit<DoseReminder, 'id' | 'user_id'>) => {
     const newReminder: DoseReminder = {
       ...reminder,
@@ -175,13 +198,26 @@ export function useDoseReminders() {
       setReminders(updated);
       saveLocalReminders(updated);
 
+      // Make sure the SW is ready and immediately schedule this reminder.
+      await ensureNotificationsReady();
+      await saveReminderToIndexedDB({
+        id: newReminder.id,
+        peptideId: newReminder.peptide_id,
+        peptideName: newReminder.peptide_name,
+        dose: newReminder.dose,
+        time: newReminder.time,
+        days: newReminder.days || [],
+        enabled: newReminder.enabled,
+      });
+      await forceSyncAndCheck();
+
       toast.success('Reminder created');
       return newReminder;
     } catch (error) {
       console.error('Error adding reminder:', error);
       throw error;
     }
-  }, [user, reminders]);
+  }, [user, reminders, ensureNotificationsReady]);
 
   // Bulk add reminders (for cycle import)
   const bulkAddReminders = useCallback(async (newReminders: Omit<DoseReminder, 'id' | 'user_id'>[]) => {
