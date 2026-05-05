@@ -463,6 +463,21 @@ export function DosageScreen() {
           </div>
         </div>
 
+        {/* Units-per-mg reference */}
+        {concentrationMgPerMl > 0 && (
+          <div className="mt-3 p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">At this concentration</p>
+            <p className="text-sm sm:text-base font-semibold text-foreground mt-0.5">
+              1&nbsp;mg = <span className="text-primary font-bold">{(selectedSyringe.unitsPerMl / concentrationMgPerMl).toFixed(1)}</span> {selectedSyringe.label} units
+            </p>
+            {targetMg > 0 && (
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                → {targetMg}&nbsp;mg dose = <span className="text-primary font-medium">{syringeUnits.toFixed(1)} units</span> on a {selectedSyringe.label} syringe
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Verification Badge */}
         {concentrationMgPerMl > 0 && (
           <div className={cn(
