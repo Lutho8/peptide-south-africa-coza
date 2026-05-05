@@ -343,4 +343,33 @@ export function saveActiveStack(stack: ActiveStackItem[]): void {
   setStoredData(STORAGE_KEYS.ACTIVE_STACK, stack);
 }
 
+// Dosage Presets Storage
+export interface DosagePreset {
+  id: string;
+  name: string;
+  peptideId?: string;
+  blendId?: string;
+  vialSize: string;
+  bacWater: string;
+  targetDose: string;
+  syringeType: 'u100' | 'u40' | 'u50';
+  createdAt: string;
+}
+
+export function getDosagePresets(): DosagePreset[] {
+  return getStoredData(STORAGE_KEYS.DOSAGE_PRESETS, [] as DosagePreset[]);
+}
+
+export function saveDosagePreset(preset: DosagePreset): void {
+  const presets = getDosagePresets();
+  const idx = presets.findIndex(p => p.id === preset.id);
+  if (idx >= 0) presets[idx] = preset;
+  else presets.unshift(preset);
+  setStoredData(STORAGE_KEYS.DOSAGE_PRESETS, presets);
+}
+
+export function deleteDosagePreset(id: string): void {
+  setStoredData(STORAGE_KEYS.DOSAGE_PRESETS, getDosagePresets().filter(p => p.id !== id));
+}
+
 export { STORAGE_KEYS };
