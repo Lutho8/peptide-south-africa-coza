@@ -119,12 +119,44 @@ export function DosageScreen() {
 
   const handleBlendSelect = (blendId: string) => {
     setSelectedBlendForCalc(blendId);
+    setSelectedPeptideForCalc('');
     const blend = findBlendData(blendId);
     if (blend) {
       const mgMatch = blend.vialSize.match(/([\d.]+)\s*mg/i);
       if (mgMatch) setVialSize(mgMatch[1]);
       const waterMatch = blend.quickstart.reconstitute.match(/([\d.]+)\s*mL/i);
       if (waterMatch) setBacWater(waterMatch[1]);
+    }
+  };
+
+  // Default vial sizes (mg) for individual peptides
+  const PEPTIDE_VIAL_DEFAULTS: Record<string, string> = {
+    retatrutide: '10',
+    'cjc-1295-no-dac': '5',
+    'cjc-1295': '5',
+    tesamorellin: '10',
+    tesamorelin: '10',
+    'bpc-157': '5',
+    'tb-500': '5',
+    semaglutide: '5',
+    tirzepatide: '10',
+    ipamorelin: '5',
+    'mots-c': '10',
+  };
+
+  const handlePeptideSelect = (peptideId: string) => {
+    setSelectedPeptideForCalc(peptideId);
+    setSelectedBlendForCalc('');
+    const peptide = peptides.find(p => p.id === peptideId);
+    if (!peptide) return;
+    setVialSize(PEPTIDE_VIAL_DEFAULTS[peptideId] ?? '5');
+    setBacWater('2');
+    const doseMatch = peptide.dosing.beginner.match(/(\d+(?:\.\d+)?)\s*(mcg|mg|IU)/i);
+    if (doseMatch) {
+      const val = parseFloat(doseMatch[1]);
+      const unit = doseMatch[2].toLowerCase();
+      const mg = unit === 'mcg' ? val / 1000 : val;
+      setTargetDose(String(mg));
     }
   };
 
