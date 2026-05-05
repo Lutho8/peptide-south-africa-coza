@@ -1,6 +1,6 @@
 // Peptide Tracker Service Worker - PWA + Background Notifications
 
-const CACHE_NAME = 'peptide-tracker-v4';
+const CACHE_NAME = 'peptide-tracker-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -225,9 +225,16 @@ async function checkDueNotifications() {
     const now = Date.now();
     const notificationsToShow = [];
     for (const reminder of reminders) {
-      if (!reminder.enabled || !reminder.nextFireTime) continue;
+      if (!reminder.enabled) continue;
+      // If nextFireTime missing, compute and persist for next tick.
+      if (!reminder.nextFireTime) {
+        const next = calculateNextFireTime(reminder.time, reminder.days || []);
+        await updateReminderNextFireTime(reminder.id, next);
+        continue;
+      }
       const timeDiff = now - reminder.nextFireTime;
-      if (timeDiff >= -30000 && timeDiff <= 60000) {
+      // Wider window so missed wake-ups still fire.
+      if (timeDiff >= -60000 && timeDiff <= 120000) {
         const notificationId = `${reminder.id}-${reminder.nextFireTime}`;
         const alreadyFired = await wasNotificationFired(notificationId);
         if (alreadyFired) continue;

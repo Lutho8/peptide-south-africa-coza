@@ -372,4 +372,12 @@ export function deleteDosagePreset(id: string): void {
   setStoredData(STORAGE_KEYS.DOSAGE_PRESETS, getDosagePresets().filter(p => p.id !== id));
 }
 
+// Most recent saved preset for a peptide, if any.
+export function getDosagePresetForPeptide(peptideId: string | undefined): DosagePreset | undefined {
+  if (!peptideId) return undefined;
+  const presets = getDosagePresets().filter(p => p.peptideId === peptideId);
+  if (presets.length === 0) return undefined;
+  return [...presets].sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))[0];
+}
+
 export { STORAGE_KEYS };
