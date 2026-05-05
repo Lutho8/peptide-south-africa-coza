@@ -94,6 +94,7 @@ export function DosageScreen() {
   const [bacWater, setBacWater] = useState(savedSettings.lastBacWater || '2');
   const [targetDose, setTargetDose] = useState(savedSettings.lastTargetDose || '2');
   const [selectedBlendForCalc, setSelectedBlendForCalc] = useState<string>('');
+  const [selectedPeptideForCalc, setSelectedPeptideForCalc] = useState<string>('');
   const [syringeType, setSyringeType] = useState<SyringeType>(savedSettings.syringeType || 'u40');
   const [experienceLevel, setExperienceLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'athlete'>(
     savedSettings.experienceLevel || 'intermediate'
@@ -118,12 +119,44 @@ export function DosageScreen() {
 
   const handleBlendSelect = (blendId: string) => {
     setSelectedBlendForCalc(blendId);
+    setSelectedPeptideForCalc('');
     const blend = findBlendData(blendId);
     if (blend) {
       const mgMatch = blend.vialSize.match(/([\d.]+)\s*mg/i);
       if (mgMatch) setVialSize(mgMatch[1]);
       const waterMatch = blend.quickstart.reconstitute.match(/([\d.]+)\s*mL/i);
       if (waterMatch) setBacWater(waterMatch[1]);
+    }
+  };
+
+  // Default vial sizes (mg) for individual peptides
+  const PEPTIDE_VIAL_DEFAULTS: Record<string, string> = {
+    retatrutide: '10',
+    'cjc-1295-no-dac': '5',
+    'cjc-1295': '5',
+    tesamorellin: '10',
+    tesamorelin: '10',
+    'bpc-157': '5',
+    'tb-500': '5',
+    semaglutide: '5',
+    tirzepatide: '10',
+    ipamorelin: '5',
+    'mots-c': '10',
+  };
+
+  const handlePeptideSelect = (peptideId: string) => {
+    setSelectedPeptideForCalc(peptideId);
+    setSelectedBlendForCalc('');
+    const peptide = peptides.find(p => p.id === peptideId);
+    if (!peptide) return;
+    setVialSize(PEPTIDE_VIAL_DEFAULTS[peptideId] ?? '5');
+    setBacWater('2');
+    const doseMatch = peptide.dosing.beginner.match(/(\d+(?:\.\d+)?)\s*(mcg|mg|IU)/i);
+    if (doseMatch) {
+      const val = parseFloat(doseMatch[1]);
+      const unit = doseMatch[2].toLowerCase();
+      const mg = unit === 'mcg' ? val / 1000 : val;
+      setTargetDose(String(mg));
     }
   };
 
@@ -293,15 +326,36 @@ export function DosageScreen() {
           <h2 className="text-base sm:text-lg font-semibold text-foreground">Reconstitution Calculator</h2>
         </div>
 
-        {/* Blend Quick-Fill Selector */}
+        {/* Quick-Fill Selector */}
         <div className="mb-4 space-y-1.5">
-          <Label className="text-xs sm:text-sm text-muted-foreground">Quick-Fill from Blend/Stack</Label>
-          <Select value={selectedBlendForCalc} onValueChange={handleBlendSelect}>
+          <Label className="text-xs sm:text-sm text-muted-foreground">Quick-Fill from Peptide / Blend / Stack</Label>
+          <Select
+            value={selectedPeptideForCalc || selectedBlendForCalc}
+            onValueChange={(v) => {
+              if (v === 'custom') {
+                setSelectedBlendForCalc('');
+                setSelectedPeptideForCalc('');
+                return;
+              }
+              if (peptides.some(p => p.id === v)) handlePeptideSelect(v);
+              else handleBlendSelect(v);
+            }}
+          >
             <SelectTrigger className="bg-muted border-border h-10">
-              <SelectValue placeholder="Select a blend to auto-fill..." />
+              <SelectValue placeholder="Select a peptide or blend to auto-fill..." />
             </SelectTrigger>
-            <SelectContent className="bg-card border-border z-50 max-h-60">
-              <SelectItem value="custom">Custom / Individual Peptide</SelectItem>
+            <SelectContent className="bg-card border-border z-50 max-h-72">
+              <SelectItem value="custom">Custom / Manual entry</SelectItem>
+              <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">Individual Peptides</div>
+              {peptides.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  <span className="flex items-center gap-1.5">
+                    <FlaskConical className="w-3 h-3 text-primary/70" />
+                    {p.shortName}
+                  </span>
+                </SelectItem>
+              ))}
+              <div className="px-2 py-1 mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">Blends &amp; Stacks</div>
               {allBlends.map((blend) => (
                 <SelectItem key={blend.id} value={blend.id}>
                   <span className="flex items-center gap-1.5">
@@ -408,6 +462,21 @@ export function DosageScreen() {
             <p className="text-[10px] sm:text-xs text-muted-foreground">doses</p>
           </div>
         </div>
+
+        {/* Units-per-mg reference */}
+        {concentrationMgPerMl > 0 && (
+          <div className="mt-3 p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">At this concentration</p>
+            <p className="text-sm sm:text-base font-semibold text-foreground mt-0.5">
+              1&nbsp;mg = <span className="text-primary font-bold">{(selectedSyringe.unitsPerMl / concentrationMgPerMl).toFixed(1)}</span> {selectedSyringe.label} units
+            </p>
+            {targetMg > 0 && (
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                → {targetMg}&nbsp;mg dose = <span className="text-primary font-medium">{syringeUnits.toFixed(1)} units</span> on a {selectedSyringe.label} syringe
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Verification Badge */}
         {concentrationMgPerMl > 0 && (
