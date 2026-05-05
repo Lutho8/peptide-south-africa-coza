@@ -642,6 +642,26 @@ export function DosageScreen() {
           </div>
         )}
 
+        {/* Validation messages */}
+        {validationMessages.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {validationMessages.map((msg, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "flex items-start gap-2 p-2.5 rounded-lg text-xs",
+                  msg.level === 'error' && "bg-destructive/15 text-destructive border border-destructive/30",
+                  msg.level === 'warn' && "bg-yellow-500/15 text-yellow-300 border border-yellow-500/30",
+                  msg.level === 'info' && "bg-muted/50 text-muted-foreground border border-border"
+                )}
+              >
+                <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                <span>{msg.text}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Verification Badge */}
         {concentrationMgPerMl > 0 && (
           <div className={cn(
