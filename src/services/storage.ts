@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   SCHEDULED_REMINDERS: 'peptide_app_scheduled_reminders',
   ACTIVE_STACK: 'peptide_app_active_stack',
   DAILY_DOSES: 'peptide-daily-doses',
+  DOSAGE_PRESETS: 'peptide_app_dosage_presets',
 } as const;
 
 // ===== Per-user namespacing =====
