@@ -1,69 +1,66 @@
-## 1. IU & units in syringe auto-calc
+# Plan
 
-Extend `DosagePreset` schema (`src/services/storage.ts`) with optional fields:
-- `vialIU?: string`, `vialUnits?: string` (alongside existing `vialSize` for mg)
-- `vialUnitType: 'mg' | 'IU' | 'units'` (defaults to `'mg'` for back-compat)
+Three focused workstreams. No DB schema changes (uses existing `lab-reports` bucket, `subscriptions`, and local `Cycle` storage). One updated edge function.
 
-Update preset save UI in `DosageScreen.tsx` (Reconstitution Calculator) to let user pick the vial unit type and enter the matching amount.
+## 1. Premium Bloodwork Upload Flow
 
-In `EditDoseModal.tsx`:
-- Replace mg-only `calc` block. Compute `concentration = vialAmount / bacMl` in whatever unit the preset stores.
-- If dose `unit === preset.vialUnitType`, compute `volumeMl = dose / concentration` and `units = volumeMl * unitsPerMl`.
-- If mismatch (e.g., dose in mg but preset in IU), show "Preset is in IU — switch dose unit to match" hint instead of unsupported.
-- Keep over-capacity / too-small warnings.
+**`src/pages/BloodworkPage.tsx`** — rebuild around a 4-step flow:
 
-## 2. Auto-convert dose unit on save
+1. **Upload step**: drag/drop + camera capture. Accepts PDF, JPG, PNG, HEIC. Uploads to `lab-reports` bucket at `${user.id}/${timestamp}-${filename}`. Premium gate happens *before* analysis (upload itself is free so users see progress).
+2. **Extracting step**: progress UI while `analyze-lab-report` runs.
+3. **Review markers step**: parsed markers grouped (Hormones, Metabolic, Lipids, Inflammation, Other) with optimal-range badges (low / optimal / high) using existing gender-specific ranges. Inline edit if OCR misread a value.
+4. **AI Recommendation step**: stack cards (peptide, rationale, suggested dose/freq, target marker improved) + plain-language explanation. "Add to My Stack" CTA per peptide.
 
-Replace the "confirm-to-save" flow in `EditDoseModal.tsx`:
-- New helper `src/data/peptideUnits.ts` → `convertDose(value, from, to, peptideId)`.
-  - Known conversion: HGH 1 mg ↔ 3 IU. HCG: pass-through (already IU).
-  - Insulin: pass-through (units).
-  - For unknowns: keep value, swap label, return `{ converted: false }`.
-- On save, if `unit !== expectedUnit`: silently convert via the helper, update form state, and save the corrected pair. Show a small inline toast "Auto-converted to X mg" (use sonner).
-- Remove `confirmMismatch` state and "Confirm & Save" button. Keep the yellow alert as an informational notice ("Will be saved as X IU").
+**Premium gate** via `useSubscription()`:
+- Free user sees uploaded preview + blurred markers/recommendation behind `PremiumLockOverlay` with "Unlock for $X" CTA → `/membership`.
+- Save analysis result to `bloodwork_results` localStorage key so users can revisit.
 
-## 3. Today's Reminders schedule screen
+**Edge function `supabase/functions/analyze-lab-report/index.ts`** — extend to:
+- Accept `{ filePath, fileType }`, fetch signed URL from `lab-reports`.
+- Call Lovable AI (`google/gemini-2.5-pro`, multimodal) with structured tool-calling schema returning `{ markers: [{name, value, unit, referenceRange, status}], recommendations: [{peptideId, peptideName, rationale, suggestedDose, targetMarkers[]}], summary }`.
+- Verify JWT + check `has_active_subscription(user_id)` server-side; reject 403 for free users.
 
-New `src/screens/TodayRemindersScreen.tsx`:
-- Lists all enabled reminders for today from `useDoseReminders`, sorted by next firing time.
-- Each row: peptide name, dose, time, computed `nextFireTime` (relative + absolute), inline `Switch` to toggle enable/disable, swipe-right to mark taken (reuse `SwipeableReminderCard`).
-- Header card: "Push notifications" status badge + "Enable" button if `Notification.permission !== 'granted'`. Calls `ensureNotificationsReady()` from `useDoseReminders`.
-- For native (Capacitor), call existing `src/services/capacitorNotifications.ts` to register and schedule via `LocalNotifications` so push works on phone.
+**New components**:
+- `src/components/bloodwork/UploadDropzone.tsx`
+- `src/components/bloodwork/MarkerReview.tsx`
+- `src/components/bloodwork/StackRecommendation.tsx`
+- `src/components/bloodwork/PremiumLockOverlay.tsx`
 
-Routing: add `/reminders/today` route in `App.tsx`. Add entry point from `TodaysReminders` card on `HomeScreen` (`onViewSettings` already lands at settings — change to navigate to the new screen).
+## 2. Predictive Search Enhancements
 
-## 4. Replace COA section with Bloodwork (user-facing)
+**`src/components/landing/PeptideSearch.tsx`** — refactor to:
+- Controlled input + 120 ms debounce.
+- Indexed search across `peptidesExpanded`, `peptideBlends`, and saved stacks (from `getActiveStack` + presets) using Fuse.js (already supported pattern). Top 8 results.
+- **Category chips** above input: All · Peptides · Blends · Stacks · Recent. Filters dropdown results.
+- **Recent searches**: store last 5 queries in `localStorage` (`recent_searches`). Show as chips when input empty/focused.
+- **Instant dropdown**: shadcn `Command` / `Popover` pattern, keyboard-navigable, each row shows icon (peptide/blend/stack), name, short tag (category, half-life, or peptide count).
+- Selecting a result navigates to existing detail modal/page route.
 
-- Remove user-facing entry points to `/coa-verification` (`BottomNav`, settings, landing CTAs). Repoint each to `/bloodwork`.
-- Keep `COAVerification` page route gated to admin only (use `useAccessControl`/`has_role('admin')`); non-admins are redirected to `/bloodwork`.
-- `COAUploadManager` stays in `AdminDashboard`.
+## 3. Cycle Management Screen
 
-`/bloodwork` (existing `BloodworkPage`):
-- Above-the-fold "Upload or photograph your lab report" CTA: file input + camera capture (`<input type="file" accept="image/*,application/pdf" capture="environment">`). Upload to existing `lab-reports` bucket via `supabase.storage`.
-- After upload: check Premium via `useSubscription().isPremium`.
-  - **Premium**: trigger `analyze-lab-report` edge function (already exists), render `BloodworkResults` + `StackPeptideCard` recommendations.
-  - **Free**: show `PremiumLockOverlay` with copy "Unlock your personalized peptide stack from your bloodwork" and a CTA wired to `useSubscription().purchase()`.
-- Add a "Why upgrade?" mini-section listing: AI lab interpretation, optimized stack, tracking over time.
+**New `src/screens/CycleManagementScreen.tsx`** at route `/cycles`:
+- Three sections: **Active** (highlighted with progress ring + days remaining), **Upcoming/Planned**, **Past**.
+- Each card: peptide name, start date, end date, dose, frequency, progress bar, status badge (active / nearing end / overdue / completed).
+- **Quick actions** per active cycle: Mark dose taken (links to today's reminders), Edit dose, Pause, End early, Restart on completion.
+- "Start new cycle" CTA → modal with peptide picker (from active stack), start date, planned duration (auto-fill from `getCycleSuggestion`), optional end date.
+- Reuses existing `Cycle` type, `saveCycle`, `updateCycle`, `getCycles` from `storage.ts`. No schema changes.
+- Add nav entry in bottom nav or `MyStackScreen` header → "Manage Cycles".
 
-## 5. Browse predictive search
+**Edited**:
+- `src/App.tsx` — register `/cycles` route.
+- `src/screens/MyStackScreen.tsx` — add "Manage Cycles" link in header.
+- `src/components/layout/BottomNav.tsx` — optional shortcut (or skip if nav is full).
 
-`PeptideSearch.tsx` currently filters on submit. Refactor:
-- Controlled `query` state, debounced 120ms.
-- Build search index over `peptidesExpanded` + `peptideBlends` (name, aliases, category, conditions). Use `Fuse.js` (already in node_modules? — if not, lightweight inline scorer).
-- Render dropdown of top 8 matches as user types; click navigates to entity page or opens `PeptideDetailModal`.
-- Keyboard nav (↑/↓/Enter), `Esc` clears.
+## Technical Notes
 
-## 6. Merge Blends + Stacks into one section
-
-- Create `src/components/landing/BlendsAndStacks.tsx` combining `PeptideBlends` + `StackBuilder` into a single section with two tabs ("Pre-made Blends" / "Build Your Stack") using shadcn `Tabs`.
-- Replace both usages in `LandingPage.tsx` with the new component. Update anchor IDs (`#blends-stacks`).
-- `ResearchTools` quick-action: replace separate "Blends" and "Stack" tiles with one "Blends & Stacks" tile that scrolls to the combined section.
-- Keep `PeptideBlends` and `StackBuilder` as internal sub-components (do not delete).
+- All AI calls through `analyze-lab-report` edge function — no client-side keys.
+- Subscription check is dual-layer (client UX + server enforcement).
+- Marker reference ranges sourced from existing `bloodworkRanges` data.
+- Cycles remain in localStorage (matches current architecture); no migration.
+- Brand: glassmorphism + #3B82F6 accents, Framer Motion transitions on step changes.
 
 ## Files
 
-**New**: `src/screens/TodayRemindersScreen.tsx`, `src/components/landing/BlendsAndStacks.tsx`.
-
-**Edited**: `src/services/storage.ts`, `src/screens/DosageScreen.tsx`, `src/components/doses/EditDoseModal.tsx`, `src/data/peptideUnits.ts`, `src/App.tsx`, `src/screens/HomeScreen.tsx`, `src/components/home/TodaysReminders.tsx`, `src/components/layout/BottomNav.tsx`, `src/pages/BloodworkPage.tsx`, `src/components/landing/PeptideSearch.tsx`, `src/components/landing/ResearchTools.tsx`, `src/components/landing/LandingPage.tsx`, `src/components/landing/index.ts`, `src/services/capacitorNotifications.ts` (wire reminder scheduling).
-
-No DB migrations needed — preset schema lives in localStorage; lab-reports bucket already exists.
+**New**: `BloodworkPage.tsx` (rewrite), 4 bloodwork components, `CycleManagementScreen.tsx`
+**Edited**: `analyze-lab-report/index.ts`, `PeptideSearch.tsx`, `App.tsx`, `MyStackScreen.tsx`
+**No DB migration required.**
