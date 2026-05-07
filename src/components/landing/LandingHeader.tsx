@@ -20,10 +20,9 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
   const navLinks = [
     { label: 'Pricing', href: '#pricing' },
     { label: 'Free Course', href: '/free-course' },
-    { label: 'COA Verified', href: '/coa-verification' },
+    { label: 'Bloodwork', href: '/bloodwork' },
     { label: 'Browse', href: '#browse' },
-    { label: 'Blends', href: '#tools' },
-    { label: 'Stacks', href: '#stacks' },
+    { label: 'Blends & Stacks', href: '#tools' },
     { label: 'Research', href: '#research' },
   ];
 
