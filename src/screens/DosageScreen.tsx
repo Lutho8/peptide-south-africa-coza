@@ -260,6 +260,13 @@ export function DosageScreen() {
     const defaultName = expectedDefaults?.name || 'Custom preset';
     const name = window.prompt('Name this preset:', defaultName);
     if (!name) return;
+    const peptideUnit = selectedPeptideForCalc
+      ? (selectedPeptideForCalc === 'hgh' || selectedPeptideForCalc === 'hcg'
+          ? 'IU'
+          : selectedPeptideForCalc === 'insulin'
+            ? 'units'
+            : 'mg')
+      : 'mg';
     const preset: DosagePreset = {
       id: `preset-${Date.now()}`,
       name: name.trim(),
@@ -269,6 +276,7 @@ export function DosageScreen() {
       bacWater,
       targetDose,
       syringeType,
+      vialUnitType: peptideUnit,
       createdAt: new Date().toISOString(),
     };
     saveDosagePreset(preset);
