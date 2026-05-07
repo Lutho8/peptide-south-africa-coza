@@ -489,7 +489,7 @@ export function MyStackScreen() {
             <span className="text-sm text-primary font-medium">{activeStack.length} peptides</span>
             <a href="/cycles">
               <Button variant="outline" size="sm" className="gap-1">
-                <Calendar size={14} />
+                <CalendarIcon size={14} />
                 Cycles
               </Button>
             </a>
