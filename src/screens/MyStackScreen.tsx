@@ -487,6 +487,12 @@ export function MyStackScreen() {
           <h3 className="text-lg font-semibold text-foreground">Active Stack</h3>
           <div className="flex items-center gap-2">
             <span className="text-sm text-primary font-medium">{activeStack.length} peptides</span>
+            <a href="/cycles">
+              <Button variant="outline" size="sm" className="gap-1">
+                <Calendar size={14} />
+                Cycles
+              </Button>
+            </a>
             <Button
               variant="outline"
               size="sm"
