@@ -176,6 +176,20 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
             </motion.div>
           </div>
 
+          {/* RIGHT: Phone mockup (mobile order: 1) */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+            className="relative order-1 mx-auto flex w-full max-w-md items-center justify-center lg:order-2"
+          >
+            <div className="relative">
+              <PhoneMockup />
+              <FloatingStatCards />
+            </div>
+          </motion.div>
+        </div>
+
         {/* Category badges below */}
         <div className="mt-14">
           <HeroCategoryBadges onCategoryClick={onCategoryClick} />
