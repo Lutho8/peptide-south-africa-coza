@@ -6,9 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Clock, FileText, Syringe, AlertTriangle, Calculator } from 'lucide-react';
+import { Clock, FileText, Syringe, AlertTriangle, Calculator, Wand2 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { DailyDoseEntry } from '@/hooks/useDailyDoses';
-import { getPreferredUnit } from '@/data/peptideUnits';
+import { getPreferredUnit, convertDose, type DoseUnit } from '@/data/peptideUnits';
 import { getDosagePresetForPeptide, type DosagePreset } from '@/services/storage';
 
 interface EditDoseModalProps {
@@ -17,7 +18,7 @@ interface EditDoseModalProps {
   onOpenChange: (open: boolean) => void;
   onSave: (
     doseId: string,
-    updates: { time?: string; notes?: string; dose?: number; unit?: 'mg' | 'IU' | 'units' }
+    updates: { time?: string; notes?: string; dose?: number; unit?: DoseUnit }
   ) => Promise<void>;
 }
 
@@ -37,9 +38,8 @@ export function EditDoseModal({ dose, open, onOpenChange, onSave }: EditDoseModa
   const [time, setTime] = useState('');
   const [notes, setNotes] = useState('');
   const [doseAmount, setDoseAmount] = useState<string>('');
-  const [unit, setUnit] = useState<'mg' | 'IU' | 'units'>('mg');
+  const [unit, setUnit] = useState<DoseUnit>('mg');
   const [isSaving, setIsSaving] = useState(false);
-  const [confirmMismatch, setConfirmMismatch] = useState(false);
   const [preset, setPreset] = useState<DosagePreset | undefined>(undefined);
 
   useEffect(() => {
@@ -48,15 +48,9 @@ export function EditDoseModal({ dose, open, onOpenChange, onSave }: EditDoseModa
       setNotes(dose.notes || '');
       setDoseAmount(String(dose.dose));
       setUnit(dose.unit);
-      setConfirmMismatch(false);
       setPreset(getDosagePresetForPeptide(dose.peptide_id));
     }
   }, [dose]);
-
-  // Reset mismatch confirmation any time the unit changes.
-  useEffect(() => {
-    setConfirmMismatch(false);
-  }, [unit]);
 
   const parsedDose = parseFloat(doseAmount);
   const doseValid = !isNaN(parsedDose) && parsedDose > 0;
@@ -65,7 +59,12 @@ export function EditDoseModal({ dose, open, onOpenChange, onSave }: EditDoseModa
   const expectedUnit = getPreferredUnit(dose?.peptide_id);
   const unitMismatch = !!expectedUnit && unit !== expectedUnit;
 
-  // Sanity warnings (non-blocking).
+  // Preview the auto-conversion that will happen on save.
+  const previewConverted = useMemo(() => {
+    if (!doseValid || !unitMismatch || !expectedUnit) return null;
+    return convertDose(parsedDose, unit, expectedUnit, dose?.peptide_id);
+  }, [doseValid, unitMismatch, expectedUnit, parsedDose, unit, dose?.peptide_id]);
+
   const sanityWarning = useMemo(() => {
     if (!doseValid) return null;
     if (unit === 'mg' && parsedDose > 50) return `${parsedDose} mg is unusually high — double-check.`;
@@ -74,42 +73,71 @@ export function EditDoseModal({ dose, open, onOpenChange, onSave }: EditDoseModa
     return null;
   }, [parsedDose, unit, doseValid]);
 
-  // Auto-calc syringe volume from preset.
+  // Auto-calc syringe volume from preset — supports mg, IU, and units presets.
   const calc = useMemo(() => {
     if (!preset || !doseValid) return null;
-    if (unit !== 'mg') return { unsupported: true as const };
-    const vialMg = parseFloat(preset.vialSize);
+    const presetUnit: DoseUnit = preset.vialUnitType ?? 'mg';
+    const vialAmount = parseFloat(preset.vialSize);
     const bacMl = parseFloat(preset.bacWater);
-    if (!vialMg || !bacMl) return null;
-    const concentration = vialMg / bacMl; // mg / mL
-    const volumeMl = parsedDose / concentration;
+    if (!vialAmount || !bacMl) return null;
+    const concentration = vialAmount / bacMl; // <unit>/mL
     const unitsPerMl = UNITS_PER_ML[preset.syringeType];
-    const units = volumeMl * unitsPerMl;
-    const overCapacity = units > unitsPerMl;
-    const tooSmall = units < 2;
+
+    // If dose unit doesn't match preset unit, try to convert dose first.
+    let effectiveDose = parsedDose;
+    let effectiveUnit: DoseUnit = unit;
+    let convertedFrom: DoseUnit | null = null;
+    if (unit !== presetUnit) {
+      const c = convertDose(parsedDose, unit, presetUnit, dose?.peptide_id);
+      if (c.converted) {
+        effectiveDose = c.value;
+        effectiveUnit = presetUnit;
+        convertedFrom = unit;
+      } else {
+        return {
+          mismatch: true as const,
+          presetUnit,
+          doseUnit: unit,
+        };
+      }
+    }
+    const volumeMl = effectiveDose / concentration;
+    const drawUnits = volumeMl * unitsPerMl;
     return {
-      unsupported: false as const,
+      mismatch: false as const,
+      presetUnit,
+      effectiveUnit,
+      convertedFrom,
+      effectiveDose,
       concentration,
       volumeMl,
-      units,
-      overCapacity,
-      tooSmall,
+      drawUnits,
       unitsPerMl,
+      overCapacity: drawUnits > unitsPerMl,
+      tooSmall: drawUnits < 2,
     };
-  }, [preset, parsedDose, unit, doseValid]);
+  }, [preset, parsedDose, unit, doseValid, dose?.peptide_id]);
 
   const handleSave = async () => {
     if (!dose || !doseValid) return;
-    if (unitMismatch && !confirmMismatch) {
-      setConfirmMismatch(true);
-      return;
-    }
     setIsSaving(true);
     try {
-      await onSave(dose.id, { time, notes, dose: parsedDose, unit });
+      let saveValue = parsedDose;
+      let saveUnit: DoseUnit = unit;
+      if (unitMismatch && expectedUnit) {
+        const c = convertDose(parsedDose, unit, expectedUnit, dose.peptide_id);
+        saveValue = c.value;
+        saveUnit = c.unit;
+        if (c.converted) {
+          toast.success(`Auto-converted to ${c.value} ${c.unit}`);
+        } else {
+          toast.info(`Saved as ${c.value} ${c.unit} (label corrected)`);
+        }
+      }
+      await onSave(dose.id, { time, notes, dose: saveValue, unit: saveUnit });
       onOpenChange(false);
     } catch {
-      // error handled by parent
+      // parent toasts the error
     } finally {
       setIsSaving(false);
     }
@@ -140,7 +168,7 @@ export function EditDoseModal({ dose, open, onOpenChange, onSave }: EditDoseModa
                 onChange={(e) => setDoseAmount(e.target.value)}
                 className="flex-1"
               />
-              <Select value={unit} onValueChange={(v) => setUnit(v as 'mg' | 'IU' | 'units')}>
+              <Select value={unit} onValueChange={(v) => setUnit(v as DoseUnit)}>
                 <SelectTrigger className="w-24">
                   <SelectValue />
                 </SelectTrigger>
@@ -161,15 +189,13 @@ export function EditDoseModal({ dose, open, onOpenChange, onSave }: EditDoseModa
             )}
           </div>
 
-          {unitMismatch && (
-            <Alert className="border-yellow-500/50 bg-yellow-500/10">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+          {unitMismatch && previewConverted && (
+            <Alert className="border-primary/50 bg-primary/10">
+              <Wand2 className="h-4 w-4 text-primary" />
               <AlertDescription className="text-xs">
-                {dose.peptide_name} is normally dosed in <strong>{expectedUnit}</strong>,
-                but you selected <strong>{unit}</strong>.
-                {confirmMismatch
-                  ? ' Press Save again to confirm.'
-                  : ' Double-check before saving.'}
+                {dose.peptide_name} is dosed in <strong>{expectedUnit}</strong>. On save we'll
+                {previewConverted.converted ? ' auto-convert to ' : ' relabel as '}
+                <strong>{previewConverted.value} {previewConverted.unit}</strong>.
               </AlertDescription>
             </Alert>
           )}
@@ -193,22 +219,28 @@ export function EditDoseModal({ dose, open, onOpenChange, onSave }: EditDoseModa
                 auto-calculation.
               </p>
             )}
-            {preset && calc?.unsupported && (
+            {preset && calc?.mismatch && (
               <p className="text-xs text-muted-foreground">
-                Auto-calc only available for mg doses.
+                Preset is in <strong>{calc.presetUnit}</strong> but dose is in <strong>{calc.doseUnit}</strong>.
+                Switch the dose unit to match, or save a new preset in {calc.doseUnit}.
               </p>
             )}
-            {preset && calc && !calc.unsupported && (
+            {preset && calc && !calc.mismatch && (
               <>
                 <div className="text-xs text-muted-foreground space-y-0.5">
                   <div>
-                    Vial: {preset.vialSize} mg in {preset.bacWater} mL ={' '}
-                    <strong>{calc.concentration.toFixed(2)} mg/mL</strong>
+                    Vial: {preset.vialSize} {calc.presetUnit} in {preset.bacWater} mL ={' '}
+                    <strong>{calc.concentration.toFixed(2)} {calc.presetUnit}/mL</strong>
                   </div>
                   <div>Syringe: {SYRINGE_LABEL[preset.syringeType]} ({calc.unitsPerMl} units / mL)</div>
+                  {calc.convertedFrom && (
+                    <div className="text-primary">
+                      Dose converted: {parsedDose} {calc.convertedFrom} → {calc.effectiveDose} {calc.effectiveUnit}
+                    </div>
+                  )}
                 </div>
                 <div className="text-base font-semibold text-primary">
-                  Draw {calc.units.toFixed(1)} units ({calc.volumeMl.toFixed(3)} mL)
+                  Draw {calc.drawUnits.toFixed(1)} units ({calc.volumeMl.toFixed(3)} mL)
                 </div>
                 {calc.overCapacity && (
                   <p className="text-xs text-destructive">
@@ -229,11 +261,7 @@ export function EditDoseModal({ dose, open, onOpenChange, onSave }: EditDoseModa
               <Clock size={14} className="text-muted-foreground" />
               Time
             </Label>
-            <Input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-            />
+            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
           </div>
 
           <div className="space-y-2">
@@ -255,11 +283,7 @@ export function EditDoseModal({ dose, open, onOpenChange, onSave }: EditDoseModa
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={isSaving || !doseValid}>
-            {isSaving
-              ? 'Saving...'
-              : unitMismatch && !confirmMismatch
-                ? 'Confirm & Save'
-                : 'Save Changes'}
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogFooter>
       </DialogContent>
