@@ -23,6 +23,7 @@ const CategoryHubPage = lazy(() => import("./pages/CategoryHubPage"));
 const GuidePage = lazy(() => import("./pages/GuidePage"));
 const BloodworkPage = lazy(() => import("./pages/BloodworkPage"));
 const TodayRemindersScreen = lazy(() => import("./screens/TodayRemindersScreen"));
+const CycleManagementScreen = lazy(() => import("./screens/CycleManagementScreen"));
 
 // Initialize i18n
 import '@/i18n';
@@ -57,6 +58,7 @@ const App = () => {
                 <Route path="/guides/:slug" element={<GuidePage />} />
                 <Route path="/bloodwork" element={<BloodworkPage />} />
                 <Route path="/reminders/today" element={<TodayRemindersScreen />} />
+                <Route path="/cycles" element={<CycleManagementScreen />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
