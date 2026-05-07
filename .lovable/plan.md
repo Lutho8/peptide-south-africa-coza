@@ -1,61 +1,58 @@
-# Bloodwork UX Redesign Plan
+## Goal
 
-## Problems with the current design
+Remove the first paywall splash screen shown to new visitors and replace the hero messaging with positioning targeted at South African peptide users.
 
-1. **Cognitive overload** — hero, form (4 sections), and two tier cards all visible at once. Users don't know where to start.
-2. **Two competing CTAs** ("Baseline" vs "Deep Decode") shown before the user has even uploaded a file.
-3. **Weak hierarchy** — numbered "01/02/03" labels appear in both hero and form, blurring what's instructional vs interactive.
-4. **Underline inputs + dashed dropzone + pill goals** mix three different visual languages.
-5. **Hero "01/02/03 steps"** are decorative — they don't reflect the actual flow state.
-6. **Submit area is sticky on the right but disabled by default** with a tiny gray hint — users miss why nothing happens.
-7. Mobile: the right sidebar stacks below a long form, so the CTA is buried.
+## Changes
 
-## Proposed flow — guided 4-step wizard
+### 1. Skip the PaywallScreen on first load
 
-Replace the all-at-once form with a horizontal stepper. One focused step on screen at a time. The hero collapses into a slim title bar after step 1.
+`src/pages/Index.tsx` (line 206–212) currently shows `<PaywallScreen />` to any unauthenticated visitor unless they've tapped "Browse Free". Change this so unauthenticated users land directly on `<LandingPage />` — no paywall splash, no minimal signup-only screen.
 
-```text
-[ 1 Upload ] ── [ 2 About you ] ── [ 3 Goals ] ── [ 4 Review & scan ]
+```tsx
+if (!user) {
+  return (
+    <Suspense fallback={...}>
+      <LandingPage />
+    </Suspense>
+  );
+}
 ```
 
-- Step indicator is sticky at top (under page header), shows progress and lets users jump back.
-- Each step has: a clear question, the input, and a single primary "Continue" button (disabled until valid).
-- Step 4 is the only place the **scan tier choice** appears — as two equal cards with a recommended badge.
+`PaywallScreen.tsx` stays in the codebase (still used by Premium upgrade flows / `useSubscription`), but is no longer the entry point.
 
-### Step content
+### 2. Rewrite the Hero section
 
-1. **Upload** — Big, friendly dropzone (cleaner: solid border, subtle gradient on hover, file-type chips). Below: "Sample report" link to show what good input looks like. Privacy reassurance line ("Encrypted · deleted after analysis").
-2. **About you** — Age + Sex as proper labeled fields (not underline-only). Optional skip link ("Skip — use general ranges").
-3. **Goals** — Pill grid with icons per goal, max 3 selectable, with helper text "Pick up to 3 — your protocol focuses here." Peptide history Yes/No with conditional textarea here too (it's about *you*, not the lab).
-4. **Review & scan** — Two-column summary card on top (file, age/sex, goals). Below it, the two tier cards side-by-side. "Deep Decode" gets a "Recommended" ribbon. One CTA per card. Disclaimer below.
+`src/components/landing/HeroSection.tsx` — replace headline, subhead, social-proof copy.
 
-## Visual cleanup
+**New eyebrow chip:** `Built for South African peptide users`
 
-- Replace the dashed dropzone with a soft solid border + tinted background; success state shows a thumbnail/icon + filename + "Replace" link.
-- Unify form inputs to use proper Label + Input/Select components (drop the underline-only style).
-- Replace mono "01 — TITLE" eyebrows with simple step headings ("Step 1 of 4 · Upload bloodwork").
-- Tier cards: equal weight, single primary action, "Recommended" badge on Deep Decode. Show what's *different* (biomarker count, follow-ups) as a small comparison row instead of long paragraphs.
-- Progress/scan-running state takes over the whole right panel as a centered, larger card so it's unmistakable.
-- Error state inline with the step that caused it (instead of replacing the tier cards silently).
+**New H1:** `Are You Still Guessing Your Peptide Doses?`
+(keep the gradient styling on the word "Guessing")
 
-## Mobile
+**Lede paragraph:**
+> Most South Africans using peptides track their protocols in a notes app, spreadsheet, or worse — their memory. The result? Inconsistent cycles, missed doses, and zero insight into what's actually working.
 
-- Stepper compresses to "Step 2 of 4 · About you" + dots.
-- CTA pinned to bottom of viewport on each step (`sticky bottom-0`) so users always see it.
-- Tier cards stack vertically on step 4; sticky CTA hides on this step.
+**Positioning block** (new, sits below the lede, above the CTAs) — heading + 4 bullets:
 
-## Results screen polish (light pass)
+> **RideTheTide is the first protocol tracker built for the South African peptide user.**
+> - Log every dose with proper unit conversions (mcg, mg, IU)
+> - Track cycles for BPC-157, TB-500, CJC-1295, Ipamorelin, and 20+ peptides
+> - Set protocol reminders so you never miss a dose
+> - Monitor progress markers (recovery, sleep, energy, body comp)
 
-- Add a sticky summary header showing health score + scan type while the user scrolls long results.
-- "Run another scan" becomes a proper outline button at top-right, not a small text link.
+Bullets render as a clean check-list (Lucide `Check` icon in primary color, `text-sm`, `space-y-2`), wrapped in a subtle bordered card to anchor the section visually.
 
-## Technical changes (frontend only)
+**CTAs:** unchanged buttons, just relabel primary to `Start Tracking Free` (still triggers `handleQnaCta` → existing premium flow). Secondary stays `Explore peptides`.
 
-- New file `src/components/bloodwork/BloodworkWizard.tsx` — owns step state (`1 | 2 | 3 | 4`), wraps existing `ScanForm` fields split across steps.
-- Refactor `ScanForm.tsx` into smaller step components: `StepUpload.tsx`, `StepAbout.tsx`, `StepGoals.tsx`, `StepReview.tsx` (re-using existing `ScanFormState` type — no logic change).
-- New `BloodworkStepper.tsx` — sticky stepper with click-to-jump for completed steps.
-- Trim `BloodworkHero.tsx` to a slim header used only on step 1; remove duplicated 01/02/03 marketing block (the wizard itself is the flow now).
-- Update `ScanTierCards.tsx` — equal cards, "Recommended" ribbon, comparison row, no sticky positioning (lives inside step 4).
-- `BloodworkPage.tsx` — replace the `ScanForm` + sidebar grid layout with `<BloodworkWizard>`. All scan logic, premium gate, edge function calls, and result rendering remain unchanged.
+**Social-proof pills:** keep as-is.
 
-No backend changes, no new dependencies, no data model changes.
+### 3. Note on dosing units
+
+The bullet uses `mcg, mg, IU` per user's exact wording. Project memory enforces "no mcg" in the app's actual dosing tools, but this is marketing copy describing what users currently juggle, not a UI dose input — the wording stays.
+
+## Files touched
+
+- `src/pages/Index.tsx` — drop PaywallScreen branch for unauthenticated users
+- `src/components/landing/HeroSection.tsx` — new headline, lede, positioning card, CTA label
+
+No backend, no routes, no new components.
