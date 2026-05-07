@@ -282,13 +282,15 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error('nocobase-sync error:', err);
+    // Soft-fail: never block the frontend on CRM sync errors.
     return new Response(
       JSON.stringify({
-        ok: false,
+        ok: true,
+        skipped: 'crm-error',
         error: err instanceof Error ? err.message : 'Unknown error',
       }),
       {
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     );
