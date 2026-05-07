@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { NewsTicker } from '@/components/home/NewsTicker';
 import { BodyCompositionCard } from '@/components/home/BodyCompositionCard';
@@ -68,6 +69,7 @@ export function HomeScreen({
   const { reminders, refreshReminders } = useDoseReminders();
   const { refreshDoses } = useDailyDoses();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([refreshDoses(), refreshReminders()]);
@@ -140,7 +142,7 @@ export function HomeScreen({
       <motion.div variants={itemVariants}>
         <TodaysReminders 
           reminders={reminders} 
-          onViewSettings={onOpenSettings}
+          onViewSettings={() => navigate('/reminders/today')}
           onMarkAsTaken={(peptideName, dose, time) => {
             // Dispatch event to trigger dose logging via NotificationActionModal
             const event = new CustomEvent('doseNotificationClick', {
