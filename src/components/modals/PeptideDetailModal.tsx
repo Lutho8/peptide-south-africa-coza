@@ -437,12 +437,12 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
                     </div>
                   ))}
                   <Link
-                    to="/coa-verification"
+                    to="/bloodwork"
                     className="flex items-center gap-1 text-xs text-primary hover:underline mt-2"
                     onClick={() => onOpenChange(false)}
                   >
                     <Shield size={12} />
-                    View all COA certificates →
+                    View bloodwork analysis →
                   </Link>
                 </div>
               )}

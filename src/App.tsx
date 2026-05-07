@@ -22,6 +22,7 @@ const PeptideEntityPage = lazy(() => import("./pages/PeptideEntityPage"));
 const CategoryHubPage = lazy(() => import("./pages/CategoryHubPage"));
 const GuidePage = lazy(() => import("./pages/GuidePage"));
 const BloodworkPage = lazy(() => import("./pages/BloodworkPage"));
+const TodayRemindersScreen = lazy(() => import("./screens/TodayRemindersScreen"));
 
 // Initialize i18n
 import '@/i18n';
@@ -55,6 +56,7 @@ const App = () => {
                 <Route path="/categories/:slug" element={<CategoryHubPage />} />
                 <Route path="/guides/:slug" element={<GuidePage />} />
                 <Route path="/bloodwork" element={<BloodworkPage />} />
+                <Route path="/reminders/today" element={<TodayRemindersScreen />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -26,9 +26,8 @@ import { PeptideCategory } from '@/data/peptides';
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
 
 const PeptideQuiz = lazy(() => import('./PeptideQuiz').then(m => ({ default: m.PeptideQuiz })));
-const PeptideBlends = lazy(() => import('./PeptideBlends').then(m => ({ default: m.PeptideBlends })));
+const BlendsAndStacks = lazy(() => import('./BlendsAndStacks').then(m => ({ default: m.BlendsAndStacks })));
 const PeptideSearch = lazy(() => import('./PeptideSearch').then(m => ({ default: m.PeptideSearch })));
-const StackBuilder = lazy(() => import('./StackBuilder').then(m => ({ default: m.StackBuilder })));
 const ReconstitutionCalculator = lazy(() => import('./ReconstitutionCalculator').then(m => ({ default: m.ReconstitutionCalculator })));
 
 export function LandingPage() {
@@ -36,9 +35,8 @@ export function LandingPage() {
   const { teaser } = useTeaserMode();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
-  const [blendsOpen, setBlendsOpen] = useState(false);
+  const [blendsStacksOpen, setBlendsStacksOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [stackBuilderOpen, setStackBuilderOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
 
   const handleSignInClick = () => {
@@ -80,10 +78,10 @@ export function LandingPage() {
         <WhyFreeBand onPrimaryClick={handleSignInClick} />
         <div className="relative">
           <ResearchTools 
-            onBlendsClick={() => teaser ? null : setBlendsOpen(true)}
+            onBlendsClick={() => teaser ? null : setBlendsStacksOpen(true)}
             onQuizClick={() => teaser ? null : setQuizOpen(true)}
             onSearchClick={() => teaser ? null : setSearchOpen(true)}
-            onStackClick={() => teaser ? null : setStackBuilderOpen(true)}
+            onStackClick={() => teaser ? null : setBlendsStacksOpen(true)}
             onCalculatorClick={() => teaser ? null : setCalculatorOpen(true)}
           />
           {teaser && (
@@ -115,9 +113,8 @@ export function LandingPage() {
       <Suspense fallback={null}>
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
         {quizOpen && <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />}
-        {blendsOpen && <PeptideBlends open={blendsOpen} onClose={() => setBlendsOpen(false)} />}
+        {blendsStacksOpen && <BlendsAndStacks open={blendsStacksOpen} onClose={() => setBlendsStacksOpen(false)} />}
         {searchOpen && <PeptideSearch open={searchOpen} onClose={() => setSearchOpen(false)} />}
-        {stackBuilderOpen && <StackBuilder open={stackBuilderOpen} onClose={() => setStackBuilderOpen(false)} />}
         {calculatorOpen && <ReconstitutionCalculator open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />}
       </Suspense>
     </div>
