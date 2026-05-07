@@ -83,27 +83,53 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
                 </span>
-                Welcome to Ride The Tide
+                Built for South African peptide users
               </div>
 
               <h1 className="mt-5 text-balance text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Track, calculate &{' '}
+                Are You Still{' '}
                 <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
-                  optimize
+                  Guessing
                 </span>{' '}
-                your peptide protocols
+                Your Peptide Doses?
               </h1>
             </motion.div>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
               className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg lg:mx-0"
             >
-              Research-grade peptide database, dose calculators, protocol tracking, and free
-              monthly expert Q&A — all in one place. From research to results.
+              Most South Africans using peptides track their protocols in a notes app, spreadsheet,
+              or worse — their memory. The result? Inconsistent cycles, missed doses, and zero
+              insight into what's actually working.
             </motion.p>
+
+            {/* Positioning card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mx-auto mt-6 max-w-xl rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur lg:mx-0"
+            >
+              <p className="text-sm font-semibold text-foreground sm:text-base">
+                RideTheTide is the first protocol tracker built for the South African peptide user.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {[
+                  'Log every dose with proper unit conversions (mcg, mg, IU)',
+                  'Track cycles for BPC-157, TB-500, CJC-1295, Ipamorelin, and 20+ peptides',
+                  'Set protocol reminders so you never miss a dose',
+                  'Monitor progress markers (recovery, sleep, energy, body comp)',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
 
             {/* Dual CTAs */}
             <motion.div
@@ -118,7 +144,7 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
                 className="h-12 gap-2 bg-gradient-to-r from-primary to-accent px-6 text-primary-foreground shadow-lg hover:opacity-90"
               >
                 <Lock className="h-4 w-4" />
-                {hasPremium ? 'Join Premium Monthly Q&A' : 'Unlock Premium Monthly Q&A'}
+                Start Tracking Free
               </Button>
               <Button
                 size="lg"
@@ -149,20 +175,6 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
               ))}
             </motion.div>
           </div>
-
-          {/* RIGHT: Phone mockup (mobile order: 1) */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
-            className="relative order-1 mx-auto flex w-full max-w-md items-center justify-center lg:order-2"
-          >
-            <div className="relative">
-              <PhoneMockup />
-              <FloatingStatCards />
-            </div>
-          </motion.div>
-        </div>
 
         {/* Category badges below */}
         <div className="mt-14">
