@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, ArrowRight, FlaskConical, Award, BookOpen } from 'lucide-react';
+import { Lock, ArrowRight, FlaskConical, Award, BookOpen, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { PhoneMockup } from './PhoneMockup';
