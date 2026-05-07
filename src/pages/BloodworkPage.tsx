@@ -231,47 +231,32 @@ export default function BloodworkPage() {
         </>
       ) : (
         <>
-          <BloodworkHero />
-
-          <main className="max-w-5xl mx-auto px-4 py-10 pb-24">
-            {!result && (
-              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,1fr] gap-10">
-                <div>
-                  <ScanForm state={form} onChange={setForm} disabled={running !== null} />
-                </div>
-                <div className="space-y-4 lg:sticky lg:top-20 self-start">
-                  {error ? (
-                    <ScanError message={error} onRetry={handleRetry} onReset={handleResetUpload} />
-                  ) : running ? (
-                    <ScanProgress
-                      stage={progress.stage}
-                      label={progress.label}
-                      percent={progress.percent}
-                      onCancel={handleCancel}
-                    />
-                  ) : (
-                    <ScanTierCards ready={isFormReady(form)} running={running} onRun={runScan} />
-                  )}
-                </div>
-              </div>
-            )}
-
-            {result && (
-              <div className="mt-2">
+          {!result ? (
+            <BloodworkWizard
+              state={form}
+              onChange={setForm}
+              running={running}
+              error={error}
+              progress={{ stage: progress.stage, label: progress.label, percent: progress.percent }}
+              onRun={runScan}
+              onCancel={handleCancel}
+              onRetry={handleRetry}
+              onResetUpload={handleResetUpload}
+            />
+          ) : (
+            <main className="max-w-5xl mx-auto px-4 py-8 pb-24">
+              <div className="mb-6">
                 <button
                   type="button"
-                  onClick={() => {
-                    setResult(null);
-                    setLabReportId(null);
-                  }}
-                  className="mb-6 text-xs uppercase tracking-wider text-muted-foreground hover:text-primary"
+                  onClick={() => { setResult(null); setLabReportId(null); }}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-card/40 text-xs font-semibold uppercase tracking-wider text-foreground hover:border-primary/60 transition-colors"
                 >
-                  ← Run another scan
+                  <ArrowLeft size={14} /> Run another scan
                 </button>
-                <BloodworkResults result={result} onDownload={handleDownload} labReportId={labReportId} />
               </div>
-            )}
-          </main>
+              <BloodworkResults result={result} onDownload={handleDownload} labReportId={labReportId} />
+            </main>
+          )}
         </>
       )}
 
