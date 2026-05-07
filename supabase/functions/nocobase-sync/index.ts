@@ -158,10 +158,12 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  if (!NOCOBASE_API_URL || !NOCOBASE_API_TOKEN) {
+  if (!NOCOBASE_API_URL || !NOCOBASE_API_TOKEN || /localhost|127\.0\.0\.1/.test(NOCOBASE_API_URL)) {
+    // CRM not reachable from edge runtime — soft no-op so frontend isn't blocked.
+    console.warn('nocobase-sync: CRM unreachable, skipping capture');
     return new Response(
-      JSON.stringify({ ok: false, error: 'NocoBase not configured' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      JSON.stringify({ ok: true, skipped: 'crm-unreachable' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 
@@ -280,13 +282,15 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error('nocobase-sync error:', err);
+    // Soft-fail: never block the frontend on CRM sync errors.
     return new Response(
       JSON.stringify({
-        ok: false,
+        ok: true,
+        skipped: 'crm-error',
         error: err instanceof Error ? err.message : 'Unknown error',
       }),
       {
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     );
