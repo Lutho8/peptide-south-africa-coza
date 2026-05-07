@@ -9,13 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { captureLead } from '@/lib/crm';
 
-import { BloodworkHero } from '@/components/bloodwork/BloodworkHero';
-import { ScanForm, ScanFormState, isFormReady } from '@/components/bloodwork/ScanForm';
-import { ScanTierCards } from '@/components/bloodwork/ScanTierCards';
+import { ScanFormState } from '@/components/bloodwork/ScanForm';
 import { BloodworkResults, BloodworkScanResult } from '@/components/bloodwork/BloodworkResults';
 import { PremiumGate } from '@/components/bloodwork/PremiumGate';
-import { ScanProgress } from '@/components/bloodwork/ScanProgress';
-import { ScanError } from '@/components/bloodwork/ScanError';
+import { BloodworkWizard } from '@/components/bloodwork/BloodworkWizard';
 import { useScanProgress } from '@/hooks/useScanProgress';
 import { exportBloodworkProtocolPDF } from '@/utils/bloodworkProtocolPdf';
 
