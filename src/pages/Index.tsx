@@ -202,11 +202,11 @@ const Index = () => {
     );
   }
 
-  // Hard paywall (first launch) → limited preview if user taps Browse Free
+  // Unauthenticated visitors land directly on the landing page
   if (!user) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-        {teaser ? <LandingPage /> : <PaywallScreen />}
+        <LandingPage />
       </Suspense>
     );
   }
