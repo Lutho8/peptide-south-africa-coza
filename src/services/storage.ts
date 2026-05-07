@@ -344,15 +344,20 @@ export function saveActiveStack(stack: ActiveStackItem[]): void {
 }
 
 // Dosage Presets Storage
+export type VialUnitType = 'mg' | 'IU' | 'units';
+
 export interface DosagePreset {
   id: string;
   name: string;
   peptideId?: string;
   blendId?: string;
+  /** Total vial amount in `vialUnitType`. Stored in `vialSize` for back-compat. */
   vialSize: string;
   bacWater: string;
   targetDose: string;
   syringeType: 'u100' | 'u40' | 'u50';
+  /** Unit type for the vial amount (and target dose). Defaults to 'mg'. */
+  vialUnitType?: VialUnitType;
   createdAt: string;
 }
 
