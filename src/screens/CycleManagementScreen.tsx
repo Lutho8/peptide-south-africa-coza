@@ -134,7 +134,7 @@ export default function CycleManagementScreen() {
       frequency: newCycle.frequency,
       startDate: newCycle.startDate,
       plannedDuration: newCycle.plannedDuration,
-      breakDuration: suggestion?.protocols?.[0]?.breakDays ?? 28,
+      breakDuration: suggestion?.protocols?.[0]?.breakDuration ?? 28,
       status: 'active',
     };
     saveCycle(cycle);
@@ -262,7 +262,7 @@ export default function CycleManagementScreen() {
                   setNewCycle((s) => ({
                     ...s,
                     peptideId: v,
-                    plannedDuration: sug?.cycleDays ?? s.plannedDuration,
+                    plannedDuration: sug?.cycleDuration ?? s.plannedDuration,
                   }));
                 }}
               >
