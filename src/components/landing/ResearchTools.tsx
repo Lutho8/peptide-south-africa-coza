@@ -58,7 +58,7 @@ export function ResearchTools({ onBlendsClick, onQuizClick, onSearchClick, onCal
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {tools.map((tool, index) => (
             <motion.div
               key={tool.title}
