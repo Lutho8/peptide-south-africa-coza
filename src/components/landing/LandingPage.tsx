@@ -104,6 +104,7 @@ export function LandingPage() {
         </div>
         <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
         <BlogSection />
+        <SafetyDisclaimerBand />
         <FAQSection />
         <CTASection onSignInClick={handleSignInClick} />
       </main>
