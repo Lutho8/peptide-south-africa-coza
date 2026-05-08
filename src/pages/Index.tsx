@@ -8,6 +8,7 @@ import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { useProfileSync } from '@/hooks/useProfileSync';
+import { useCloudSync } from '@/hooks/useCloudSync';
 import { useScreenTransition } from '@/hooks/useScreenTransition';
 import { useTeaserMode } from '@/hooks/useTeaserMode';
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
@@ -56,6 +57,11 @@ const Index = () => {
   const { user, signOut, isLoading } = useAuth();
   const { isLoading: accessLoading } = useAccessControl();
   const { hydrated: profileHydrated } = useProfileSync();
+  // Mount cloud sync at the app shell so the stack (and other cloud data)
+  // hydrates as soon as the user is authenticated, regardless of which tab
+  // they happen to land on. Without this, hydration only ran when the user
+  // opened the My Stack screen, causing the home preview to look empty.
+  useCloudSync();
   const { getDirection, getTransitionVariants } = useScreenTransition();
   const { teaser } = useTeaserMode();
 
