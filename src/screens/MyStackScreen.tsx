@@ -295,6 +295,8 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
 export function MyStackScreen() {
   const { user } = useAuth();
   const { syncActiveStack } = useCloudSync();
+  const { phase, lastSyncAt } = useSyncPhase();
+  const [undoAvailable, setUndoAvailable] = useState(false);
   const [activeStack, setActiveStack] = useState<StackItem[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profile, setProfile] = useState(userProfile);
