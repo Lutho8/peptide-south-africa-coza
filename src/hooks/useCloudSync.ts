@@ -235,13 +235,36 @@ export function useCloudSync() {
         }));
         saveActiveStack(stack);
       } else {
-        // Cloud is empty for this user — make sure the local namespace
-        // doesn't show another user's seeded data.
-        saveActiveStack([]);
+        // Cloud is empty for this user. If the local (per-user) namespace
+        // already has a stack — e.g. they built it before signing in, or on
+        // another device that hasn't synced yet — push it up instead of
+        // wiping it. This was the root cause of users having to re-add
+        // their stack after every login.
+        const localStack = getActiveStack();
+        if (localStack && localStack.length > 0) {
+          try {
+            await supabase
+              .from('user_stacks')
+              .insert(localStack.map(item => ({
+                user_id: user.id,
+                peptide_id: item.peptideId,
+                dose: item.dose,
+                frequency: item.frequency,
+              })));
+          } catch (pushErr) {
+            console.error('Error backfilling local stack to cloud:', pushErr);
+          }
+          // Keep local as-is so the UI shows the stack immediately.
+        } else {
+          // Truly empty everywhere — make sure no stale data leaks through.
+          saveActiveStack([]);
+        }
       }
-      // Notify listeners (e.g. MyStackScreen) that local storage now reflects cloud
+      // Notify listeners (e.g. MyStackScreen, ActiveStackPreview) that local
+      // storage now reflects cloud
       try {
         window.dispatchEvent(new CustomEvent('rtd:cloud-hydrated'));
+        window.dispatchEvent(new CustomEvent('rtd:stack-changed'));
       } catch { /* noop */ }
     } catch (err) {
       console.error('Error loading from cloud:', err);

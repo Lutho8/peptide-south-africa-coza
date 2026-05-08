@@ -1,75 +1,39 @@
-## Goals
+# Fix My Stack persistence across login
 
-1. Make sure signed-in (non-Premium) users can use all free features without paywall friction, while Premium-only surfaces (Live Q&A, Education premium content, 1:1 calls, AI bloodwork insights) remain gated.
-2. Add a new expandable "Dosing, Adherence & Safety" FAQ + safety disclaimer block on the landing page.
+## Goal
+Make a user’s saved stack persist across sessions and devices so they do not have to re-add peptides after logging in, and ensure all stack UI updates immediately after hydration.
 
-## 1. Authenticated Premium Gate
+## What I’ll change
 
-**New component:** `src/components/paywall/PremiumGate.tsx`
+1. **Preserve local stack when a user signs in for the first time**
+   - Update the stack sync flow so a signed-in user does not lose an existing local/guest stack when their backend stack is empty.
+   - Use a merge strategy similar to the daily dose flow: if the backend has no rows but the current local stack has items, push the local stack to the backend instead of replacing it with an empty array.
 
-A reusable wrapper that:
-- Reads `useMembership()` for `hasPremium`, `isAdmin`, `isLoading`.
-- Reads `useAuth()` for `user`.
-- If loading → skeleton.
-- If `hasPremium` → renders `children`.
-- Else → renders a soft lock card with: lock icon, configurable title/description, "Upgrade to Premium" CTA (scrolls to `#pricing` or opens auth modal if not signed in), and "Learn more" link to pricing.
+2. **Make backend hydration explicit and safe**
+   - Refine `useCloudSync` so stack loading distinguishes between:
+     - backend already has saved stack items
+     - backend is empty for this user
+     - local signed-in namespace already has stack items
+   - Avoid destructive overwrite behavior during login hydration.
 
-Props: `title`, `description`, `featureName`, `children`, optional `variant: 'inline' | 'overlay'`.
+3. **Refresh the home “My Stack” preview after hydration and edits**
+   - Update `ActiveStackPreview` so it reacts to stack changes after login, hydration, or saves instead of only reading once on initial mount.
+   - Reuse the existing stack hydration event pattern or add a dedicated stack-changed event so both the home card and full stack screen stay in sync.
 
-**Apply gate to Premium-only surfaces (already partially gated, standardize):**
-- `src/pages/LiveQnA.tsx` — replace ad-hoc `!hasPremium` block with `<PremiumGate>`.
-- `src/pages/BloodworkPage.tsx` — replace inline non-premium branch with `<PremiumGate>` for AI insights tier; keep manual entry available to free users.
-- `src/components/booking/BookCallSection.tsx` — wrap the booking CTA in `<PremiumGate>` (free users see upsell instead of mailto).
-- Education premium lessons in `src/screens/EducationScreen.tsx` (if such tagging exists; otherwise add a `premium` flag on lesson rows and gate the player) — verify during implementation.
+4. **Verify the auth/startup timing**
+   - Ensure the startup order between `AuthContext`, `useStorageInit`, and stack hydration does not briefly seed an empty state that wins over real saved data.
+   - Keep the fix frontend-only unless a backend schema problem is discovered.
 
-**Free-feature access for signed-in users:**
-- Confirm `useTeaserMode` is not enabled for authenticated users. The teaser overlay in `LandingPage.tsx` (research tools, featured peptides) is driven by `teaser` from `useTeaserMode`; ensure it never auto-enables for signed-in non-Premium users. Add a guard in `useTeaserMode` so `teaser` is forced `false` whenever `useAuth().user` is present (read auth via a small effect rather than coupling the hook). This guarantees signed-in free users hit the dashboard with all free tools unblocked.
+## Expected outcome
+- A returning signed-in user sees their existing stack after login.
+- A user who built a stack before signing in keeps that stack once authenticated.
+- The home card no longer keeps showing “Add your first peptide” when a stack exists.
+- The full “Active Stack” screen and home preview stay consistent.
 
-## 2. Landing FAQ + Safety Disclaimer
-
-**Augment `src/components/landing/FAQSection.tsx`:**
-Add a new category before `safety`:
-
-```
-id: 'dosing-adherence'
-title: 'Dosing & Adherence'
-icon: Syringe
-```
-
-with 6 expandable Q/A entries covering:
-- How do I know the right starting dose?
-- mg vs IU vs U-40 units — what's the difference?
-- What if I miss a dose?
-- How strict do I need to be with timing?
-- Can I stack peptides safely?
-- When should I cycle off?
-
-And expand the existing `safety` category with 3 more entries:
-- When should I consult a doctor or endocrinologist?
-- What bloodwork should I run before/during a cycle?
-- Red-flag symptoms that mean stop immediately.
-
-All copy is research/education framing — no medical claims; reinforce "consult a qualified healthcare professional."
-
-**New component:** `src/components/landing/SafetyDisclaimerBand.tsx`
-A prominent, expandable disclaimer card placed directly above `<FAQSection />` in `LandingPage.tsx`:
-- Amber-bordered card, AlertTriangle icon, heading "Research-Use Only — Not Medical Advice".
-- Collapsed: 1-line summary + "Read full disclaimer" toggle.
-- Expanded: bullets covering FDA non-approval, "consult a healthcare professional", start-low/go-slow, monitor bloodwork, discontinue on adverse effects, age/pregnancy contraindications.
-- Reuses semantic tokens (`border-yellow-500/30 bg-yellow-500/10` style already used in `SafetyDisclaimer.tsx`) but lives at the landing scale (full-width container, larger type).
-
-Insert into `LandingPage.tsx` between `<BlogSection />` and `<FAQSection />`.
-
-## Files
-
-**New**
-- `src/components/paywall/PremiumGate.tsx`
-- `src/components/landing/SafetyDisclaimerBand.tsx`
-
-**Modified**
-- `src/hooks/useTeaserMode.ts` — force-disable when auth user present.
-- `src/components/landing/FAQSection.tsx` — add `dosing-adherence` category, extend `safety`.
-- `src/components/landing/LandingPage.tsx` — render `<SafetyDisclaimerBand />`.
-- `src/pages/LiveQnA.tsx`, `src/pages/BloodworkPage.tsx`, `src/components/booking/BookCallSection.tsx` — adopt `<PremiumGate>`.
-
-No DB or edge-function changes. No payment-flow changes (Tagadapay link unchanged).
+## Technical notes
+- Likely files:
+  - `src/hooks/useCloudSync.ts`
+  - `src/components/home/ActiveStackPreview.tsx`
+  - possibly `src/screens/MyStackScreen.tsx` or a small shared event utility if needed
+- No database migration is currently planned because the `user_stacks` table and access rules already exist and appear readable/writable.
+- I already confirmed the backend currently contains at least one `user_stacks` row, so this looks like an app-side hydration/persistence bug rather than missing backend infrastructure.
