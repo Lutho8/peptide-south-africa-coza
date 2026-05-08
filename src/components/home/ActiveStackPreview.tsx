@@ -4,6 +4,10 @@ import { getActiveStack, type ActiveStackItem } from '@/services/storage';
 import { peptides, getCategoryGradient } from '@/data/peptides';
 import { Layers, ChevronRight, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSyncPhase } from '@/hooks/useCloudSync';
+import { useAuth } from '@/contexts/AuthContext';
+import { StackSyncBadge, type SyncStatus } from '@/components/sync/StackSyncBadge';
+import { StackPreviewSkeleton } from './StackPreviewSkeleton';
 
 interface ActiveStackPreviewProps {
   onViewStack: () => void;
@@ -11,12 +15,12 @@ interface ActiveStackPreviewProps {
 
 export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
   const [userStack, setUserStack] = useState<ActiveStackItem[]>([]);
+  const { user } = useAuth();
+  const { phase, lastSyncAt } = useSyncPhase();
 
   useEffect(() => {
     const refresh = () => setUserStack(getActiveStack());
     refresh();
-    // Stay in sync with cloud hydration after login and with edits made
-    // elsewhere (e.g. MyStackScreen save).
     window.addEventListener('rtd:cloud-hydrated', refresh);
     window.addEventListener('rtd:stack-changed', refresh);
     window.addEventListener('focus', refresh);
@@ -30,6 +34,22 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
   const stackPeptides = userStack
     .map((item) => peptides.find((p) => p.id === item.peptideId))
     .filter(Boolean);
+
+  // Show skeleton while hydrating cloud and we don't yet have any local stack
+  const isHydrating = !!user && (phase === 'hydrating' || phase === 'idle');
+  if (isHydrating && userStack.length === 0) {
+    return <StackPreviewSkeleton />;
+  }
+
+  const status: SyncStatus = !user
+    ? 'offline'
+    : phase === 'hydrating' || phase === 'idle'
+      ? 'hydrating'
+      : phase === 'syncing'
+        ? 'syncing'
+        : phase === 'error'
+          ? 'error'
+          : 'ready';
 
   // Empty state — guide new members to build their stack
   if (userStack.length === 0) {
@@ -65,7 +85,10 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
             <p className="text-sm text-muted-foreground">{userStack.length} peptides</p>
           </div>
         </div>
-        <ChevronRight size={20} className="text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          <StackSyncBadge status={status} lastSyncAt={lastSyncAt} compact />
+          <ChevronRight size={20} className="text-muted-foreground" />
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
