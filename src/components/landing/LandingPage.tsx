@@ -13,6 +13,7 @@ import { BlogSection } from './BlogSection';
 import { CTASection } from './CTASection';
 import { LandingFooter } from './LandingFooter';
 import { FAQSection, faqCategories } from './FAQSection';
+import { SafetyDisclaimerBand } from './SafetyDisclaimerBand';
 import { LiveQnAPopup } from './LiveQnAPopup';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeaserMode } from '@/hooks/useTeaserMode';

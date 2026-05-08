@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, HelpCircle, Shield, FlaskConical, Wrench, Info, CreditCard } from 'lucide-react';
+import { ChevronDown, HelpCircle, Shield, FlaskConical, Wrench, Info, CreditCard, Syringe } from 'lucide-react';
 
 export const faqCategories = [
   {
@@ -31,6 +31,37 @@ export const faqCategories = [
     ],
   },
   {
+    id: 'dosing-adherence',
+    title: 'Dosing & Adherence',
+    icon: Syringe,
+    faqs: [
+      {
+        q: 'How do I know the right starting dose?',
+        a: 'Start at the lowest researched dose for the specific peptide and titrate up only if needed. Each peptide profile in Ride The Tide lists a conservative starting range based on published literature. Body weight, goals, and prior experience all matter — when in doubt, start lower than you think and consult a qualified healthcare professional.',
+      },
+      {
+        q: 'mg, IU, and U-40 units — what is the difference?',
+        a: 'mg (milligrams) measures mass. IU (international units) is a standardized activity unit used for some peptides like HCG and HGH. U-40/U-100 refers to insulin syringe markings — U-100 means 100 units = 1 mL. The Reconstitution Calculator converts your vial size and bacteriostatic water volume into the exact insulin-syringe units to draw. Ride The Tide never uses mcg.',
+      },
+      {
+        q: 'What if I miss a dose?',
+        a: 'For most short half-life peptides (BPC-157, TB-500, GHRPs), take the missed dose as soon as you remember if it is the same day, otherwise skip and resume the next scheduled dose. Never double up. For long half-life compounds (semaglutide, tirzepatide), consult the prescribing guidance — doubling can cause significant side effects.',
+      },
+      {
+        q: 'How strict do I need to be with timing?',
+        a: 'GH-releasing peptides (CJC-1295, Ipamorelin, GHRP-6) are best dosed on an empty stomach (≥2 hours after food, ≥30 min before food) to avoid blunting the GH pulse. Most healing and metabolic peptides are more forgiving — consistency over weeks matters more than perfect timing on a single day.',
+      },
+      {
+        q: 'Can I stack peptides safely?',
+        a: 'Some peptides are synergistic (CJC-1295 + Ipamorelin), some are compatible (BPC-157 + TB-500), and some require caution or should be avoided together. Use the Stacking Matrix in Ride The Tide before combining compounds, and never introduce more than one new peptide at a time so you can attribute any effects.',
+      },
+      {
+        q: 'When should I cycle off?',
+        a: 'Most growth-hormone secretagogues are cycled 8–12 weeks on, 4 weeks off, to preserve receptor sensitivity. Healing peptides like BPC-157 are typically used until the issue resolves. Cycle length depends on the compound, your goal, and bloodwork — Ride The Tide cycle templates default to research-backed durations and warn you when a cycle is overdue.',
+      },
+    ],
+  },
+  {
     id: 'safety',
     title: 'Safety',
     icon: Shield,
@@ -54,6 +85,18 @@ export const faqCategories = [
       {
         q: 'What are common side effects of peptides?',
         a: 'Common side effects vary by peptide but may include injection site reactions (redness, swelling), water retention, increased hunger or decreased appetite, headaches, and fatigue. GH-releasing peptides may cause tingling or numbness. Serious side effects are rare but possible with improper dosing.',
+      },
+      {
+        q: 'When should I consult a doctor or endocrinologist?',
+        a: 'Always speak with a qualified healthcare professional before starting any peptide protocol — and especially before using GH-releasing compounds, GLP-1 agonists, or anything affecting hormones if you have a history of cancer, diabetes, thyroid disease, cardiovascular disease, or are on prescription medication. An endocrinologist is the right specialist for HPA-axis or growth-hormone-related questions.',
+      },
+      {
+        q: 'What bloodwork should I run before and during a cycle?',
+        a: 'Baseline at minimum: full blood count, comprehensive metabolic panel, lipid panel, HbA1c, fasting glucose & insulin, IGF-1 (for GH peptides), TSH, free T3/T4, total & free testosterone, estradiol, and inflammatory markers (hs-CRP). Retest 8–12 weeks into a cycle and again 4 weeks after stopping. The Bloodwork tracker in Ride The Tide flags out-of-range markers automatically.',
+      },
+      {
+        q: 'Red-flag symptoms — when do I stop immediately?',
+        a: 'Stop immediately and seek medical attention for: severe or persistent headaches, vision changes, chest pain, shortness of breath, signs of an allergic reaction (rash, swelling, difficulty breathing), uncontrolled blood pressure spikes, severe injection-site infection, or any symptom that feels seriously out of the ordinary. Do not "push through" — peptides are research compounds, not prescription medication.',
       },
     ],
   },
