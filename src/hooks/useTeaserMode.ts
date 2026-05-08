@@ -1,6 +1,8 @@
 // Teaser mode: limited-preview state that persists for the current session only.
 // Cleared on cold start so the hard paywall re-shows on every app launch.
+// Authenticated users always get the full free experience — teaser is forced off.
 import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const KEY = 'rtt_teaser_mode';
 
@@ -13,6 +15,7 @@ function read(): boolean {
 }
 
 export function useTeaserMode() {
+  const { user } = useAuth();
   const [teaser, setTeaser] = useState<boolean>(() => read());
 
   useEffect(() => {
@@ -20,6 +23,14 @@ export function useTeaserMode() {
     window.addEventListener('rtt:teaser-mode-changed', handler);
     return () => window.removeEventListener('rtt:teaser-mode-changed', handler);
   }, []);
+
+  // Signed-in users bypass teaser entirely — they get all free features.
+  useEffect(() => {
+    if (user) {
+      try { sessionStorage.removeItem(KEY); } catch { /* noop */ }
+      setTeaser(false);
+    }
+  }, [user]);
 
   const enableTeaser = useCallback(() => {
     try { sessionStorage.setItem(KEY, '1'); } catch { /* noop */ }
