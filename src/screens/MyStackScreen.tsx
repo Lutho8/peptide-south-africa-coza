@@ -319,9 +319,17 @@ export function MyStackScreen() {
 
   // When cloud sync finishes hydrating local storage, refresh the screen
   useEffect(() => {
-    const handler = () => refreshFromStorage();
+    const handler = () => {
+      refreshFromStorage();
+      setUndoAvailable(canUndoStack());
+    };
+    handler();
     window.addEventListener('rtd:cloud-hydrated', handler);
-    return () => window.removeEventListener('rtd:cloud-hydrated', handler);
+    window.addEventListener('rtd:stack-changed', handler);
+    return () => {
+      window.removeEventListener('rtd:cloud-hydrated', handler);
+      window.removeEventListener('rtd:stack-changed', handler);
+    };
   }, []);
 
   // Resolve display name: stored profile → auth metadata → email → fallback.
