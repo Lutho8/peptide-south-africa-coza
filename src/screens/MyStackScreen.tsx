@@ -547,6 +547,18 @@ export function MyStackScreen() {
                 Cycles
               </Button>
             </a>
+            {undoAvailable && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUndo}
+                className="gap-1"
+                title="Undo last stack change"
+              >
+                <Undo2 size={14} />
+                Undo
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
