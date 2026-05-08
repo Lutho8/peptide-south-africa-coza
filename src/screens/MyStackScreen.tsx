@@ -337,17 +337,38 @@ export function MyStackScreen() {
 
   const hasProfileDetails = profile.age > 0 && profile.height > 0 && profile.weight > 0;
 
-  const handleSaveStack = (newStack: StackItem[]) => {
+  const handleSaveStack = (newStack: StackItem[], reason: 'edit' | 'undo' = 'edit') => {
+    const prev = getActiveStack();
     setActiveStack(newStack);
     saveActiveStack(newStack);
-    // Notify other surfaces (e.g. home preview) that the stack changed.
+    if (reason !== 'undo') {
+      const changeReason = newStack.length === 0 && prev.length > 0 ? 'clear' : 'edit';
+      recordStackChange(prev, newStack, changeReason);
+      // Offer undo
+      sonnerToast('Stack updated', {
+        description: changeReason === 'clear' ? 'All peptides removed.' : 'Your stack has been saved.',
+        action: {
+          label: 'Undo',
+          onClick: () => handleUndo(),
+        },
+      });
+    }
     try {
       window.dispatchEvent(new CustomEvent('rtd:stack-changed'));
     } catch { /* noop */ }
-    // Persist to cloud immediately so it survives across devices/logins
     if (user) {
-      void syncActiveStack().catch(() => {/* surfaced via toast inside hook on syncAll only */});
+      void syncActiveStack().catch(() => { /* noop */ });
     }
+  };
+
+  const handleUndo = () => {
+    const last = popLastChange();
+    if (!last) {
+      sonnerToast.error('Nothing to undo');
+      return;
+    }
+    handleSaveStack(last.prev, 'undo');
+    sonnerToast.success('Reverted to previous stack');
   };
 
   const handleStartBreak = (cycle: Cycle) => {
