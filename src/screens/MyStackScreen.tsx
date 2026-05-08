@@ -521,8 +521,24 @@ export function MyStackScreen() {
 
       {/* Active Stack Overview */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-foreground">Active Stack</h3>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-foreground">Active Stack</h3>
+            <StackSyncBadge
+              status={
+                !user
+                  ? 'offline'
+                  : phase === 'hydrating' || phase === 'idle'
+                    ? 'hydrating'
+                    : phase === 'syncing'
+                      ? 'syncing'
+                      : phase === 'error'
+                        ? 'error'
+                        : 'ready'
+              }
+              lastSyncAt={lastSyncAt}
+            />
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-primary font-medium">{activeStack.length} peptides</span>
             <a href="/cycles">
