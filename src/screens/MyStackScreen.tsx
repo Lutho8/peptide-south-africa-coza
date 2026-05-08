@@ -337,6 +337,10 @@ export function MyStackScreen() {
   const handleSaveStack = (newStack: StackItem[]) => {
     setActiveStack(newStack);
     saveActiveStack(newStack);
+    // Notify other surfaces (e.g. home preview) that the stack changed.
+    try {
+      window.dispatchEvent(new CustomEvent('rtd:stack-changed'));
+    } catch { /* noop */ }
     // Persist to cloud immediately so it survives across devices/logins
     if (user) {
       void syncActiveStack().catch(() => {/* surfaced via toast inside hook on syncAll only */});

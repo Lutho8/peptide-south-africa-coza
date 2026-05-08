@@ -13,7 +13,18 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
   const [userStack, setUserStack] = useState<ActiveStackItem[]>([]);
 
   useEffect(() => {
-    setUserStack(getActiveStack());
+    const refresh = () => setUserStack(getActiveStack());
+    refresh();
+    // Stay in sync with cloud hydration after login and with edits made
+    // elsewhere (e.g. MyStackScreen save).
+    window.addEventListener('rtd:cloud-hydrated', refresh);
+    window.addEventListener('rtd:stack-changed', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.removeEventListener('rtd:cloud-hydrated', refresh);
+      window.removeEventListener('rtd:stack-changed', refresh);
+      window.removeEventListener('focus', refresh);
+    };
   }, []);
 
   const stackPeptides = userStack
