@@ -4,9 +4,9 @@ import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { userProfile, stackOptimizations } from '@/data/userData';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCloudSync } from '@/hooks/useCloudSync';
+import { useCloudSync, useSyncPhase } from '@/hooks/useCloudSync';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon, Undo2 } from 'lucide-react';
 import { getGoalLabels } from '@/data/goalMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,9 @@ import { EditStackModal, StackItem } from '@/components/modals/EditStackModal';
 import { getActiveStack, saveActiveStack, getUserProfile, getCycles, updateCycle, saveCycle, Cycle } from '@/services/storage';
 import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { toast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
+import { recordStackChange, popLastChange, canUndo as canUndoStack } from '@/services/stackHistory';
+import { StackSyncBadge, type SyncStatus } from '@/components/sync/StackSyncBadge';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
 import { Badge } from '@/components/ui/badge';
 import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
@@ -292,6 +295,8 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
 export function MyStackScreen() {
   const { user } = useAuth();
   const { syncActiveStack } = useCloudSync();
+  const { phase, lastSyncAt } = useSyncPhase();
+  const [undoAvailable, setUndoAvailable] = useState(false);
   const [activeStack, setActiveStack] = useState<StackItem[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profile, setProfile] = useState(userProfile);
@@ -314,9 +319,17 @@ export function MyStackScreen() {
 
   // When cloud sync finishes hydrating local storage, refresh the screen
   useEffect(() => {
-    const handler = () => refreshFromStorage();
+    const handler = () => {
+      refreshFromStorage();
+      setUndoAvailable(canUndoStack());
+    };
+    handler();
     window.addEventListener('rtd:cloud-hydrated', handler);
-    return () => window.removeEventListener('rtd:cloud-hydrated', handler);
+    window.addEventListener('rtd:stack-changed', handler);
+    return () => {
+      window.removeEventListener('rtd:cloud-hydrated', handler);
+      window.removeEventListener('rtd:stack-changed', handler);
+    };
   }, []);
 
   // Resolve display name: stored profile → auth metadata → email → fallback.
@@ -334,17 +347,38 @@ export function MyStackScreen() {
 
   const hasProfileDetails = profile.age > 0 && profile.height > 0 && profile.weight > 0;
 
-  const handleSaveStack = (newStack: StackItem[]) => {
+  const handleSaveStack = (newStack: StackItem[], reason: 'edit' | 'undo' = 'edit') => {
+    const prev = getActiveStack();
     setActiveStack(newStack);
     saveActiveStack(newStack);
-    // Notify other surfaces (e.g. home preview) that the stack changed.
+    if (reason !== 'undo') {
+      const changeReason = newStack.length === 0 && prev.length > 0 ? 'clear' : 'edit';
+      recordStackChange(prev, newStack, changeReason);
+      // Offer undo
+      sonnerToast('Stack updated', {
+        description: changeReason === 'clear' ? 'All peptides removed.' : 'Your stack has been saved.',
+        action: {
+          label: 'Undo',
+          onClick: () => handleUndo(),
+        },
+      });
+    }
     try {
       window.dispatchEvent(new CustomEvent('rtd:stack-changed'));
     } catch { /* noop */ }
-    // Persist to cloud immediately so it survives across devices/logins
     if (user) {
-      void syncActiveStack().catch(() => {/* surfaced via toast inside hook on syncAll only */});
+      void syncActiveStack().catch(() => { /* noop */ });
     }
+  };
+
+  const handleUndo = () => {
+    const last = popLastChange();
+    if (!last) {
+      sonnerToast.error('Nothing to undo');
+      return;
+    }
+    handleSaveStack(last.prev, 'undo');
+    sonnerToast.success('Reverted to previous stack');
   };
 
   const handleStartBreak = (cycle: Cycle) => {
@@ -487,8 +521,24 @@ export function MyStackScreen() {
 
       {/* Active Stack Overview */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-foreground">Active Stack</h3>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-foreground">Active Stack</h3>
+            <StackSyncBadge
+              status={
+                !user
+                  ? 'offline'
+                  : phase === 'hydrating' || phase === 'idle'
+                    ? 'hydrating'
+                    : phase === 'syncing'
+                      ? 'syncing'
+                      : phase === 'error'
+                        ? 'error'
+                        : 'ready'
+              }
+              lastSyncAt={lastSyncAt}
+            />
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-primary font-medium">{activeStack.length} peptides</span>
             <a href="/cycles">
@@ -497,6 +547,18 @@ export function MyStackScreen() {
                 Cycles
               </Button>
             </a>
+            {undoAvailable && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUndo}
+                className="gap-1"
+                title="Undo last stack change"
+              >
+                <Undo2 size={14} />
+                Undo
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
