@@ -776,7 +776,10 @@ export function DosageScreen() {
                 </div>
                 <div className="col-span-2 p-2 rounded bg-muted/50">
                   <p className="text-muted-foreground">Recommended Dose ({experienceLevel})</p>
-                  <p className="text-primary font-medium">{schedulePeptide.dosing[experienceLevel]}</p>
+                  <RecommendedDoseDisplay
+                    doseString={schedulePeptide.dosing[experienceLevel]}
+                    peptideId={schedulePeptide.id}
+                  />
                 </div>
               </div>
 
