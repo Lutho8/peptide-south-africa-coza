@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { parseDose, resolveConcentration, convertDose, SyringeType } from '@/lib/doseMath';
+import { getStoredVialSize } from '@/components/peptide/VialSizeSelector';
 
 interface Props {
   doseString: string;
@@ -23,7 +24,8 @@ export function RecommendedDoseDisplay({
   const enriched = useMemo(() => {
     const parsed = parseDose(doseString);
     if (!parsed) return null;
-    const conc = resolveConcentration(peptideId, vialMg, bacWaterMl);
+    const effectiveVial = vialMg ?? getStoredVialSize(peptideId);
+    const conc = resolveConcentration(peptideId, effectiveVial, bacWaterMl);
     const out = convertDose(parsed, conc.mgPerMl, syringe);
     if (!out) return null;
     return {
