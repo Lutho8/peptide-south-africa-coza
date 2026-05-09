@@ -1,8 +1,6 @@
 // Pure helpers for dose unit parsing and mg ↔ mL ↔ syringe-units conversion.
 // Kept free of React so unit tests can cover the math without rendering.
 import { findBlendData } from '@/data/blendAdapters';
-import { peptides } from '@/data/peptides';
-import { peptidesExpanded } from '@/data/peptides'; // re-exported below for fallback
 
 export type SyringeType = 'U-40' | 'U-100';
 export type ParsedDoseUnit = 'ml' | 'mg' | 'iu' | 'units';
@@ -92,6 +90,3 @@ export function convertDose(
   return { mg, mL, units: mL * unitsPerMl(syringe) };
 }
 
-// ensure peptidesExpanded re-export resolves in the bundler even if not used here
-void peptides;
-void peptidesExpanded;
