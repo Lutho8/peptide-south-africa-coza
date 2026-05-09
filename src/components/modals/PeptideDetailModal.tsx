@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
+import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
 
 interface PeptideDetailModalProps {
   peptide: Peptide | null;
