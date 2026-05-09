@@ -1,55 +1,44 @@
 ## Goal
-Make stack sync visible, safe, and reversible — and never show an empty stack while cloud data is still loading.
 
-## 1. Sync status indicator ("Syncing… / Up to date")
+In the **Dosage tab → Dosing Schedule → Recommended Dose** cell, when a peptide's recommended dose is expressed in mL (e.g. KLOW shows `0.5ml`), also display the equivalent **mg** and **U-40 syringe units** so the user can draw the correct amount confidently.
 
-- Extend `useCloudSync` to expose a `hydrationState`: `'idle' | 'hydrating' | 'syncing' | 'ready' | 'error'`, plus `lastSyncAt`.
-  - Set `hydrating` while `loadFromCloud` runs on login.
-  - Set `syncing` during `syncActiveStack` writes.
-  - Set `ready` once first hydration + any pending push completes.
-- Add a small `StackSyncBadge` component (reuse design tokens, `Loader2` spinner + check icon) showing:
-  - "Syncing…" while syncing/hydrating
-  - "Up to date" with relative time after success
-  - "Offline" if user not authenticated, "Sync error" on failure
-- Mount it in:
-  - `src/screens/MyStackScreen.tsx` header row (next to "My Stack" title)
-  - `src/components/home/ActiveStackPreview.tsx` header (small, right of "Active Protocol")
+Example for KLOW (80 mg / 3 mL ≈ 26.67 mg/mL):
 
-## 2. Stack change log + Undo
+```
+Recommended Dose (intermediate)
+0.5 mL  ≈ 13.3 mg  •  20 units (U-40)
+```
 
-- New file `src/services/stackHistory.ts`:
-  - `recordStackChange(prev, next, reason)` — pushes `{ id, ts, reason: 'add'|'remove'|'update'|'clear'|'hydrate', prev, next }` into a capped (last 10) ring buffer in `localStorage` per user.
-  - `getLastChange()`, `popLastChange()`, `canUndo()`.
-- Hook into `saveActiveStack` callers (centralized in `MyStackScreen.handleSaveStack` and `useCloudSync.loadFromCloud` empty-cloud branch). Skip recording for `hydrate`-from-cloud reads except when hydrate would clear a non-empty stack.
-- Add a toast with an "Undo" action after every `handleSaveStack` and after any auto-clear: clicking restores `prev`, persists locally, and re-syncs to cloud.
-- Add an "Undo last change" item in the MyStackScreen header overflow (visible only when `canUndo()`).
+## Scope
 
-## 3. Safeguards against duplicate cloud inserts
+Frontend / presentation only. No data model or business-logic changes.
 
-Current `loadFromCloud` empty-cloud branch can race: two tabs / fast reconnects may each insert the same local stack.
+## Files
 
-- Add a unique constraint on `user_stacks(user_id, peptide_id)` via migration so duplicate inserts fail safely instead of compounding. Use `ON CONFLICT (user_id, peptide_id) DO UPDATE` for the backfill insert.
-- Add an in-memory `hydrationInFlight` ref + a per-user `localStorage` flag `rtd:stack-backfilled:<uid>` set after a successful backfill to prevent a second backfill on reconnect.
-- Replace destructive `delete + insert` pattern in `syncActiveStack` with an upsert + targeted delete of removed peptide ids only, eliminating the brief "empty cloud" window that today can be observed by another concurrent reader.
-- Guard `loadFromCloud` so it does not run while another invocation is in flight (debounce).
+**Modified**
+- `src/screens/DosageScreen.tsx` — enrich the "Recommended Dose" cell (lines ~776–779).
 
-## 4. Loading skeleton + shimmer for Home "My Stack" card
+**New**
+- `src/components/dosage/RecommendedDoseDisplay.tsx` — small presentational component that takes the raw dose string + peptide id and renders the enriched line.
 
-- Add a `hydratedRef` / `isHydrating` signal exposed from `useCloudSync` and accessible via a tiny `useStackHydration()` hook (reads context or a module singleton).
-- In `ActiveStackPreview`:
-  - While `user && isHydrating && userStack.length === 0`, render a `StackPreviewSkeleton` instead of the empty "Build your stack" CTA.
-  - Skeleton: `GradientCard` with shimmering placeholder rows (reuse `Skeleton` from shadcn, add a `bg-gradient-shimmer` animation in `index.css` via existing tokens).
-- Only after hydration finishes AND stack is still empty do we render the existing empty-state CTA.
+## Behavior rules
 
-## Technical notes
+1. **Parse the dose string** (`peptide.dosing[experienceLevel]`) for the first numeric value and unit (`ml`, `mg`, `iu`, `units`, `u`).
+2. **Resolve concentration** in mg/mL:
+   - If `findBlendData(peptideId)` returns a blend → use `vialSize` mg ÷ reconstitute mL (KLOW = 80/3, etc.).
+   - Else if the peptide has a known vial+BAC standard (10 mg / 2 mL → 5 mg/mL) use that as a documented fallback.
+   - If no concentration can be resolved, show the original string only (no enrichment).
+3. **Compute and show** (when concentration is known):
+   - mL input → `mg = mL × concentration`, `units = mL × 100` for U-100 and `mL × 40` for U-40. Show **U-40 units** as the primary callout (per project standard), with mg.
+   - mg input → `mL = mg / concentration`, then U-40 units.
+   - IU / units inputs → show as-is, no conversion (those aren't volumetric).
+4. Render format (single line, wraps on small screens):
+   `<original> ≈ <mg> mg • <units> units (U-40)`
+   Use `text-primary` for the original value, `text-muted-foreground` for the conversion suffix.
+5. Add a tiny `Info` tooltip explaining the assumed reconstitution (e.g. "Based on 80 mg vial + 3 mL BAC water = 26.7 mg/mL").
 
-- Files touched:
-  - `src/hooks/useCloudSync.ts` (hydration state, debounce, idempotent backfill, upsert)
-  - `src/components/home/ActiveStackPreview.tsx` (skeleton + sync badge)
-  - `src/screens/MyStackScreen.tsx` (sync badge, undo toast, history hookup)
-  - new `src/services/stackHistory.ts`
-  - new `src/components/sync/StackSyncBadge.tsx`
-  - new `src/components/home/StackPreviewSkeleton.tsx`
-  - `src/index.css` (shimmer keyframes if missing)
-- Migration: add `UNIQUE (user_id, peptide_id)` on `user_stacks` (after de-duping any existing rows in the same migration).
-- No business-logic changes to peptides, dosing, or auth.
+## Non-goals
+
+- Don't change the dose strings stored in `src/data/peptides.ts` / `peptideBlends.ts`.
+- Don't touch `InsulinNeedleGuide`, `ReconstitutionCalculator`, or any other surface — only the Dosage tab schedule card.
+- No mcg anywhere (project rule).
