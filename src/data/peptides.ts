@@ -1,4 +1,6 @@
 import { expandedPeptides } from './peptidesExpanded';
+import { newPeptidesFromCatalog } from './peptidesNewCatalog';
+import { VIAL_SIZES_MG } from './vialSizes';
 
 export type PeptideCategory = 'immune' | 'longevity' | 'cognitive' | 'metabolic' | 'healing' | 'gh-secretagogue' | 'weight-loss' | 'anti-aging' | 'skin-hair' | 'hormonal' | 'bioregulators';
 
@@ -84,6 +86,8 @@ export interface Peptide {
     doi?: string;
   }>;
   recommendedDuration?: string;
+  /** Available vial sizes in mg, sourced from supplier catalog. */
+  vialSizesMg?: number[];
   cycleProtocol?: {
     minDays: number;
     maxDays: number;
@@ -1165,10 +1169,19 @@ export const corePeptides: Peptide[] = [
 
 // Merge core and expanded peptides, avoiding duplicates
 const coreIds = new Set(corePeptides.map(p => p.id));
-export const peptides: Peptide[] = [
+const merged: Peptide[] = [
   ...corePeptides,
-  ...expandedPeptides.filter(p => !coreIds.has(p.id))
+  ...expandedPeptides.filter(p => !coreIds.has(p.id)),
 ];
+const mergedIds = new Set(merged.map(p => p.id));
+const allPeptides = [
+  ...merged,
+  ...newPeptidesFromCatalog.filter(p => !mergedIds.has(p.id)),
+];
+// Apply vial-size catalog overrides without mutating the source data.
+export const peptides: Peptide[] = allPeptides.map(p =>
+  p.vialSizesMg ? p : (VIAL_SIZES_MG[p.id] ? { ...p, vialSizesMg: VIAL_SIZES_MG[p.id] } : p)
+);
 
 export const getCategoryColor = (category: PeptideCategory): string => {
   const colors: Partial<Record<PeptideCategory, string>> = {

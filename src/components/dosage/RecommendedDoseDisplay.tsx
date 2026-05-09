@@ -1,80 +1,46 @@
 import { useMemo } from 'react';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { findBlendData } from '@/data/blendAdapters';
+import { parseDose, resolveConcentration, convertDose, SyringeType } from '@/lib/doseMath';
+import { getStoredVialSize } from '@/components/peptide/VialSizeSelector';
 
 interface Props {
   doseString: string;
   peptideId: string;
+  syringe?: SyringeType;
+  vialMg?: number;
+  bacWaterMl?: number;
+  className?: string;
 }
 
-interface Concentration {
-  mgPerMl: number;
-  source: string; // human description for tooltip
-}
-
-function resolveConcentration(peptideId: string): Concentration | null {
-  const blend = findBlendData(peptideId);
-  if (blend) {
-    const mg = parseFloat(blend.vialSize.match(/([\d.]+)\s*mg/i)?.[1] ?? '');
-    const ml = parseFloat(blend.quickstart.reconstitute.match(/([\d.]+)\s*mL/i)?.[1] ?? '');
-    if (mg > 0 && ml > 0) {
-      return {
-        mgPerMl: mg / ml,
-        source: `${mg} mg vial + ${ml} mL BAC water = ${(mg / ml).toFixed(2)} mg/mL`,
-      };
-    }
-  }
-  // Fallback assumption for non-blend peptides: standard 10 mg / 2 mL = 5 mg/mL
-  return { mgPerMl: 5, source: 'Assumes standard 10 mg vial + 2 mL BAC water = 5 mg/mL' };
-}
-
-function parseDose(s: string): { value: number; unit: 'ml' | 'mg' | 'iu' | 'units' } | null {
-  const m = s.match(/([\d.]+)\s*(ml|mg|iu|units?|u)\b/i);
-  if (!m) return null;
-  const value = parseFloat(m[1]);
-  if (!isFinite(value) || value <= 0) return null;
-  const raw = m[2].toLowerCase();
-  let unit: 'ml' | 'mg' | 'iu' | 'units';
-  if (raw === 'ml') unit = 'ml';
-  else if (raw === 'mg') unit = 'mg';
-  else if (raw === 'iu') unit = 'iu';
-  else unit = 'units';
-  return { value, unit };
-}
-
-export function RecommendedDoseDisplay({ doseString, peptideId }: Props) {
+export function RecommendedDoseDisplay({
+  doseString,
+  peptideId,
+  syringe = 'U-40',
+  vialMg,
+  bacWaterMl,
+  className,
+}: Props) {
   const enriched = useMemo(() => {
     const parsed = parseDose(doseString);
     if (!parsed) return null;
-    if (parsed.unit === 'iu' || parsed.unit === 'units') return null;
-
-    const conc = resolveConcentration(peptideId);
-    if (!conc) return null;
-
-    let mL: number;
-    let mg: number;
-    if (parsed.unit === 'ml') {
-      mL = parsed.value;
-      mg = mL * conc.mgPerMl;
-    } else {
-      mg = parsed.value;
-      mL = mg / conc.mgPerMl;
-    }
-    const u40 = mL * 40;
+    const effectiveVial = vialMg ?? getStoredVialSize(peptideId);
+    const conc = resolveConcentration(peptideId, effectiveVial, bacWaterMl);
+    const out = convertDose(parsed, conc.mgPerMl, syringe);
+    if (!out) return null;
     return {
-      mg: mg.toFixed(mg < 1 ? 2 : 1),
-      u40: u40.toFixed(1),
+      mg: out.mg.toFixed(out.mg < 1 ? 2 : 1),
+      units: out.units.toFixed(1),
       source: conc.source,
     };
-  }, [doseString, peptideId]);
+  }, [doseString, peptideId, syringe, vialMg, bacWaterMl]);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+    <div className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 ${className ?? ''}`}>
       <span className="text-primary font-medium">{doseString}</span>
       {enriched && (
         <span className="text-xs text-muted-foreground flex items-center gap-1">
-          ≈ {enriched.mg} mg • {enriched.u40} units (U-40)
+          ≈ {enriched.mg} mg • {enriched.units} units ({syringe})
           <TooltipProvider delayDuration={150}>
             <Tooltip>
               <TooltipTrigger asChild>
