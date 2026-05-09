@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { 
@@ -775,7 +776,10 @@ export function DosageScreen() {
                 </div>
                 <div className="col-span-2 p-2 rounded bg-muted/50">
                   <p className="text-muted-foreground">Recommended Dose ({experienceLevel})</p>
-                  <p className="text-primary font-medium">{schedulePeptide.dosing[experienceLevel]}</p>
+                  <RecommendedDoseDisplay
+                    doseString={schedulePeptide.dosing[experienceLevel]}
+                    peptideId={schedulePeptide.id}
+                  />
                 </div>
               </div>
 
