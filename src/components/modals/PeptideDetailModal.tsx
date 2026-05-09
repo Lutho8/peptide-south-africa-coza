@@ -15,6 +15,8 @@ import {
 import { cn } from '@/lib/utils';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
 import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
+import { VialSizeSelector } from '@/components/peptide/VialSizeSelector';
+import { getVialSizesFor } from '@/data/vialSizes';
 
 interface PeptideDetailModalProps {
   peptide: Peptide | null;
@@ -344,6 +346,12 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
           {/* Dosing Tiers */}
           <GradientCard>
             <h3 className="font-medium text-foreground mb-3">Dosing Tiers</h3>
+            {(() => {
+              const sizes = peptide.vialSizesMg ?? getVialSizesFor(peptide.id);
+              return sizes && sizes.length > 1 ? (
+                <VialSizeSelector peptideId={peptide.id} sizes={sizes} className="mb-3" />
+              ) : null;
+            })()}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
               <div className="p-2 rounded bg-muted/50">
                 <p className="text-muted-foreground text-xs">Beginner</p>
