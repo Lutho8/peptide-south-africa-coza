@@ -84,6 +84,8 @@ export interface Peptide {
     doi?: string;
   }>;
   recommendedDuration?: string;
+  /** Available vial sizes in mg, sourced from supplier catalog. */
+  vialSizesMg?: number[];
   cycleProtocol?: {
     minDays: number;
     maxDays: number;
