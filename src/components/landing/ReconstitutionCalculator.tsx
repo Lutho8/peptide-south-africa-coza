@@ -394,7 +394,15 @@ export function ReconstitutionCalculator({ open, onClose }: ReconstitutionCalcul
                       <div className="text-xs text-muted-foreground">Concentration</div>
                       <div className="text-2xl font-bold">{calculations.concentrationMgPerMl.toFixed(2)}</div>
                       <div className="text-xs text-muted-foreground">mg/mL</div>
-                    </Card>
+                  </Card>
+                  </div>
+
+                  {/* Standardized conversion line, consistent with Dosage tab + Peptide modal */}
+                  <div className="text-xs text-muted-foreground text-center">
+                    <span className="text-primary font-medium">{calculations.ccPerDose.toFixed(3)} mL</span>
+                    {' '}≈ <span className="text-foreground">{(calculations.ccPerDose * calculations.concentrationMgPerMl).toFixed(2)} mg</span>
+                    {' '}• <span className="text-foreground">{calculations.unitsToDraw} units</span>
+                    {' '}({syringeInfo.label})
                   </div>
 
                   {/* Horizontal Syringe Visual */}
