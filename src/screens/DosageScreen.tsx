@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { 
