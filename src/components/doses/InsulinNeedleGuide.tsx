@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { findBlendData } from '@/data/blendAdapters';
+import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
 
 interface InsulinNeedleGuideProps {
   dose: number;
@@ -311,6 +312,15 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                 <div className="text-sm font-medium text-foreground">
                   Your current dose: {dose} {unit}
                 </div>
+                {peptideId && (
+                  <RecommendedDoseDisplay
+                    doseString={`${dose} ${unit}`}
+                    peptideId={peptideId}
+                    syringe={syringeType}
+                    vialMg={activeTotalMg}
+                    bacWaterMl={activeWaterMl}
+                  />
+                )}
                 <div className="p-3 rounded-md bg-background border border-border text-center">
                   <div className="text-muted-foreground text-xs">{syringeType} Syringe</div>
                   <div className="text-2xl font-bold text-primary">{drawUnits.toFixed(1)}</div>
