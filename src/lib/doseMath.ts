@@ -26,7 +26,7 @@ export function unitsPerMl(syringe: SyringeType): 40 | 100 {
 
 export function parseDose(s: string | undefined | null): ParsedDose | null {
   if (!s) return null;
-  const m = s.match(/([\d.]+)\s*(ml|mg|iu|units?|u)\b/i);
+  const m = s.match(/(?:^|[^\d.\-])([\d.]+)\s*(ml|mg|iu|units?|u)\b/i);
   if (!m) return null;
   const value = parseFloat(m[1]);
   if (!isFinite(value) || value <= 0) return null;
