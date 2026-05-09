@@ -343,22 +343,22 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
           {/* Dosing Tiers */}
           <GradientCard>
             <h3 className="font-medium text-foreground mb-3">Dosing Tiers</h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
               <div className="p-2 rounded bg-muted/50">
                 <p className="text-muted-foreground text-xs">Beginner</p>
-                <p className="text-foreground font-medium">{peptide.dosing.beginner}</p>
+                <RecommendedDoseDisplay doseString={peptide.dosing.beginner} peptideId={peptide.id} />
               </div>
               <div className="p-2 rounded bg-muted/50">
                 <p className="text-muted-foreground text-xs">Intermediate</p>
-                <p className="text-foreground font-medium">{peptide.dosing.intermediate}</p>
+                <RecommendedDoseDisplay doseString={peptide.dosing.intermediate} peptideId={peptide.id} />
               </div>
               <div className="p-2 rounded bg-muted/50">
                 <p className="text-muted-foreground text-xs">Advanced</p>
-                <p className="text-foreground font-medium">{peptide.dosing.advanced}</p>
+                <RecommendedDoseDisplay doseString={peptide.dosing.advanced} peptideId={peptide.id} />
               </div>
               <div className="p-2 rounded bg-primary/20 border border-primary/30">
                 <p className="text-primary text-xs">Athlete</p>
-                <p className="text-foreground font-medium">{peptide.dosing.athlete}</p>
+                <RecommendedDoseDisplay doseString={peptide.dosing.athlete} peptideId={peptide.id} />
               </div>
             </div>
             <div className="text-xs text-muted-foreground mt-2 space-y-1">
