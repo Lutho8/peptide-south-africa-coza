@@ -14,6 +14,8 @@ import { Link } from 'react-router-dom';
 import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureLead } from '@/lib/crm';
+import { SEOHead } from '@/components/seo/SEOHead';
+import { JsonLd } from '@/components/seo/JsonLd';
 
 const COUNTRY_CODES = [
   { code: '+1', label: 'US (+1)' },
@@ -181,6 +183,23 @@ export default function LiveQnA() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Live Peptide Q&A — Monthly Expert Sessions | Ride The Tide"
+        description="Free monthly live peptide research Q&A. Ask experts about dosing, stacks, cycles, and bloodwork. First Saturday of every month."
+        canonical="https://ridethetide.info/live-qna"
+      />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Event',
+        name: 'Ride The Tide Live Peptide Q&A',
+        description: 'Free monthly live Q&A on peptide research, dosing, stacks, cycles, and bloodwork interpretation.',
+        eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+        eventStatus: 'https://schema.org/EventScheduled',
+        url: 'https://ridethetide.info/live-qna',
+        organizer: { '@type': 'Organization', name: 'Ride The Tide', url: 'https://ridethetide.info' },
+        location: { '@type': 'VirtualLocation', url: 'https://ridethetide.info/live-qna' },
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', availability: 'https://schema.org/InStock', url: 'https://ridethetide.info/live-qna' },
+      }} />
       {/* Header */}
       <div className="border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
