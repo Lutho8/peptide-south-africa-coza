@@ -59,7 +59,7 @@ export const categoryMeta: Record<string, { title: string; description: string; 
     intro: 'Immune-modulating peptides enhance both innate and adaptive immune responses through T-cell activation, dendritic cell maturation, and cytokine modulation. These peptides are among the most clinically validated in the field.'
   },
   'growth-hormone': {
-    title: 'GH Secretagogues – Ipamorelin, CJC-1295 & Growth Hormone Peptides',
+    title: 'GH Secretagogues – Ipamorelin, CJC-1295 Protocols',
     description: 'Growth hormone releasing peptides and secretagogues. Dosing protocols for Ipamorelin, CJC-1295, GHRP-6, and MK-677.',
     intro: 'Growth hormone secretagogues stimulate the pituitary gland to release GH through GHRH receptor or ghrelin receptor activation. Stacking a GHRP with a GHRH analog produces synergistic GH pulses that mimic physiological patterns.'
   },
