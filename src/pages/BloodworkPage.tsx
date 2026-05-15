@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
 import { supabase } from '@/integrations/supabase/client';
@@ -203,9 +204,20 @@ export default function BloodworkPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Bloodwork → Protocol | Ride The Tide Premium"
-        description="Premium AI bloodwork decoding: extract biomarkers, score your health, and receive a personalised peptide stack, supplements, nutrition, and retest schedule."
+        title="AI Bloodwork Decoding & Peptide Protocols | Ride The Tide"
+        description="Upload a lab report and get an AI-decoded biomarker breakdown with a personalised peptide stack, supplement plan, and retest schedule. Free baseline scan."
+        canonical="https://ridethetide.info/bloodwork"
       />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: 'AI Bloodwork Decoding',
+        provider: { '@type': 'Organization', name: 'Ride The Tide', url: 'https://ridethetide.info' },
+        serviceType: 'Biomarker analysis and peptide protocol generation',
+        url: 'https://ridethetide.info/bloodwork',
+        description: 'AI-powered lab report analysis that decodes 20+ biomarkers and generates a personalised peptide protocol, supplement plan, and retest schedule.',
+        areaServed: 'Worldwide',
+      }} />
 
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
