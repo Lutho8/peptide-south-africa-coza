@@ -47,6 +47,17 @@ export function LandingPage() {
   const [blendsStacksOpen, setBlendsStacksOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [popupReady, setPopupReady] = useState(false);
+
+  // Defer non-critical popup until idle so it doesn't compete with LCP
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 2500));
+    const id = schedule(() => setPopupReady(true));
+    return () => {
+      if (typeof id === 'number') clearTimeout(id);
+    };
+  }, []);
 
   const handleSignInClick = () => {
     setAuthModalOpen(true);
