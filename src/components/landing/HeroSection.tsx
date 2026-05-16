@@ -97,7 +97,7 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
               Most South Africans using peptides track their protocols in a notes app, spreadsheet,
               or worse — their memory. The result? Inconsistent cycles, missed doses, and zero
               insight into what's actually working.
-            </motion.p>
+            </p>
 
             {/* Positioning card */}
             <motion.div
