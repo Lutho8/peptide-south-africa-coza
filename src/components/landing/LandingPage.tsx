@@ -93,17 +93,25 @@ export function LandingPage() {
         <HeroSection onCategoryClick={handleCategoryClick} />
         <HowItWorks />
         <PricingSection />
-        <BentoFeatures />
-        <Testimonials />
-        <WhyFreeBand onPrimaryClick={handleSignInClick} />
+        <Suspense fallback={<SectionPlaceholder minH={600} />}>
+          <BentoFeatures />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={500} />}>
+          <Testimonials />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={300} />}>
+          <WhyFreeBand onPrimaryClick={handleSignInClick} />
+        </Suspense>
         <div className="relative">
-          <ResearchTools 
-            onBlendsClick={() => teaser ? null : setBlendsStacksOpen(true)}
-            onQuizClick={() => teaser ? null : setQuizOpen(true)}
-            onSearchClick={() => teaser ? null : setSearchOpen(true)}
-            onStackClick={() => teaser ? null : setBlendsStacksOpen(true)}
-            onCalculatorClick={() => teaser ? null : setCalculatorOpen(true)}
-          />
+          <Suspense fallback={<SectionPlaceholder minH={500} />}>
+            <ResearchTools
+              onBlendsClick={() => teaser ? null : setBlendsStacksOpen(true)}
+              onQuizClick={() => teaser ? null : setQuizOpen(true)}
+              onSearchClick={() => teaser ? null : setSearchOpen(true)}
+              onStackClick={() => teaser ? null : setBlendsStacksOpen(true)}
+              onCalculatorClick={() => teaser ? null : setCalculatorOpen(true)}
+            />
+          </Suspense>
           {teaser && (
             <PremiumLockOverlay
               title="Research tools are Premium"
@@ -112,7 +120,9 @@ export function LandingPage() {
           )}
         </div>
         <div id="featured-peptides" className="relative">
-          <FeaturedPeptides limit={teaser ? 3 : undefined} />
+          <Suspense fallback={<SectionPlaceholder minH={600} />}>
+            <FeaturedPeptides limit={teaser ? 3 : undefined} />
+          </Suspense>
           {teaser && (
             <div className="container mx-auto px-4 -mt-4 pb-10 text-center">
               <p className="text-sm text-muted-foreground">
@@ -121,15 +131,31 @@ export function LandingPage() {
             </div>
           )}
         </div>
-        <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
-        <BlogSection />
-        <SafetyDisclaimerBand />
-        <FAQSection />
-        <CTASection onSignInClick={handleSignInClick} />
+        <Suspense fallback={<SectionPlaceholder minH={400} />}>
+          <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={500} />}>
+          <BlogSection />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={120} />}>
+          <SafetyDisclaimerBand />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={600} />}>
+          <FAQSection />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={300} />}>
+          <CTASection onSignInClick={handleSignInClick} />
+        </Suspense>
       </main>
 
-      <LandingFooter />
-      <LiveQnAPopup />
+      <Suspense fallback={<SectionPlaceholder minH={300} />}>
+        <LandingFooter />
+      </Suspense>
+      {popupReady && (
+        <Suspense fallback={null}>
+          <LiveQnAPopup />
+        </Suspense>
+      )}
 
       <Suspense fallback={null}>
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
