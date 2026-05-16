@@ -1,27 +1,30 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
 import { HowItWorks } from './HowItWorks';
-import { BentoFeatures } from './BentoFeatures';
-import { Testimonials } from './Testimonials';
 import { PricingSection } from './PricingSection';
-import { WhyFreeBand } from './WhyFreeBand';
-import { ResearchTools } from './ResearchTools';
-import { FeaturedPeptides } from './FeaturedPeptides';
-import { PeptideCategories } from './PeptideCategories';
-import { BlogSection } from './BlogSection';
-import { CTASection } from './CTASection';
-import { LandingFooter } from './LandingFooter';
-import { FAQSection, faqCategories } from './FAQSection';
-import { SafetyDisclaimerBand } from './SafetyDisclaimerBand';
-import { LiveQnAPopup } from './LiveQnAPopup';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeaserMode } from '@/hooks/useTeaserMode';
 import { PremiumLockOverlay } from '@/components/paywall/PremiumLockOverlay';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd, buildOrganizationSchema, buildWebSiteSchema, buildFAQSchema } from '@/components/seo/JsonLd';
+import { faqCategories } from './FAQSection';
 
 import { PeptideCategory } from '@/data/peptides';
+
+// Below-the-fold sections — lazy load to improve LCP/TBT
+const BentoFeatures = lazy(() => import('./BentoFeatures').then(m => ({ default: m.BentoFeatures })));
+const Testimonials = lazy(() => import('./Testimonials').then(m => ({ default: m.Testimonials })));
+const WhyFreeBand = lazy(() => import('./WhyFreeBand').then(m => ({ default: m.WhyFreeBand })));
+const ResearchTools = lazy(() => import('./ResearchTools').then(m => ({ default: m.ResearchTools })));
+const FeaturedPeptides = lazy(() => import('./FeaturedPeptides').then(m => ({ default: m.FeaturedPeptides })));
+const PeptideCategories = lazy(() => import('./PeptideCategories').then(m => ({ default: m.PeptideCategories })));
+const BlogSection = lazy(() => import('./BlogSection').then(m => ({ default: m.BlogSection })));
+const CTASection = lazy(() => import('./CTASection').then(m => ({ default: m.CTASection })));
+const LandingFooter = lazy(() => import('./LandingFooter').then(m => ({ default: m.LandingFooter })));
+const FAQSection = lazy(() => import('./FAQSection').then(m => ({ default: m.FAQSection })));
+const SafetyDisclaimerBand = lazy(() => import('./SafetyDisclaimerBand').then(m => ({ default: m.SafetyDisclaimerBand })));
+const LiveQnAPopup = lazy(() => import('./LiveQnAPopup').then(m => ({ default: m.LiveQnAPopup })));
 
 // Lazy load modals - only loaded when opened
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
@@ -31,6 +34,11 @@ const BlendsAndStacks = lazy(() => import('./BlendsAndStacks').then(m => ({ defa
 const PeptideSearch = lazy(() => import('./PeptideSearch').then(m => ({ default: m.PeptideSearch })));
 const ReconstitutionCalculator = lazy(() => import('./ReconstitutionCalculator').then(m => ({ default: m.ReconstitutionCalculator })));
 
+// Reserved-space placeholder to prevent CLS while a section loads in.
+const SectionPlaceholder = ({ minH = 400 }: { minH?: number }) => (
+  <div style={{ minHeight: minH }} aria-hidden="true" />
+);
+
 export function LandingPage() {
   const { user } = useAuth();
   const { teaser } = useTeaserMode();
@@ -39,6 +47,17 @@ export function LandingPage() {
   const [blendsStacksOpen, setBlendsStacksOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [popupReady, setPopupReady] = useState(false);
+
+  // Defer non-critical popup until idle so it doesn't compete with LCP
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 2500));
+    const id = schedule(() => setPopupReady(true));
+    return () => {
+      if (typeof id === 'number') clearTimeout(id);
+    };
+  }, []);
 
   const handleSignInClick = () => {
     setAuthModalOpen(true);
@@ -74,17 +93,25 @@ export function LandingPage() {
         <HeroSection onCategoryClick={handleCategoryClick} />
         <HowItWorks />
         <PricingSection />
-        <BentoFeatures />
-        <Testimonials />
-        <WhyFreeBand onPrimaryClick={handleSignInClick} />
+        <Suspense fallback={<SectionPlaceholder minH={600} />}>
+          <BentoFeatures />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={500} />}>
+          <Testimonials />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={300} />}>
+          <WhyFreeBand onPrimaryClick={handleSignInClick} />
+        </Suspense>
         <div className="relative">
-          <ResearchTools 
-            onBlendsClick={() => teaser ? null : setBlendsStacksOpen(true)}
-            onQuizClick={() => teaser ? null : setQuizOpen(true)}
-            onSearchClick={() => teaser ? null : setSearchOpen(true)}
-            onStackClick={() => teaser ? null : setBlendsStacksOpen(true)}
-            onCalculatorClick={() => teaser ? null : setCalculatorOpen(true)}
-          />
+          <Suspense fallback={<SectionPlaceholder minH={500} />}>
+            <ResearchTools
+              onBlendsClick={() => teaser ? null : setBlendsStacksOpen(true)}
+              onQuizClick={() => teaser ? null : setQuizOpen(true)}
+              onSearchClick={() => teaser ? null : setSearchOpen(true)}
+              onStackClick={() => teaser ? null : setBlendsStacksOpen(true)}
+              onCalculatorClick={() => teaser ? null : setCalculatorOpen(true)}
+            />
+          </Suspense>
           {teaser && (
             <PremiumLockOverlay
               title="Research tools are Premium"
@@ -93,7 +120,9 @@ export function LandingPage() {
           )}
         </div>
         <div id="featured-peptides" className="relative">
-          <FeaturedPeptides limit={teaser ? 3 : undefined} />
+          <Suspense fallback={<SectionPlaceholder minH={600} />}>
+            <FeaturedPeptides limit={teaser ? 3 : undefined} />
+          </Suspense>
           {teaser && (
             <div className="container mx-auto px-4 -mt-4 pb-10 text-center">
               <p className="text-sm text-muted-foreground">
@@ -102,15 +131,31 @@ export function LandingPage() {
             </div>
           )}
         </div>
-        <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
-        <BlogSection />
-        <SafetyDisclaimerBand />
-        <FAQSection />
-        <CTASection onSignInClick={handleSignInClick} />
+        <Suspense fallback={<SectionPlaceholder minH={400} />}>
+          <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={500} />}>
+          <BlogSection />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={120} />}>
+          <SafetyDisclaimerBand />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={600} />}>
+          <FAQSection />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder minH={300} />}>
+          <CTASection onSignInClick={handleSignInClick} />
+        </Suspense>
       </main>
 
-      <LandingFooter />
-      <LiveQnAPopup />
+      <Suspense fallback={<SectionPlaceholder minH={300} />}>
+        <LandingFooter />
+      </Suspense>
+      {popupReady && (
+        <Suspense fallback={null}>
+          <LiveQnAPopup />
+        </Suspense>
+      )}
 
       <Suspense fallback={null}>
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
