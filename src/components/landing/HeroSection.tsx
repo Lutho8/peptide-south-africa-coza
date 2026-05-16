@@ -73,11 +73,7 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
           {/* LEFT: Content (mobile order: 2) */}
           <div className="order-2 text-center lg:order-1 lg:text-left">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
@@ -93,12 +89,9 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
                 </span>{' '}
                 Your Peptide Doses?
               </h1>
-            </motion.div>
+            </div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
+            <p
               className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg lg:mx-0"
             >
               Most South Africans using peptides track their protocols in a notes app, spreadsheet,
