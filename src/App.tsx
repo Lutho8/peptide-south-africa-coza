@@ -62,6 +62,9 @@ const App = () => {
                 <Route path="/reminders/today" element={<TodayRemindersScreen />} />
                 <Route path="/cycles" element={<CycleManagementScreen />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="/admin/seo" element={<SEODashboard />} />
+                <Route path="/admin/seo/verify" element={<SEOVerifyPage />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
