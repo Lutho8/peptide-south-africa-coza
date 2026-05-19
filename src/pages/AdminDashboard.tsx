@@ -127,6 +127,12 @@ export default function AdminDashboard() {
               <Upload className="h-4 w-4" />
               COA Upload
             </TabsTrigger>
+            <TabsTrigger value="seo" className="gap-1.5" asChild>
+              <Link to="/admin/seo">
+                <Search className="h-4 w-4" />
+                SEO / Search Console
+              </Link>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="space-y-6">
