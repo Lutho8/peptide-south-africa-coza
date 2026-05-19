@@ -1,66 +1,37 @@
-# SEO Automation & Admin Dashboard
+## Plan
 
-Three connected pieces: regenerate sitemap on build, surface GSC data in admin, and validate the live page before submitting to Google.
+### 1. Make the Supabase SECURITY linter a hard build gate
 
-## 1. Auto sitemap regeneration + GSC resubmit
+Update `scripts/security-lint-check.ts` and `package.json` so the build fails on any new SECURITY warning, with no silent skips.
 
-**Sitemap generator** — replace static `public/sitemap.xml` with a script.
+**New behavior (strict mode):**
+- Run order on every build: `generate-sitemap.ts` → `security-lint-check.ts` → `vite build` (via `prebuild`).
+- Resolution order for lint results:
+  1. Supabase Management API (`/v1/projects/{ref}/database/lints`) when `SUPABASE_ACCESS_TOKEN` is set.
+  2. `supabase db lint --level warning --schema public` if the Supabase CLI is on PATH.
+  3. **No fallback to "skip".** If neither source is available, exit non-zero with a clear message:
+     > "Security linter gate cannot run. Set SUPABASE_ACCESS_TOKEN or install the Supabase CLI. Build aborted."
+- Filter findings to `category = SECURITY` and `level ∈ {WARN, ERROR}`.
+- Compare against `scripts/security-lint-allowlist.json` (array of finding `name`+`cache_key`). Anything not in the allowlist → exit 1 and print a table of offending findings + remediation links.
+- Exit 0 only when the resulting list is empty.
+- Single escape hatch for true emergencies: `LOVABLE_SKIP_SECURITY_LINT=1` env var, which prints a loud warning. Not set anywhere by default.
 
-- New `scripts/generate-sitemap.ts` — enumerates all public routes from `src/App.tsx` (excluding `/admin`, `/auth`, `*`), pulls dynamic peptide/category slugs from Supabase via the anon client, writes `public/sitemap.xml` with `BASE_URL = https://ridethetide.info`.
-- Wire into `package.json`: `"predev"` and `"prebuild"` → `bunx tsx scripts/generate-sitemap.ts`.
-- Result: every publish (which runs build) ships a fresh sitemap.
+**Wire-up:**
+- `package.json` `prebuild`: `tsx scripts/generate-sitemap.ts && tsx scripts/security-lint-check.ts`.
+- Add `lint:security` script for manual runs.
+- `README.md`: short section on the gate, how to add a finding to the allowlist, and how to obtain `SUPABASE_ACCESS_TOKEN`.
 
-**Auto resubmit to GSC on publish** — edge function `gsc-resubmit-sitemap`.
+**Allowlist seed:** start empty. The 15 existing warnings are being fixed in the parallel security-hardening work, so the gate starts clean.
 
-- Calls `PUT /webmasters/v3/sites/<encoded>/sitemaps/<encoded sitemap url>` via the `google_search_console` connector gateway.
-- Triggered two ways:
-  1. Manual button in admin dashboard ("Resubmit sitemap now").
-  2. Daily cron (08:00 UTC via `pg_cron` + `pg_net`) — acts as the "post-publish" hook since Lovable doesn't expose a publish webhook. Daily cadence matches Google's recommended polling.
-- Records each attempt in `gsc_submissions` table (timestamp, status, errors, warnings, source: manual|cron).
+### 2. Hide the "Edit with Lovable" badge on production
 
-## 2. Admin SEO status dashboard
+Call `publish_settings--set_badge_visibility` with `hide_badge: true`. Requires user approval and a Pro+ plan; if the plan check fails, surface the message and stop.
 
-New route `/admin/seo` (gated by existing admin check for `lutho.kote@relicom.de`), linked from `AdminDashboard.tsx`.
+### Files touched
+- `scripts/security-lint-check.ts` (rewrite — strict mode, no skip fallback)
+- `scripts/security-lint-allowlist.json` (new, `[]`)
+- `package.json` (`prebuild`, `lint:security`)
+- `README.md` (docs section)
 
-**Cards:**
-- **Sitemap status** — last submission timestamp, Google's reported `lastSubmitted` / `lastDownloaded`, `isPending`, `errors`, `warnings`, total URLs submitted vs indexed. Manual "Resubmit now" button.
-- **Indexing coverage trend** — line chart (recharts) of `contentsIndexed` over the last 30 days, pulled from a new `gsc_coverage_snapshots` table that the daily cron also populates.
-- **Latest crawl errors** — list from `GET /webmasters/v3/sites/<site>/sitemaps/<sitemap>` `errors[]` and from `searchanalytics` query (top 10 URLs with 0 impressions over 28d as a proxy for crawl issues since the Inspection API is per-URL only).
-- **Search performance** — last 28d clicks/impressions/CTR/position from `POST /webmasters/v3/sites/<site>/searchAnalytics/query`.
-
-**Edge function** `gsc-status` — single function the dashboard calls, returns aggregated JSON. Reuses the connector pattern (`Authorization: Bearer LOVABLE_API_KEY` + `X-Connection-Api-Key: GOOGLE_SEARCH_CONSOLE_API_KEY`).
-
-## 3. Pre-submit live verification check page
-
-New route `/admin/seo/verify` — admin-only.
-
-- Input: production URL (defaults to `https://ridethetide.info`).
-- "Run check" button calls edge function `gsc-verify-live` which:
-  - `fetch()`es the URL server-side (avoids CORS).
-  - Parses the HTML and reports presence of:
-    - `<meta name="google-site-verification" content="...">`
-    - All `<link rel="alternate" hreflang="...">` tags (en-za, de-de, x-default)
-    - `<link rel="canonical">`
-    - Sitewide JSON-LD blocks
-    - `<title>` and `<meta name="description">`
-- UI shows a checklist (✓ / ✗) with the actual found value or "missing". Green "Ready to submit → Verify with Google" button is enabled only when verification meta is present; clicking it triggers the existing verify + add-site flow.
-
-## Database (new tables)
-
-```sql
-gsc_submissions      (id, site_url, sitemap_url, submitted_at, status, errors jsonb, warnings int, source text)
-gsc_coverage_snapshots (id, site_url, captured_at, submitted int, indexed int, errors int, warnings int)
-```
-
-Both admin-read only via RLS using existing `has_role(_user_id, 'admin')` pattern.
-
-## Files touched
-
-- New: `scripts/generate-sitemap.ts`, `supabase/functions/{gsc-resubmit-sitemap,gsc-status,gsc-verify-live}/index.ts`, `src/pages/admin/SEODashboard.tsx`, `src/pages/admin/SEOVerifyPage.tsx`
-- Edited: `package.json` (predev/prebuild), `src/App.tsx` (2 admin routes), `src/pages/AdminDashboard.tsx` (link card), DB migration for tables + cron job
-
-## Open questions
-
-1. **Cron cadence** — daily 08:00 UTC OK, or prefer hourly?
-2. **Coverage chart source** — Google deprecated the public Index Coverage report API. Confirm OK using "sitemap submitted vs indexed" counts (from sitemaps API) as the trend metric. Alternative is per-URL Inspection API (slow, quota-limited).
-3. **Dynamic sitemap entries** — include all peptides + categories + blog posts, or stay with the current static route list?
+### Open question
+None — proceeding with strict mode and empty allowlist on approval.
