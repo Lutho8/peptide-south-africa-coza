@@ -113,7 +113,7 @@ export function LandingFooter() {
             </div>
           </div>
           <p className="text-center text-xs text-muted-foreground/70 mt-4">
-            Proudly South African 🇿🇦 · Prices in ZAR
+            Serving researchers in Germany 🇩🇪 &amp; South Africa 🇿🇦
           </p>
         </div>
       </div>

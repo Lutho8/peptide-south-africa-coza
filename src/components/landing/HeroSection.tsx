@@ -79,24 +79,24 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
                 </span>
-                Built for South African peptide users
+                Built for researchers in Germany &amp; South Africa
               </div>
 
               <h1 className="mt-5 text-balance text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Are You Still{' '}
+                The Smartest Way to{' '}
                 <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
-                  Guessing
+                  Track
                 </span>{' '}
-                Your Peptide Doses?
+                Your Peptide Research
               </h1>
             </div>
 
             <p
               className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg lg:mx-0"
             >
-              Most South Africans using peptides track their protocols in a notes app, spreadsheet,
-              or worse — their memory. The result? Inconsistent cycles, missed doses, and zero
-              insight into what's actually working.
+              Most researchers track their protocols in notes apps, spreadsheets, or memory.
+              The result? Inconsistent cycles, missed doses, and zero insight into what's
+              actually working.
             </p>
 
             {/* Positioning card */}
@@ -106,12 +106,16 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="mx-auto mt-6 max-w-xl rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur lg:mx-0"
             >
-              <p className="text-sm font-semibold text-foreground sm:text-base">
-                RideTheTide is the first protocol tracker built for the South African peptide user.
+              <h2 className="text-sm font-semibold text-foreground sm:text-base">
+                Are You Still Guessing Your Peptide Doses?
+              </h2>
+              <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
+                RideTheTide is the first protocol tracker built for the peptide research
+                community in Germany and South Africa.
               </p>
               <ul className="mt-3 space-y-2">
                 {[
-                  'Log every dose with proper unit conversions (mcg, mg, IU)',
+                  'Log every dose with proper unit conversions (mg, IU, units)',
                   'Track cycles for BPC-157, TB-500, CJC-1295, Ipamorelin, and 20+ peptides',
                   'Set protocol reminders so you never miss a dose',
                   'Monitor progress markers (recovery, sleep, energy, body comp)',
