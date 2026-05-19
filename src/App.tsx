@@ -24,6 +24,8 @@ const GuidePage = lazy(() => import("./pages/GuidePage"));
 const BloodworkPage = lazy(() => import("./pages/BloodworkPage"));
 const TodayRemindersScreen = lazy(() => import("./screens/TodayRemindersScreen"));
 const CycleManagementScreen = lazy(() => import("./screens/CycleManagementScreen"));
+const SEODashboard = lazy(() => import("./pages/admin/SEODashboard"));
+const SEOVerifyPage = lazy(() => import("./pages/admin/SEOVerifyPage"));
 
 // Initialize i18n
 import '@/i18n';
@@ -59,6 +61,9 @@ const App = () => {
                 <Route path="/bloodwork" element={<BloodworkPage />} />
                 <Route path="/reminders/today" element={<TodayRemindersScreen />} />
                 <Route path="/cycles" element={<CycleManagementScreen />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="/admin/seo" element={<SEODashboard />} />
+                <Route path="/admin/seo/verify" element={<SEOVerifyPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
