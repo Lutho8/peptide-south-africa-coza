@@ -24,6 +24,8 @@ const GuidePage = lazy(() => import("./pages/GuidePage"));
 const BloodworkPage = lazy(() => import("./pages/BloodworkPage"));
 const TodayRemindersScreen = lazy(() => import("./screens/TodayRemindersScreen"));
 const CycleManagementScreen = lazy(() => import("./screens/CycleManagementScreen"));
+const SEODashboard = lazy(() => import("./pages/admin/SEODashboard"));
+const SEOVerifyPage = lazy(() => import("./pages/admin/SEOVerifyPage"));
 
 // Initialize i18n
 import '@/i18n';
