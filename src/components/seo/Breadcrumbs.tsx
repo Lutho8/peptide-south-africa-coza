@@ -11,7 +11,7 @@ interface BreadcrumbsProps {
   items: BreadcrumbItem[];
 }
 
-const BASE_URL = 'https://peptide-mastery.lovable.app';
+const BASE_URL = 'https://ridethetide.info';
 
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
   const schemaItems = [
