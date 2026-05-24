@@ -29,6 +29,11 @@ const footerLinks = {
     { label: 'Disclaimer', href: '/disclaimer', isRoute: true },
     { label: 'Contact', href: 'mailto:contact@ridethetide.app' },
   ],
+  Network: [
+    { label: 'RTD Research Peptides', href: 'https://ridethetide.site' },
+    { label: 'Cape Town Peptide Club', href: 'https://capetownpeptideclub.co.za' },
+    { label: 'WhatsApp Us', href: 'https://wa.me/[YOUR_NUMBER]' },
+  ],
 };
 
 export function LandingFooter() {
