@@ -1,65 +1,112 @@
-## Plan
+## Scope
 
-### 1. Soften the security linter gate (unblock builds)
+Standalone project (no merge with store). Remove all paywall surfaces, rewire nav, add cross-property links to ridethetide.site / capetownpeptideclub.co.za / WhatsApp, refresh /welcome hero, add two dashboard widgets, and update meta tags to Cape Town. Auth, Capacitor, i18n, Supabase, routes, and tracker features stay untouched.
 
-Confirmed from the workspace screenshot: this plan does not expose Build Secrets, so `SUPABASE_ACCESS_TOKEN` cannot be injected at build time. The current strict-mode behavior in `scripts/security-lint-check.ts` will keep aborting every production build. We'll switch to **soft mode when no signal is available**, while keeping **strict mode when either signal is present** so the gate still has teeth in CI/local with a token.
+One open question before I build — see bottom.
 
-**New resolution behavior:**
-1. `SUPABASE_ACCESS_TOKEN` present → call Management API, enforce strict (fail on offending findings).
-2. Else if Supabase CLI on PATH → run `supabase db lint`, enforce strict.
-3. Else → print a loud yellow WARNING banner explaining the gate is disarmed and **exit 0** so the build proceeds.
-4. Hard-failure escape hatches preserved:
-   - `LOVABLE_SKIP_SECURITY_LINT=1` still bypasses (loud red banner).
-   - New `LOVABLE_SECURITY_LINT_STRICT=1` forces the old behavior (exit 1 when no signal available) — useful in GitHub Actions where we *do* want the gate to break the pipeline if the token is missing.
+---
 
-**Wording of the warn-and-pass banner** (printed in yellow, not red):
-> ⚠ Security linter gate is running in soft mode. No SUPABASE_ACCESS_TOKEN and no Supabase CLI detected — findings cannot be checked this build. Add the token in Workspace Settings → Build Secrets, or run `bun run lint:security` locally with the CLI. Build will proceed.
+## 1. Remove all paywalls
 
-**Docs:** update the README "Security linter gate" section to describe the three modes (strict-token, strict-cli, soft-warn) and the two env-var escape hatches.
+**Delete files**
+- `src/components/PaywallScreen.tsx`
+- `src/components/TeaserMode.tsx`
+- `src/components/paywall/PremiumGate.tsx`
+- `src/components/paywall/PremiumLockOverlay.tsx`
+- `src/components/bloodwork/PremiumGate.tsx`
+- `src/hooks/useTeaserMode.ts`
+- `src/hooks/useSubscription.ts`
+- `src/hooks/useMembership.ts`
+- `src/components/landing/PricingSection.tsx`
+- `src/components/landing/PricingTrustBar.tsx`
+- `src/components/landing/WhyFreeBand.tsx` (paywall-adjacent; will confirm by reading)
+- `src/lib/revenuecat.ts`, `src/lib/billing.ts`, `src/services/playBilling.ts`
+- Memory file `.lovable/memory/features/hard-paywall.md`, `payment-provider-tagadapay.md`, `premium-tier-allowed.md`
 
-**Files touched**
-- `scripts/security-lint-check.ts` — replace the hard-fail branch with a soft-mode warning, gated by `LOVABLE_SECURITY_LINT_STRICT`.
-- `README.md` — short update to the gate docs.
+**Edit callers** — strip `<PremiumGate>`, `<PremiumLockOverlay>`, `useMembership`, `useSubscription`, `useTeaserMode`, `isPremium` checks. Every gated feature renders unconditionally for signed-in users. Replace any inline "Go Premium / Upgrade" CTA copy with a plain text link:
 
-### 2. Phone-number login entry screen (matches reference)
+```
+Shop Protocols → ridethetide.site
+```
 
-Build a new entry screen used as the **first thing unauthenticated users see** before reaching the app, modeled exactly on the reference screenshot:
+Files I expect to touch (confirmed via grep before editing): `LandingPage.tsx`, `BloodworkPage.tsx`, `BloodworkHero.tsx`, `BloodworkWizard.tsx`, `ResearchTools.tsx`, `BlendsAndStacks.tsx`, `StackBuilder.tsx`, `ReconstitutionCalculator.tsx`, `PeptideQuiz.tsx`, `PeptideSearch.tsx`, `FeaturedPeptides.tsx`, `LiveQnA.tsx`, `LiveQnAPopup.tsx`, `App.tsx` (remove paywall route/gate), any screen importing `useMembership`.
 
-- Header card: "Login with phone number" + compliance subtext ("Due to regulatory changes in this industry, we now require an account login to access product information and continue browsing.")
-- Phone field with country-code dropdown (default DE +49; include common EU/US/UK/ZA/AU codes) and a numeric phone input
-- Big primary "Send Code" button (full-width, brand blue `#3B82F6`)
-- Compliance checkbox + long-form research-use-only disclaimer (the exact text from the screenshot, reused as the canonical research disclaimer already present in the project)
-- After "Send Code": switch to a 6-digit OTP input screen with "Resend code" + "Change number" affordances
+## 2. Nav
 
-**Auth wiring (Supabase phone OTP):**
-- Use `supabase.auth.signInWithOtp({ phone })` to send the code, then `supabase.auth.verifyOtp({ phone, token, type: 'sms' })` to verify.
-- Phone provider must be enabled in Lovable Cloud auth settings; this requires a Twilio/MessageBird SMS provider. **Open question below** — we need the user's choice/credentials before sign-in actually works. The UI ships either way; if the provider isn't configured the "Send Code" call will surface a clear "SMS provider not configured" toast.
-- The compliance checkbox must be ticked before "Send Code" is enabled; checkbox state is stored alongside the user on first verify (new `profiles.research_use_acknowledged_at` timestamp via migration).
+In `src/components/landing/LandingHeader.tsx` (and any mobile drawer):
+- Remove **Pricing** link and **Go Premium** button.
+- Final order: Free Course · Bloodwork · Browse · Blends & Stacks · Research · Dashboard · **[Shop Protocols →]**
+- "Shop Protocols" = outlined button, `border-accent text-accent`, opens `https://ridethetide.site` in same tab (no `target="_blank"`).
 
-**Routing & gating:**
-- New route `/welcome` rendering the phone-login screen.
-- `AuthContext` / route guard: if user is unauthenticated and the current path is not in a small public allowlist (`/welcome`, `/disclaimer`, `/privacy`, `/terms`, `/coa/*`), redirect to `/welcome`.
-- Existing Google/Apple OAuth from `AuthModal` is preserved as a secondary "Or continue with" row beneath the phone form (keeps the existing memory'd OAuth flow intact).
-- Admin email (`lutho.kote@relicom.de`) and the trial email continue to work via OAuth — no regression to the hardcoded admin path.
+## 3. Cross-property footer links
 
-**Design:**
-- Reuses the existing brand tokens (`#3B82F6` primary, glass cards, luxury Framer Motion fade/slide), per project memory. No new colors.
-- Mobile-first; 44px touch targets; the form fits inside one viewport on phones without scrolling for the primary action.
+In `src/components/landing/LandingFooter.tsx`, add a new column "Network" with three rows:
 
-**Files touched / created**
-- `src/pages/Welcome.tsx` (new) — phone + OTP screens, country-code dropdown, compliance checkbox.
-- `src/components/auth/PhoneLoginForm.tsx` + `OtpVerifyForm.tsx` (new, split for clarity).
-- `src/contexts/AuthContext.tsx` — add `signInWithPhone`, `verifyPhoneOtp` helpers; expose `researchAcknowledged`.
-- `src/App.tsx` — register `/welcome` and add the unauth redirect guard.
-- `src/components/auth/AuthModal.tsx` — minor: link "Use phone instead" to `/welcome`.
-- Migration: add `research_use_acknowledged_at timestamptz` column to `profiles`; permissive RLS already covers it per project memory.
+```
+RTD Research Peptides → https://ridethetide.site
+Cape Town Peptide Club → https://capetownpeptideclub.co.za
+WhatsApp Us → https://wa.me/[YOUR_NUMBER]
+```
 
-### Technical notes
-- Country list lives in a small `src/data/countryCodes.ts` (ISO code, dial code, flag emoji). Kept short (~25 entries) to stay snappy on mobile.
-- Phone normalization to E.164 happens client-side before the Supabase call (`+<dial><digits>`).
-- OTP input uses the existing `InputOTP` shadcn component; 6 digits, auto-submit on completion.
-- No paywall logic touched — free-access model is preserved.
+External links open same tab per spec. `[YOUR_NUMBER]` stays as a literal placeholder until you give me a real number (see question below).
 
-### Open questions
-1. **SMS provider** — Lovable Cloud's phone auth needs an SMS sender. Do you want to plug in **Twilio** (most common, you'd provide Account SID / Auth Token / Messaging Service SID), or skip SMS and keep the screen as Google/Apple-only for now? I'll ship the UI either way; this only affects whether "Send Code" works on day one.
-2. **Replace or coexist?** Should `/welcome` fully **replace** the current landing page for logged-out users, or sit alongside it (landing remains public, "Sign in" buttons route to `/welcome`)? Reference screenshot implies *replace* — I'll go with replace unless you say otherwise.
+## 4. Floating WhatsApp button
+
+New `src/components/global/WhatsAppFab.tsx`. Mounted once in `src/App.tsx` so it appears on every route.
+
+- Fixed `bottom-4 right-4` (with `env(safe-area-inset-*)` padding for iOS).
+- 56×56 circle, `background: #25D366`, white `MessageCircle` / WhatsApp glyph (SVG, not lucide so it's the real WA glyph).
+- href: `https://wa.me/[YOUR_NUMBER]?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20RTD`
+- `aria-label="Chat on WhatsApp"`, subtle shadow, hover scale.
+
+## 5. /welcome rewrite
+
+Edit `src/pages/Welcome.tsx`. Strip phone-OTP form, plan comparison, anything pricing-related. New hero:
+
+- H1: **"Track Your Protocol. See What's Actually Working."**
+- Sub: "The only free peptide tracker built for South African researchers. Dose logging, bloodwork integration, monthly expert Q&As. No paywalls. Ever."
+- Primary CTA → `/auth` (filled, accent) — "Start Tracking Free"
+- Secondary CTA → `https://ridethetide.site` (outlined) — "Shop Protocols"
+- Keep the existing research-use-only disclaimer and the country-code/OTP form? **See question below.**
+
+## 6. Dashboard "Running Low?" card
+
+New `src/components/home/ReorderWidget.tsx`, rendered at the bottom of `src/screens/HomeScreen.tsx` (the in-app dashboard).
+
+- Dark surface card (`bg-card`), 3px left border `#06b6d4`.
+- Title: "Running Low?" · Body: "Reorder your protocol in one tap."
+- CTA: "Shop Now →" → `https://ridethetide.site/products?utm_source=tracker&utm_medium=dashboard&utm_campaign=reorder`
+
+## 7. Dashboard "Next RTD Workshop" card
+
+New `src/components/home/NextClubEventCard.tsx`, rendered alongside the reorder widget (two-column on ≥md, stacked on mobile).
+
+- Dark surface card, 3px left border `#0ea5e9`.
+- Title: "Next RTD Workshop" · Body: "November 2025 · Cape Town\nMilnerton / Blouberg"
+- CTA: "Reserve Your Seat →" → `https://capetownpeptideclub.co.za?utm_source=tracker&utm_medium=dashboard&utm_campaign=club_event`
+
+## 8. Meta tags
+
+Edit `index.html`, `src/components/seo/SEOHead.tsx`, `src/components/seo/JsonLd.tsx`, `public/sitemap.xml` if relevant:
+
+- Remove all Germany / DE / Johannesburg references.
+- Geo: `geo.region = ZA-WC`, `geo.placename = Cape Town`, `geo.position = -33.9249;18.4241`, `ICBM = -33.9249, 18.4241`.
+- `<meta name="description">` and og/twitter description → "Free peptide protocol tracker for South African researchers. Dose logging, bloodwork integration, monthly Q&As. Built by Ride The Tide, Cape Town."
+- Update LandingFooter tagline "Serving researchers in Germany 🇩🇪 & South Africa 🇿🇦" → "Built in Cape Town 🇿🇦".
+- Update Organization JSON-LD address to Cape Town.
+
+## Out of scope (untouched per instruction)
+
+Capacitor config, i18n setup, Supabase config, route structure, auth system, tracker features.
+
+## Memory updates after build
+
+- Remove/supersede `hard-paywall`, `payment-provider-tagadapay`, `premium-tier-allowed`, `access-model` memories.
+- Reinstate Core rule: "Free-access model; no paywalls, no premium tiers."
+- Add memory: "Cross-property: ridethetide.site (store), capetownpeptideclub.co.za (events). Floating WhatsApp FAB sitewide."
+
+---
+
+## One question before I build
+
+**WhatsApp number** — you wrote `[YOUR_NUMBER]` literally. Should I (a) bake in a real number you give me now, or (b) ship the literal `[YOUR_NUMBER]` placeholder everywhere so you can find-and-replace later? If (a), please paste the number in international format without `+` (e.g. `27821234567`).
