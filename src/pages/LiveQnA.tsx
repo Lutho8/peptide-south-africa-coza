@@ -352,7 +352,7 @@ export default function LiveQnA() {
                     <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                       <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       <p className="text-xs text-muted-foreground">
-                        We'll also send Premium membership details separately so you can decide before the session.
+                        We'll also send research peptide updates from ridethetide.site separately.
                       </p>
                     </div>
                   )}
