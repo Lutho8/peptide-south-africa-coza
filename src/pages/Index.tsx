@@ -10,7 +10,7 @@ import { useAccessControl } from '@/hooks/useAccessControl';
 import { useProfileSync } from '@/hooks/useProfileSync';
 import { useCloudSync } from '@/hooks/useCloudSync';
 import { useScreenTransition } from '@/hooks/useScreenTransition';
-import { WhatsAppFab } from '@/components/global/WhatsAppFab';
+
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -312,8 +312,6 @@ const Index = () => {
           />
         )}
       </Suspense>
-
-      <WhatsAppFab />
     </div>
   );
 };
