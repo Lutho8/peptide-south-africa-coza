@@ -35,7 +35,7 @@ export function ScanError({ message, onRetry, onReset }: Props) {
           <FileUp size={12} /> Upload different file
         </button>
         <a
-          href="https://wa.me/?text=I%20need%20help%20with%20my%20bloodwork%20scan"
+          href="https://wa.me/491624747159?text=I%20need%20help%20with%20my%20bloodwork%20scan"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/40 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-primary hover:border-primary/60 transition-colors"

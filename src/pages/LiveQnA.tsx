@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Video, Calendar, Users, Clock, CheckCircle2, ArrowLeft, Shield, Zap, BookOpen, Lock, Sparkles, Mail, Bell, CalendarPlus } from 'lucide-react';
+import { Video, Calendar, Users, Clock, CheckCircle2, ArrowLeft, Shield, Zap, BookOpen, Sparkles, Mail, Bell, CalendarPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
@@ -223,15 +223,15 @@ export default function LiveQnA() {
           <div className="text-center max-w-3xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <Badge className="mb-4 bg-accent/20 text-accent border-accent/30 text-sm px-4 py-1">
-                <Lock className="w-4 h-4 mr-2" /> Premium · Monthly Live on Zoom
+                <Sparkles className="w-4 h-4 mr-2" /> Free · Monthly Live on Zoom
               </Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
                 <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
-                  Premium Peptide Q&A
+                  Monthly Peptide Q&A
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto">
-                Exclusive monthly group consultation for Premium members. Ask anything about peptides — from beginner basics to advanced stacking protocols.
+                Free monthly group consultation for registered researchers. Ask anything about peptides — from beginner basics to advanced stacking protocols.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground mb-8">
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4 text-accent" /> {sessionDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
@@ -287,27 +287,7 @@ export default function LiveQnA() {
 
           {/* Registration Form */}
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-            {!membershipLoading && !hasPremium ? (
-              <Card className="border-primary/40 shadow-lg overflow-hidden">
-                <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
-                <CardContent className="p-8 text-center space-y-5">
-                  <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                    <Lock className="w-7 h-7 text-accent" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-foreground">Premium members only</h3>
-                  <p className="text-muted-foreground">
-                    The monthly Live Q&A is exclusive to Premium members. Upgrade for just <strong className="text-foreground">R4.99/month</strong> (or R49/year) to reserve your seat and unlock 1:1 calls, AI bloodwork insights, and more.
-                  </p>
-                  <Link to="/#pricing" onClick={handleUpgradeClick} className="block">
-                    <Button size="lg" className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 shadow-lg shadow-primary/25">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Unlock with Premium
-                    </Button>
-                  </Link>
-                  <p className="text-xs text-muted-foreground">Cancel anytime · Prices in ZAR · 🇿🇦 Built in South Africa</p>
-                </CardContent>
-              </Card>
-            ) : registered ? (
+            {registered ? (
               <Card className="border-accent/50 bg-accent/5 overflow-hidden">
                 <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
                 <CardContent className="p-7 space-y-6">
@@ -372,7 +352,7 @@ export default function LiveQnA() {
                     <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                       <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       <p className="text-xs text-muted-foreground">
-                        We'll also send Premium membership details separately so you can decide before the session.
+                        We'll also send research peptide updates from ridethetide.site separately.
                       </p>
                     </div>
                   )}
@@ -427,8 +407,8 @@ export default function LiveQnA() {
               <Card className="border-primary/30 shadow-lg">
                 <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary rounded-t-lg" />
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-foreground mb-1">Reserve Your Premium Spot</h3>
-                  <p className="text-sm text-muted-foreground mb-6">Premium members only · {sessionMonth} Session · Via Zoom</p>
+                  <h3 className="text-xl font-bold text-foreground mb-1">Reserve Your Free Spot</h3>
+                  <p className="text-sm text-muted-foreground mb-6">Free for registered researchers · {sessionMonth} Session · Via Zoom</p>
 
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Email */}
@@ -505,7 +485,7 @@ export default function LiveQnA() {
                         />
                         <span className="text-sm text-foreground leading-relaxed flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-accent shrink-0" />
-                          I'm also interested in Premium membership — send me details.
+                          I'd like updates on research peptides from ridethetide.site.
                         </span>
                       </label>
                     </div>

@@ -10,16 +10,11 @@ const benefits = [
   '98+ Peptide Profiles',
   'Smart Calculators',
   'Protocol Tracking',
-  'Premium Monthly Q&A',
+  'Monthly Group Q&A',
   'COA Verification',
 ];
 
 export function CTASection({ onSignInClick }: CTASectionProps) {
-  const scrollToPricing = () => {
-    const el = document.getElementById('pricing');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   return (
     <section className="py-16 lg:py-24 relative overflow-hidden">
       {/* Background Effects */}
@@ -38,7 +33,7 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
             Ready to Optimize Your Peptide Journey?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Start free with research-grade data, dose calculators, and protocol tracking. Upgrade to Premium for 1:1 expert calls and AI-powered bloodwork insights.
+            Every feature is free for registered researchers — dose logging, bloodwork integration, calculators, and the monthly Q&A. No paywalls. Ever.
           </p>
 
           {/* Benefits List */}
@@ -70,19 +65,21 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button
-              onClick={scrollToPricing}
+              asChild
               size="lg"
               className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 shadow-lg shadow-primary/25 group w-full sm:w-auto"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Unlock Premium
+              <a href="https://ridethetide.site" target="_blank" rel="noopener noreferrer">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Shop Protocols →
+              </a>
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-4">
-            Free forever tier · Premium from R4.99/month · Cancel anytime
+            Free forever · No credit card · No paywalls
           </p>
           <p className="text-xs text-muted-foreground/70 mt-2">
-            🇿🇦 Built in South Africa
+            🇿🇦 Built in Cape Town
           </p>
         </motion.div>
       </div>

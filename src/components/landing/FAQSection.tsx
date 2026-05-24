@@ -149,11 +149,11 @@ export const faqCategories = [
     faqs: [
       {
         q: 'What does it cost to use Ride The Tide?',
-        a: 'Ride The Tide is free to start. The free tier gives you full access to the peptide research database, dose and reconstitution calculators, blends and stacks tools, COA verification, and protocol tracking. The monthly group Q&A on Zoom and 1:1 expert calls are exclusive to Premium members (R4.99/month or R49/year, ZAR).',
+        a: 'Nothing. Ride The Tide is 100% free for registered researchers. You get full access to the peptide database, dose and reconstitution calculators, blends and stacks tools, COA verification, protocol tracking, bloodwork integration, and the monthly group Q&A. No paywalls, no premium tier, no credit card required.',
       },
       {
         q: 'How do I join the monthly Live Q&A?',
-        a: 'The monthly Q&A is exclusive to Premium members. Upgrade from the Pricing section, then reserve your seat from the home page or the "Live Q&A" link in the footer. Sessions run on Zoom on the first Saturday of each month and cover dosage, stacking, cycles, and protocol questions.',
+        a: 'The monthly Q&A is free for all registered researchers. Reserve your seat from the home page or the "Live Q&A" link in the footer. Sessions run on Zoom on the first Saturday of each month and cover dosage, stacking, cycles, and protocol questions.',
       },
       {
         q: 'Can I book a 1-on-1 consultation?',
@@ -171,28 +171,24 @@ export const faqCategories = [
   },
   {
     id: 'pricing',
-    title: 'Pricing & Membership',
+    title: 'Access & Membership',
     icon: CreditCard,
     faqs: [
       {
-        q: "What's included in the free tier?",
-        a: 'The free tier gives you full access to the peptide research database (98+ profiles), reconstitution and dose calculators, the stack and blend builder, COA verification, and protocol tracking. No credit card required, free forever. The monthly group Q&A and 1:1 calls are Premium-only.',
+        q: "What's included for free?",
+        a: 'Everything. All 98+ peptide profiles, reconstitution and dose calculators, the stack and blend builder, COA verification, protocol tracking, dose logging, bloodwork integration, AI insights, advanced cycle planning, the monthly group Q&A, and 1:1 expert calls. No credit card required, free forever.',
       },
       {
-        q: 'What does Premium add?',
-        a: 'Premium (R4.99/month or R49/year) unlocks the exclusive monthly group Q&A on Zoom, 1:1 expert consultation calls, AI-powered bloodwork insights, advanced cycle planning with safety alerts, priority WhatsApp and email support, and early access to new tools as they launch.',
+        q: 'Is there a paid tier I am missing?',
+        a: 'No. We removed all paywalls. Every feature in the app is free for registered researchers. If you want to support the project, the best way is to shop research peptides at ridethetide.site — that is what funds the tracker.',
       },
       {
-        q: 'How do I cancel my Premium subscription?',
-        a: 'You can cancel anytime from your account settings — no questions asked, no retention calls. Your Premium access remains active until the end of your current billing period, then you automatically revert to the free tier with all your data intact.',
-      },
-      {
-        q: "What's your refund policy?",
-        a: "If something is genuinely wrong with the service in your first 14 days, email us at contact@ridethetide.app and we'll make it right. Because Premium is priced at R4.99/month, the easiest path is usually to simply cancel — you won't be billed again.",
+        q: 'Where do I buy research peptides?',
+        a: 'Our sister site Ride The Tide Research Peptides at ridethetide.site stocks COA-verified peptides and ships from South Africa. The tracker and the shop are separate properties but built by the same team.',
       },
       {
         q: 'Is Ride The Tide South African?',
-        a: "Yes 🇿🇦 — Ride The Tide is built and operated from South Africa, with prices in ZAR (South African Rand) and local WhatsApp + email support. We serve a global research community but we're proudly local.",
+        a: "Yes 🇿🇦 — Ride The Tide is built and operated from Cape Town, with local WhatsApp + email support. We serve a global research community but we're proudly local.",
       },
     ],
   },

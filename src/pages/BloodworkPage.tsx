@@ -229,7 +229,7 @@ export default function BloodworkPage() {
               <FlaskConical size={18} className="text-primary" />
               Bloodwork → Protocol
             </h1>
-            <p className="text-[11px] text-muted-foreground">Premium · AI biomarker decoding · personalised stack</p>
+            <p className="text-[11px] text-muted-foreground">Free · AI biomarker decoding · personalised stack</p>
           </div>
         </div>
       </header>
