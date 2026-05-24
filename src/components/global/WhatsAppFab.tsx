@@ -1,7 +1,6 @@
 // Floating WhatsApp call-to-action.
 // Pinned bottom-right on every route, opens WhatsApp chat.
-// NOTE: replace [YOUR_NUMBER] with your real WhatsApp number in international format.
-const WA_NUMBER = '[YOUR_NUMBER]';
+const WA_NUMBER = '491624747159';
 const WA_HREF = `https://wa.me/${WA_NUMBER}?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20RTD`;
 
 export function WhatsAppFab() {
