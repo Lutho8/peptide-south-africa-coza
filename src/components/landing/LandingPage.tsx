@@ -38,7 +38,6 @@ const SectionPlaceholder = ({ minH = 400 }: { minH?: number }) => (
 
 export function LandingPage() {
   const { user } = useAuth();
-  const teaser = false;
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [blendsStacksOpen, setBlendsStacksOpen] = useState(false);
@@ -111,7 +110,7 @@ export function LandingPage() {
         </div>
         <div id="featured-peptides" className="relative">
           <Suspense fallback={<SectionPlaceholder minH={600} />}>
-            <FeaturedPeptides limit={teaser ? 3 : undefined} />
+            <FeaturedPeptides />
           </Suspense>
         </div>
         <Suspense fallback={<SectionPlaceholder minH={400} />}>
