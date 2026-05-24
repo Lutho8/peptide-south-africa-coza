@@ -113,13 +113,6 @@ export function LandingPage() {
           <Suspense fallback={<SectionPlaceholder minH={600} />}>
             <FeaturedPeptides limit={teaser ? 3 : undefined} />
           </Suspense>
-          {teaser && (
-            <div className="container mx-auto px-4 -mt-4 pb-10 text-center">
-              <p className="text-sm text-muted-foreground">
-                Showing 3 of {`50+`} peptides — unlock Premium to view all.
-              </p>
-            </div>
-          )}
         </div>
         <Suspense fallback={<SectionPlaceholder minH={400} />}>
           <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
