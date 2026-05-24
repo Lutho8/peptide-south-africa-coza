@@ -407,8 +407,8 @@ export default function LiveQnA() {
               <Card className="border-primary/30 shadow-lg">
                 <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary rounded-t-lg" />
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-foreground mb-1">Reserve Your Premium Spot</h3>
-                  <p className="text-sm text-muted-foreground mb-6">Premium members only · {sessionMonth} Session · Via Zoom</p>
+                  <h3 className="text-xl font-bold text-foreground mb-1">Reserve Your Free Spot</h3>
+                  <p className="text-sm text-muted-foreground mb-6">Free for registered researchers · {sessionMonth} Session · Via Zoom</p>
 
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Email */}
