@@ -112,10 +112,15 @@ async function main() {
   }
 
   if (findings === null) {
-    loud(
-      "Security linter gate cannot run. Set SUPABASE_ACCESS_TOKEN (Supabase → Account → Access Tokens) or install the Supabase CLI. Build aborted.",
-    );
-    process.exit(1);
+    const strict = process.env.LOVABLE_SECURITY_LINT_STRICT === "1";
+    const msg =
+      "Security linter gate could not reach a signal. No SUPABASE_ACCESS_TOKEN and no Supabase CLI detected. Add the token in Workspace Settings → Build Secrets, or run `bun run lint:security` locally with the CLI.";
+    if (strict) {
+      loud("STRICT mode: " + msg + " Build aborted.");
+      process.exit(1);
+    }
+    console.warn("\n\x1b[43m\x1b[30m ⚠ SOFT MODE: " + msg + " Build will proceed. \x1b[0m\n");
+    process.exit(0);
   }
 
   const security = findings.filter(

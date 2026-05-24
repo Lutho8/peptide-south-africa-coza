@@ -26,6 +26,7 @@ const TodayRemindersScreen = lazy(() => import("./screens/TodayRemindersScreen")
 const CycleManagementScreen = lazy(() => import("./screens/CycleManagementScreen"));
 const SEODashboard = lazy(() => import("./pages/admin/SEODashboard"));
 const SEOVerifyPage = lazy(() => import("./pages/admin/SEOVerifyPage"));
+const Welcome = lazy(() => import("./pages/Welcome"));
 
 // Initialize i18n
 import '@/i18n';
@@ -47,6 +48,7 @@ const App = () => {
           <BrowserRouter>
             <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
               <Routes>
+                <Route path="/welcome" element={<Welcome />} />
                 <Route path="/" element={<Index />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/disclaimer" element={<Disclaimer />} />
