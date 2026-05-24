@@ -23,7 +23,7 @@ export function ScanTierCards({ ready, running, onRun }: Props) {
         accent="primary"
       />
       <TierCard
-        eyebrow="Premium · single-click upgrade"
+        eyebrow="Free · advanced scan"
         title="Deep Decode"
         icon={Layers}
         description="32 biomarkers across 8 panels. Full health report scored by category, with a personalised optimisation protocol. Includes 4 follow-ups over 12 months."
