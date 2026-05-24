@@ -312,6 +312,8 @@ const Index = () => {
           />
         )}
       </Suspense>
+
+      <WhatsAppFab />
     </div>
   );
 };
