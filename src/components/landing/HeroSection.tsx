@@ -79,7 +79,7 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
                 </span>
-                Built for researchers in Germany &amp; South Africa
+                Built for researchers in Cape Town &amp; across South Africa
               </div>
 
               <h1 className="mt-5 text-balance text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
@@ -110,8 +110,8 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
                 Are You Still Guessing Your Peptide Doses?
               </h2>
               <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
-                RideTheTide is the first protocol tracker built for the peptide research
-                community in Germany and South Africa.
+                RideTheTide is the first protocol tracker built for the South African peptide
+                research community.
               </p>
               <ul className="mt-3 space-y-2">
                 {[

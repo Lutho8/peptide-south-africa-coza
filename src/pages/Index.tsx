@@ -10,7 +10,7 @@ import { useAccessControl } from '@/hooks/useAccessControl';
 import { useProfileSync } from '@/hooks/useProfileSync';
 import { useCloudSync } from '@/hooks/useCloudSync';
 import { useScreenTransition } from '@/hooks/useScreenTransition';
-import { useTeaserMode } from '@/hooks/useTeaserMode';
+
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -33,7 +33,7 @@ const ResearchLibraryScreen = lazy(() => import('@/screens/ResearchLibraryScreen
 const TransformationScreen = lazy(() => import('@/screens/TransformationScreen').then(m => ({ default: m.TransformationScreen })));
 const SettingsScreen = lazy(() => import('@/screens/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m => ({ default: m.LandingPage })));
-const PaywallScreen = lazy(() => import('@/components/PaywallScreen').then(m => ({ default: m.PaywallScreen })));
+
 
 // Lazy load modals
 const BodyCompositionModal = lazy(() => import('@/components/modals/BodyCompositionModal').then(m => ({ default: m.BodyCompositionModal })));
@@ -63,7 +63,6 @@ const Index = () => {
   // opened the My Stack screen, causing the home preview to look empty.
   useCloudSync();
   const { getDirection, getTransitionVariants } = useScreenTransition();
-  const { teaser } = useTeaserMode();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [showSettings, setShowSettings] = useState(false);

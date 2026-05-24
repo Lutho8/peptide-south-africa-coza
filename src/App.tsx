@@ -28,6 +28,8 @@ const SEODashboard = lazy(() => import("./pages/admin/SEODashboard"));
 const SEOVerifyPage = lazy(() => import("./pages/admin/SEOVerifyPage"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 
+import { WhatsAppFab } from "@/components/global/WhatsAppFab";
+
 // Initialize i18n
 import '@/i18n';
 
@@ -71,6 +73,7 @@ const App = () => {
               </Routes>
             </Suspense>
           </BrowserRouter>
+          <WhatsAppFab />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

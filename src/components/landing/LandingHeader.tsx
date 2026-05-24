@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Menu, X, Sparkles } from 'lucide-react';
+import { Search, Menu, X, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { useAuth } from '@/contexts/AuthContext';
-import { captureLead } from '@/lib/crm';
 
 interface LandingHeaderProps {
   onSignInClick: () => void;
   onSearch?: (query: string) => void;
 }
+
+const SHOP_URL = 'https://ridethetide.site';
 
 export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -18,7 +19,6 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
   const { user } = useAuth();
 
   const navLinks = [
-    { label: 'Pricing', href: '#pricing' },
     { label: 'Free Course', href: '/free-course' },
     { label: 'Bloodwork', href: '/bloodwork' },
     { label: 'Browse', href: '#browse' },
@@ -31,55 +31,35 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
     onSearch?.(searchQuery);
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const scrollToPricing = () => {
-    setMobileMenuOpen(false);
-    captureLead({
-      email: user?.email ?? null,
-      source: 'header_go_premium',
-      planInterest: 'premium',
-      activityType: 'premium_click',
-    });
-    const el = document.getElementById('pricing');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-card/95 backdrop-blur-xl shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo - Clickable to go home */}
           <AnimatedLogo size="md" showText={true} onClick={scrollToTop} />
 
-          {/* Desktop Navigation */}
+          {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-6">
             {navLinks.map((link) =>
               link.href.startsWith('/') ? (
-                <Link
-                  key={link.label}
-                  to={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                >
+                <Link key={link.label} to={link.href} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                   {link.label}
                 </Link>
               ) : (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                >
+                <a key={link.label} href={link.href} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                   {link.label}
                 </a>
               )
             )}
+            {user && (
+              <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                Dashboard
+              </Link>
+            )}
           </nav>
 
-          {/* Search Bar */}
+          {/* Search */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -93,48 +73,29 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
             </div>
           </form>
 
-          {/* CTA Buttons */}
+          {/* CTAs */}
           <div className="flex items-center gap-2">
-            {user ? (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hidden sm:inline-flex border-border hover:border-primary hover:text-primary"
-                >
-                  Dashboard
-                </Button>
-                <Button
-                  onClick={scrollToPricing}
-                  size="sm"
-                  className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:opacity-95"
-                >
-                  <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                  Go Premium
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  onClick={onSignInClick}
-                  variant="outline"
-                  size="sm"
-                  className="hidden sm:inline-flex border-border hover:border-primary hover:text-primary"
-                >
-                  Start Free
-                </Button>
-                <Button
-                  onClick={scrollToPricing}
-                  size="sm"
-                  className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:opacity-95"
-                >
-                  <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                  Go Premium
-                </Button>
-              </>
+            {!user && (
+              <Button
+                onClick={onSignInClick}
+                variant="ghost"
+                size="sm"
+                className="hidden sm:inline-flex text-muted-foreground hover:text-primary"
+              >
+                Sign in
+              </Button>
             )}
+            <a href={SHOP_URL}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+              >
+                <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
+                Shop Protocols →
+              </Button>
+            </a>
 
-            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 text-muted-foreground hover:text-foreground"
@@ -145,7 +106,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-border/50">
             <form onSubmit={handleSearch} className="mb-4">
@@ -182,6 +143,23 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
                   </a>
                 )
               )}
+              {user && (
+                <Link
+                  to="/"
+                  className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
+              <a
+                href={SHOP_URL}
+                className="mt-2 px-3 py-2 text-sm font-semibold text-accent border border-accent rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Shop Protocols →
+              </a>
               {!user && (
                 <button
                   onClick={() => {
@@ -190,7 +168,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
                   }}
                   className="mt-2 px-3 py-2 text-sm font-medium text-left text-foreground border border-border rounded-lg hover:border-primary hover:text-primary transition-colors"
                 >
-                  Start Free
+                  Sign in
                 </button>
               )}
             </nav>

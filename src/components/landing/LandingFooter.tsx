@@ -29,6 +29,11 @@ const footerLinks = {
     { label: 'Disclaimer', href: '/disclaimer', isRoute: true },
     { label: 'Contact', href: 'mailto:contact@ridethetide.app' },
   ],
+  Network: [
+    { label: 'RTD Research Peptides', href: 'https://ridethetide.site' },
+    { label: 'Cape Town Peptide Club', href: 'https://capetownpeptideclub.co.za' },
+    { label: 'WhatsApp Us', href: 'https://wa.me/[YOUR_NUMBER]' },
+  ],
 };
 
 export function LandingFooter() {
@@ -39,7 +44,7 @@ export function LandingFooter() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             <button
@@ -113,7 +118,7 @@ export function LandingFooter() {
             </div>
           </div>
           <p className="text-center text-xs text-muted-foreground/70 mt-4">
-            Serving researchers in Germany 🇩🇪 &amp; South Africa 🇿🇦
+            Built in Cape Town 🇿🇦
           </p>
         </div>
       </div>

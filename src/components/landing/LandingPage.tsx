@@ -2,10 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
 import { HowItWorks } from './HowItWorks';
-import { PricingSection } from './PricingSection';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTeaserMode } from '@/hooks/useTeaserMode';
-import { PremiumLockOverlay } from '@/components/paywall/PremiumLockOverlay';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd, buildOrganizationSchema, buildWebSiteSchema, buildFAQSchema } from '@/components/seo/JsonLd';
 import { faqCategories } from './FAQSection';
@@ -41,7 +38,6 @@ const SectionPlaceholder = ({ minH = 400 }: { minH?: number }) => (
 
 export function LandingPage() {
   const { user } = useAuth();
-  const { teaser } = useTeaserMode();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [blendsStacksOpen, setBlendsStacksOpen] = useState(false);
@@ -92,7 +88,6 @@ export function LandingPage() {
       <main>
         <HeroSection onCategoryClick={handleCategoryClick} />
         <HowItWorks />
-        <PricingSection />
         <Suspense fallback={<SectionPlaceholder minH={600} />}>
           <BentoFeatures />
         </Suspense>
@@ -105,31 +100,18 @@ export function LandingPage() {
         <div className="relative">
           <Suspense fallback={<SectionPlaceholder minH={500} />}>
             <ResearchTools
-              onBlendsClick={() => teaser ? null : setBlendsStacksOpen(true)}
-              onQuizClick={() => teaser ? null : setQuizOpen(true)}
-              onSearchClick={() => teaser ? null : setSearchOpen(true)}
-              onStackClick={() => teaser ? null : setBlendsStacksOpen(true)}
-              onCalculatorClick={() => teaser ? null : setCalculatorOpen(true)}
+              onBlendsClick={() => setBlendsStacksOpen(true)}
+              onQuizClick={() => setQuizOpen(true)}
+              onSearchClick={() => setSearchOpen(true)}
+              onStackClick={() => setBlendsStacksOpen(true)}
+              onCalculatorClick={() => setCalculatorOpen(true)}
             />
           </Suspense>
-          {teaser && (
-            <PremiumLockOverlay
-              title="Research tools are Premium"
-              description="Unlock the stack builder, reconstitution calculator, blends, quiz, and search."
-            />
-          )}
         </div>
         <div id="featured-peptides" className="relative">
           <Suspense fallback={<SectionPlaceholder minH={600} />}>
-            <FeaturedPeptides limit={teaser ? 3 : undefined} />
+            <FeaturedPeptides />
           </Suspense>
-          {teaser && (
-            <div className="container mx-auto px-4 -mt-4 pb-10 text-center">
-              <p className="text-sm text-muted-foreground">
-                Showing 3 of {`50+`} peptides — unlock Premium to view all.
-              </p>
-            </div>
-          )}
         </div>
         <Suspense fallback={<SectionPlaceholder minH={400} />}>
           <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />

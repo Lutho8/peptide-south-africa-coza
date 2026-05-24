@@ -14,6 +14,8 @@ import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
 import { BookCallSection } from '@/components/booking/BookCallSection';
 import { WelcomeGuide } from '@/components/home/WelcomeGuide';
+import { ReorderWidget } from '@/components/home/ReorderWidget';
+import { NextClubEventCard } from '@/components/home/NextClubEventCard';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
@@ -194,6 +196,12 @@ export function HomeScreen({
       {/* Book a Call Section */}
       <motion.div variants={itemVariants}>
         <BookCallSection />
+      </motion.div>
+
+      {/* Cross-property widgets */}
+      <motion.div variants={itemVariants} className="grid gap-3 sm:grid-cols-2">
+        <ReorderWidget />
+        <NextClubEventCard />
       </motion.div>
 
       {/* Safety Disclaimer */}
