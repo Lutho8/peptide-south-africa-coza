@@ -69,9 +69,9 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
               size="lg"
               className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 shadow-lg shadow-primary/25 group w-full sm:w-auto"
             >
-              <a href="https://ridethetide.site" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.ridethetide.site" target="_blank" rel="noopener noreferrer">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Shop Protocols →
+                Shop Peptides →
               </a>
             </Button>
           </div>

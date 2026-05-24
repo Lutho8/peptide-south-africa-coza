@@ -11,7 +11,7 @@ interface LandingHeaderProps {
   onSearch?: (query: string) => void;
 }
 
-const SHOP_URL = 'https://ridethetide.site';
+const SHOP_URL = 'https://www.ridethetide.site';
 
 export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,7 +92,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
                 className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
               >
                 <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
-                Shop Protocols →
+                Shop Peptides →
               </Button>
             </a>
 
@@ -158,7 +158,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <ShoppingBag className="w-4 h-4" />
-                Shop Protocols →
+                Shop Peptides →
               </a>
               {!user && (
                 <button
