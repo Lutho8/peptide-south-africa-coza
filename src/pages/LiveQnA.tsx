@@ -287,27 +287,7 @@ export default function LiveQnA() {
 
           {/* Registration Form */}
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-            {!membershipLoading && !hasPremium ? (
-              <Card className="border-primary/40 shadow-lg overflow-hidden">
-                <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
-                <CardContent className="p-8 text-center space-y-5">
-                  <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                    <Lock className="w-7 h-7 text-accent" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-foreground">Premium members only</h3>
-                  <p className="text-muted-foreground">
-                    The monthly Live Q&A is exclusive to Premium members. Upgrade for just <strong className="text-foreground">R4.99/month</strong> (or R49/year) to reserve your seat and unlock 1:1 calls, AI bloodwork insights, and more.
-                  </p>
-                  <Link to="/#pricing" onClick={handleUpgradeClick} className="block">
-                    <Button size="lg" className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 shadow-lg shadow-primary/25">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Unlock with Premium
-                    </Button>
-                  </Link>
-                  <p className="text-xs text-muted-foreground">Cancel anytime · Prices in ZAR · 🇿🇦 Built in South Africa</p>
-                </CardContent>
-              </Card>
-            ) : registered ? (
+            {registered ? (
               <Card className="border-accent/50 bg-accent/5 overflow-hidden">
                 <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
                 <CardContent className="p-7 space-y-6">
