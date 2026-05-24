@@ -34,24 +34,15 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
     }
   };
 
-  const scrollToPricing = () => {
-    const el = document.getElementById('pricing');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   const handleQnaCta = () => {
     captureLead({
       email: user?.email ?? null,
       source: 'hero_qa_cta',
-      planInterest: 'premium',
+      planInterest: 'free',
       activityType: 'qa_signup',
       activityData: { hasPremium },
     });
-    if (hasPremium) {
-      navigate('/live-qna');
-    } else {
-      scrollToPricing();
-    }
+    navigate('/live-qna');
   };
 
   return (
