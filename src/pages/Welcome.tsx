@@ -63,9 +63,7 @@ export default function Welcome() {
 
   const oauth = async (provider: "google" | "apple") => {
     if (!agreed) return toast.error("Please confirm the research-use acknowledgment first.");
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirectTo: `${window.location.origin}/`,
-    });
+    const { error } = await lovable.auth.signInWithOAuth(provider);
     if (error) toast.error(error.message);
   };
 
