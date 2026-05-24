@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 import { useAuth } from "@/contexts/AuthContext";
 
-const SHOP_URL = "https://ridethetide.site";
+const SHOP_URL = "https://www.ridethetide.site";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ export default function Welcome() {
               className="w-full sm:w-auto h-14 px-8 text-base font-semibold gap-2 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground"
             >
               <ShoppingBag className="w-4 h-4" />
-              Shop Protocols
+              Shop Peptides
             </Button>
           </a>
         </div>
