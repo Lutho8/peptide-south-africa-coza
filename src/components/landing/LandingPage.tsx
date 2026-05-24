@@ -38,7 +38,7 @@ const SectionPlaceholder = ({ minH = 400 }: { minH?: number }) => (
 
 export function LandingPage() {
   const { user } = useAuth();
-  const { teaser } = useTeaserMode();
+  const teaser = false;
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [blendsStacksOpen, setBlendsStacksOpen] = useState(false);
@@ -89,7 +89,6 @@ export function LandingPage() {
       <main>
         <HeroSection onCategoryClick={handleCategoryClick} />
         <HowItWorks />
-        <PricingSection />
         <Suspense fallback={<SectionPlaceholder minH={600} />}>
           <BentoFeatures />
         </Suspense>
@@ -102,19 +101,13 @@ export function LandingPage() {
         <div className="relative">
           <Suspense fallback={<SectionPlaceholder minH={500} />}>
             <ResearchTools
-              onBlendsClick={() => teaser ? null : setBlendsStacksOpen(true)}
-              onQuizClick={() => teaser ? null : setQuizOpen(true)}
-              onSearchClick={() => teaser ? null : setSearchOpen(true)}
-              onStackClick={() => teaser ? null : setBlendsStacksOpen(true)}
-              onCalculatorClick={() => teaser ? null : setCalculatorOpen(true)}
+              onBlendsClick={() => setBlendsStacksOpen(true)}
+              onQuizClick={() => setQuizOpen(true)}
+              onSearchClick={() => setSearchOpen(true)}
+              onStackClick={() => setBlendsStacksOpen(true)}
+              onCalculatorClick={() => setCalculatorOpen(true)}
             />
           </Suspense>
-          {teaser && (
-            <PremiumLockOverlay
-              title="Research tools are Premium"
-              description="Unlock the stack builder, reconstitution calculator, blends, quiz, and search."
-            />
-          )}
         </div>
         <div id="featured-peptides" className="relative">
           <Suspense fallback={<SectionPlaceholder minH={600} />}>
