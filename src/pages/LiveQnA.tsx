@@ -485,7 +485,7 @@ export default function LiveQnA() {
                         />
                         <span className="text-sm text-foreground leading-relaxed flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-accent shrink-0" />
-                          I'm also interested in Premium membership — send me details.
+                          I'd like updates on research peptides from ridethetide.site.
                         </span>
                       </label>
                     </div>
