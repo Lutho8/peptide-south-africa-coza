@@ -11,7 +11,7 @@ export function ScanTierCards({ ready, running, onRun }: Props) {
   return (
     <div className="space-y-4 lg:sticky lg:top-20">
       <TierCard
-        eyebrow="Included with Premium"
+        eyebrow="Free for all researchers"
         title="Baseline Scan"
         icon={Sparkles}
         description="Instant biomarker extraction across all panels, personalised health insights, and a curated peptide stack. Ready in under 60 seconds."
