@@ -1,77 +1,108 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Menu, X, ShoppingBag } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Menu, X, ShoppingBag, Sparkles, FlaskConical, Activity, Search as SearchIcon, LayoutDashboard, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { useAuth } from '@/contexts/AuthContext';
+import { track } from '@/lib/analytics';
 
 interface LandingHeaderProps {
   onSignInClick: () => void;
   onSearch?: (query: string) => void;
+  onBlendsClick?: () => void;
 }
 
 const SHOP_URL = 'https://www.ridethetide.site';
 
-export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+type NavItem = {
+  label: string;
+  icon: typeof Sparkles;
+  href?: string;
+  action?: 'browse' | 'blends' | 'dashboard';
+};
+
+export function LandingHeader({ onSignInClick, onSearch, onBlendsClick }: LandingHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const navLinks = [
-    { label: 'Free Course', href: '/free-course' },
-    { label: 'Bloodwork', href: '/bloodwork' },
-    { label: 'Browse', href: '#browse' },
-    { label: 'Blends & Stacks', href: '#tools' },
-    { label: 'Research', href: '#research' },
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const navItems: NavItem[] = [
+    { label: 'Free Course', icon: GraduationCap, href: '/free-course' },
+    { label: 'Bloodwork', icon: Activity, href: '/bloodwork' },
+    { label: 'Browse Peptides', icon: SearchIcon, action: 'browse' },
+    { label: 'Blends & Stacks', icon: FlaskConical, action: 'blends' },
+    { label: 'Dashboard', icon: LayoutDashboard, action: 'dashboard' },
   ];
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch?.(searchQuery);
+  const handleAction = (item: NavItem) => {
+    track('header_nav_click', { label: item.label });
+    if (item.action === 'browse') return onSearch?.('');
+    if (item.action === 'blends') return onBlendsClick?.();
+    if (item.action === 'dashboard') {
+      if (user) {
+        window.location.assign('/');
+      } else {
+        onSignInClick();
+      }
+    }
   };
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-card/95 backdrop-blur-xl shadow-sm">
+    <header
+      className={`sticky top-0 z-50 w-full border-b transition-all duration-300 backdrop-blur-xl ${
+        scrolled
+          ? 'border-primary/20 bg-background/85 shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.35)]'
+          : 'border-border/40 bg-background/70'
+      }`}
+    >
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           <AnimatedLogo size="md" showText={true} onClick={scrollToTop} />
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-6">
-            {navLinks.map((link) =>
-              link.href.startsWith('/') ? (
-                <Link key={link.label} to={link.href} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                  {link.label}
+          {/* Desktop nav — dark brand pills */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = active === item.label;
+              const content = (
+                <span
+                  className="relative inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold tracking-tight text-foreground/80 hover:text-primary transition-colors"
+                  onMouseEnter={() => setActive(item.label)}
+                  onMouseLeave={() => setActive(null)}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-pill"
+                      className="absolute inset-0 rounded-lg bg-primary/10 ring-1 ring-primary/30 shadow-[0_0_20px_-6px_hsl(var(--primary)/0.6)]"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <Icon className="relative w-3.5 h-3.5" />
+                  <span className="relative">{item.label}</span>
+                </span>
+              );
+              return item.href ? (
+                <Link key={item.label} to={item.href} onClick={() => track('header_nav_click', { label: item.label })}>
+                  {content}
                 </Link>
               ) : (
-                <a key={link.label} href={link.href} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                  {link.label}
-                </a>
-              )
-            )}
-            {user && (
-              <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                Dashboard
-              </Link>
-            )}
+                <button key={item.label} onClick={() => handleAction(item)} className="touch-target">
+                  {content}
+                </button>
+              );
+            })}
           </nav>
-
-          {/* Search */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search peptides..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-muted/50 border-border"
-              />
-            </div>
-          </form>
 
           {/* CTAs */}
           <div className="flex items-center gap-2">
@@ -80,21 +111,25 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
                 onClick={onSignInClick}
                 variant="ghost"
                 size="sm"
-                className="hidden sm:inline-flex text-muted-foreground hover:text-primary"
+                className="hidden sm:inline-flex text-foreground/80 hover:text-primary"
               >
                 Sign in
               </Button>
             )}
-            <a href={SHOP_URL}>
-              <Button size="sm" className="btn-sparkle gap-1.5">
+            <a href={SHOP_URL} onClick={() => track('header_shop_click', {})}>
+              <Button
+                size="sm"
+                className="gap-1.5 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 shadow-[0_6px_20px_-6px_hsl(var(--primary)/0.55)]"
+              >
                 <ShoppingBag className="w-3.5 h-3.5" />
+                <Sparkles className="w-3 h-3 opacity-80" />
                 Buy Peptides →
               </Button>
             </a>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-muted-foreground hover:text-foreground"
+              className="lg:hidden p-2 text-foreground/80 hover:text-primary touch-target"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -104,53 +139,34 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-border/50">
-            <form onSubmit={handleSearch} className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search peptides..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-muted/50"
-                />
-              </div>
-            </form>
-            <nav className="flex flex-col gap-2">
-              {navLinks.map((link) =>
-                link.href.startsWith('/') ? (
+          <div className="lg:hidden py-4 border-t border-primary/15">
+            <nav className="flex flex-col gap-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const className =
+                  'flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-foreground/90 hover:text-primary hover:bg-primary/10 ring-0 hover:ring-1 hover:ring-primary/25 rounded-lg transition-all touch-target';
+                return item.href ? (
                   <Link
-                    key={link.label}
-                    to={link.href}
-                    className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
+                    key={item.label}
+                    to={item.href}
+                    className={className}
+                    onClick={() => { setMobileMenuOpen(false); track('header_nav_click', { label: item.label, mobile: true }); }}
                   >
-                    {link.label}
+                    <Icon className="w-4 h-4" /> {item.label}
                   </Link>
                 ) : (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
+                  <button
+                    key={item.label}
+                    onClick={() => { setMobileMenuOpen(false); handleAction(item); }}
+                    className={`${className} text-left`}
                   >
-                    {link.label}
-                  </a>
-                )
-              )}
-              {user && (
-                <Link
-                  to="/"
-                  className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-              )}
+                    <Icon className="w-4 h-4" /> {item.label}
+                  </button>
+                );
+              })}
               <a
                 href={SHOP_URL}
-                className="mt-2 btn-sparkle px-3 py-2 text-sm rounded-lg flex items-center gap-2 justify-center"
+                className="mt-2 px-3 py-2.5 text-sm rounded-lg flex items-center gap-2 justify-center bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <ShoppingBag className="w-4 h-4" />
@@ -158,11 +174,8 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
               </a>
               {!user && (
                 <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onSignInClick();
-                  }}
-                  className="mt-2 px-3 py-2 text-sm font-medium text-left text-foreground border border-border rounded-lg hover:border-primary hover:text-primary transition-colors"
+                  onClick={() => { setMobileMenuOpen(false); onSignInClick(); }}
+                  className="mt-2 px-3 py-2.5 text-sm font-semibold text-left text-foreground border border-primary/30 rounded-lg hover:bg-primary/10 transition-colors"
                 >
                   Sign in
                 </button>
