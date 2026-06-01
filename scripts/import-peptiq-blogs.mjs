@@ -31,23 +31,26 @@ for (const slug of slugs) {
   const end = endRel < 0 ? Math.min(html.length, idx + 4000) : endRel + 4;
   const block = html.slice(start, end);
 
+  const decode = (s) => s
+    .replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ').trim();
+
   // Title from <img alt="...">
   const altMatch = block.match(/<img[^>]+alt="([^"]+)"/);
-  const title = altMatch ? altMatch[1].replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim() : slug;
+  const title = altMatch ? decode(altMatch[1]) : slug;
 
   // Image src
   const imgMatch = block.match(/<img[^>]+src="([^"]+)"/);
   let image = imgMatch ? imgMatch[1] : '';
   if (image.startsWith('/_next/image')) {
-    // Decode url param
     try {
       const u = new URL('https://peptiq.io' + image);
       const real = u.searchParams.get('url');
       if (real) image = decodeURIComponent(real);
     } catch {}
-  } else if (image.startsWith('/')) {
-    image = 'https://peptiq.io' + image;
   }
+  if (image.startsWith('/')) image = 'https://peptiq.io' + image;
 
   // Find text in the block — strip tags, collapse
   const text = block.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
