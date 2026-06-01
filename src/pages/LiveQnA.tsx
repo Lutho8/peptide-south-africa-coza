@@ -403,7 +403,7 @@ export default function LiveQnA() {
                       rel="noopener noreferrer"
                       className="flex-1"
                     >
-                      <Button className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-primary text-white font-semibold shadow-md shadow-orange-500/30 hover:opacity-95">
+                      <Button className="btn-sparkle w-full">
                         Buy Peptides
                       </Button>
                     </a>

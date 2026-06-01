@@ -1,17 +1,18 @@
 import { motion } from 'framer-motion';
-import { Lock, ArrowRight, FlaskConical, Award, BookOpen, Check } from 'lucide-react';
+import { Rocket, ArrowRight, FlaskConical, Award, BookOpen, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SparkleButton } from '@/components/ui/SparkleButton';
 import { useNavigate } from 'react-router-dom';
 import { PhoneMockup } from './PhoneMockup';
 import { FloatingStatCards } from './FloatingStatCards';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
-import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureLead } from '@/lib/crm';
 
 interface HeroSectionProps {
   onCategoryClick?: (category: PeptideCategory) => void;
+  onSignInClick?: () => void;
 }
 
 const socialProof = [
@@ -20,10 +21,9 @@ const socialProof = [
   { icon: BookOpen, label: '22+ scientific citations' },
 ];
 
-export function HeroSection({ onCategoryClick }: HeroSectionProps) {
+export function HeroSection({ onCategoryClick, onSignInClick }: HeroSectionProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasPremium } = useMembership();
 
   const scrollToPeptides = () => {
     const el = document.getElementById('featured-peptides');
@@ -34,15 +34,22 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
     }
   };
 
-  const handleQnaCta = () => {
+  const handleStartTracking = () => {
     captureLead({
       email: user?.email ?? null,
-      source: 'hero_qa_cta',
+      source: 'hero_signup_cta',
       planInterest: 'free',
-      activityType: 'qa_signup',
-      activityData: { hasPremium },
+      activityType: 'course_start',
+      activityData: { surface: 'hero' },
     });
-    navigate('/live-qna');
+    if (user) {
+      // Already signed in → go to dashboard and (re)trigger the tour
+      try { localStorage.removeItem('rtd-dashboard-tour-done'); } catch {}
+      navigate('/');
+    } else {
+      // Open auth modal in signup mode
+      onSignInClick?.();
+    }
   };
 
   return (
@@ -128,17 +135,13 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
             >
               <Button
                 size="lg"
-                onClick={handleQnaCta}
+                onClick={handleStartTracking}
                 className="h-12 gap-2 bg-gradient-to-r from-primary to-accent px-6 text-primary-foreground shadow-lg hover:opacity-90"
               >
-                <Lock className="h-4 w-4" />
-                Start Tracking Free
+                <Rocket className="h-4 w-4" />
+                {user ? 'Go to Dashboard' : 'Create Free Account'}
               </Button>
-              <Button
-                asChild
-                size="lg"
-                className="h-12 gap-2 px-6 font-semibold text-white shadow-xl shadow-orange-500/30 bg-gradient-to-r from-orange-500 via-pink-500 to-primary hover:opacity-95 hover:scale-[1.02] transition-all"
-              >
+              <SparkleButton asChild size="lg" className="h-12 gap-2 px-6">
                 <a
                   href="https://www.ridethetide.site?utm_source=tracker&utm_medium=hero&utm_campaign=buy_peptides"
                   target="_blank"
@@ -147,8 +150,18 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
                   Buy Peptides
                   <ArrowRight className="h-4 w-4" />
                 </a>
-              </Button>
+              </SparkleButton>
             </motion.div>
+
+            {/* Secondary: Q&A link (small, no longer the primary) */}
+            <div className="mt-3 text-center lg:text-left">
+              <button
+                onClick={() => navigate('/live-qna')}
+                className="text-xs text-muted-foreground hover:text-primary underline-offset-2 hover:underline transition-colors"
+              >
+                Or join our free monthly live Q&amp;A →
+              </button>
+            </div>
 
             {/* Social proof pills */}
             <motion.div

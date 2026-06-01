@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rocket, X, ArrowRight, Syringe, BarChart3, Calendar, BookOpen } from 'lucide-react';
+import { Rocket, X, ArrowRight, Syringe, BarChart3, Calendar, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { resetDashboardTour } from '@/components/onboarding/DashboardTour';
 
 interface WelcomeGuideProps {
   onDoseTracker: () => void;
@@ -86,6 +87,18 @@ export function WelcomeGuide({ onDoseTracker, onBodyStats, onCycles, onResearch 
             <p className="text-xs text-muted-foreground mb-3">
               New here? Get started in 4 easy steps:
             </p>
+
+            <Button
+              size="sm"
+              onClick={() => {
+                resetDashboardTour();
+                window.dispatchEvent(new CustomEvent('rtd-start-tour'));
+              }}
+              className="btn-sparkle w-full mb-3 gap-1.5"
+            >
+              <Sparkles size={14} />
+              Take the 60-second guided tour
+            </Button>
 
             <div className="grid grid-cols-2 gap-2">
               {steps.map((step, i) => (

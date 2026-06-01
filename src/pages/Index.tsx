@@ -247,7 +247,7 @@ const Index = () => {
       <AppHeader onLogoClick={handleLogoClick} />
 
       {/* User Auth Button */}
-      <div className="fixed top-4 right-16 z-50">
+      <div className="fixed top-4 right-16 z-50" data-tour="profile-avatar">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" className="rounded-full bg-card border-border touch-target">

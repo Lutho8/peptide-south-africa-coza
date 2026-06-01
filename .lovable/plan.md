@@ -1,66 +1,61 @@
-# Plan: Rename CTAs + Improve Peptide Search
 
-## 1. Rename CTAs ("Shop Peptides" / "Explore Peptides" → "Buy Peptides")
+## 1. "Buy Peptides" CTA — solid sparkle treatment
 
-Replace every user-facing instance of:
-- "Shop Peptides" → **"Buy Peptides"**
-- "Explore Peptides" → **"Buy Peptides"**
+Replace the current gradient (`from-orange-500 via-pink-500 to-primary`) with a **solid bold orange** (`bg-orange-500`, `hover:bg-orange-600`) and add a continuous sparkle effect to catch the eye.
 
-Files to update:
-- `src/components/landing/HeroSection.tsx` (primary hero CTA — both copy + style)
-- `src/components/landing/CTASection.tsx`
-- `src/components/landing/LandingHeader.tsx` (desktop nav + mobile menu)
-- `src/components/landing/LandingFooter.tsx`
-- `src/pages/Welcome.tsx`
-- Any remaining "Explore Peptides" buttons (e.g. in `PeptideCategories.tsx`, `BentoFeatures.tsx`, `FeaturedPeptides.tsx` if present)
+- New shared button class (added to `src/index.css`): `.btn-sparkle` — solid `bg-orange-500`, white text, strong `shadow-orange-500/40`, subtle pulse-glow, and a moving shimmer sweep (`::before` with a translating white gradient, 2.5s infinite).
+- Add two animated `Sparkles` icons (top-right + bottom-left of the button) with staggered `animate-pulse` / rotate via Framer Motion.
+- Apply to every "Buy Peptides" button: `HeroSection.tsx`, `CTASection.tsx`, `LandingHeader.tsx`, `LandingFooter.tsx`, `Welcome.tsx`, `LiveQnA.tsx`.
 
-All links continue pointing to `https://www.ridethetide.site` with existing UTM params.
+## 2. Fix "Start Tracking Free" routing
 
-## 2. Bold CTA color treatment
+Currently `handleQnaCta` in `HeroSection.tsx` (and the matching button in `CTASection.tsx`) routes to `/live-qna`. Change behavior:
 
-The primary "Buy Peptides" buttons currently use the muted primary (#3B82F6). Upgrade the hero + section CTAs to a bold, attention-grabbing treatment:
-- Gradient: `from-orange-500 via-pink-500 to-primary` (warm-to-brand sweep) with white text
-- Stronger shadow + subtle scale-on-hover
-- Keep secondary/nav links as standard outline/ghost (don't over-shout)
+- **Logged out:** open the `AuthModal` in sign-up mode (call `onSignInClick` with a `defaultTab: 'signup'` prop) instead of navigating to Q&A.
+- **Logged in:** navigate to `/` (Dashboard / HomeScreen) and auto-trigger the new onboarding tour.
+- Rename the secondary Q&A entry point to a smaller text link ("Join the monthly Q&A →") so it stays accessible but stops hijacking the primary CTA.
+- Keep `captureLead` analytics, but change `source` to `hero_signup_cta` / `activityType: 'signup_intent'`.
 
-Applied to: hero CTA, CTASection main CTA, footer "Buy Peptides" link, and the standalone "Buy Peptides" button in the landing header.
+Apply to: `HeroSection.tsx`, `CTASection.tsx` (its "Get Started Free" button already calls `onSignInClick` — verify and make consistent).
 
-## 3. Search improvements (`PeptideSearch.tsx` + `PeptidesScreen.tsx`)
+## 3. Pre-signup "Dashboard Preview" section
 
-Current problem: typing "Tesa" doesn't reliably surface **Tesamorelin**, and results feel sparse.
+Add a new landing section `src/components/landing/DashboardPreview.tsx` inserted between `HeroSection` and `BentoFeatures` in `LandingPage.tsx`. Shows a clean annotated screenshot-style mockup of the real Dashboard (Today's Doses, Body Composition, Reminders, Quick Actions) with callout chips ("Log a dose in 2 taps", "See adherence weekly", "Reminders that follow you"). Ends with a single sparkle "Create Free Account" CTA that opens `AuthModal`. Purpose: show the value before the sign-up wall.
 
-Fixes in `src/components/landing/PeptideSearch.tsx`:
-- **Add alias/synonym matching**: build a lookup of common aliases (e.g. `tesa` → Tesamorelin, `bpc` → BPC-157, `tirz` → Tirzepatide, `sema` → Semaglutide, `ghk` → GHK-Cu, `mots` → MOTS-c, `ipa` → Ipamorelin, `cjc` → CJC-1295, `reta` → Retatrutide, `klow` → KLOW blend, etc.)
-- **Broaden scored fields**: also match against `category`, `goalTags`, `aliases` (new), and the first 120 chars of `description` — not just name + mechanism
-- **Lower fuzzy threshold**: current "all chars in order" returns 20; add a typo-tolerant Levenshtein-1 match for short queries (≥3 chars) so "Tesa", "Tesm", "Tezamorelin" all hit Tesamorelin
-- **Prefix boost**: anything whose name OR shortName OR alias starts with the query gets +60 (so "tesa" → Tesamorelin lands at top)
-- **Show more results**: raise cap from 12 → 20 when a query is present
-- **Empty-state suggestions**: when no query, show 6 popular peptides (Tesamorelin, BPC-157, Semaglutide, Retatrutide, GHK-Cu, Ipamorelin) as clickable chips instead of just recents
+## 4. Guided in-app onboarding tour (logged-in)
 
-Fixes in `src/screens/PeptidesScreen.tsx` (the "Browse" tab):
-- Same alias-aware search applied to the in-page search input
-- Match against `shortName`, `name`, `category`, `mechanism`, `benefits`, and aliases
-- Show result count + a "Clear filters" affordance when filters return nothing
+Replace the static `WelcomeGuide` card with an **interactive 5-step spotlight tour** that fires on first dashboard visit after signup.
 
-## 4. Add alias data
+- New file: `src/components/onboarding/DashboardTour.tsx` — lightweight tour using `framer-motion` (no new dependency). Each step renders a dimmed overlay with a cut-out highlight around a target element, a tooltip ("Step X of 5"), and Next/Skip buttons.
+- Target elements via `data-tour="..."` attributes added to existing components:
+  1. `data-tour="welcome-header"` → "This is your Dashboard. Everything lives here."
+  2. `data-tour="todays-doses"` (`TodaysDoses.tsx`) → "Log today's peptide doses with one tap."
+  3. `data-tour="quick-actions"` (`QuickActions.tsx`) → "Jump to Cycles, Bloodwork, Inventory."
+  4. `data-tour="bottom-nav"` (`BottomNav.tsx`) → "Tap **Home** any time to return to your Dashboard."
+  5. `data-tour="profile-avatar"` → "Your profile, settings, and sign-out live here."
+- Trigger: on mount in `HomeScreen.tsx` when `localStorage['rtd-dashboard-tour-done'] !== 'true'` AND user is authenticated. Also expose a "Replay tour" button in `SettingsScreen.tsx` and inside the existing `WelcomeGuide`.
+- Persists completion; "Skip" also marks done.
 
-New file `src/data/peptideAliases.ts` exporting:
-```ts
-export const peptideAliases: Record<string, string[]> = {
-  'tesamorelin': ['tesa', 'tesm', 'egrifta'],
-  'bpc-157': ['bpc', 'bpc157', 'pentadeca'],
-  'semaglutide': ['sema', 'ozempic', 'wegovy'],
-  // ...20+ entries
-};
-```
-Imported by both PeptideSearch and PeptidesScreen.
+## 5. Persistent "Back to Home/Dashboard" affordance
 
-## Out of scope
-- Backend, auth, routes, Capacitor, tracker features
-- DNS/SSL on apex shop domain
-- Memory updates (already current)
+- Ensure `BottomNav.tsx` Home tab is clearly labeled and always visible across screens (verify on modals/sub-routes).
+- Add a top-left "← Dashboard" breadcrumb chip in `AppHeader.tsx` that appears on any route other than `/` and routes back to `/`.
+- Add the same affordance inside full-screen modals (DoseTrackerModal, BloodworkModal, etc.) — a clear "Close → Dashboard" close button label.
+
+## 6. Onboarding polish
+
+- After successful signup in `AuthModal.tsx`, redirect to `/` and set `localStorage['rtd-dashboard-tour-done'] = ''` so the tour fires.
+- Update `WelcomeGuide.tsx` copy to: "New here? Take the 60-second tour →" as the primary action, with the existing 4 quick-start cards as secondary.
 
 ## Technical notes
-- All color treatments use semantic Tailwind tokens; the new gradient uses existing palette stops, no new tokens needed
-- No new dependencies; Levenshtein is ~15 lines inline
-- Search remains fully client-side
+
+- All colors via Tailwind tokens / existing palette — no new HSL variables required (orange-500 is already used).
+- Sparkle shimmer keyframe added to `tailwind.config.ts` (`shimmer-sweep`) and `index.css`.
+- Tour overlay uses `position: fixed` + `getBoundingClientRect()` of `[data-tour]` targets; recalculates on resize and step change.
+- No backend changes. No new dependencies.
+
+## Out of scope
+
+- Backend/auth schema, RLS, edge functions.
+- Capacitor native changes.
+- Memory updates (will follow once approved if needed).

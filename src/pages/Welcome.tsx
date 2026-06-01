@@ -54,7 +54,7 @@ export default function Welcome() {
           <a href={SHOP_URL}>
             <Button
               size="lg"
-              className="w-full sm:w-auto h-14 px-8 text-base font-semibold gap-2 bg-gradient-to-r from-orange-500 via-pink-500 to-primary text-white shadow-xl shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all"
+              className="btn-sparkle w-full sm:w-auto h-14 px-8 text-base gap-2"
             >
               <ShoppingBag className="w-4 h-4" />
               Buy Peptides
