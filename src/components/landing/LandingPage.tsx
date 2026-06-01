@@ -39,6 +39,7 @@ const SectionPlaceholder = ({ minH = 400 }: { minH?: number }) => (
 export function LandingPage() {
   const { user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [quizOpen, setQuizOpen] = useState(false);
   const [blendsStacksOpen, setBlendsStacksOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -56,6 +57,7 @@ export function LandingPage() {
   }, []);
 
   const handleSignInClick = () => {
+    setAuthMode('signup');
     setAuthModalOpen(true);
   };
 
@@ -140,7 +142,7 @@ export function LandingPage() {
       )}
 
       <Suspense fallback={null}>
-        {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
+        {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} defaultMode={authMode} />}
         {quizOpen && <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />}
         {blendsStacksOpen && <BlendsAndStacks open={blendsStacksOpen} onClose={() => setBlendsStacksOpen(false)} />}
         {searchOpen && <PeptideSearch open={searchOpen} onClose={() => setSearchOpen(false)} />}

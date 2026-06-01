@@ -14,13 +14,14 @@ import { captureLead } from '@/lib/crm';
 interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultMode?: 'signin' | 'signup';
 }
 
 const emailSchema = z.string().email('Invalid email address').max(255);
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100);
 
-export function AuthModal({ open, onOpenChange }: AuthModalProps) {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthModalProps) {
+  const [mode, setMode] = useState<'signin' | 'signup'>(defaultMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
