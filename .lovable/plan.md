@@ -1,69 +1,94 @@
-# Plan: Header revamp, Blogs import, PWA install tests
+# Plan — Stronger iOS install tests + SEO-owned Blog
 
-## 1. Header — dark brand-themed nav
+Two independent workstreams. Both are frontend/content; no schema or auth changes.
 
-Update `LandingHeader.tsx`:
-- Replace nav links with: **Free Course**, **Bloodwork**, **Browse Peptides**, **Blends & Stacks**, **Dashboard** (Dashboard always shown — routes to `/` when logged in, opens auth modal when not).
-- Remove the "Research" link.
-- Dark glassmorphic skin: deepen header to `bg-background/80` with `border-primary/15`, primary-glow underline on active/hover (Framer Motion layoutId pill behind active link), bold tracking-tight links in `text-foreground/80 → text-primary` on hover. Sticky shadow gains a subtle primary glow on scroll.
-- "Buy Peptides" CTA keeps its sparkle but gains the brand gradient (`from-primary to-accent`).
-- Mobile menu mirrors the same links and styling.
+---
 
-Routing for new links:
-- `Browse Peptides` → opens `PeptideSearch` modal (via existing `onSearch` callback).
-- `Blends & Stacks` → opens `BlendsAndStacks` modal. Add a new `onBlendsClick` prop wired from `LandingPage`.
-- `Bloodwork` → `/bloodwork` route (existing).
-- `Free Course` → `/free-course` route (existing).
-- `Dashboard` → `/` (existing).
+## 1. Expand iOS Safari install-verification tests
 
-## 2. Rename Research → Blogs, move into footer area
+Goal: emulate Safari install behavior more faithfully and assert the **exact** troubleshooting copy shown for each failure mode.
 
-- `BlogSection.tsx`: change heading "Research & Insights" → **"Blogs"**, section `id="blogs"`, subtitle simplified.
-- Move the rendered `<BlogSection />` to sit **directly above the footer** (just before `LandingFooter`) so it reads as the closing/index-of-articles section. Keep it lazy-loaded inside `SafeSection`.
-- Add a "Blogs" column to `LandingFooter` linking to the latest ~5 posts plus a "Browse all blogs" link to `#blogs`.
+### Test environment upgrades (`src/test/setup.ts`)
+Extend `pwaMock` so iOS Safari quirks can be simulated deterministically:
+- `navigator.standalone` toggling (iOS-only flag)
+- `window.matchMedia('(display-mode: standalone)')` independent of `navigator.standalone`
+- `navigator.serviceWorker` **absent** (Safari < 16.4 in non-standalone tabs) vs present
+- `caches` API absent (Private Browsing) vs present-but-empty vs populated
+- `navigator.onLine = false` for offline simulation
+- `beforeinstallprompt` never fires on iOS (assert no native prompt path taken)
+- Stub `window.location.assign` / `reload` and capture calls
 
-## 3. Import all blogs from peptiq.io/blog
+### New iOS test cases (`src/components/pwa/__tests__/InstallVerification.test.tsx`)
+Adds an `iOS Safari — deep scenarios` describe block:
 
-- New file `src/data/blogPosts.ts` exporting a typed `BlogPost[]` of **every article** parsed from `tool-results://fetched-websites/peptiq.io_blog.md` (~85 posts). Fields: `id` (slug), `title`, `excerpt`, `category`, `date` (ISO), `readTime`, `url` (full peptiq.io URL), `image` (peptiq image URL), optional `featured`.
-- Generation approach (during build mode): one-off `scripts/import-peptiq-blogs.mjs` parses the fetched markdown with regex `\[!\[(title)\]\((image)\).*?(category)•(date)•(min read).*?(excerpt).*?\]\((url)\)` and writes the TS file. Run once; commit the data file; delete the script after.
-- Categories normalised to the peptiq taxonomy (Science & Research, Safety & Best Practices, Protocols, Peptide Science, Clinical Research, Research, recovery, metabolic, longevity, performance). Color map extended in `BlogSection`.
-- `BlogSection.tsx` switches to read from `@/data/blogPosts`, shows top 3 featured + paginated grid (load more in 9-card batches, no extra page route). Each card links externally to its `url` (opens new tab, `rel="noopener"`).
-- "View All Articles" button → `https://peptiq.io/blog`.
+1. **Safari tab, not installed** → asserts exact strings:
+   - "Tap the Share button" + "Add to Home Screen" + "Open from Home Screen icon"
+   - Shows Share-icon illustration alt text
+2. **Safari standalone, SW missing** (older iOS) → "Update iOS to 16.4 or newer for offline support" guidance
+3. **Safari standalone, caches API blocked (Private Browsing)** → "Disable Private Browsing to enable offline mode"
+4. **Safari standalone, cache present but `/offline.html` match fails** → "Offline fallback not yet cached — open the app once while online"
+5. **Safari standalone + `navigator.onLine === false` + cache ready** → passes; shows "Offline-ready ✓" badge and does NOT show troubleshooting
+6. **Safari standalone + offline + cache empty** → shows "You appear to be offline and assets aren't cached yet. Reconnect and reopen."
+7. **iOS Chrome/Firefox/Edge** → asserts the warning copy verbatim: "Install only works in Safari on iOS. Tap the … menu → 'Open in Safari'." and that the "Open in Safari" link uses `x-safari-https://` scheme
+8. **iPad desktop-mode UA** (MacIntel + maxTouchPoints>1) → treated as iOS-safari, not desktop
+9. **Add-to-Home-Screen completion poll** → simulate user returning with `navigator.standalone=true` after troubleshooting was shown; re-running check transitions to passed state and fires `install_verification_passed` exactly once
+10. **Analytics payload shape** → asserts `platform: 'ios-safari'`, `iosVersion`, `swSupported`, `cachesSupported`, `online` fields are all present on both pass and fail events
 
-## 4. PWA install verification tests
+If `InstallVerification.tsx` doesn't yet expose all of those copy strings or analytics fields, add them in the same task (small, surgical additions — no UX redesign).
 
-Use existing Vitest + RTL setup (`src/test/setup.ts`). Add to setup:
-- `Object.defineProperty(navigator, 'serviceWorker', ...)` stub (mutable per test).
-- Global `caches` mock with controllable `keys()` / `match()` / `open()` / `delete()`.
-- Helpers to mock `navigator.userAgent` (iOS Safari, iOS Chrome, Android Chrome, Android Samsung) and `window.matchMedia('(display-mode: standalone)')`.
+---
 
-New `src/components/pwa/__tests__/InstallVerification.test.tsx` covers:
-1. **iOS Safari, installed + offline ready** — UA = iPhone Safari, standalone=true, SW controller present, cache has `/offline.html`. Click "Run install check" → all 4 rows render ✅ and the green "You're offline-ready" banner appears. Asserts `track('install_verification_passed', ...)` fires.
-2. **iOS Safari, not yet installed** — standalone=false → standalone row fails, troubleshooting auto-opens showing the iOS Safari "Tap Share → Add to Home Screen" panel.
-3. **iOS non-Safari** — UA = iPhone Chrome → troubleshooting shows the "only works in Safari" amber panel.
-4. **Android Chrome, install ok but cache empty** (offline simulation: `caches.keys()` returns `[]`) → cache row fails, fallback row fails, `install_verification_failed` fires with `cacheOk:false`.
-5. **Android Chrome, fully offline ready** — controller + cache populated + `/offline.html` matched → passes, calls `markStep('install_completed', { meta: { source: 'verification' }})`.
-6. **Android non-Chrome** (Samsung Internet) → troubleshooting shows "Open in Chrome" deep link.
-7. **Troubleshooting toggle** — clicking "Troubleshooting" toggles panel + fires `install_verification_trouble_toggled`.
-8. **Clear cache & retry** — stubs `caches.delete` and `serviceWorker.getRegistrations().unregister`, asserts both are invoked and `location.reload` called (jsdom: spy on `window.location.reload`).
+## 2. Replace external blog links with locally-hosted, SEO-indexable blog pages
 
-Analytics spy: mock `@/lib/analytics` `track` with `vi.fn()`. Onboarding progress: mock `markStep` similarly.
+Right now `BlogSection` and the footer link out to `https://peptiq.io/blog/<slug>` with `target="_blank"`. This bleeds SEO equity off-site and Google won't index Ride The Tide for any of that content. Fix:
 
-## 5. Files
+### 2a. Content model — re-host the articles
+- Extend the importer `scripts/import-peptiq-blogs.mjs` to fetch each `/blog/<slug>` page (not just the index) and pull the **full article markdown** + hero image + author + canonical metadata.
+- Rewrite `src/data/blogPosts.ts` so each `BlogPost` includes:
+  ```ts
+  { id, title, slug, excerpt, contentMd, category, tags[], date, updatedDate,
+    readTime, heroImage, author, sourceUrl /* peptiq original for attribution */ }
+  ```
+  `url` field is removed; `slug` drives internal routing.
+- Add an attribution footer rendered on each post: "Originally researched by Peptiq · republished with adaptation" with `rel="canonical"` pointing at the **Ride The Tide** URL (we are the canonical now — we host the full content, add our own commentary, and the source is credited inline). This is the standard pattern for republished content that you want indexed under your domain.
 
-**New**
-- `src/data/blogPosts.ts` — generated catalog of all peptiq.io blog posts
-- `src/components/pwa/__tests__/InstallVerification.test.tsx`
-- `scripts/import-peptiq-blogs.mjs` — one-off importer (kept in repo for future re-runs)
+> Note for the user: republishing third-party content verbatim has copyright implications. The safe options are (a) we paraphrase + add original commentary per post during import (LLM rewrite pass via Lovable AI Gateway, `google/gemini-2.5-flash`), or (b) we only host short summaries + our own analysis and link out for the full text. **I'll ask which you want before running the importer.**
 
-**Edited**
-- `src/components/landing/LandingHeader.tsx` — new nav, dark brand styling, mobile menu updates, new `onBlendsClick` prop
-- `src/components/landing/LandingPage.tsx` — pass `onBlendsClick`, reorder so `<BlogSection />` renders just before footer
-- `src/components/landing/BlogSection.tsx` — renamed to Blogs, data from `blogPosts.ts`, external links, load-more pagination, expanded category colors
-- `src/components/landing/LandingFooter.tsx` — add "Blogs" column with latest 5 + browse-all link
-- `src/test/setup.ts` — add `caches`, `serviceWorker`, UA helper utilities
+### 2b. Routing & pages
+- New routes in `src/App.tsx`:
+  - `/blog` → `BlogIndexPage` (paginated grid, category filter, search)
+  - `/blog/:slug` → `BlogPostPage` (full article)
+  - `/blog/category/:category` → `BlogCategoryPage`
+- New components:
+  - `src/pages/BlogIndexPage.tsx`
+  - `src/pages/BlogPostPage.tsx` — renders markdown via `react-markdown` + `remark-gfm` (already referenced in firecrawl docs; add dep if missing), Tailwind `prose prose-invert`
+  - `src/pages/BlogCategoryPage.tsx`
+- Update `BlogSection.tsx` cards: replace `<a href={post.url} target="_blank">` with `<Link to={`/blog/${post.slug}`}>`.
+- Update `LandingFooter.tsx` Blogs column links the same way; "Browse all blogs" → `/blog`.
 
-## Out of scope
-- No backend/RLS changes.
-- No Playwright/headed e2e (heavier setup); component-level tests cover the verification flow deterministically.
-- "Research Tools" section on the landing page stays (it powers Quiz / Calculator / Search modals) — only the header link named "Research" is removed.
+### 2c. SEO plumbing
+- `<SEOHead>` on each post: title, meta description (from excerpt), `og:image` = heroImage, `og:type=article`, `article:published_time`, `article:author`.
+- `<JsonLd>` `BlogPosting` schema per post + `Blog` schema on index.
+- `Breadcrumbs`: Home → Blog → Category → Post.
+- `scripts/generate-sitemap.ts`: import `blogPosts`, add one `<url>` per post (`/blog/<slug>`) and one per category (`/blog/category/<cat>`). Bumps weekly changefreq.
+- `public/robots.txt`: ensure `/blog` not disallowed (it isn't currently — verify).
+- After deploy, trigger `gsc-resubmit-sitemap` edge function so Google re-crawls.
+
+### 2d. Files
+**New:** `src/pages/BlogIndexPage.tsx`, `src/pages/BlogPostPage.tsx`, `src/pages/BlogCategoryPage.tsx`, possibly `src/components/blog/BlogCard.tsx`, `src/components/blog/BlogAttribution.tsx`
+**Edited:** `src/data/blogPosts.ts` (regenerated), `scripts/import-peptiq-blogs.mjs` (deep-fetch + optional LLM rewrite), `scripts/generate-sitemap.ts`, `src/App.tsx`, `src/components/landing/BlogSection.tsx`, `src/components/landing/LandingFooter.tsx`, possibly `src/test/setup.ts` and `src/components/pwa/InstallVerification.tsx`
+
+### Out of scope
+- No backend tables for blog posts (static data file is faster, fully indexable, no RLS surface).
+- No comments/likes/newsletter on posts.
+- No changes to Header / nav / Blends & Stacks / Dashboard wiring from previous turn.
+
+---
+
+## Question before build mode
+Republishing approach for the ~156 Peptiq articles:
+- **A)** LLM rewrite pass (paraphrase + add Ride The Tide commentary; credit + link to Peptiq). Best for SEO, safest legally, ~5–10 min import cost.
+- **B)** Short summary + our own takeaways only, with "Read full study at Peptiq" CTA. Lighter, very safe.
+- **C)** Verbatim mirror with canonical pointing at **Peptiq** (won't help our SEO — Google credits them). Not recommended.
+
+I'll wait for your pick before running the importer.
