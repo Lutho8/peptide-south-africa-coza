@@ -90,7 +90,10 @@ export function WelcomeGuide({ onDoseTracker, onBodyStats, onCycles, onResearch 
 
             <Button
               size="sm"
-              onClick={() => { resetDashboardTour(); window.location.reload(); }}
+              onClick={() => {
+                resetDashboardTour();
+                window.dispatchEvent(new CustomEvent('rtd-start-tour'));
+              }}
               className="btn-sparkle w-full mb-3 gap-1.5"
             >
               <Sparkles size={14} />
