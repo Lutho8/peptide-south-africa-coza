@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ArrowRight, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -66,17 +67,14 @@ export function BlogSection() {
         {featured.length > 0 && (
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {featured.map((post, i) => (
-              <motion.a
-                key={post.id}
-                href={post.url}
-                target="_blank"
-                rel="noopener noreferrer"
+              <motion.div
+                key={post.slug}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="group block"
               >
+              <Link to={`/blog/${post.slug}`} className="group block">
                 <Card className="h-full overflow-hidden hover:border-primary/40 transition-all duration-300">
                   {post.image && (
                     <div className="aspect-[16/9] overflow-hidden bg-secondary/40">
@@ -109,7 +107,8 @@ export function BlogSection() {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.a>
+              </Link>
+              </motion.div>
             ))}
           </div>
         )}
@@ -117,17 +116,14 @@ export function BlogSection() {
         {/* Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {rest.slice(0, visible).map((post, i) => (
-            <motion.a
-              key={post.id}
-              href={post.url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <motion.div
+              key={post.slug}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: (i % PAGE) * 0.05 }}
-              className="group block"
             >
+            <Link to={`/blog/${post.slug}`} className="group block">
               <Card className="h-full hover:border-primary/40 transition-all duration-300">
                 <CardHeader className="pb-2">
                   <Badge variant="outline" className={`w-fit ${getCategoryColor(post.category)}`}>
@@ -147,7 +143,8 @@ export function BlogSection() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.a>
+            </Link>
+            </motion.div>
           ))}
         </div>
 
@@ -158,11 +155,12 @@ export function BlogSection() {
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           )}
-          <a href="https://peptiq.io/blog" target="_blank" rel="noopener noreferrer">
+          <Link to="/blog">
             <Button className="bg-gradient-to-r from-primary to-accent text-primary-foreground gap-2">
-              Browse all on Peptiq <ExternalLink className="w-4 h-4" />
+              Browse all {blogPosts.length} articles
+              <ArrowRight className="w-4 h-4" />
             </Button>
-          </a>
+          </Link>
         </div>
       </div>
     </section>

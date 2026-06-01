@@ -7,14 +7,14 @@ type FooterLink = { label: string; href: string; isRoute?: boolean; external?: b
 
 const latestBlogs: FooterLink[] = blogPosts.slice(0, 5).map(p => ({
   label: p.title.length > 52 ? p.title.slice(0, 52) + '…' : p.title,
-  href: p.url,
-  external: true,
+  href: `/blog/${p.slug}`,
+  isRoute: true,
 }));
 
 const footerLinks: Record<string, FooterLink[]> = {
   Blogs: [
     ...latestBlogs,
-    { label: 'Browse all blogs →', href: '#blogs' },
+    { label: 'Browse all blogs →', href: '/blog', isRoute: true },
   ],
   'Popular Peptides': [
     { label: 'BPC-157', href: '/peptides/bpc-157', isRoute: true },
