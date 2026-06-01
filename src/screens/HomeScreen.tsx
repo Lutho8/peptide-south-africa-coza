@@ -17,6 +17,7 @@ import { WelcomeGuide } from '@/components/home/WelcomeGuide';
 import { ReorderWidget } from '@/components/home/ReorderWidget';
 import { NextClubEventCard } from '@/components/home/NextClubEventCard';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
+import { DashboardTour } from '@/components/onboarding/DashboardTour';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
@@ -101,6 +102,7 @@ export function HomeScreen({
       <motion.div 
         className="flex items-center justify-between"
         variants={itemVariants}
+        data-tour="welcome-header"
       >
         <div>
           <h1 className="text-2xl font-bold text-foreground">Welcome back,</h1>
@@ -136,7 +138,7 @@ export function HomeScreen({
       </motion.div>
 
       {/* Today's Doses Summary */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} data-tour="todays-doses">
         <TodaysDoses onViewTracker={onOpenDoseTracker} />
       </motion.div>
 
