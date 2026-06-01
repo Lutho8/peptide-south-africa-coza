@@ -23,10 +23,21 @@ export const SparkleButton = forwardRef<HTMLButtonElement, ButtonProps>(
       </>
     );
 
-    if (asChild) {
-      // When asChild, Button uses Radix Slot which requires a single child element.
-      // The consumer passes a single element (e.g. <a>); we inject our sparkle wrapper inside it.
+    if (asChild && isValidElement(children)) {
       const child = children as React.ReactElement<{ children?: React.ReactNode }>;
+      const wrapped = cloneElement(child, {}, (
+        <>
+          <Sparkles
+            className="w-3.5 h-3.5 mr-1.5 text-white drop-shadow animate-pulse"
+            aria-hidden="true"
+          />
+          {child.props.children}
+          <Sparkles
+            className="w-3 h-3 ml-1.5 text-white/90 drop-shadow animate-pulse [animation-delay:0.4s]"
+            aria-hidden="true"
+          />
+        </>
+      ));
       return (
         <Button
           ref={ref}
@@ -34,25 +45,7 @@ export const SparkleButton = forwardRef<HTMLButtonElement, ButtonProps>(
           className={cn('btn-sparkle group', className)}
           {...props}
         >
-          {{
-            ...child,
-            props: {
-              ...child.props,
-              children: (
-                <>
-                  <Sparkles
-                    className="w-3.5 h-3.5 mr-1.5 text-white drop-shadow animate-pulse"
-                    aria-hidden="true"
-                  />
-                  {child.props.children}
-                  <Sparkles
-                    className="w-3 h-3 ml-1.5 text-white/90 drop-shadow animate-pulse [animation-delay:0.4s]"
-                    aria-hidden="true"
-                  />
-                </>
-              ),
-            },
-          } as React.ReactElement}
+          {wrapped}
         </Button>
       );
     }
