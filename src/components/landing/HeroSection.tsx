@@ -1,17 +1,18 @@
 import { motion } from 'framer-motion';
-import { Lock, ArrowRight, FlaskConical, Award, BookOpen, Check } from 'lucide-react';
+import { Rocket, ArrowRight, FlaskConical, Award, BookOpen, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SparkleButton } from '@/components/ui/SparkleButton';
 import { useNavigate } from 'react-router-dom';
 import { PhoneMockup } from './PhoneMockup';
 import { FloatingStatCards } from './FloatingStatCards';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
-import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureLead } from '@/lib/crm';
 
 interface HeroSectionProps {
   onCategoryClick?: (category: PeptideCategory) => void;
+  onSignInClick?: () => void;
 }
 
 const socialProof = [
@@ -20,10 +21,9 @@ const socialProof = [
   { icon: BookOpen, label: '22+ scientific citations' },
 ];
 
-export function HeroSection({ onCategoryClick }: HeroSectionProps) {
+export function HeroSection({ onCategoryClick, onSignInClick }: HeroSectionProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasPremium } = useMembership();
 
   const scrollToPeptides = () => {
     const el = document.getElementById('featured-peptides');
@@ -34,15 +34,22 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
     }
   };
 
-  const handleQnaCta = () => {
+  const handleStartTracking = () => {
     captureLead({
       email: user?.email ?? null,
-      source: 'hero_qa_cta',
+      source: 'hero_signup_cta',
       planInterest: 'free',
-      activityType: 'qa_signup',
-      activityData: { hasPremium },
+      activityType: 'course_start',
+      activityData: { surface: 'hero' },
     });
-    navigate('/live-qna');
+    if (user) {
+      // Already signed in → go to dashboard and (re)trigger the tour
+      try { localStorage.removeItem('rtd-dashboard-tour-done'); } catch {}
+      navigate('/');
+    } else {
+      // Open auth modal in signup mode
+      onSignInClick?.();
+    }
   };
 
   return (
