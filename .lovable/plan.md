@@ -1,41 +1,66 @@
-# Fix Shop CTA
+# Plan: Rename CTAs + Improve Peptide Search
 
-## Problem
-- Apex `https://ridethetide.site` returns an invalid response (likely SSL/redirect issue). The working host is `https://www.ridethetide.site` (already used in `StackPeptideCard.tsx`).
-- Button copy says "Shop Protocols" — should be "Shop Peptides".
+## 1. Rename CTAs ("Shop Peptides" / "Explore Peptides" → "Buy Peptides")
 
-## Changes
+Replace every user-facing instance of:
+- "Shop Peptides" → **"Buy Peptides"**
+- "Explore Peptides" → **"Buy Peptides"**
 
-### 1. Standardize URL to `https://www.ridethetide.site`
-Replace every `https://ridethetide.site` with `https://www.ridethetide.site` (preserve any query strings / UTM params) in:
-- `src/components/landing/LandingHeader.tsx` (`SHOP_URL` const)
+Files to update:
+- `src/components/landing/HeroSection.tsx` (primary hero CTA — both copy + style)
 - `src/components/landing/CTASection.tsx`
-- `src/components/landing/FAQSection.tsx`
+- `src/components/landing/LandingHeader.tsx` (desktop nav + mobile menu)
 - `src/components/landing/LandingFooter.tsx`
-- `src/components/home/ReorderWidget.tsx`
 - `src/pages/Welcome.tsx`
-- `src/pages/BloodworkPage.tsx`, `src/pages/LiveQnA.tsx`
-- `src/components/bloodwork/ProtocolSections.tsx`
-- `src/components/modals/PeptideDetailModal.tsx`
-- `src/screens/MyStackScreen.tsx`
-- any remaining matches found by `rg "https://ridethetide\.site"`
+- Any remaining "Explore Peptides" buttons (e.g. in `PeptideCategories.tsx`, `BentoFeatures.tsx`, `FeaturedPeptides.tsx` if present)
 
-Leave canonical SEO hostname (`ridethetide.info`) untouched — only the shop links change.
+All links continue pointing to `https://www.ridethetide.site` with existing UTM params.
 
-### 2. Rename CTA copy "Shop Protocols" → "Shop Peptides"
-Update every user-facing instance (button label, mobile menu, footer link, arrow suffix variants like "Shop Protocols →"):
-- `LandingHeader.tsx` (desktop + mobile)
-- `CTASection.tsx`
-- `HeroSection.tsx`
-- `LandingFooter.tsx`
-- `Welcome.tsx`
-- any other matches from `rg "Shop Protocols"`
+## 2. Bold CTA color treatment
 
-Keep `ReorderWidget`'s "Shop Now" and other distinct copy as-is.
+The primary "Buy Peptides" buttons currently use the muted primary (#3B82F6). Upgrade the hero + section CTAs to a bold, attention-grabbing treatment:
+- Gradient: `from-orange-500 via-pink-500 to-primary` (warm-to-brand sweep) with white text
+- Stronger shadow + subtle scale-on-hover
+- Keep secondary/nav links as standard outline/ghost (don't over-shout)
 
-### 3. Memory
-Update `mem://index.md` Core rule: replace "Shop Protocols → ridethetide.site" with "Shop Peptides → www.ridethetide.site".
-Update `mem://features/cross-property-network` shop URL + CTA label.
+Applied to: hero CTA, CTASection main CTA, footer "Buy Peptides" link, and the standalone "Buy Peptides" button in the landing header.
+
+## 3. Search improvements (`PeptideSearch.tsx` + `PeptidesScreen.tsx`)
+
+Current problem: typing "Tesa" doesn't reliably surface **Tesamorelin**, and results feel sparse.
+
+Fixes in `src/components/landing/PeptideSearch.tsx`:
+- **Add alias/synonym matching**: build a lookup of common aliases (e.g. `tesa` → Tesamorelin, `bpc` → BPC-157, `tirz` → Tirzepatide, `sema` → Semaglutide, `ghk` → GHK-Cu, `mots` → MOTS-c, `ipa` → Ipamorelin, `cjc` → CJC-1295, `reta` → Retatrutide, `klow` → KLOW blend, etc.)
+- **Broaden scored fields**: also match against `category`, `goalTags`, `aliases` (new), and the first 120 chars of `description` — not just name + mechanism
+- **Lower fuzzy threshold**: current "all chars in order" returns 20; add a typo-tolerant Levenshtein-1 match for short queries (≥3 chars) so "Tesa", "Tesm", "Tezamorelin" all hit Tesamorelin
+- **Prefix boost**: anything whose name OR shortName OR alias starts with the query gets +60 (so "tesa" → Tesamorelin lands at top)
+- **Show more results**: raise cap from 12 → 20 when a query is present
+- **Empty-state suggestions**: when no query, show 6 popular peptides (Tesamorelin, BPC-157, Semaglutide, Retatrutide, GHK-Cu, Ipamorelin) as clickable chips instead of just recents
+
+Fixes in `src/screens/PeptidesScreen.tsx` (the "Browse" tab):
+- Same alias-aware search applied to the in-page search input
+- Match against `shortName`, `name`, `category`, `mechanism`, `benefits`, and aliases
+- Show result count + a "Clear filters" affordance when filters return nothing
+
+## 4. Add alias data
+
+New file `src/data/peptideAliases.ts` exporting:
+```ts
+export const peptideAliases: Record<string, string[]> = {
+  'tesamorelin': ['tesa', 'tesm', 'egrifta'],
+  'bpc-157': ['bpc', 'bpc157', 'pentadeca'],
+  'semaglutide': ['sema', 'ozempic', 'wegovy'],
+  // ...20+ entries
+};
+```
+Imported by both PeptideSearch and PeptidesScreen.
 
 ## Out of scope
-DNS/SSL on the apex domain (user's hosting concern), other branding, route changes.
+- Backend, auth, routes, Capacitor, tracker features
+- DNS/SSL on apex shop domain
+- Memory updates (already current)
+
+## Technical notes
+- All color treatments use semantic Tailwind tokens; the new gradient uses existing palette stops, no new tokens needed
+- No new dependencies; Levenshtein is ~15 lines inline
+- Search remains fully client-side
