@@ -178,7 +178,7 @@ export function HomeScreen({
       </motion.div>
 
       {/* Quick Actions Grid */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} data-tour="quick-actions">
         <QuickActions
           onDoseTracker={onOpenDoseTracker}
           onBodyStats={onOpenBodyComposition}
@@ -211,6 +211,9 @@ export function HomeScreen({
         <SafetyDisclaimer />
       </motion.div>
       </motion.div>
+
+      {/* First-visit guided dashboard tour */}
+      {user && <DashboardTour />}
     </PullToRefresh>
   );
 }
