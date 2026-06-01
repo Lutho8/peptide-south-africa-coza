@@ -44,6 +44,7 @@ const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').t
 const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
 const ProfileSetupWizard = lazy(() => import('@/components/onboarding/ProfileSetupWizard').then(m => ({ default: m.ProfileSetupWizard })));
+const InstallAppStep = lazy(() => import('@/components/onboarding/InstallAppStep').then(m => ({ default: m.InstallAppStep })));
 
 const ScreenLoaderHome = () => <HomeSkeleton />;
 const ScreenLoaderList = () => <ListSkeleton />;
