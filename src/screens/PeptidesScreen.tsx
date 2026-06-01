@@ -3,6 +3,7 @@ import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { peptides, Peptide, PeptideCategory, getCategoryLabel } from '@/data/peptides';
+import { getAliasesFor, boundedLevenshtein } from '@/data/peptideAliases';
 import { Search, Filter, Star, Check, FlaskConical, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -56,11 +57,27 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
 
   const filteredPeptides = peptides
     .filter(p => {
-      const matchesSearch = 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.shortName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        getCategoryLabel(p.category).toLowerCase().includes(searchQuery.toLowerCase());
-      
+      const q = searchQuery.trim().toLowerCase();
+      let matchesSearch = true;
+      if (q) {
+        const aliases = getAliasesFor(p.name, p.shortName);
+        const haystacks = [
+          p.name,
+          p.shortName,
+          getCategoryLabel(p.category),
+          p.mechanism ?? '',
+          ...(p.benefits ?? []),
+          ...aliases,
+        ].map((s) => s.toLowerCase());
+        matchesSearch = haystacks.some((h) => h.includes(q));
+        if (!matchesSearch && q.length >= 3) {
+          // typo tolerance vs short tokens
+          matchesSearch = haystacks.some((h) =>
+            h.split(/[\s\-+()]+/).some((w) => w.length >= 3 && boundedLevenshtein(w, q, 1) <= 1)
+          );
+        }
+      }
+
       if (!matchesSearch) return false;
 
       // Category filter
@@ -111,7 +128,7 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
       <div className="relative">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search by name, short name, or category..."
+          placeholder='Try "Tesa", "BPC", "Sema"… partial names work'
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10 bg-card border-border"

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { peptides, Peptide } from '@/data/peptides';
+import { getAliasesFor, boundedLevenshtein } from '@/data/peptideAliases';
 import { peptideBlends, PeptideBlend } from '@/data/peptideBlends';
 import { getActiveStack } from '@/services/storage';
 import { cn } from '@/lib/utils';
@@ -61,11 +62,47 @@ function scoreMatch(haystack: string, q: string): number {
   if (!needle) return 0;
   if (h === needle) return 100;
   if (h.startsWith(needle)) return 80;
-  if (h.includes(needle)) return 50;
-  // simple fuzzy: all chars present in order
+  if (h.includes(needle)) return 55;
+  // word-boundary prefix match (e.g. "tesa" → "Tesamorelin 5mg + Ipamorelin")
+  for (const word of h.split(/[\s\-+()]+/)) {
+    if (word.startsWith(needle)) return 65;
+  }
+  // typo tolerance for queries ≥3 chars: Levenshtein-1 vs any short word
+  if (needle.length >= 3) {
+    for (const word of h.split(/[\s\-+()]+/)) {
+      if (word.length >= 3 && boundedLevenshtein(word, needle, 1) <= 1) return 35;
+    }
+  }
+  // fuzzy: all chars present in order
   let i = 0;
   for (const c of h) if (c === needle[i]) i++;
-  return i === needle.length ? 20 : 0;
+  return i === needle.length ? 18 : 0;
+}
+
+function scoreEntity(
+  q: string,
+  name: string,
+  shortName: string,
+  extra: string[],
+): number {
+  if (!q) return 0;
+  const aliases = getAliasesFor(name, shortName);
+  let best = Math.max(
+    scoreMatch(name, q),
+    scoreMatch(shortName, q),
+    ...aliases.map((a) => scoreMatch(a, q) + 5), // alias hits get small bonus
+    ...extra.map((e) => scoreMatch(e, q) * 0.5),
+  );
+  // prefix boost on canonical name / shortName / aliases
+  const ql = q.toLowerCase();
+  if (
+    name.toLowerCase().startsWith(ql) ||
+    shortName.toLowerCase().startsWith(ql) ||
+    aliases.some((a) => a.toLowerCase().startsWith(ql))
+  ) {
+    best += 25;
+  }
+  return best;
 }
 
 export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
@@ -115,12 +152,11 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
     if (category === 'all' || category === 'peptides') {
       for (const p of peptides) {
         const s = q
-          ? Math.max(
-              scoreMatch(p.name, q),
-              scoreMatch(p.shortName, q),
-              scoreMatch(p.mechanism.slice(0, 80), q) * 0.5,
-              ...p.benefits.map((b) => scoreMatch(b, q) * 0.4),
-            )
+          ? scoreEntity(q, p.name, p.shortName, [
+              p.mechanism?.slice(0, 120) ?? '',
+              p.category,
+              ...(p.benefits ?? []),
+            ])
           : 50;
         if (s > 0) {
           out.push({
@@ -139,11 +175,7 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
     if (category === 'all' || category === 'blends') {
       for (const b of peptideBlends) {
         const s = q
-          ? Math.max(
-              scoreMatch(b.name, q),
-              scoreMatch(b.shortName, q),
-              ...b.components.map((c) => scoreMatch(c, q) * 0.6),
-            )
+          ? scoreEntity(q, b.name, b.shortName, b.components ?? [])
           : 40;
         if (s > 0) {
           out.push({
@@ -164,7 +196,7 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
         const peptide = peptides.find((p) => p.id === item.peptideId);
         if (!peptide) continue;
         const s = q
-          ? Math.max(scoreMatch(peptide.name, q), scoreMatch(peptide.shortName, q))
+          ? scoreEntity(q, peptide.name, peptide.shortName, [peptide.category])
           : 60;
         if (s > 0) {
           out.push({
@@ -180,8 +212,15 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
       }
     }
 
-    return out.sort((a, b) => b.score - a.score).slice(0, 12);
+    return out.sort((a, b) => b.score - a.score).slice(0, q ? 20 : 12);
   }, [debouncedQuery, category, stackItems]);
+
+  const popularSuggestions = useMemo(() => {
+    const ids = ['tesamorelin', 'bpc157', 'semaglutide', 'retatrutide', 'ghkcu', 'ipamorelin'];
+    return ids
+      .map((id) => peptides.find((p) => p.id === id))
+      .filter((p): p is Peptide => Boolean(p));
+  }, []);
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
@@ -369,11 +408,30 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
                 <p className="text-sm text-muted-foreground">Try a different keyword or category.</p>
               </div>
             ) : (
-              !showRecents && (
-                <div className="text-center py-16 text-muted-foreground">
-                  <p className="text-sm">Start typing to search across peptides, blends, and your stack.</p>
+              <div className="space-y-3">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3" /> Popular
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {popularSuggestions.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedPeptide(p);
+                        setDetailModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors"
+                    >
+                      {p.shortName}
+                    </button>
+                  ))}
                 </div>
-              )
+                {!showRecents && (
+                  <p className="text-xs text-muted-foreground pt-4">
+                    Try "Tesa", "BPC", "Sema", or "Reta" — partial names and brand names work.
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </ScrollArea>

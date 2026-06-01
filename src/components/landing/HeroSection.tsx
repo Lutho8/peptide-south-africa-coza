@@ -135,13 +135,18 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
                 Start Tracking Free
               </Button>
               <Button
+                asChild
                 size="lg"
-                variant="outline"
-                onClick={scrollToPeptides}
-                className="h-12 gap-2 border-2 px-6"
+                className="h-12 gap-2 px-6 font-semibold text-white shadow-xl shadow-orange-500/30 bg-gradient-to-r from-orange-500 via-pink-500 to-primary hover:opacity-95 hover:scale-[1.02] transition-all"
               >
-                Explore peptides
-                <ArrowRight className="h-4 w-4" />
+                <a
+                  href="https://www.ridethetide.site?utm_source=tracker&utm_medium=hero&utm_campaign=buy_peptides"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Buy Peptides
+                  <ArrowRight className="h-4 w-4" />
+                </a>
               </Button>
             </motion.div>
 

@@ -397,9 +397,16 @@ export default function LiveQnA() {
                       <CalendarPlus className="w-4 h-4 mr-2" />
                       Add to calendar
                     </Button>
-                    <Link to="/" className="flex-1">
-                      <Button variant="outline" className="w-full">Explore Peptides</Button>
-                    </Link>
+                    <a
+                      href="https://www.ridethetide.site?utm_source=tracker&utm_medium=live_qna&utm_campaign=buy_peptides"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1"
+                    >
+                      <Button className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-primary text-white font-semibold shadow-md shadow-orange-500/30 hover:opacity-95">
+                        Buy Peptides
+                      </Button>
+                    </a>
                   </div>
                 </CardContent>
               </Card>

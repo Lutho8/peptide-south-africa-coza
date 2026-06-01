@@ -88,11 +88,10 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
             <a href={SHOP_URL}>
               <Button
                 size="sm"
-                variant="outline"
-                className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                className="bg-gradient-to-r from-orange-500 via-pink-500 to-primary text-white font-semibold shadow-md shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all"
               >
                 <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
-                Shop Peptides →
+                Buy Peptides →
               </Button>
             </a>
 
@@ -154,11 +153,11 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
               )}
               <a
                 href={SHOP_URL}
-                className="mt-2 px-3 py-2 text-sm font-semibold text-accent border border-accent rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-2"
+                className="mt-2 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 via-pink-500 to-primary rounded-lg shadow-md shadow-orange-500/30 hover:opacity-95 transition-all flex items-center gap-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <ShoppingBag className="w-4 h-4" />
-                Shop Peptides →
+                Buy Peptides →
               </a>
               {!user && (
                 <button

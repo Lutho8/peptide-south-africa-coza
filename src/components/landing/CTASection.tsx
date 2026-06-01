@@ -67,11 +67,11 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
             <Button
               asChild
               size="lg"
-              className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 shadow-lg shadow-primary/25 group w-full sm:w-auto"
+              className="bg-gradient-to-r from-orange-500 via-pink-500 to-primary text-white hover:opacity-95 hover:scale-[1.02] transition-all shadow-xl shadow-orange-500/30 group w-full sm:w-auto font-semibold"
             >
-              <a href="https://www.ridethetide.site" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.ridethetide.site?utm_source=tracker&utm_medium=cta_section&utm_campaign=buy_peptides" target="_blank" rel="noopener noreferrer">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Shop Peptides →
+                Buy Peptides →
               </a>
             </Button>
           </div>
