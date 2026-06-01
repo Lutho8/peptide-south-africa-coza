@@ -27,6 +27,8 @@ const CycleManagementScreen = lazy(() => import("./screens/CycleManagementScreen
 const SEODashboard = lazy(() => import("./pages/admin/SEODashboard"));
 const SEOVerifyPage = lazy(() => import("./pages/admin/SEOVerifyPage"));
 const Welcome = lazy(() => import("./pages/Welcome"));
+const BlogIndexPage = lazy(() => import("./pages/BlogIndexPage"));
+const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 
 import { WhatsAppFab } from "@/components/global/WhatsAppFab";
 
@@ -65,6 +67,8 @@ const App = () => {
                 <Route path="/bloodwork" element={<BloodworkPage />} />
                 <Route path="/reminders/today" element={<TodayRemindersScreen />} />
                 <Route path="/cycles" element={<CycleManagementScreen />} />
+                <Route path="/blog" element={<BlogIndexPage />} />
+                <Route path="/blog/:slug" element={<BlogPostPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="/admin/seo" element={<SEODashboard />} />
                 <Route path="/admin/seo/verify" element={<SEOVerifyPage />} />
