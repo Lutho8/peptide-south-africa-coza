@@ -62,23 +62,22 @@ for (const slug of slugs) {
   let readTime = '';
   let excerpt = '';
 
-  const meta = text.match(/^([^•]+?)•\s*([^•]+?)\s*•\s*(\d+\s*min\s*read)/i);
-  const meta2 = text.match(/^([^•]+?)•\s*(\d+\s*min\s*read)/i);
+  const meta = text.match(/^(.+?)•\s*([A-Z][a-z]+\s+\d{1,2},\s*\d{4})\s*•\s*(\d+\s*min\s*read)/);
+  const meta2 = text.match(/^(.+?)•\s*(\d+\s*min\s*read)/i);
   let afterMeta = text;
   if (meta) {
-    category = meta[1].trim();
+    category = decode(meta[1]);
     date = meta[2].trim();
     readTime = meta[3].trim();
     afterMeta = text.slice(meta[0].length).trim();
   } else if (meta2) {
-    category = meta2[1].trim();
+    category = decode(meta2[1]);
     readTime = meta2[2].trim();
     afterMeta = text.slice(meta2[0].length).trim();
   }
 
-  // Excerpt: strip the title prefix if present, drop trailing "Read article"
   if (afterMeta.startsWith(title)) afterMeta = afterMeta.slice(title.length).trim();
-  excerpt = afterMeta.replace(/Read article\s*$/i, '').trim();
+  excerpt = decode(afterMeta.replace(/Read article\s*$/i, '').trim());
   if (excerpt.length > 320) excerpt = excerpt.slice(0, 317).trim() + '…';
 
   // ISO date
