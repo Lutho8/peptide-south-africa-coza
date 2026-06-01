@@ -57,11 +57,27 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
 
   const filteredPeptides = peptides
     .filter(p => {
-      const matchesSearch = 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.shortName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        getCategoryLabel(p.category).toLowerCase().includes(searchQuery.toLowerCase());
-      
+      const q = searchQuery.trim().toLowerCase();
+      let matchesSearch = true;
+      if (q) {
+        const aliases = getAliasesFor(p.name, p.shortName);
+        const haystacks = [
+          p.name,
+          p.shortName,
+          getCategoryLabel(p.category),
+          p.mechanism ?? '',
+          ...(p.benefits ?? []),
+          ...aliases,
+        ].map((s) => s.toLowerCase());
+        matchesSearch = haystacks.some((h) => h.includes(q));
+        if (!matchesSearch && q.length >= 3) {
+          // typo tolerance vs short tokens
+          matchesSearch = haystacks.some((h) =>
+            h.split(/[\s\-+()]+/).some((w) => w.length >= 3 && boundedLevenshtein(w, q, 1) <= 1)
+          );
+        }
+      }
+
       if (!matchesSearch) return false;
 
       // Category filter
