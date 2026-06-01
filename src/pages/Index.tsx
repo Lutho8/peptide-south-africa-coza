@@ -78,15 +78,29 @@ const Index = () => {
   const [profileSetupOpen, setProfileSetupOpen] = useState(false);
   const [installStepOpen, setInstallStepOpen] = useState(false);
 
+  // Mark install_completed when user opens app from home screen (standalone)
+  useEffect(() => {
+    if (!user) return;
+    import('@/lib/pwaInstall').then(({ isStandalone }) => {
+      if (isStandalone()) {
+        import('@/lib/onboardingProgress').then(({ markStep }) => {
+          markStep('install_completed', { userId: user.id, meta: { source: 'standalone_launch' } });
+          markStep('install_attempted', { userId: user.id });
+        });
+      }
+    });
+    import('@/lib/onboardingProgress').then(({ markStep }) => markStep('account_created', { userId: user.id }));
+  }, [user]);
+
   // Show install onboarding once after signup, only on mobile and if not yet installed
   useEffect(() => {
     if (!user) return;
     try {
       const pending = localStorage.getItem('rtd-install-prompt-pending') === '1';
       if (!pending) return;
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isStandaloneNow = window.matchMedia('(display-mode: standalone)').matches;
       const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
-      if (isStandalone || !isMobile) {
+      if (isStandaloneNow || !isMobile) {
         localStorage.removeItem('rtd-install-prompt-pending');
         return;
       }
