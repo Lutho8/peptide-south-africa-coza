@@ -3,6 +3,7 @@ import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { peptides, Peptide, PeptideCategory, getCategoryLabel } from '@/data/peptides';
+import { getAliasesFor, boundedLevenshtein } from '@/data/peptideAliases';
 import { Search, Filter, Star, Check, FlaskConical, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
