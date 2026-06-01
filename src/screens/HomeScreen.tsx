@@ -220,7 +220,7 @@ export function HomeScreen({
       </motion.div>
 
       {/* First-visit guided dashboard tour */}
-      {user && <DashboardTour />}
+      {user && <DashboardTour key={tourForceKey} force={tourForceKey > 0 ? true : undefined} />}
     </PullToRefresh>
   );
 }
