@@ -28,7 +28,7 @@ export function InstallBanner() {
           </div>
           <Button
             size="sm"
-            onClick={install}
+            onClick={() => install('install_banner')}
             className="shrink-0 gap-1.5 rounded-full touch-target"
           >
             <Download size={14} />
