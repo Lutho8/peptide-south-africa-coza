@@ -1,5 +1,15 @@
 import "@testing-library/jest-dom";
 
+class IO {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() { return []; }
+}
+(globalThis as unknown as { IntersectionObserver: typeof IO }).IntersectionObserver = IO;
+(globalThis as unknown as { ResizeObserver: typeof IO }).ResizeObserver = IO;
+
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   configurable: true,
