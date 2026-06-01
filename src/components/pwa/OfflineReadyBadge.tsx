@@ -1,4 +1,4 @@
-import { CloudCheck, Cloud, CloudOff, Loader2 } from 'lucide-react';
+import { CheckCircle2 as CloudCheck, Cloud, CloudOff, Loader2 } from 'lucide-react';
 import { useOfflineReadiness } from '@/hooks/useOfflineReadiness';
 
 interface Props { className?: string; compact?: boolean }
