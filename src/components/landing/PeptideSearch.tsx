@@ -408,11 +408,30 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
                 <p className="text-sm text-muted-foreground">Try a different keyword or category.</p>
               </div>
             ) : (
-              !showRecents && (
-                <div className="text-center py-16 text-muted-foreground">
-                  <p className="text-sm">Start typing to search across peptides, blends, and your stack.</p>
+              <div className="space-y-3">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3" /> Popular
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {popularSuggestions.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedPeptide(p);
+                        setDetailModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors"
+                    >
+                      {p.shortName}
+                    </button>
+                  ))}
                 </div>
-              )
+                {!showRecents && (
+                  <p className="text-xs text-muted-foreground pt-4">
+                    Try "Tesa", "BPC", "Sema", or "Reta" — partial names and brand names work.
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </ScrollArea>
