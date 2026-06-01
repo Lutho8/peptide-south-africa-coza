@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SparkleButton } from '@/components/ui/SparkleButton';
 
 interface CTASectionProps {
   onSignInClick: () => void;
@@ -58,22 +59,17 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
             <Button
               onClick={onSignInClick}
               size="lg"
-              variant="outline"
-              className="border-border hover:border-primary hover:text-primary group w-full sm:w-auto"
+              className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95 group w-full sm:w-auto"
             >
-              Get Started Free
+              <Rocket className="w-4 h-4 mr-2" />
+              Create Free Account
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button
-              asChild
-              size="lg"
-              className="bg-gradient-to-r from-orange-500 via-pink-500 to-primary text-white hover:opacity-95 hover:scale-[1.02] transition-all shadow-xl shadow-orange-500/30 group w-full sm:w-auto font-semibold"
-            >
+            <SparkleButton asChild size="lg" className="w-full sm:w-auto">
               <a href="https://www.ridethetide.site?utm_source=tracker&utm_medium=cta_section&utm_campaign=buy_peptides" target="_blank" rel="noopener noreferrer">
-                <Sparkles className="w-4 h-4 mr-2" />
                 Buy Peptides →
               </a>
-            </Button>
+            </SparkleButton>
           </div>
           <p className="text-sm text-muted-foreground mt-4">
             Free forever · No credit card · No paywalls
