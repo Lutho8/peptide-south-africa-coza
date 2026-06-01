@@ -152,12 +152,11 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
     if (category === 'all' || category === 'peptides') {
       for (const p of peptides) {
         const s = q
-          ? Math.max(
-              scoreMatch(p.name, q),
-              scoreMatch(p.shortName, q),
-              scoreMatch(p.mechanism.slice(0, 80), q) * 0.5,
-              ...p.benefits.map((b) => scoreMatch(b, q) * 0.4),
-            )
+          ? scoreEntity(q, p.name, p.shortName, [
+              p.mechanism?.slice(0, 120) ?? '',
+              p.category,
+              ...(p.benefits ?? []),
+            ])
           : 50;
         if (s > 0) {
           out.push({
@@ -176,11 +175,7 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
     if (category === 'all' || category === 'blends') {
       for (const b of peptideBlends) {
         const s = q
-          ? Math.max(
-              scoreMatch(b.name, q),
-              scoreMatch(b.shortName, q),
-              ...b.components.map((c) => scoreMatch(c, q) * 0.6),
-            )
+          ? scoreEntity(q, b.name, b.shortName, b.components ?? [])
           : 40;
         if (s > 0) {
           out.push({
@@ -201,7 +196,7 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
         const peptide = peptides.find((p) => p.id === item.peptideId);
         if (!peptide) continue;
         const s = q
-          ? Math.max(scoreMatch(peptide.name, q), scoreMatch(peptide.shortName, q))
+          ? scoreEntity(q, peptide.name, peptide.shortName, [peptide.category])
           : 60;
         if (s > 0) {
           out.push({
