@@ -76,6 +76,24 @@ const Index = () => {
   const [bloodworkOpen, setBloodworkOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [profileSetupOpen, setProfileSetupOpen] = useState(false);
+  const [installStepOpen, setInstallStepOpen] = useState(false);
+
+  // Show install onboarding once after signup, only on mobile and if not yet installed
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const pending = localStorage.getItem('rtd-install-prompt-pending') === '1';
+      if (!pending) return;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+      if (isStandalone || !isMobile) {
+        localStorage.removeItem('rtd-install-prompt-pending');
+        return;
+      }
+      const t = setTimeout(() => setInstallStepOpen(true), 800);
+      return () => clearTimeout(t);
+    } catch {}
+  }, [user]);
 
   // Auto-open the profile setup wizard once per user — wait for cloud hydration first
   // so we don't prompt a user who already has a profile saved on another device.
