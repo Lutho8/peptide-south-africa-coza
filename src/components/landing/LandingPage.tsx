@@ -86,7 +86,7 @@ export function LandingPage() {
       />
       
       <main>
-        <HeroSection onCategoryClick={handleCategoryClick} />
+        <HeroSection onCategoryClick={handleCategoryClick} onSignInClick={handleSignInClick} />
         <HowItWorks />
         <Suspense fallback={<SectionPlaceholder minH={600} />}>
           <BentoFeatures />

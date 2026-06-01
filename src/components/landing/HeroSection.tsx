@@ -135,17 +135,13 @@ export function HeroSection({ onCategoryClick, onSignInClick }: HeroSectionProps
             >
               <Button
                 size="lg"
-                onClick={handleQnaCta}
+                onClick={handleStartTracking}
                 className="h-12 gap-2 bg-gradient-to-r from-primary to-accent px-6 text-primary-foreground shadow-lg hover:opacity-90"
               >
-                <Lock className="h-4 w-4" />
-                Start Tracking Free
+                <Rocket className="h-4 w-4" />
+                {user ? 'Go to Dashboard' : 'Create Free Account'}
               </Button>
-              <Button
-                asChild
-                size="lg"
-                className="h-12 gap-2 px-6 font-semibold text-white shadow-xl shadow-orange-500/30 bg-gradient-to-r from-orange-500 via-pink-500 to-primary hover:opacity-95 hover:scale-[1.02] transition-all"
-              >
+              <SparkleButton asChild size="lg" className="h-12 gap-2 px-6">
                 <a
                   href="https://www.ridethetide.site?utm_source=tracker&utm_medium=hero&utm_campaign=buy_peptides"
                   target="_blank"
@@ -154,8 +150,18 @@ export function HeroSection({ onCategoryClick, onSignInClick }: HeroSectionProps
                   Buy Peptides
                   <ArrowRight className="h-4 w-4" />
                 </a>
-              </Button>
+              </SparkleButton>
             </motion.div>
+
+            {/* Secondary: Q&A link (small, no longer the primary) */}
+            <div className="mt-3 text-center lg:text-left">
+              <button
+                onClick={() => navigate('/live-qna')}
+                className="text-xs text-muted-foreground hover:text-primary underline-offset-2 hover:underline transition-colors"
+              >
+                Or join our free monthly live Q&amp;A →
+              </button>
+            </div>
 
             {/* Social proof pills */}
             <motion.div
