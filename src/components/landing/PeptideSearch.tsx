@@ -62,11 +62,47 @@ function scoreMatch(haystack: string, q: string): number {
   if (!needle) return 0;
   if (h === needle) return 100;
   if (h.startsWith(needle)) return 80;
-  if (h.includes(needle)) return 50;
-  // simple fuzzy: all chars present in order
+  if (h.includes(needle)) return 55;
+  // word-boundary prefix match (e.g. "tesa" → "Tesamorelin 5mg + Ipamorelin")
+  for (const word of h.split(/[\s\-+()]+/)) {
+    if (word.startsWith(needle)) return 65;
+  }
+  // typo tolerance for queries ≥3 chars: Levenshtein-1 vs any short word
+  if (needle.length >= 3) {
+    for (const word of h.split(/[\s\-+()]+/)) {
+      if (word.length >= 3 && boundedLevenshtein(word, needle, 1) <= 1) return 35;
+    }
+  }
+  // fuzzy: all chars present in order
   let i = 0;
   for (const c of h) if (c === needle[i]) i++;
-  return i === needle.length ? 20 : 0;
+  return i === needle.length ? 18 : 0;
+}
+
+function scoreEntity(
+  q: string,
+  name: string,
+  shortName: string,
+  extra: string[],
+): number {
+  if (!q) return 0;
+  const aliases = getAliasesFor(name, shortName);
+  let best = Math.max(
+    scoreMatch(name, q),
+    scoreMatch(shortName, q),
+    ...aliases.map((a) => scoreMatch(a, q) + 5), // alias hits get small bonus
+    ...extra.map((e) => scoreMatch(e, q) * 0.5),
+  );
+  // prefix boost on canonical name / shortName / aliases
+  const ql = q.toLowerCase();
+  if (
+    name.toLowerCase().startsWith(ql) ||
+    shortName.toLowerCase().startsWith(ql) ||
+    aliases.some((a) => a.toLowerCase().startsWith(ql))
+  ) {
+    best += 25;
+  }
+  return best;
 }
 
 export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
