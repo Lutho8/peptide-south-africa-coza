@@ -103,7 +103,7 @@ export function InstallVerification() {
     track(passed ? 'install_verification_passed' : 'install_verification_failed', {
       platform, standalone, swOk, cacheOk, fallbackOk,
     });
-    if (passed) markStep('install_verified');
+    if (passed) markStep('install_completed', { meta: { source: 'verification' } });
     setRunning(false);
     setRanOnce(true);
     if (!passed) setShowTrouble(true);
