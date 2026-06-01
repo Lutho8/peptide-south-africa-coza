@@ -1,8 +1,21 @@
 import { Link } from 'react-router-dom';
 import { Twitter, Mail, Linkedin } from 'lucide-react';
 import logoIcon from '@/assets/logo-icon.png';
+import { blogPosts } from '@/data/blogPosts';
 
-const footerLinks = {
+type FooterLink = { label: string; href: string; isRoute?: boolean; external?: boolean };
+
+const latestBlogs: FooterLink[] = blogPosts.slice(0, 5).map(p => ({
+  label: p.title.length > 52 ? p.title.slice(0, 52) + '…' : p.title,
+  href: p.url,
+  external: true,
+}));
+
+const footerLinks: Record<string, FooterLink[]> = {
+  Blogs: [
+    ...latestBlogs,
+    { label: 'Browse all blogs →', href: '#blogs' },
+  ],
   'Popular Peptides': [
     { label: 'BPC-157', href: '/peptides/bpc-157', isRoute: true },
     { label: 'Retatrutide', href: '/peptides/retatrutide', isRoute: true },
