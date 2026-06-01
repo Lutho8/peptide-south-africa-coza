@@ -212,8 +212,15 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
       }
     }
 
-    return out.sort((a, b) => b.score - a.score).slice(0, 12);
+    return out.sort((a, b) => b.score - a.score).slice(0, q ? 20 : 12);
   }, [debouncedQuery, category, stackItems]);
+
+  const popularSuggestions = useMemo(() => {
+    const ids = ['tesamorelin', 'bpc157', 'semaglutide', 'retatrutide', 'ghkcu', 'ipamorelin'];
+    return ids
+      .map((id) => peptides.find((p) => p.id === id))
+      .filter((p): p is Peptide => Boolean(p));
+  }, []);
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
