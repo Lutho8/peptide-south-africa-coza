@@ -11,6 +11,7 @@ import { track } from '@/lib/analytics';
 import { markStep } from '@/lib/onboardingProgress';
 import { OfflineReadyBadge } from '@/components/pwa/OfflineReadyBadge';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
+import { InstallVerification } from '@/components/pwa/InstallVerification';
 
 const PENDING_KEY = 'rtd-install-prompt-pending';
 
@@ -172,6 +173,10 @@ export function InstallAppStep({ open, onClose }: Props) {
                 {cta.kind === 'installed' ? 'Continue to dashboard' : 'Skip for now'}
                 <Download className="w-3.5 h-3.5 ml-1.5 opacity-0 sm:opacity-100" />
               </Button>
+            </div>
+
+            <div className="mt-6 pt-5 border-t border-border/40">
+              <InstallVerification />
             </div>
 
             <div className="mt-6 pt-5 border-t border-border/40">

@@ -12,8 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "predev": "bunx tsx scripts/generate-sitemap.ts",
-    "prebuild": "bunx tsx scripts/generate-sitemap.ts && bunx tsx scripts/security-lint-check.ts",
-    "lint:security": "bunx tsx scripts/security-lint-check.ts"
+    "prebuild": "bunx tsx scripts/generate-sitemap.ts && bunx tsx scripts/security-lint-check.ts && node scripts/check-landing-symbols.mjs",
+    "lint:security": "bunx tsx scripts/security-lint-check.ts",
+    "check:landing": "node scripts/check-landing-symbols.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.2",
