@@ -1,10 +1,10 @@
 // Generates public/sitemap.xml. Runs via predev/prebuild hooks.
-import { writeFileSync } from "fs";
+import { writeFileSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 const BASE_URL = "https://ridethetide.info";
 
-type Entry = { path: string; changefreq?: string; priority?: string };
+type Entry = { path: string; changefreq?: string; priority?: string; lastmod?: string };
 
 const staticEntries: Entry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
@@ -13,6 +13,7 @@ const staticEntries: Entry[] = [
   { path: "/coa-verification", changefreq: "monthly", priority: "0.5" },
   { path: "/bloodwork", changefreq: "monthly", priority: "0.8" },
   { path: "/cycles", changefreq: "monthly", priority: "0.6" },
+  { path: "/blog", changefreq: "daily", priority: "0.9" },
   { path: "/privacy", changefreq: "yearly", priority: "0.3" },
   { path: "/terms", changefreq: "yearly", priority: "0.3" },
   { path: "/disclaimer", changefreq: "yearly", priority: "0.3" },
@@ -31,11 +32,34 @@ const categories = [
 
 const guides = ["reconstitution","injection","bloodwork"];
 
+// Read blog post slugs from the static data file.
+function readBlogSlugs(): { slug: string; date: string }[] {
+  try {
+    const src = readFileSync(resolve("src/data/blogPosts.ts"), "utf8");
+    const marker = src.indexOf("blogPosts: BlogPost[]");
+    const start = src.indexOf("[", src.indexOf("=", marker));
+    const end = src.lastIndexOf("];");
+    const arr = JSON.parse(src.slice(start, end + 1)) as { slug: string; id: string; date: string }[];
+    return arr.map(p => ({ slug: p.slug || p.id, date: p.date }));
+  } catch (e) {
+    console.warn("sitemap: could not read blog posts:", (e as Error).message);
+    return [];
+  }
+}
+
+const blogPosts = readBlogSlugs();
+
 const entries: Entry[] = [
   ...staticEntries,
   ...peptides.map((s) => ({ path: `/peptides/${s}`, changefreq: "monthly", priority: "0.9" })),
   ...categories.map((s) => ({ path: `/categories/${s}`, changefreq: "monthly", priority: "0.8" })),
   ...guides.map((s) => ({ path: `/guides/${s}`, changefreq: "monthly", priority: "0.9" })),
+  ...blogPosts.map(p => ({
+    path: `/blog/${p.slug}`,
+    changefreq: "monthly",
+    priority: "0.7",
+    lastmod: p.date || undefined,
+  })),
 ];
 
 const lastmod = new Date().toISOString().slice(0, 10);
