@@ -71,7 +71,11 @@ export function LandingPage() {
       <JsonLd data={buildOrganizationSchema()} id="org-schema" />
       <JsonLd data={buildWebSiteSchema()} id="website-schema" />
       <JsonLd data={buildFAQSchema(allFaqs)} id="faq-schema" />
-      <LandingHeader onSignInClick={handleSignInClick} onSearch={() => setSearchOpen(true)} />
+      <LandingHeader
+        onSignInClick={handleSignInClick}
+        onSearch={() => setSearchOpen(true)}
+        onBlendsClick={() => setBlendsStacksOpen(true)}
+      />
 
       <ErrorBoundary fallbackTitle="The landing page hit a snag">
         <main>
@@ -110,7 +114,6 @@ export function LandingPage() {
             </Suspense>
           </SafeSection>
 
-          <SafeSection name="Blog" enabled={LANDING_SECTIONS.blog} minH={500} component={BlogSection} />
           <SafeSection name="Safety Disclaimer" enabled={LANDING_SECTIONS.safetyDisclaimer} minH={120} component={SafetyDisclaimerBand} />
           <SafeSection name="FAQ" enabled={LANDING_SECTIONS.faq} minH={600} component={FAQSection} />
 
@@ -119,6 +122,9 @@ export function LandingPage() {
               <CTASection onSignInClick={handleSignInClick} />
             </Suspense>
           </SafeSection>
+
+          {/* Blogs sit just above the footer */}
+          <SafeSection name="Blogs" enabled={LANDING_SECTIONS.blog} minH={500} component={BlogSection} />
         </main>
       </ErrorBoundary>
 
