@@ -88,11 +88,10 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
             <a href={SHOP_URL}>
               <Button
                 size="sm"
-                variant="outline"
-                className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                className="bg-gradient-to-r from-orange-500 via-pink-500 to-primary text-white font-semibold shadow-md shadow-orange-500/30 hover:opacity-95 hover:scale-[1.02] transition-all"
               >
                 <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
-                Shop Peptides →
+                Buy Peptides →
               </Button>
             </a>
 
