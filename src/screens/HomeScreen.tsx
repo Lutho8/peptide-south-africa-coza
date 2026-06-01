@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { NewsTicker } from '@/components/home/NewsTicker';
@@ -73,6 +73,13 @@ export function HomeScreen({
   const { refreshDoses } = useDailyDoses();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [tourForceKey, setTourForceKey] = useState(0);
+
+  useEffect(() => {
+    const onStart = () => setTourForceKey(k => k + 1);
+    window.addEventListener('rtd-start-tour', onStart);
+    return () => window.removeEventListener('rtd-start-tour', onStart);
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([refreshDoses(), refreshReminders()]);
