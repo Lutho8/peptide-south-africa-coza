@@ -10,6 +10,7 @@ import { PeptideCategory } from '@/data/peptides';
 
 // Below-the-fold sections — lazy load to improve LCP/TBT
 const BentoFeatures = lazy(() => import('./BentoFeatures').then(m => ({ default: m.BentoFeatures })));
+const PWAInstallJourney = lazy(() => import('./PWAInstallJourney').then(m => ({ default: m.PWAInstallJourney })));
 const Testimonials = lazy(() => import('./Testimonials').then(m => ({ default: m.Testimonials })));
 const WhyFreeBand = lazy(() => import('./WhyFreeBand').then(m => ({ default: m.WhyFreeBand })));
 const ResearchTools = lazy(() => import('./ResearchTools').then(m => ({ default: m.ResearchTools })));
