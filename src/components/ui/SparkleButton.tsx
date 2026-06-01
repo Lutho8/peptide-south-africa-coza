@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, cloneElement, isValidElement } from 'react';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button, type ButtonProps } from '@/components/ui/button';
@@ -8,13 +8,9 @@ import { Button, type ButtonProps } from '@/components/ui/button';
  * Used for "Buy Peptides" CTAs across the app.
  */
 export const SparkleButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, children, ...props }, ref) => {
-    return (
-      <Button
-        ref={ref}
-        className={cn('btn-sparkle group', className)}
-        {...props}
-      >
+  ({ className, children, asChild, ...props }, ref) => {
+    const inner = (
+      <>
         <Sparkles
           className="w-3.5 h-3.5 mr-1.5 text-white drop-shadow animate-pulse"
           aria-hidden="true"
@@ -24,6 +20,43 @@ export const SparkleButton = forwardRef<HTMLButtonElement, ButtonProps>(
           className="w-3 h-3 ml-1.5 text-white/90 drop-shadow animate-pulse [animation-delay:0.4s]"
           aria-hidden="true"
         />
+      </>
+    );
+
+    if (asChild && isValidElement(children)) {
+      const child = children as React.ReactElement<{ children?: React.ReactNode }>;
+      const wrapped = cloneElement(child, {}, (
+        <>
+          <Sparkles
+            className="w-3.5 h-3.5 mr-1.5 text-white drop-shadow animate-pulse"
+            aria-hidden="true"
+          />
+          {child.props.children}
+          <Sparkles
+            className="w-3 h-3 ml-1.5 text-white/90 drop-shadow animate-pulse [animation-delay:0.4s]"
+            aria-hidden="true"
+          />
+        </>
+      ));
+      return (
+        <Button
+          ref={ref}
+          asChild
+          className={cn('btn-sparkle group', className)}
+          {...props}
+        >
+          {wrapped}
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        ref={ref}
+        className={cn('btn-sparkle group', className)}
+        {...props}
+      >
+        {inner}
       </Button>
     );
   }
