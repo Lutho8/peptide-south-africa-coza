@@ -1,61 +1,75 @@
+## Goal
 
-## 1. "Buy Peptides" CTA — solid sparkle treatment
+Replace the landing's "Your Peptide Protocol — Research to Results in 4 steps" (`HowItWorks`) and "Everything you need to research, track, and optimize" (`BentoFeatures`) sections with an interactive, on-brand **PWA Install Journey** that mirrors the three reference screenshots, and reuse the same flow as a step in post-signup onboarding.
 
-Replace the current gradient (`from-orange-500 via-pink-500 to-primary`) with a **solid bold orange** (`bg-orange-500`, `hover:bg-orange-600`) and add a continuous sparkle effect to catch the eye.
+## New landing block: `PWAInstallJourney`
 
-- New shared button class (added to `src/index.css`): `.btn-sparkle` — solid `bg-orange-500`, white text, strong `shadow-orange-500/40`, subtle pulse-glow, and a moving shimmer sweep (`::before` with a translating white gradient, 2.5s infinite).
-- Add two animated `Sparkles` icons (top-right + bottom-left of the button) with staggered `animate-pulse` / rotate via Framer Motion.
-- Apply to every "Buy Peptides" button: `HeroSection.tsx`, `CTASection.tsx`, `LandingHeader.tsx`, `LandingFooter.tsx`, `Welcome.tsx`, `LiveQnA.tsx`.
+Single new component at `src/components/landing/PWAInstallJourney.tsx` containing 3 stacked sub-sections, all using existing semantic tokens (`bg-background`, `text-foreground`, `text-primary` = Ride The Tide blue #3B82F6) plus glassmorphism cards (`glass-card`, `border-border/50`) and Framer Motion entrance animations consistent with `BloodworkHero` / `BentoFeatures`.
 
-## 2. Fix "Start Tracking Free" routing
+### 1. Hero — "Get Ride The Tide on Your Phone"
+- Chip: `Smartphone` icon + "Progressive Web App"
+- Headline: **"Get Ride The Tide on `<span text-primary>`Your Phone`</span>`"** (display font, large)
+- Subline: "Install directly to your home screen. No app store needed."
+- Two **disabled-looking** store buttons (App Store / Google Play) rendered as muted glass cards with a small "Unavailable" badge — visually echo screenshot 1.
+- Caption: "Not available in app stores — and that's by design." (links to section 2)
+- Primary live CTA: **"Install in 30 seconds →"** (smooth scrolls to section 3). On mobile, if `usePWAInstall().isInstallable` is true, shows a sparkle "Install Now" button that calls `install()`.
 
-Currently `handleQnaCta` in `HeroSection.tsx` (and the matching button in `CTASection.tsx`) routes to `/live-qna`. Change behavior:
+### 2. "Not on the App Store. By design."
+- Three short paragraphs adapted to Ride The Tide voice:
+  1. "We built a fully native app first. Apple and Google asked us to strip the safety engine, peptide interaction warnings, and dosing logic to pass review. Every removal made the app safer for them and less useful for you."
+  2. "The peptide apps that made it through review did so by removing what matters. That's not what this community needs."
+  3. "A PWA lets us ship the real product — the depth this research space deserves — without permission from a review board that doesn't understand it yet."
+- Accent line in primary blue: **"Small initial friction. Exponential gains."**
+- 5 benefit cards in a 2-col responsive grid (last one full-width), using lucide icons:
+  - `WifiOff` — **Works offline** — Core dose tracking & references without internet
+  - `Monitor` — **Full-screen** — No browser bar, feels like a native app
+  - `RefreshCw` — **Auto-updates** — Always the latest version, no store waits
+  - `Smartphone` — **Same experience** — Identical on iPhone and Android
+  - `ShieldCheck` (wide) — **No gatekeeping** — Safety engine, interaction warnings and dosing logic live free and fully here
 
-- **Logged out:** open the `AuthModal` in sign-up mode (call `onSignInClick` with a `defaultTab: 'signup'` prop) instead of navigating to Q&A.
-- **Logged in:** navigate to `/` (Dashboard / HomeScreen) and auto-trigger the new onboarding tour.
-- Rename the secondary Q&A entry point to a smaller text link ("Join the monthly Q&A →") so it stays accessible but stops hijacking the primary CTA.
-- Keep `captureLead` analytics, but change `source` to `hero_signup_cta` / `activityType: 'signup_intent'`.
+### 3. "Install in 30 seconds" — interactive tabs
+- Auto-detect platform via `navigator.userAgent` to default the active tab (iOS / Android).
+- Tab switcher: **iOS (Safari)** with `Apple`-style icon, **Android (Chrome)** with `Chrome`/Play icon. Animated underline using Framer Motion `layoutId`.
+- Animated step list inside a glass card. Numbered circles in primary blue, staggered fade-in on tab change.
+  - **iOS — Safari only**
+    1. Open `ridethetide.info` in Safari
+    2. Tap the Share icon (box with arrow ↑)
+    3. Scroll and tap **"Add to Home Screen"** ➕
+    4. Tap **"Add"** to confirm
+  - **Android — Chrome**
+    1. Open `ridethetide.info` in Chrome
+    2. Tap the ⋮ menu (top-right)
+    3. Tap **"Install app"** / **"Add to Home Screen"**
+    4. Tap **"Install"** to confirm
+- If `usePWAInstall().isInstallable`, swap the Android list footer for a live **"Install Now"** sparkle button that triggers the native prompt.
+- Footer link: "Already installed? Open the app →" (deep link to `/`).
 
-Apply to: `HeroSection.tsx`, `CTASection.tsx` (its "Get Started Free" button already calls `onSignInClick` — verify and make consistent).
+## Landing wiring
 
-## 3. Pre-signup "Dashboard Preview" section
+In `src/components/landing/LandingPage.tsx`:
+- Remove `HowItWorks` import + render and `BentoFeatures` lazy import + render.
+- Insert lazy-loaded `PWAInstallJourney` in their place (between `HeroSection` and `Testimonials`).
+- Leave existing Suspense placeholders pattern intact.
 
-Add a new landing section `src/components/landing/DashboardPreview.tsx` inserted between `HeroSection` and `BentoFeatures` in `LandingPage.tsx`. Shows a clean annotated screenshot-style mockup of the real Dashboard (Today's Doses, Body Composition, Reminders, Quick Actions) with callout chips ("Log a dose in 2 taps", "See adherence weekly", "Reminders that follow you"). Ends with a single sparkle "Create Free Account" CTA that opens `AuthModal`. Purpose: show the value before the sign-up wall.
+Files `HowItWorks.tsx` and `BentoFeatures.tsx` stay on disk (not deleted) in case other routes import them — confirmed they're only used by `LandingPage` and `index.ts`; we'll prune `index.ts` exports of the two.
 
-## 4. Guided in-app onboarding tour (logged-in)
+## Post-signup onboarding reuse
 
-Replace the static `WelcomeGuide` card with an **interactive 5-step spotlight tour** that fires on first dashboard visit after signup.
+Add a single new step to the post-registration flow so new accounts immediately see how to install:
+- New component `src/components/onboarding/InstallAppStep.tsx` — a condensed, single-screen version of section 3 (tabs + 4 steps + live install button when available) plus a "Skip for now" link.
+- Trigger: after successful signup in `AuthContext` / `AuthModal`, set `localStorage['rtd-install-prompt-pending'] = '1'`. On `Index`/dashboard mount, if pending and `!isInstalled` (from `usePWAInstall`), show `InstallAppStep` as a full-screen modal (Framer Motion fade/slide). Dismiss clears the flag. Then continue to the existing `DashboardTour`.
+- On desktop, skip automatically (only useful on phones), but keep a "Show install guide" entry in `SettingsScreen` so users can replay it.
 
-- New file: `src/components/onboarding/DashboardTour.tsx` — lightweight tour using `framer-motion` (no new dependency). Each step renders a dimmed overlay with a cut-out highlight around a target element, a tooltip ("Step X of 5"), and Next/Skip buttons.
-- Target elements via `data-tour="..."` attributes added to existing components:
-  1. `data-tour="welcome-header"` → "This is your Dashboard. Everything lives here."
-  2. `data-tour="todays-doses"` (`TodaysDoses.tsx`) → "Log today's peptide doses with one tap."
-  3. `data-tour="quick-actions"` (`QuickActions.tsx`) → "Jump to Cycles, Bloodwork, Inventory."
-  4. `data-tour="bottom-nav"` (`BottomNav.tsx`) → "Tap **Home** any time to return to your Dashboard."
-  5. `data-tour="profile-avatar"` → "Your profile, settings, and sign-out live here."
-- Trigger: on mount in `HomeScreen.tsx` when `localStorage['rtd-dashboard-tour-done'] !== 'true'` AND user is authenticated. Also expose a "Replay tour" button in `SettingsScreen.tsx` and inside the existing `WelcomeGuide`.
-- Persists completion; "Skip" also marks done.
+## Brand & motion
 
-## 5. Persistent "Back to Home/Dashboard" affordance
-
-- Ensure `BottomNav.tsx` Home tab is clearly labeled and always visible across screens (verify on modals/sub-routes).
-- Add a top-left "← Dashboard" breadcrumb chip in `AppHeader.tsx` that appears on any route other than `/` and routes back to `/`.
-- Add the same affordance inside full-screen modals (DoseTrackerModal, BloodworkModal, etc.) — a clear "Close → Dashboard" close button label.
-
-## 6. Onboarding polish
-
-- After successful signup in `AuthModal.tsx`, redirect to `/` and set `localStorage['rtd-dashboard-tour-done'] = ''` so the tour fires.
-- Update `WelcomeGuide.tsx` copy to: "New here? Take the 60-second tour →" as the primary action, with the existing 4 quick-start cards as secondary.
-
-## Technical notes
-
-- All colors via Tailwind tokens / existing palette — no new HSL variables required (orange-500 is already used).
-- Sparkle shimmer keyframe added to `tailwind.config.ts` (`shimmer-sweep`) and `index.css`.
-- Tour overlay uses `position: fixed` + `getBoundingClientRect()` of `[data-tour]` targets; recalculates on resize and step change.
-- No backend changes. No new dependencies.
+- Colors: primary `#3B82F6` for accents, headlines/text via `text-foreground` / `text-muted-foreground`, glassmorphism (`backdrop-blur`, `border-border/50`, `bg-card/40`).
+- Typography: existing display heading classes; keep the "Your Phone" gradient highlight using `bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent`.
+- Motion: staggered `whileInView` fades for cards, `layoutId` underline on tab switch, subtle pulse on the live "Install Now" sparkle button (reuse `.btn-sparkle`).
+- Icons: lucide-react only; small Ride The Tide wordmark chip in the hero corner for brand presence.
 
 ## Out of scope
 
-- Backend/auth schema, RLS, edge functions.
-- Capacitor native changes.
-- Memory updates (will follow once approved if needed).
+- No changes to `vite-plugin-pwa` config, service worker, or manifest.
+- No backend/auth schema changes.
+- No copy changes to other landing sections.
+- No new dependencies.

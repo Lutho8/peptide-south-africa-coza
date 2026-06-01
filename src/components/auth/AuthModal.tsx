@@ -95,6 +95,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
           activityType: 'course_start',
           activityData: { method: 'email' },
         });
+        try { localStorage.setItem('rtd-install-prompt-pending', '1'); } catch {}
         toast.success('Account created! You can now sign in.');
         onOpenChange(false);
       }
