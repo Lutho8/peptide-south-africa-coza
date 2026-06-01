@@ -160,8 +160,8 @@ async function pool(items, n, fn) {
 
 const blogFile = path.resolve('src/data/blogPosts.ts');
 const src = fs.readFileSync(blogFile, 'utf8');
-const marker = src.indexOf('blogPosts');
-const jsonStart = src.indexOf('[', marker);
+const marker = src.indexOf('blogPosts: BlogPost[]');
+const jsonStart = src.indexOf('[', src.indexOf('=', marker));
 const jsonEnd = src.lastIndexOf('];');
 const posts = JSON.parse(src.slice(jsonStart, jsonEnd + 1));
 
