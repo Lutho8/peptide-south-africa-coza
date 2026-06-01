@@ -330,6 +330,9 @@ const Index = () => {
             onOpenChange={setProfileSetupOpen}
           />
         )}
+        {installStepOpen && (
+          <InstallAppStep open={installStepOpen} onClose={() => setInstallStepOpen(false)} />
+        )}
       </Suspense>
     </div>
   );
