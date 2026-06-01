@@ -128,7 +128,7 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
       <div className="relative">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search by name, short name, or category..."
+          placeholder='Try "Tesa", "BPC", "Sema"… partial names work'
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10 bg-card border-border"
