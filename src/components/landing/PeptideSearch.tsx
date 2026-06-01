@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { peptides, Peptide } from '@/data/peptides';
+import { getAliasesFor, boundedLevenshtein } from '@/data/peptideAliases';
 import { peptideBlends, PeptideBlend } from '@/data/peptideBlends';
 import { getActiveStack } from '@/services/storage';
 import { cn } from '@/lib/utils';
