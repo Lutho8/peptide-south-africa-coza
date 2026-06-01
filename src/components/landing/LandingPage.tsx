@@ -89,9 +89,8 @@ export function LandingPage() {
       
       <main>
         <HeroSection onCategoryClick={handleCategoryClick} onSignInClick={handleSignInClick} />
-        <HowItWorks />
-        <Suspense fallback={<SectionPlaceholder minH={600} />}>
-          <BentoFeatures />
+        <Suspense fallback={<SectionPlaceholder minH={900} />}>
+          <PWAInstallJourney />
         </Suspense>
         <Suspense fallback={<SectionPlaceholder minH={500} />}>
           <Testimonials />
