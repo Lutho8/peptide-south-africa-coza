@@ -492,7 +492,6 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                 </GradientCard>
                 );
               })}
-              ))}
 
               {cycles.filter(c => c.status !== 'completed').length === 0 && (
                 <GradientCard className="p-3 text-center">
