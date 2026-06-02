@@ -16,7 +16,9 @@ import {
   updateCycle,
   Cycle
 } from '@/services/storage';
-import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell, FlaskConical, Calendar, Sparkles } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell, FlaskConical, Calendar, Sparkles, Pencil } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
+import { EditCyclePanel } from '@/components/doses/EditCyclePanel';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { BulkReminderModal } from './BulkReminderModal';
@@ -36,6 +38,7 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [newCycle, setNewCycle] = useState<Partial<Cycle>>({});
+  const [editingCycleId, setEditingCycleId] = useState<string | null>(null);
   const [latestReport, setLatestReport] = useState<{ id: string; report_date: string | null; uploaded_at: string; extracted_biomarkers: any[] } | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const { toast } = useToast();
