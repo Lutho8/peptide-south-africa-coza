@@ -34,9 +34,14 @@ export interface PwaMockState {
   standaloneMedia: boolean;
   iosStandalone: boolean;
   swSupported: boolean;
+  swBlocked: boolean;
   swController: object | null;
   swRegistration: object | null;
   caches: CacheEntry[];
+  cacheMatchFailsFor: string[];
+  privateBrowsing: boolean;
+  online: boolean;
+  ipadDesktopUa: boolean;
   reloads: number;
   unregistered: number;
   cacheDeletes: string[];
@@ -52,9 +57,14 @@ function createInitial(): PwaMockState {
     standaloneMedia: false,
     iosStandalone: false,
     swSupported: true,
+    swBlocked: false,
     swController: { state: 'activated' },
     swRegistration: {},
     caches: [],
+    cacheMatchFailsFor: [],
+    privateBrowsing: false,
+    online: true,
+    ipadDesktopUa: false,
     reloads: 0,
     unregistered: 0,
     cacheDeletes: [],
