@@ -152,13 +152,30 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
 
   const handleToggleCycleStatus = (cycle: Cycle) => {
     const newStatus = cycle.status === 'active' ? 'break' : 'active';
-    const updatedCycle = { ...cycle, status: newStatus as 'active' | 'break' };
+    const today = new Date().toISOString().split('T')[0];
+    const updatedCycle: Cycle = {
+      ...cycle,
+      status: newStatus as 'active' | 'break',
+      ...(newStatus === 'active'
+        ? { resumedAt: today, pauseReason: undefined }
+        : { pausedAt: today }),
+    };
     updateCycle(updatedCycle);
     setCycles(cycles.map(c => c.id === cycle.id ? updatedCycle : c));
-    
+
     toast({
       title: newStatus === 'break' ? "Break started" : "Cycle resumed",
       description: `${cycle.peptideName} is now ${newStatus === 'break' ? 'on break' : 'active'}.`,
+    });
+  };
+
+  const handleSavePauseEdit = (updated: Cycle) => {
+    updateCycle(updated);
+    setCycles(cycles.map(c => c.id === updated.id ? updated : c));
+    setEditingCycleId(null);
+    toast({
+      title: 'Cycle paused',
+      description: "You can resume when you're back on track.",
     });
   };
 
