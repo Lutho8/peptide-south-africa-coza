@@ -1,94 +1,86 @@
-# Plan — Stronger iOS install tests + SEO-owned Blog
+# Plan
 
-Two independent workstreams. Both are frontend/content; no schema or auth changes.
-
----
-
-## 1. Expand iOS Safari install-verification tests
-
-Goal: emulate Safari install behavior more faithfully and assert the **exact** troubleshooting copy shown for each failure mode.
-
-### Test environment upgrades (`src/test/setup.ts`)
-Extend `pwaMock` so iOS Safari quirks can be simulated deterministically:
-- `navigator.standalone` toggling (iOS-only flag)
-- `window.matchMedia('(display-mode: standalone)')` independent of `navigator.standalone`
-- `navigator.serviceWorker` **absent** (Safari < 16.4 in non-standalone tabs) vs present
-- `caches` API absent (Private Browsing) vs present-but-empty vs populated
-- `navigator.onLine = false` for offline simulation
-- `beforeinstallprompt` never fires on iOS (assert no native prompt path taken)
-- Stub `window.location.assign` / `reload` and capture calls
-
-### New iOS test cases (`src/components/pwa/__tests__/InstallVerification.test.tsx`)
-Adds an `iOS Safari — deep scenarios` describe block:
-
-1. **Safari tab, not installed** → asserts exact strings:
-   - "Tap the Share button" + "Add to Home Screen" + "Open from Home Screen icon"
-   - Shows Share-icon illustration alt text
-2. **Safari standalone, SW missing** (older iOS) → "Update iOS to 16.4 or newer for offline support" guidance
-3. **Safari standalone, caches API blocked (Private Browsing)** → "Disable Private Browsing to enable offline mode"
-4. **Safari standalone, cache present but `/offline.html` match fails** → "Offline fallback not yet cached — open the app once while online"
-5. **Safari standalone + `navigator.onLine === false` + cache ready** → passes; shows "Offline-ready ✓" badge and does NOT show troubleshooting
-6. **Safari standalone + offline + cache empty** → shows "You appear to be offline and assets aren't cached yet. Reconnect and reopen."
-7. **iOS Chrome/Firefox/Edge** → asserts the warning copy verbatim: "Install only works in Safari on iOS. Tap the … menu → 'Open in Safari'." and that the "Open in Safari" link uses `x-safari-https://` scheme
-8. **iPad desktop-mode UA** (MacIntel + maxTouchPoints>1) → treated as iOS-safari, not desktop
-9. **Add-to-Home-Screen completion poll** → simulate user returning with `navigator.standalone=true` after troubleshooting was shown; re-running check transitions to passed state and fires `install_verification_passed` exactly once
-10. **Analytics payload shape** → asserts `platform: 'ios-safari'`, `iosVersion`, `swSupported`, `cachesSupported`, `online` fields are all present on both pass and fail events
-
-If `InstallVerification.tsx` doesn't yet expose all of those copy strings or analytics fields, add them in the same task (small, surgical additions — no UX redesign).
+Two independent workstreams, both frontend-only. No schema, no auth, no business-logic changes outside what's listed.
 
 ---
 
-## 2. Replace external blog links with locally-hosted, SEO-indexable blog pages
+## 1. Expand iOS Safari PWA install verification E2E tests
 
-Right now `BlogSection` and the footer link out to `https://peptiq.io/blog/<slug>` with `target="_blank"`. This bleeds SEO equity off-site and Google won't index Ride The Tide for any of that content. Fix:
+Goal: confirm `InstallVerification.tsx` shows the correct installer step (and exact troubleshooting copy) under realistic iOS Safari conditions — offline, blocked, no SW, private browsing, iPad desktop UA, in-Safari-tab vs standalone.
 
-### 2a. Content model — re-host the articles
-- Extend the importer `scripts/import-peptiq-blogs.mjs` to fetch each `/blog/<slug>` page (not just the index) and pull the **full article markdown** + hero image + author + canonical metadata.
-- Rewrite `src/data/blogPosts.ts` so each `BlogPost` includes:
-  ```ts
-  { id, title, slug, excerpt, contentMd, category, tags[], date, updatedDate,
-    readTime, heroImage, author, sourceUrl /* peptiq original for attribution */ }
-  ```
-  `url` field is removed; `slug` drives internal routing.
-- Add an attribution footer rendered on each post: "Originally researched by Peptiq · republished with adaptation" with `rel="canonical"` pointing at the **Ride The Tide** URL (we are the canonical now — we host the full content, add our own commentary, and the source is credited inline). This is the standard pattern for republished content that you want indexed under your domain.
+### Test harness changes (`src/test/setup.ts`)
 
-> Note for the user: republishing third-party content verbatim has copyright implications. The safe options are (a) we paraphrase + add original commentary per post during import (LLM rewrite pass via Lovable AI Gateway, `google/gemini-2.5-flash`), or (b) we only host short summaries + our own analysis and link out for the full text. **I'll ask which you want before running the importer.**
+Extend `PwaMockState` and `applyMocks()` with:
+- `online: boolean` → drives `navigator.onLine` and dispatches `online`/`offline` events on toggle.
+- `privateBrowsing: boolean` → when true, `caches.open()` rejects with `QuotaExceededError` (Safari Private Mode behavior) and `caches.keys()` returns `[]`.
+- `swBlocked: boolean` → `serviceWorker.getRegistration()` rejects with `SecurityError` (simulates blocked SW / Lockdown Mode).
+- `cacheMatchFailsFor: string[]` → make `caches.match(url)` return `undefined` for listed URLs even if keys include them (simulates partially populated precache).
+- `ipadDesktopUa: boolean` shortcut → sets `navigator.userAgent` to a Mac UA and `navigator.maxTouchPoints = 5` so `detectPlatform()` resolves to `ios-safari` (matches existing logic in `src/lib/pwaInstall.ts`).
+- Helpers: `goOffline()` / `goOnline()` that flip `online` and fire the matching window event.
 
-### 2b. Routing & pages
-- New routes in `src/App.tsx`:
-  - `/blog` → `BlogIndexPage` (paginated grid, category filter, search)
-  - `/blog/:slug` → `BlogPostPage` (full article)
-  - `/blog/category/:category` → `BlogCategoryPage`
-- New components:
-  - `src/pages/BlogIndexPage.tsx`
-  - `src/pages/BlogPostPage.tsx` — renders markdown via `react-markdown` + `remark-gfm` (already referenced in firecrawl docs; add dep if missing), Tailwind `prose prose-invert`
-  - `src/pages/BlogCategoryPage.tsx`
-- Update `BlogSection.tsx` cards: replace `<a href={post.url} target="_blank">` with `<Link to={`/blog/${post.slug}`}>`.
-- Update `LandingFooter.tsx` Blogs column links the same way; "Browse all blogs" → `/blog`.
+### New / expanded cases in `src/components/pwa/__tests__/InstallVerification.test.tsx`
 
-### 2c. SEO plumbing
-- `<SEOHead>` on each post: title, meta description (from excerpt), `og:image` = heroImage, `og:type=article`, `article:published_time`, `article:author`.
-- `<JsonLd>` `BlogPosting` schema per post + `Blog` schema on index.
-- `Breadcrumbs`: Home → Blog → Category → Post.
-- `scripts/generate-sitemap.ts`: import `blogPosts`, add one `<url>` per post (`/blog/<slug>`) and one per category (`/blog/category/<cat>`). Bumps weekly changefreq.
-- `public/robots.txt`: ensure `/blog` not disallowed (it isn't currently — verify).
-- After deploy, trigger `gsc-resubmit-sitemap` edge function so Google re-crawls.
+Add a dedicated `describe('InstallVerification — iOS Safari realistic states', …)` block:
 
-### 2d. Files
-**New:** `src/pages/BlogIndexPage.tsx`, `src/pages/BlogPostPage.tsx`, `src/pages/BlogCategoryPage.tsx`, possibly `src/components/blog/BlogCard.tsx`, `src/components/blog/BlogAttribution.tsx`
-**Edited:** `src/data/blogPosts.ts` (regenerated), `scripts/import-peptiq-blogs.mjs` (deep-fetch + optional LLM rewrite), `scripts/generate-sitemap.ts`, `src/App.tsx`, `src/components/landing/BlogSection.tsx`, `src/components/landing/LandingFooter.tsx`, possibly `src/test/setup.ts` and `src/components/pwa/InstallVerification.tsx`
+1. **In-Safari tab, not installed** → asserts standalone check fails with detail `Open the app from your Home Screen icon` and troubleshooting auto-opens showing the exact Safari steps (`Tap … Share`, `Add to Home Screen`, `Tap … Add`). Asserts `install_verification_failed` payload `{ platform: 'ios-safari', standalone: false }`.
+2. **Standalone + SW unsupported (older iOS)** → `swSupported: false`. SW row state `na` with detail `Not supported on this browser`. Overall still passes if cache `na` too; asserts `markStep('install_completed', …)` fires.
+3. **Standalone + Private Browsing** → `privateBrowsing: true`. Cache row fails with `Cache not yet populated …`, fallback row fails. Troubleshooting opens; asserts "Disable private/incognito mode" copy is visible.
+4. **Standalone + SW blocked (`SecurityError`)** → SW row fails with `Could not query service worker`. Asserts failure analytics include `swOk: false`.
+5. **Standalone + cache populated but `/offline.html` missing** → uses `cacheMatchFailsFor: ['/offline.html']`. Fallback row shows `Offline fallback not yet cached`; cache row still `ok`.
+6. **Offline simulation mid-check** → start online with populated cache, call `goOffline()` before clicking Run; assert all checks still resolve from cache and overall passes (offline-ready banner shown).
+7. **iPad desktop-mode UA** → `ipadDesktopUa: true`; assert platform pill renders `ios safari` and Safari troubleshooting (not Android) appears.
+8. **Re-run after fix** → first run fails (not standalone), then `resetPwaMock({ iosStandalone: true, standaloneMedia: true, caches: [...] })` and click `Re-run check` → success banner appears and `install_verification_passed` fires exactly once for that pass.
+9. **Analytics shape** → assert `track('install_verification_started', { platform: 'ios-safari' })` is called once per Run click and never duplicated.
+
+No production code changes to `InstallVerification.tsx` are expected. If a test reveals a real copy or branching bug, fix in that file with a minimal edit and note it in the closing message.
+
+---
+
+## 2. Cycle pause + edit when user missed days / ran out of peptides
+
+Goal: from `CycleManagementModal`, let a user pause an active cycle, log a reason (`missed_doses` or `out_of_stock`), edit start date / duration / dose / frequency, and resume — without losing history. Pure local-storage feature; uses existing `Cycle` type + `updateCycle`.
+
+### Data (non-breaking additions)
+
+Extend `Cycle` in `src/data/userData.ts`:
+
+```ts
+pauseReason?: 'missed_doses' | 'out_of_stock' | 'other';
+pausedAt?: string;        // ISO date when paused
+resumedAt?: string;       // ISO date when last resumed
+missedDays?: number;      // optional running tally entered by user
+```
+
+All optional, so existing stored cycles keep working. No migration needed.
+
+### UI changes in `src/components/modals/CycleManagementModal.tsx`
+
+- Replace today's single "Start Break / Resume Cycle" button with a two-action row on each active cycle card:
+  - **Pause & edit** → opens an inline `EditCyclePanel` (new component below) prefilled with the cycle.
+  - **Resume** (only when `status === 'break'`) → sets `status: 'active'`, writes `resumedAt`, clears `pauseReason`.
+- Show a small "Paused — out of peptides" / "Paused — caught up on missed days" chip under the status badge when `pauseReason` is set.
+- Calendar grid: render paused-day cells in `bg-amber-500/20` (new third legend entry) so missed-day stretches are visible.
+
+### New component `src/components/doses/EditCyclePanel.tsx`
+
+Inline (not modal — embedded in the cycle card) with fields:
+- Reason chips: `Missed several days` | `Ran out of peptides` | `Other`
+- `Missed days` numeric input (default 0)
+- Editable: `Dose`, `Frequency`, `Start date`, `Planned duration`, `Break duration`, `Notes`
+- Buttons: **Save & pause** (sets `status: 'break'`, `pausedAt: today`, persists edits via `updateCycle`) and **Cancel**.
+
+Toast on save: `Cycle paused — you can resume when you're back on track.`
+
+### Reminders side-effect (minimal)
+
+When a cycle is paused, call existing `useDoseReminders().pauseRemindersForPeptide(peptideId)` if that helper exists; otherwise skip and surface a note "Reminders for this peptide will keep firing — disable in Reminders if needed." (Will check the hook during implementation; no new backend.)
+
+### Files
+
+- New: `src/components/doses/EditCyclePanel.tsx`, `src/components/pwa/__tests__/InstallVerification.ios.test.tsx` (or extend existing file — decide during impl based on size).
+- Edited: `src/test/setup.ts`, `src/components/pwa/__tests__/InstallVerification.test.tsx`, `src/data/userData.ts`, `src/components/modals/CycleManagementModal.tsx`.
 
 ### Out of scope
-- No backend tables for blog posts (static data file is faster, fully indexable, no RLS surface).
-- No comments/likes/newsletter on posts.
-- No changes to Header / nav / Blends & Stacks / Dashboard wiring from previous turn.
 
----
-
-## Question before build mode
-Republishing approach for the ~156 Peptiq articles:
-- **A)** LLM rewrite pass (paraphrase + add Ride The Tide commentary; credit + link to Peptiq). Best for SEO, safest legally, ~5–10 min import cost.
-- **B)** Short summary + our own takeaways only, with "Read full study at Peptiq" CTA. Lighter, very safe.
-- **C)** Verbatim mirror with canonical pointing at **Peptiq** (won't help our SEO — Google credits them). Not recommended.
-
-I'll wait for your pick before running the importer.
+- No paywall changes, no Supabase tables, no notification scheduler changes, no header/footer/blog changes, no styling overhaul of the modal beyond the new chip + amber legend cell.
+- No automatic detection of missed doses — user enters the count themselves.

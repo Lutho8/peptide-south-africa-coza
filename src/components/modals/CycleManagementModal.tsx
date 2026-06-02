@@ -16,7 +16,9 @@ import {
   updateCycle,
   Cycle
 } from '@/services/storage';
-import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell, FlaskConical, Calendar, Sparkles } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell, FlaskConical, Calendar, Sparkles, Pencil } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
+import { EditCyclePanel } from '@/components/doses/EditCyclePanel';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { BulkReminderModal } from './BulkReminderModal';
@@ -36,6 +38,7 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [newCycle, setNewCycle] = useState<Partial<Cycle>>({});
+  const [editingCycleId, setEditingCycleId] = useState<string | null>(null);
   const [latestReport, setLatestReport] = useState<{ id: string; report_date: string | null; uploaded_at: string; extracted_biomarkers: any[] } | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const { toast } = useToast();
@@ -149,13 +152,30 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
 
   const handleToggleCycleStatus = (cycle: Cycle) => {
     const newStatus = cycle.status === 'active' ? 'break' : 'active';
-    const updatedCycle = { ...cycle, status: newStatus as 'active' | 'break' };
+    const today = new Date().toISOString().split('T')[0];
+    const updatedCycle: Cycle = {
+      ...cycle,
+      status: newStatus as 'active' | 'break',
+      ...(newStatus === 'active'
+        ? { resumedAt: today, pauseReason: undefined }
+        : { pausedAt: today }),
+    };
     updateCycle(updatedCycle);
     setCycles(cycles.map(c => c.id === cycle.id ? updatedCycle : c));
-    
+
     toast({
       title: newStatus === 'break' ? "Break started" : "Cycle resumed",
       description: `${cycle.peptideName} is now ${newStatus === 'break' ? 'on break' : 'active'}.`,
+    });
+  };
+
+  const handleSavePauseEdit = (updated: Cycle) => {
+    updateCycle(updated);
+    setCycles(cycles.map(c => c.id === updated.id ? updated : c));
+    setEditingCycleId(null);
+    toast({
+      title: 'Cycle paused',
+      description: "You can resume when you're back on track.",
     });
   };
 
@@ -384,7 +404,13 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
           <div>
             <h3 className="font-medium text-foreground mb-3">Active Cycles</h3>
             <div className="space-y-3">
-              {cycles.filter(c => c.status !== 'completed').map((cycle) => (
+              {cycles.filter(c => c.status !== 'completed').map((cycle) => {
+                const isEditing = editingCycleId === cycle.id;
+                const reasonLabel =
+                  cycle.pauseReason === 'out_of_stock' ? 'Paused — out of peptides' :
+                  cycle.pauseReason === 'missed_doses' ? 'Paused — catching up on missed days' :
+                  cycle.pauseReason === 'other' ? 'Paused' : null;
+                return (
                 <GradientCard key={cycle.id} className="p-3">
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -392,6 +418,11 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                       <p className="text-xs text-muted-foreground">
                         {cycle.dose} • {cycle.frequency}
                       </p>
+                      {reasonLabel && cycle.status === 'break' && (
+                        <span className="inline-flex items-center gap-1 mt-1 rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-[10px]">
+                          {reasonLabel}{typeof cycle.missedDays === 'number' && cycle.missedDays > 0 ? ` · ${cycle.missedDays}d missed` : ''}
+                        </span>
+                      )}
                     </div>
                     <StatusBadge status={cycle.status} />
                   </div>
@@ -409,27 +440,38 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                       <p className="text-muted-foreground">Break</p>
                       <p className="text-foreground">{cycle.breakDuration} days</p>
                     </div>
-                    <div className="flex items-end">
+                    <div className="flex items-end justify-end gap-1.5">
                       {cycle.status === 'active' ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="gap-1"
-                          onClick={() => handleToggleCycleStatus(cycle)}
+                          onClick={() => setEditingCycleId(isEditing ? null : cycle.id)}
                         >
-                          <Pause size={12} />
-                          Start Break
+                          <Pencil size={12} />
+                          Pause & edit
                         </Button>
                       ) : cycle.status === 'break' ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="gap-1"
-                          onClick={() => handleToggleCycleStatus(cycle)}
-                        >
-                          <Play size={12} />
-                          Resume
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => setEditingCycleId(isEditing ? null : cycle.id)}
+                          >
+                            <Pencil size={12} />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => handleToggleCycleStatus(cycle)}
+                          >
+                            <Play size={12} />
+                            Resume
+                          </Button>
+                        </>
                       ) : null}
                     </div>
                   </div>
@@ -437,8 +479,19 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                   {cycle.notes && (
                     <p className="text-xs text-muted-foreground mt-2 italic">{cycle.notes}</p>
                   )}
+
+                  <AnimatePresence>
+                    {isEditing && (
+                      <EditCyclePanel
+                        cycle={cycle}
+                        onSave={handleSavePauseEdit}
+                        onCancel={() => setEditingCycleId(null)}
+                      />
+                    )}
+                  </AnimatePresence>
                 </GradientCard>
-              ))}
+                );
+              })}
 
               {cycles.filter(c => c.status !== 'completed').length === 0 && (
                 <GradientCard className="p-3 text-center">
