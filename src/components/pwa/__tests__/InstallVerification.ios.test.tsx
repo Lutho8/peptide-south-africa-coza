@@ -10,7 +10,8 @@ vi.mock('@/lib/onboardingProgress', async () => {
   return { ...actual, markStep: (...a: unknown[]) => markStepSpy(...a) };
 });
 
-let mockReadiness = { status: 'ready' as const, cachedAssets: 12, lastUpdated: null as number | null };
+type Readiness = { status: 'unknown' | 'caching' | 'ready' | 'unsupported'; cachedAssets: number; lastUpdated: number | null };
+let mockReadiness: Readiness = { status: 'ready', cachedAssets: 12, lastUpdated: null };
 vi.mock('@/hooks/useOfflineReadiness', () => ({
   useOfflineReadiness: () => mockReadiness,
 }));
