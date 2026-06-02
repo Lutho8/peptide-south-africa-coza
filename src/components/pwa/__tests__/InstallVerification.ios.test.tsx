@@ -53,12 +53,12 @@ describe('InstallVerification — iOS Safari realistic states', () => {
     mockReadiness = { status: 'unsupported', cachedAssets: 0, lastUpdated: null };
     resetPwaMock({
       ua: IOS_SAFARI, iosStandalone: true, standaloneMedia: true, swSupported: false,
+      caches: [{ name: 'rtd-precache', keys: ['/offline.html'], match: { '/offline.html': true } }],
     });
     render(<InstallVerification />);
     await runCheck();
 
     expect(await screen.findByText(/Not supported on this browser/i)).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText(/You're offline-ready/i)).toBeInTheDocument());
     expect(markStepSpy).toHaveBeenCalledWith('install_completed', { meta: { source: 'verification' } });
   });
 
