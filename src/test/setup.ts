@@ -140,9 +140,8 @@ function applyMocks() {
       },
     });
   } else {
-    Object.defineProperty(window.navigator, 'serviceWorker', {
-      configurable: true, value: undefined,
-    });
+    // Actually remove the property so `'serviceWorker' in navigator` is false
+    try { delete (window.navigator as unknown as { serviceWorker?: unknown }).serviceWorker; } catch { /* noop */ }
   }
 
   // CacheStorage

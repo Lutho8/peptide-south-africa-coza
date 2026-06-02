@@ -40,7 +40,7 @@ describe('InstallVerification — iOS Safari realistic states', () => {
 
     expect(await screen.findByText(/Open the app from your Home Screen icon/i)).toBeInTheDocument();
     // Troubleshooting auto-expands with the exact Safari steps
-    expect(screen.getByText(/iOS Safari/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/iOS Safari/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Add to Home Screen/i)).toBeInTheDocument();
 
     expect(trackSpy).toHaveBeenCalledWith(
@@ -100,7 +100,7 @@ describe('InstallVerification — iOS Safari realistic states', () => {
     await runCheck();
 
     expect(await screen.findByText(/Offline fallback not yet cached/i)).toBeInTheDocument();
-    expect(screen.getByText(/assets cached/i)).toBeInTheDocument();
+    expect(screen.getByText(/12 assets cached/i)).toBeInTheDocument();
   });
 
   it('passes when toggled offline mid-check (cache serves verification)', async () => {
@@ -123,8 +123,8 @@ describe('InstallVerification — iOS Safari realistic states', () => {
     render(<InstallVerification />);
     await runCheck();
 
-    // Platform pill shows ios safari
-    expect(screen.getByText(/ios safari/i)).toBeInTheDocument();
+    // Platform pill shows ios safari (label + troubleshooting both render it)
+    expect(screen.getAllByText(/ios safari/i).length).toBeGreaterThan(0);
     // Safari (not Android Chrome) troubleshooting is shown
     expect(screen.getByText(/Add to Home Screen/i)).toBeInTheDocument();
     expect(screen.queryByText(/Android Chrome/i)).not.toBeInTheDocument();
