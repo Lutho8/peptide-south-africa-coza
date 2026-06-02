@@ -49,6 +49,10 @@ export interface Cycle {
   breakDuration: number; // days
   status: 'active' | 'break' | 'completed';
   notes?: string;
+  pauseReason?: 'missed_doses' | 'out_of_stock' | 'other';
+  pausedAt?: string;   // ISO date when paused
+  resumedAt?: string;  // ISO date when last resumed
+  missedDays?: number;
 }
 
 // Default empty profile for new members. Each user fills in their own data.
