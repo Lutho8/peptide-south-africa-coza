@@ -4,16 +4,23 @@ import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { userProfile, stackOptimizations } from '@/data/userData';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCloudSync, useSyncPhase } from '@/hooks/useCloudSync';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon, Undo2 } from 'lucide-react';
 import { getGoalLabels } from '@/data/goalMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { EditStackModal, StackItem } from '@/components/modals/EditStackModal';
 import { getActiveStack, saveActiveStack, getUserProfile, getCycles, updateCycle, saveCycle, Cycle } from '@/services/storage';
 import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { toast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
+import { recordStackChange, popLastChange, canUndo as canUndoStack } from '@/services/stackHistory';
+import { StackSyncBadge, type SyncStatus } from '@/components/sync/StackSyncBadge';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
 import { Badge } from '@/components/ui/badge';
 import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
@@ -287,16 +294,43 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
 // --- Main Screen ---
 export function MyStackScreen() {
   const { user } = useAuth();
+  const { syncActiveStack } = useCloudSync();
+  const { phase, lastSyncAt } = useSyncPhase();
+  const [undoAvailable, setUndoAvailable] = useState(false);
   const [activeStack, setActiveStack] = useState<StackItem[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profile, setProfile] = useState(userProfile);
   const [cycles, setCycles] = useState<Cycle[]>([]);
 
-  useEffect(() => {
+  // Start-cycle date picker dialog state
+  const [startCycleDialogOpen, setStartCycleDialogOpen] = useState(false);
+  const [pendingCycle, setPendingCycle] = useState<{ peptideId: string; peptideName: string; dose: string; frequency: string } | null>(null);
+  const [pendingStartDate, setPendingStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  const refreshFromStorage = () => {
     setActiveStack(getActiveStack());
     setProfile(getUserProfile());
     setCycles(getCycles());
+  };
+
+  useEffect(() => {
+    refreshFromStorage();
   }, [user?.id]);
+
+  // When cloud sync finishes hydrating local storage, refresh the screen
+  useEffect(() => {
+    const handler = () => {
+      refreshFromStorage();
+      setUndoAvailable(canUndoStack());
+    };
+    handler();
+    window.addEventListener('rtd:cloud-hydrated', handler);
+    window.addEventListener('rtd:stack-changed', handler);
+    return () => {
+      window.removeEventListener('rtd:cloud-hydrated', handler);
+      window.removeEventListener('rtd:stack-changed', handler);
+    };
+  }, []);
 
   // Resolve display name: stored profile → auth metadata → email → fallback.
   const displayName =
@@ -313,9 +347,38 @@ export function MyStackScreen() {
 
   const hasProfileDetails = profile.age > 0 && profile.height > 0 && profile.weight > 0;
 
-  const handleSaveStack = (newStack: StackItem[]) => {
+  const handleSaveStack = (newStack: StackItem[], reason: 'edit' | 'undo' = 'edit') => {
+    const prev = getActiveStack();
     setActiveStack(newStack);
     saveActiveStack(newStack);
+    if (reason !== 'undo') {
+      const changeReason = newStack.length === 0 && prev.length > 0 ? 'clear' : 'edit';
+      recordStackChange(prev, newStack, changeReason);
+      // Offer undo
+      sonnerToast('Stack updated', {
+        description: changeReason === 'clear' ? 'All peptides removed.' : 'Your stack has been saved.',
+        action: {
+          label: 'Undo',
+          onClick: () => handleUndo(),
+        },
+      });
+    }
+    try {
+      window.dispatchEvent(new CustomEvent('rtd:stack-changed'));
+    } catch { /* noop */ }
+    if (user) {
+      void syncActiveStack().catch(() => { /* noop */ });
+    }
+  };
+
+  const handleUndo = () => {
+    const last = popLastChange();
+    if (!last) {
+      sonnerToast.error('Nothing to undo');
+      return;
+    }
+    handleSaveStack(last.prev, 'undo');
+    sonnerToast.success('Reverted to previous stack');
   };
 
   const handleStartBreak = (cycle: Cycle) => {
@@ -324,7 +387,13 @@ export function MyStackScreen() {
     setCycles(getCycles());
   };
 
-  const handleStartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
+  const openStartCycleDialog = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
+    setPendingCycle({ peptideId, peptideName, dose, frequency });
+    setPendingStartDate(new Date().toISOString().split('T')[0]);
+    setStartCycleDialogOpen(true);
+  };
+
+  const handleStartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string, startDateOverride?: string) => {
     const suggestion = getCycleSuggestion(peptideId);
     const protocol = suggestion?.protocols?.[0];
     const cycleDuration = protocol?.cycleDuration || 60;
@@ -336,7 +405,7 @@ export function MyStackScreen() {
       peptideName,
       dose,
       frequency,
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: startDateOverride || new Date().toISOString().split('T')[0],
       plannedDuration: cycleDuration,
       breakDuration,
       status: 'active',
@@ -345,8 +414,15 @@ export function MyStackScreen() {
     setCycles(getCycles());
     toast({
       title: '🚀 Cycle Started',
-      description: `${peptideName} — ${cycleDuration}-day cycle with ${breakDuration}-day break.`,
+      description: `${peptideName} — started ${newCycle.startDate} • ${cycleDuration}-day cycle.`,
     });
+  };
+
+  const confirmStartCycle = () => {
+    if (!pendingCycle) return;
+    handleStartCycle(pendingCycle.peptideId, pendingCycle.peptideName, pendingCycle.dose, pendingCycle.frequency, pendingStartDate);
+    setStartCycleDialogOpen(false);
+    setPendingCycle(null);
   };
 
   const handleEndCycle = (cycle: Cycle) => {
@@ -364,7 +440,7 @@ export function MyStackScreen() {
     if (existing) {
       updateCycle({ ...existing, status: 'completed' as any });
     }
-    handleStartCycle(peptideId, peptideName, dose, frequency);
+    openStartCycleDialog(peptideId, peptideName, dose, frequency);
   };
 
   const getCycleForPeptide = (peptideId: string): Cycle | undefined => {
@@ -445,10 +521,44 @@ export function MyStackScreen() {
 
       {/* Active Stack Overview */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-foreground">Active Stack</h3>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-foreground">Active Stack</h3>
+            <StackSyncBadge
+              status={
+                !user
+                  ? 'offline'
+                  : phase === 'hydrating' || phase === 'idle'
+                    ? 'hydrating'
+                    : phase === 'syncing'
+                      ? 'syncing'
+                      : phase === 'error'
+                        ? 'error'
+                        : 'ready'
+              }
+              lastSyncAt={lastSyncAt}
+            />
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-primary font-medium">{activeStack.length} peptides</span>
+            <a href="/cycles">
+              <Button variant="outline" size="sm" className="gap-1">
+                <CalendarIcon size={14} />
+                Cycles
+              </Button>
+            </a>
+            {undoAvailable && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUndo}
+                className="gap-1"
+                title="Undo last stack change"
+              >
+                <Undo2 size={14} />
+                Undo
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -480,7 +590,7 @@ export function MyStackScreen() {
                 dose={item.dose}
                 frequency={item.frequency}
                 cycle={getCycleForPeptide(item.peptideId)}
-                onStartCycle={handleStartCycle}
+                onStartCycle={openStartCycleDialog}
                 onEndCycle={handleEndCycle}
                 onRestartCycle={handleRestartCycle}
               />
@@ -543,11 +653,17 @@ export function MyStackScreen() {
         </div>
       )}
 
-      {/* Order Button */}
-      <Button className="w-full gap-2" size="lg">
-        <ShoppingCart size={18} />
-        Order from Supplier
-        <ExternalLink size={14} />
+      {/* Buy Peptides */}
+      <Button
+        className="w-full gap-2"
+        size="lg"
+        asChild
+      >
+        <a href="https://www.ridethetide.site" target="_blank" rel="noopener noreferrer">
+          <ShoppingCart size={18} />
+          Buy Peptides
+          <ExternalLink size={14} />
+        </a>
       </Button>
 
       {/* Active Cycles Summary */}
@@ -600,6 +716,39 @@ export function MyStackScreen() {
         currentStack={activeStack}
         onSave={handleSaveStack}
       />
+
+      {/* Start Cycle dialog — lets users backdate when they actually started */}
+      <Dialog open={startCycleDialogOpen} onOpenChange={setStartCycleDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon size={18} className="text-primary" />
+              Start cycle{pendingCycle ? ` — ${pendingCycle.peptideName}` : ''}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label htmlFor="cycle-start-date" className="text-sm">
+              When did you start this cycle?
+            </Label>
+            <Input
+              id="cycle-start-date"
+              type="date"
+              value={pendingStartDate}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={(e) => setPendingStartDate(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Defaults to today. Pick an earlier date if you already started this peptide.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setStartCycleDialogOpen(false)}>Cancel</Button>
+            <Button onClick={confirmStartCycle} className="gap-2">
+              <Play size={14} /> Start cycle
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

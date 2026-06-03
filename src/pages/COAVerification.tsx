@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, Shield, Search, ExternalLink, FlaskConical, CheckCircle2, Filter, Award, Percent, FileCheck, Download } from 'lucide-react';
 import { generateCOAPdf } from '@/utils/coaPdfExport';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -10,10 +10,21 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Refere
 import { Badge } from '@/components/ui/badge';
 import { peptides, categoryConfig } from '@/data/peptides';
 import type { PeptideCategory } from '@/data/peptides';
+import { useAccessControl } from '@/hooks/useAccessControl';
+import { Loader2 } from 'lucide-react';
 
 export default function COAVerification() {
+  const { isAdmin, isLoading } = useAccessControl();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PeptideCategory | 'all'>('all');
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  }
+  if (!isAdmin) {
+    return <Navigate to="/bloodwork" replace />;
+  }
+
 
   const testedPeptides = useMemo(() => {
     return peptides

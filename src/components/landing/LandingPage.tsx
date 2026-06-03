@@ -1,56 +1,64 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
-import { HowItWorks } from './HowItWorks';
-import { BentoFeatures } from './BentoFeatures';
-import { Testimonials } from './Testimonials';
-import { PricingSection } from './PricingSection';
-import { WhyFreeBand } from './WhyFreeBand';
-import { ResearchTools } from './ResearchTools';
-import { FeaturedPeptides } from './FeaturedPeptides';
-import { PeptideCategories } from './PeptideCategories';
-import { BlogSection } from './BlogSection';
-import { CTASection } from './CTASection';
-import { LandingFooter } from './LandingFooter';
-import { FAQSection, faqCategories } from './FAQSection';
-import { LiveQnAPopup } from './LiveQnAPopup';
+import { SafeSection } from './SafeSection';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { LANDING_SECTIONS } from '@/lib/landingSections';
 import { useAuth } from '@/contexts/AuthContext';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd, buildOrganizationSchema, buildWebSiteSchema, buildFAQSchema } from '@/components/seo/JsonLd';
+import { faqCategories } from './FAQSection';
 
 import { PeptideCategory } from '@/data/peptides';
+
+// Below-the-fold sections — lazy load to improve LCP/TBT
+const BentoFeatures = lazy(() => import('./BentoFeatures').then(m => ({ default: m.BentoFeatures })));
+const PWAInstallJourney = lazy(() => import('./PWAInstallJourney').then(m => ({ default: m.PWAInstallJourney })));
+const InstallVerification = lazy(() => import('@/components/pwa/InstallVerification').then(m => ({ default: m.InstallVerification })));
+const Testimonials = lazy(() => import('./Testimonials').then(m => ({ default: m.Testimonials })));
+const WhyFreeBand = lazy(() => import('./WhyFreeBand').then(m => ({ default: m.WhyFreeBand })));
+const ResearchTools = lazy(() => import('./ResearchTools').then(m => ({ default: m.ResearchTools })));
+const FeaturedPeptides = lazy(() => import('./FeaturedPeptides').then(m => ({ default: m.FeaturedPeptides })));
+const PeptideCategories = lazy(() => import('./PeptideCategories').then(m => ({ default: m.PeptideCategories })));
+const BlogSection = lazy(() => import('./BlogSection').then(m => ({ default: m.BlogSection })));
+const CTASection = lazy(() => import('./CTASection').then(m => ({ default: m.CTASection })));
+const LandingFooter = lazy(() => import('./LandingFooter').then(m => ({ default: m.LandingFooter })));
+const FAQSection = lazy(() => import('./FAQSection').then(m => ({ default: m.FAQSection })));
+const SafetyDisclaimerBand = lazy(() => import('./SafetyDisclaimerBand').then(m => ({ default: m.SafetyDisclaimerBand })));
+const LiveQnAPopup = lazy(() => import('./LiveQnAPopup').then(m => ({ default: m.LiveQnAPopup })));
 
 // Lazy load modals - only loaded when opened
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
 
 const PeptideQuiz = lazy(() => import('./PeptideQuiz').then(m => ({ default: m.PeptideQuiz })));
-const PeptideBlends = lazy(() => import('./PeptideBlends').then(m => ({ default: m.PeptideBlends })));
+const BlendsAndStacks = lazy(() => import('./BlendsAndStacks').then(m => ({ default: m.BlendsAndStacks })));
 const PeptideSearch = lazy(() => import('./PeptideSearch').then(m => ({ default: m.PeptideSearch })));
-const StackBuilder = lazy(() => import('./StackBuilder').then(m => ({ default: m.StackBuilder })));
 const ReconstitutionCalculator = lazy(() => import('./ReconstitutionCalculator').then(m => ({ default: m.ReconstitutionCalculator })));
+
+const SectionPlaceholder = ({ minH = 400 }: { minH?: number }) => (
+  <div style={{ minHeight: minH }} aria-hidden="true" />
+);
 
 export function LandingPage() {
   const { user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [quizOpen, setQuizOpen] = useState(false);
-  const [blendsOpen, setBlendsOpen] = useState(false);
+  const [blendsStacksOpen, setBlendsStacksOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [stackBuilderOpen, setStackBuilderOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [popupReady, setPopupReady] = useState(false);
 
-  const handleSignInClick = () => {
-    setAuthModalOpen(true);
-  };
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 2500));
+    const id = schedule(() => setPopupReady(true));
+    return () => { if (typeof id === 'number') clearTimeout(id); };
+  }, []);
 
-  const handleCategoryClick = (category: PeptideCategory) => {
-    setSearchOpen(true);
-  };
+  const handleSignInClick = () => { setAuthMode('signup'); setAuthModalOpen(true); };
+  const handleCategoryClick = (_category: PeptideCategory) => { setSearchOpen(true); };
 
-  const handleAccessDashboard = () => {
-    window.location.reload();
-  };
-
-  // Collect all FAQs for JSON-LD
   const allFaqs = faqCategories.flatMap(cat => cat.faqs);
 
   return (
@@ -63,43 +71,77 @@ export function LandingPage() {
       <JsonLd data={buildOrganizationSchema()} id="org-schema" />
       <JsonLd data={buildWebSiteSchema()} id="website-schema" />
       <JsonLd data={buildFAQSchema(allFaqs)} id="faq-schema" />
-      <LandingHeader 
-        onSignInClick={handleSignInClick} 
+      <LandingHeader
+        onSignInClick={handleSignInClick}
         onSearch={() => setSearchOpen(true)}
+        onBlendsClick={() => setBlendsStacksOpen(true)}
       />
-      
-      <main>
-        <HeroSection onCategoryClick={handleCategoryClick} />
-        <HowItWorks />
-        <PricingSection />
-        <BentoFeatures />
-        <Testimonials />
-        <WhyFreeBand onPrimaryClick={handleSignInClick} />
-        <ResearchTools 
-          onBlendsClick={() => setBlendsOpen(true)}
-          onQuizClick={() => setQuizOpen(true)}
-          onSearchClick={() => setSearchOpen(true)}
-          onStackClick={() => setStackBuilderOpen(true)}
-          onCalculatorClick={() => setCalculatorOpen(true)}
-        />
-        <div id="featured-peptides">
-          <FeaturedPeptides />
-        </div>
-        <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
-        <BlogSection />
-        <FAQSection />
-        <CTASection onSignInClick={handleSignInClick} />
-      </main>
 
-      <LandingFooter />
-      <LiveQnAPopup />
+      <ErrorBoundary fallbackTitle="The landing page hit a snag">
+        <main>
+          <HeroSection onCategoryClick={handleCategoryClick} onSignInClick={handleSignInClick} />
+
+          <SafeSection name="PWA Install Journey" enabled={LANDING_SECTIONS.pwaJourney} minH={900} component={PWAInstallJourney} />
+          <SafeSection name="Install Verification" enabled={LANDING_SECTIONS.pwaJourney} minH={500} component={InstallVerification} />
+
+          <SafeSection name="Testimonials" enabled={LANDING_SECTIONS.testimonials} minH={500} component={Testimonials} />
+
+          <SafeSection name="Why Free Band" enabled={LANDING_SECTIONS.whyFreeBand} minH={300}>
+            <Suspense fallback={<SectionPlaceholder minH={300} />}>
+              <WhyFreeBand onPrimaryClick={handleSignInClick} />
+            </Suspense>
+          </SafeSection>
+
+          <SafeSection name="Research Tools" enabled={LANDING_SECTIONS.researchTools} minH={500}>
+            <Suspense fallback={<SectionPlaceholder minH={500} />}>
+              <ResearchTools
+                onBlendsClick={() => setBlendsStacksOpen(true)}
+                onQuizClick={() => setQuizOpen(true)}
+                onSearchClick={() => setSearchOpen(true)}
+                onStackClick={() => setBlendsStacksOpen(true)}
+                onCalculatorClick={() => setCalculatorOpen(true)}
+              />
+            </Suspense>
+          </SafeSection>
+
+          <div id="featured-peptides" className="relative">
+            <SafeSection name="Featured Peptides" enabled={LANDING_SECTIONS.featuredPeptides} minH={600} component={FeaturedPeptides} />
+          </div>
+
+          <SafeSection name="Peptide Categories" enabled={LANDING_SECTIONS.peptideCategories} minH={400}>
+            <Suspense fallback={<SectionPlaceholder minH={400} />}>
+              <PeptideCategories onCategoryClick={() => setSearchOpen(true)} />
+            </Suspense>
+          </SafeSection>
+
+          <SafeSection name="Safety Disclaimer" enabled={LANDING_SECTIONS.safetyDisclaimer} minH={120} component={SafetyDisclaimerBand} />
+          <SafeSection name="FAQ" enabled={LANDING_SECTIONS.faq} minH={600} component={FAQSection} />
+
+          <SafeSection name="CTA" enabled={LANDING_SECTIONS.cta} minH={300}>
+            <Suspense fallback={<SectionPlaceholder minH={300} />}>
+              <CTASection onSignInClick={handleSignInClick} />
+            </Suspense>
+          </SafeSection>
+
+          {/* Blogs sit just above the footer */}
+          <SafeSection name="Blogs" enabled={LANDING_SECTIONS.blog} minH={500} component={BlogSection} />
+        </main>
+      </ErrorBoundary>
+
+      <Suspense fallback={<SectionPlaceholder minH={300} />}>
+        <LandingFooter />
+      </Suspense>
+      {popupReady && (
+        <Suspense fallback={null}>
+          <LiveQnAPopup />
+        </Suspense>
+      )}
 
       <Suspense fallback={null}>
-        {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
+        {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} defaultMode={authMode} />}
         {quizOpen && <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />}
-        {blendsOpen && <PeptideBlends open={blendsOpen} onClose={() => setBlendsOpen(false)} />}
+        {blendsStacksOpen && <BlendsAndStacks open={blendsStacksOpen} onClose={() => setBlendsStacksOpen(false)} />}
         {searchOpen && <PeptideSearch open={searchOpen} onClose={() => setSearchOpen(false)} />}
-        {stackBuilderOpen && <StackBuilder open={stackBuilderOpen} onClose={() => setStackBuilderOpen(false)} />}
         {calculatorOpen && <ReconstitutionCalculator open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />}
       </Suspense>
     </div>

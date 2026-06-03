@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 interface SEOHeadProps {
   title: string;
@@ -6,46 +6,44 @@ interface SEOHeadProps {
   canonical?: string;
   ogType?: string;
   ogImage?: string;
+  keywords?: string;
+  lang?: 'en' | 'de';
+  jsonLd?: Record<string, any> | Record<string, any>[];
 }
 
-export function SEOHead({ title, description, canonical, ogType = 'website', ogImage }: SEOHeadProps) {
-  useEffect(() => {
-    document.title = title;
-    
-    const setMeta = (attr: string, key: string, content: string) => {
-      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement;
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute(attr, key);
-        document.head.appendChild(el);
-      }
-      el.content = content;
-    };
+export function SEOHead({
+  title,
+  description,
+  canonical,
+  ogType = 'website',
+  ogImage = 'https://ridethetide.info/logo-animated.png',
+  keywords,
+  lang = 'en',
+  jsonLd,
+}: SEOHeadProps) {
+  const ldArray = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
-    setMeta('name', 'description', description);
-    setMeta('property', 'og:title', title);
-    setMeta('property', 'og:description', description);
-    setMeta('property', 'og:type', ogType);
-    if (ogImage) setMeta('property', 'og:image', ogImage);
-    setMeta('name', 'twitter:title', title);
-    setMeta('name', 'twitter:description', description);
-
-    // Canonical
-    if (canonical) {
-      let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'canonical';
-        document.head.appendChild(link);
-      }
-      link.href = canonical;
-    }
-
-    return () => {
-      const link = document.querySelector('link[rel="canonical"]');
-      if (link) link.remove();
-    };
-  }, [title, description, canonical, ogType, ogImage]);
-
-  return null;
+  return (
+    <Helmet>
+      <html lang={lang} />
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      {keywords && <meta name="keywords" content={keywords} />}
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:type" content={ogType} />
+      <meta property="og:image" content={ogImage} />
+      {canonical && <meta property="og:url" content={canonical} />}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={ogImage} />
+      {canonical && <link rel="canonical" href={canonical} />}
+      {ldArray.map((data, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(data)}
+        </script>
+      ))}
+    </Helmet>
+  );
 }

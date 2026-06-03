@@ -1,17 +1,18 @@
 import { motion } from 'framer-motion';
-import { Lock, ArrowRight, FlaskConical, Award, BookOpen } from 'lucide-react';
+import { Rocket, ArrowRight, FlaskConical, Award, BookOpen, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SparkleButton } from '@/components/ui/SparkleButton';
 import { useNavigate } from 'react-router-dom';
 import { PhoneMockup } from './PhoneMockup';
 import { FloatingStatCards } from './FloatingStatCards';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
-import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureLead } from '@/lib/crm';
 
 interface HeroSectionProps {
   onCategoryClick?: (category: PeptideCategory) => void;
+  onSignInClick?: () => void;
 }
 
 const socialProof = [
@@ -20,10 +21,9 @@ const socialProof = [
   { icon: BookOpen, label: '22+ scientific citations' },
 ];
 
-export function HeroSection({ onCategoryClick }: HeroSectionProps) {
+export function HeroSection({ onCategoryClick, onSignInClick }: HeroSectionProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasPremium } = useMembership();
 
   const scrollToPeptides = () => {
     const el = document.getElementById('featured-peptides');
@@ -34,23 +34,21 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
     }
   };
 
-  const scrollToPricing = () => {
-    const el = document.getElementById('pricing');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const handleQnaCta = () => {
+  const handleStartTracking = () => {
     captureLead({
       email: user?.email ?? null,
-      source: 'hero_qa_cta',
-      planInterest: 'premium',
-      activityType: 'qa_signup',
-      activityData: { hasPremium },
+      source: 'hero_signup_cta',
+      planInterest: 'free',
+      activityType: 'course_start',
+      activityData: { surface: 'hero' },
     });
-    if (hasPremium) {
-      navigate('/live-qna');
+    if (user) {
+      // Already signed in → go to dashboard and (re)trigger the tour
+      try { localStorage.removeItem('rtd-dashboard-tour-done'); } catch {}
+      navigate('/');
     } else {
-      scrollToPricing();
+      // Open auth modal in signup mode
+      onSignInClick?.();
     }
   };
 
@@ -73,37 +71,60 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
           {/* LEFT: Content (mobile order: 2) */}
           <div className="order-2 text-center lg:order-1 lg:text-left">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
                 </span>
-                Welcome to Ride The Tide
+                Built for researchers in Cape Town &amp; across South Africa
               </div>
 
               <h1 className="mt-5 text-balance text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Track, calculate &{' '}
+                The Smartest Way to{' '}
                 <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
-                  optimize
+                  Track
                 </span>{' '}
-                your peptide protocols
+                Your Peptide Research
               </h1>
-            </motion.div>
+            </div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+            <p
               className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg lg:mx-0"
             >
-              Research-grade peptide database, dose calculators, protocol tracking, and free
-              monthly expert Q&A — all in one place. From research to results.
-            </motion.p>
+              Most researchers track their protocols in notes apps, spreadsheets, or memory.
+              The result? Inconsistent cycles, missed doses, and zero insight into what's
+              actually working.
+            </p>
+
+            {/* Positioning card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mx-auto mt-6 max-w-xl rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur lg:mx-0"
+            >
+              <h2 className="text-sm font-semibold text-foreground sm:text-base">
+                Are You Still Guessing Your Peptide Doses?
+              </h2>
+              <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
+                RideTheTide is the first protocol tracker built for the South African peptide
+                research community.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {[
+                  'Log every dose with proper unit conversions (mg, IU, units)',
+                  'Track cycles for BPC-157, TB-500, CJC-1295, Ipamorelin, and 20+ peptides',
+                  'Set protocol reminders so you never miss a dose',
+                  'Monitor progress markers (recovery, sleep, energy, body comp)',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
 
             {/* Dual CTAs */}
             <motion.div
@@ -114,22 +135,33 @@ export function HeroSection({ onCategoryClick }: HeroSectionProps) {
             >
               <Button
                 size="lg"
-                onClick={handleQnaCta}
+                onClick={handleStartTracking}
                 className="h-12 gap-2 bg-gradient-to-r from-primary to-accent px-6 text-primary-foreground shadow-lg hover:opacity-90"
               >
-                <Lock className="h-4 w-4" />
-                {hasPremium ? 'Join Premium Monthly Q&A' : 'Unlock Premium Monthly Q&A'}
+                <Rocket className="h-4 w-4" />
+                {user ? 'Go to Dashboard' : 'Create Free Account'}
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={scrollToPeptides}
-                className="h-12 gap-2 border-2 px-6"
-              >
-                Explore peptides
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              <SparkleButton asChild size="lg" className="h-12 gap-2 px-6">
+                <a
+                  href="https://www.ridethetide.site?utm_source=tracker&utm_medium=hero&utm_campaign=buy_peptides"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Buy Peptides
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </SparkleButton>
             </motion.div>
+
+            {/* Secondary: Q&A link (small, no longer the primary) */}
+            <div className="mt-3 text-center lg:text-left">
+              <button
+                onClick={() => navigate('/live-qna')}
+                className="text-xs text-muted-foreground hover:text-primary underline-offset-2 hover:underline transition-colors"
+              >
+                Or join our free monthly live Q&amp;A →
+              </button>
+            </div>
 
             {/* Social proof pills */}
             <motion.div

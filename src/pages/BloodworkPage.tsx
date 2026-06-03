@@ -3,19 +3,17 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMembership } from '@/hooks/useMembership';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { captureLead } from '@/lib/crm';
 
-import { BloodworkHero } from '@/components/bloodwork/BloodworkHero';
-import { ScanForm, ScanFormState, isFormReady } from '@/components/bloodwork/ScanForm';
-import { ScanTierCards } from '@/components/bloodwork/ScanTierCards';
+import { ScanFormState } from '@/components/bloodwork/ScanForm';
 import { BloodworkResults, BloodworkScanResult } from '@/components/bloodwork/BloodworkResults';
 import { PremiumGate } from '@/components/bloodwork/PremiumGate';
-import { ScanProgress } from '@/components/bloodwork/ScanProgress';
-import { ScanError } from '@/components/bloodwork/ScanError';
+import { BloodworkWizard } from '@/components/bloodwork/BloodworkWizard';
 import { useScanProgress } from '@/hooks/useScanProgress';
 import { exportBloodworkProtocolPDF } from '@/utils/bloodworkProtocolPdf';
 
@@ -206,9 +204,20 @@ export default function BloodworkPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Bloodwork → Protocol | Ride The Tide Premium"
-        description="Premium AI bloodwork decoding: extract biomarkers, score your health, and receive a personalised peptide stack, supplements, nutrition, and retest schedule."
+        title="AI Bloodwork Decoding & Peptide Protocols | Ride The Tide"
+        description="Upload a lab report and get an AI-decoded biomarker breakdown with a personalised peptide stack, supplement plan, and retest schedule. Free baseline scan."
+        canonical="https://ridethetide.info/bloodwork"
       />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: 'AI Bloodwork Decoding',
+        provider: { '@type': 'Organization', name: 'Ride The Tide', url: 'https://ridethetide.info' },
+        serviceType: 'Biomarker analysis and peptide protocol generation',
+        url: 'https://ridethetide.info/bloodwork',
+        description: 'AI-powered lab report analysis that decodes 20+ biomarkers and generates a personalised peptide protocol, supplement plan, and retest schedule.',
+        areaServed: 'Worldwide',
+      }} />
 
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -220,7 +229,7 @@ export default function BloodworkPage() {
               <FlaskConical size={18} className="text-primary" />
               Bloodwork → Protocol
             </h1>
-            <p className="text-[11px] text-muted-foreground">Premium · AI biomarker decoding · personalised stack</p>
+            <p className="text-[11px] text-muted-foreground">Free · AI biomarker decoding · personalised stack</p>
           </div>
         </div>
       </header>
@@ -234,47 +243,32 @@ export default function BloodworkPage() {
         </>
       ) : (
         <>
-          <BloodworkHero />
-
-          <main className="max-w-5xl mx-auto px-4 py-10 pb-24">
-            {!result && (
-              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,1fr] gap-10">
-                <div>
-                  <ScanForm state={form} onChange={setForm} disabled={running !== null} />
-                </div>
-                <div className="space-y-4 lg:sticky lg:top-20 self-start">
-                  {error ? (
-                    <ScanError message={error} onRetry={handleRetry} onReset={handleResetUpload} />
-                  ) : running ? (
-                    <ScanProgress
-                      stage={progress.stage}
-                      label={progress.label}
-                      percent={progress.percent}
-                      onCancel={handleCancel}
-                    />
-                  ) : (
-                    <ScanTierCards ready={isFormReady(form)} running={running} onRun={runScan} />
-                  )}
-                </div>
-              </div>
-            )}
-
-            {result && (
-              <div className="mt-2">
+          {!result ? (
+            <BloodworkWizard
+              state={form}
+              onChange={setForm}
+              running={running}
+              error={error}
+              progress={{ stage: progress.stage, label: progress.label, percent: progress.percent }}
+              onRun={runScan}
+              onCancel={handleCancel}
+              onRetry={handleRetry}
+              onResetUpload={handleResetUpload}
+            />
+          ) : (
+            <main className="max-w-5xl mx-auto px-4 py-8 pb-24">
+              <div className="mb-6">
                 <button
                   type="button"
-                  onClick={() => {
-                    setResult(null);
-                    setLabReportId(null);
-                  }}
-                  className="mb-6 text-xs uppercase tracking-wider text-muted-foreground hover:text-primary"
+                  onClick={() => { setResult(null); setLabReportId(null); }}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-card/40 text-xs font-semibold uppercase tracking-wider text-foreground hover:border-primary/60 transition-colors"
                 >
-                  ← Run another scan
+                  <ArrowLeft size={14} /> Run another scan
                 </button>
-                <BloodworkResults result={result} onDownload={handleDownload} labReportId={labReportId} />
               </div>
-            )}
-          </main>
+              <BloodworkResults result={result} onDownload={handleDownload} labReportId={labReportId} />
+            </main>
+          )}
         </>
       )}
 

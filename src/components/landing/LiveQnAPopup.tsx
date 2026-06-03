@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Lock, Sparkles } from 'lucide-react';
+import { X, Calendar, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { captureLead } from '@/lib/crm';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMembership } from '@/hooks/useMembership';
+import { Link } from 'react-router-dom';
 
 export function LiveQnAPopup() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const { user } = useAuth();
-  const { hasPremium } = useMembership();
 
   useEffect(() => {
     if (sessionStorage.getItem('qna-popup-dismissed')) {
@@ -42,20 +41,18 @@ export function LiveQnAPopup() {
     sessionStorage.setItem('qna-popup-dismissed', 'true');
   };
 
-  const handleUpgrade = () => {
+  const handleReserve = () => {
     captureLead({
       email: user?.email ?? null,
-      source: 'qna_popup_upgrade',
-      planInterest: 'premium',
-      activityType: 'premium_click',
+      source: 'qna_popup_reserve',
+      planInterest: 'free',
+      activityType: 'qa_signup',
       activityData: { surface: 'live_qna_popup' },
     });
     dismiss();
-    const el = document.getElementById('pricing');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  if (dismissed || hasPremium) return null;
+  if (dismissed) return null;
 
   return (
     <AnimatePresence>
@@ -78,29 +75,31 @@ export function LiveQnAPopup() {
 
             <div className="flex items-start gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5 text-accent" />
+                <Calendar className="w-5 h-5 text-accent" />
               </div>
               <div>
                 <h4 className="font-bold text-foreground text-sm">
-                  Premium Monthly Live Q&A
+                  Monthly Live Q&A
                 </h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Exclusive to Premium members · R4.99/mo
+                  Free · First Saturday · On Zoom
                 </p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Live monthly Zoom session with a peptide expert. Get protocol reviews, dosage guidance, and stacking advice — only for Premium members.
+              Live monthly Zoom session with a peptide expert. Get protocol reviews, dosage guidance, and stacking advice — free for registered researchers.
             </p>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95"
-                onClick={handleUpgrade}
-              >
-                <Sparkles className="w-3.5 h-3.5 mr-1" />
-                Unlock with Premium
-              </Button>
+              <Link to="/live-qna" className="flex-1">
+                <Button
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-95"
+                  onClick={handleReserve}
+                >
+                  <Sparkles className="w-3.5 h-3.5 mr-1" />
+                  Reserve my seat
+                </Button>
+              </Link>
               <Button size="sm" variant="ghost" onClick={dismiss}>
                 Not Now
               </Button>

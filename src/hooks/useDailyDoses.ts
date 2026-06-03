@@ -178,7 +178,7 @@ export function useDailyDoses() {
     }
   }, [user, doses]);
 
-  const updateDose = useCallback(async (doseId: string, updates: Partial<Pick<DailyDoseEntry, 'time' | 'notes'>>) => {
+  const updateDose = useCallback(async (doseId: string, updates: Partial<Pick<DailyDoseEntry, 'time' | 'notes' | 'dose' | 'unit'>>) => {
     try {
       if (user) {
         const { error } = await supabase
@@ -186,6 +186,8 @@ export function useDailyDoses() {
           .update({
             ...(updates.time !== undefined && { time: updates.time }),
             ...(updates.notes !== undefined && { notes: updates.notes || null }),
+            ...(updates.dose !== undefined && { dose: updates.dose }),
+            ...(updates.unit !== undefined && { unit: updates.unit }),
           })
           .eq('id', doseId);
 

@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import {
   setActiveUserId,
-  clearAllUserScopedStorage,
   clearLegacyGlobalKeys,
   initializeStorage,
 } from '@/services/storage';
@@ -29,16 +28,14 @@ function ensureLegacyCleared() {
   legacyCleared = true;
 }
 
-function applyUserScope(currentUser: User | null, prevUserId: string | null) {
-  // If the user changed (login, switch, or logout), wipe the previous user's
-  // local-namespace data so no leakage occurs on the same device.
+function applyUserScope(currentUser: User | null, _prevUserId: string | null) {
+  // Switch the storage namespace to the current user (or guest). Each user has
+  // their own namespace ("<key>::<uid>"), so we do NOT wipe other users' data —
+  // that's what was causing stacks/cycles to disappear after sign-in.
+  // Privacy is preserved by namespacing alone.
   const newUserId = currentUser?.id ?? null;
-  if (prevUserId !== newUserId) {
-    // Wipe ALL namespaced data (both prior user's and any guest leftover).
-    clearAllUserScopedStorage();
-  }
   setActiveUserId(newUserId);
-  // Seed default data into the (now-empty) namespace for this user/guest.
+  // Seed defaults only if this user/guest has no namespaced data yet.
   initializeStorage();
 }
 

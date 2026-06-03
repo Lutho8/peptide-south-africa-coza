@@ -1,8 +1,21 @@
 import { Link } from 'react-router-dom';
 import { Twitter, Mail, Linkedin } from 'lucide-react';
 import logoIcon from '@/assets/logo-icon.png';
+import { blogPosts } from '@/data/blogPosts';
 
-const footerLinks = {
+type FooterLink = { label: string; href: string; isRoute?: boolean; external?: boolean };
+
+const latestBlogs: FooterLink[] = blogPosts.slice(0, 5).map(p => ({
+  label: p.title.length > 52 ? p.title.slice(0, 52) + '…' : p.title,
+  href: `/blog/${p.slug}`,
+  isRoute: true,
+}));
+
+const footerLinks: Record<string, FooterLink[]> = {
+  Blogs: [
+    ...latestBlogs,
+    { label: 'Browse all blogs →', href: '/blog', isRoute: true },
+  ],
   'Popular Peptides': [
     { label: 'BPC-157', href: '/peptides/bpc-157', isRoute: true },
     { label: 'Retatrutide', href: '/peptides/retatrutide', isRoute: true },
@@ -29,6 +42,11 @@ const footerLinks = {
     { label: 'Disclaimer', href: '/disclaimer', isRoute: true },
     { label: 'Contact', href: 'mailto:contact@ridethetide.app' },
   ],
+  Network: [
+    { label: 'RTD Research Peptides', href: 'https://www.ridethetide.site' },
+    { label: 'Cape Town Peptide Club', href: 'https://capetownpeptideclub.co.za' },
+    { label: 'WhatsApp Us', href: 'https://wa.me/491624747159?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20RTD' },
+  ],
 };
 
 export function LandingFooter() {
@@ -39,7 +57,7 @@ export function LandingFooter() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             <button
@@ -76,14 +94,16 @@ export function LandingFooter() {
                     {link.isRoute ? (
                       <Link
                         to={link.href}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors line-clamp-2"
                       >
                         {link.label}
                       </Link>
                     ) : (
                       <a
                         href={link.href}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        target={link.external ? '_blank' : undefined}
+                        rel={link.external ? 'noopener noreferrer' : undefined}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors line-clamp-2"
                       >
                         {link.label}
                       </a>
@@ -113,7 +133,7 @@ export function LandingFooter() {
             </div>
           </div>
           <p className="text-center text-xs text-muted-foreground/70 mt-4">
-            Proudly South African 🇿🇦 · Prices in ZAR
+            Built in Cape Town 🇿🇦
           </p>
         </div>
       </div>

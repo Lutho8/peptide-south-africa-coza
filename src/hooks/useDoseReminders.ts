@@ -13,6 +13,9 @@ import {
   bulkSaveReminders, 
   deleteReminderFromIndexedDB,
   saveReminderToIndexedDB,
+  forceSyncAndCheck,
+  registerServiceWorker,
+  requestPushPermission,
   type ScheduledReminder 
 } from '@/services/pushScheduler';
 
@@ -146,6 +149,29 @@ export function useDoseReminders() {
     scheduleRemindersForToday();
   }, [scheduleRemindersForToday]);
 
+  // Ensure browser notification permission has been requested and the SW is
+  // registered, so reminders saved here actually fire later. Returns true if
+  // notifications can be delivered.
+  const ensureNotificationsReady = useCallback(async (): Promise<boolean> => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return false;
+    try {
+      await registerServiceWorker();
+    } catch {
+      // ignore — sw may already be registered
+    }
+    if (Notification.permission === 'default') {
+      const granted = await requestPushPermission();
+      if (!granted) {
+        toast.error('Enable notifications in your browser to receive dose reminders');
+        return false;
+      }
+    } else if (Notification.permission === 'denied') {
+      toast.error('Notifications blocked. Enable them in your browser settings.');
+      return false;
+    }
+    return true;
+  }, []);
+
   const addReminder = useCallback(async (reminder: Omit<DoseReminder, 'id' | 'user_id'>) => {
     const newReminder: DoseReminder = {
       ...reminder,
@@ -172,13 +198,26 @@ export function useDoseReminders() {
       setReminders(updated);
       saveLocalReminders(updated);
 
+      // Make sure the SW is ready and immediately schedule this reminder.
+      await ensureNotificationsReady();
+      await saveReminderToIndexedDB({
+        id: newReminder.id,
+        peptideId: newReminder.peptide_id,
+        peptideName: newReminder.peptide_name,
+        dose: newReminder.dose,
+        time: newReminder.time,
+        days: newReminder.days || [],
+        enabled: newReminder.enabled,
+      });
+      await forceSyncAndCheck();
+
       toast.success('Reminder created');
       return newReminder;
     } catch (error) {
       console.error('Error adding reminder:', error);
       throw error;
     }
-  }, [user, reminders]);
+  }, [user, reminders, ensureNotificationsReady]);
 
   // Bulk add reminders (for cycle import)
   const bulkAddReminders = useCallback(async (newReminders: Omit<DoseReminder, 'id' | 'user_id'>[]) => {
@@ -209,6 +248,10 @@ export function useDoseReminders() {
       saveLocalReminders(updated);
 
       toast.success(`${remindersWithIds.length} reminder${remindersWithIds.length > 1 ? 's' : ''} created`);
+
+      await ensureNotificationsReady();
+      await forceSyncAndCheck();
+
       return remindersWithIds;
     } catch (error) {
       console.error('Error bulk adding reminders:', error);
@@ -240,6 +283,20 @@ export function useDoseReminders() {
       );
       setReminders(updated);
       saveLocalReminders(updated);
+
+      const updatedReminder = updated.find(r => r.id === id);
+      if (updatedReminder) {
+        await saveReminderToIndexedDB({
+          id: updatedReminder.id,
+          peptideId: updatedReminder.peptide_id,
+          peptideName: updatedReminder.peptide_name,
+          dose: updatedReminder.dose,
+          time: updatedReminder.time,
+          days: updatedReminder.days || [],
+          enabled: updatedReminder.enabled,
+        });
+      }
+      await forceSyncAndCheck();
     } catch (error) {
       console.error('Error updating reminder:', error);
       throw error;
@@ -268,17 +325,30 @@ export function useDoseReminders() {
       setReminders(updated);
       saveLocalReminders(updated);
 
-      // Cancel or reschedule notification
-      if (!newEnabled) {
+      // Push the new enabled state into IDB so the SW reschedules immediately.
+      await saveReminderToIndexedDB({
+        id: reminder.id,
+        peptideId: reminder.peptide_id,
+        peptideName: reminder.peptide_name,
+        dose: reminder.dose,
+        time: reminder.time,
+        days: reminder.days || [],
+        enabled: newEnabled,
+      });
+
+      if (newEnabled) {
+        await ensureNotificationsReady();
+      } else {
         const today = new Date();
         const notificationId = `${id}-${reminder.time}-${today.toDateString()}`;
         cancelNotification(notificationId);
       }
+      await forceSyncAndCheck();
     } catch (error) {
       console.error('Error toggling reminder:', error);
       throw error;
     }
-  }, [user, reminders]);
+  }, [user, reminders, ensureNotificationsReady]);
 
   const deleteReminder = useCallback(async (id: string) => {
     try {

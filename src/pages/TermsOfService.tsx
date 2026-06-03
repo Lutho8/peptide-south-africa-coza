@@ -2,10 +2,16 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 export default function TermsOfService() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Terms of Service | Ride The Tide"
+        description="Terms governing use of the Ride The Tide peptide research and protocol tracking platform. Educational use only — not medical advice."
+        canonical="https://ridethetide.info/terms"
+      />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Link to="/">
           <Button variant="ghost" className="mb-6">

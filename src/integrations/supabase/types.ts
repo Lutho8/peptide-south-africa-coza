@@ -284,6 +284,75 @@ export type Database = {
         }
         Relationships: []
       }
+      gsc_coverage_snapshots: {
+        Row: {
+          captured_at: string
+          errors: number | null
+          id: string
+          indexed: number | null
+          raw: Json | null
+          site_url: string
+          submitted: number | null
+          warnings: number | null
+        }
+        Insert: {
+          captured_at?: string
+          errors?: number | null
+          id?: string
+          indexed?: number | null
+          raw?: Json | null
+          site_url: string
+          submitted?: number | null
+          warnings?: number | null
+        }
+        Update: {
+          captured_at?: string
+          errors?: number | null
+          id?: string
+          indexed?: number | null
+          raw?: Json | null
+          site_url?: string
+          submitted?: number | null
+          warnings?: number | null
+        }
+        Relationships: []
+      }
+      gsc_submissions: {
+        Row: {
+          errors: Json | null
+          http_status: number | null
+          id: string
+          site_url: string
+          sitemap_url: string
+          source: string
+          status: string
+          submitted_at: string
+          warnings: number | null
+        }
+        Insert: {
+          errors?: Json | null
+          http_status?: number | null
+          id?: string
+          site_url: string
+          sitemap_url: string
+          source?: string
+          status: string
+          submitted_at?: string
+          warnings?: number | null
+        }
+        Update: {
+          errors?: Json | null
+          http_status?: number | null
+          id?: string
+          site_url?: string
+          sitemap_url?: string
+          source?: string
+          status?: string
+          submitted_at?: string
+          warnings?: number | null
+        }
+        Relationships: []
+      }
       lab_reports: {
         Row: {
           ai_insights: string | null

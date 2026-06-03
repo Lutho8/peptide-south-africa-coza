@@ -22,13 +22,17 @@ const gradientMap: Record<string, string> = {
   'tirzepatide': 'from-orange-500 to-red-600',
 };
 
-export function FeaturedPeptides() {
+interface FeaturedPeptidesProps {
+  limit?: number;
+}
+
+export function FeaturedPeptides({ limit }: FeaturedPeptidesProps = {}) {
   const [selectedPeptide, setSelectedPeptide] = useState<Peptide | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
-  const featuredPeptides = featuredPeptideIds
+  const featuredPeptides = (featuredPeptideIds
     .map(id => peptides.find(p => p.id === id))
-    .filter(Boolean) as Peptide[];
+    .filter(Boolean) as Peptide[]).slice(0, limit ?? featuredPeptideIds.length);
 
   const handlePeptideClick = (peptide: Peptide) => {
     setSelectedPeptide(peptide);

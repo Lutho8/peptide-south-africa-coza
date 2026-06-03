@@ -157,6 +157,29 @@
     }
   }
 
+  /* Lightweight shimmer sweep for skeletons */
+  .shimmer-sweep {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-sweep::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.18),
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: shimmer-sweep 1.6s ease-in-out infinite;
+  }
+  @keyframes shimmer-sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
   /* Premium border glow */
   .premium-border {
     position: relative;
@@ -450,4 +473,50 @@
     content-visibility: auto;
     contain-intrinsic-size: auto 800px;
   }
+}
+
+/* ============================================ */
+/* Sparkle CTA — solid bold orange with shimmer  */
+/* ============================================ */
+@keyframes btn-sparkle-shimmer {
+  0% { transform: translateX(-150%) skewX(-12deg); }
+  100% { transform: translateX(250%) skewX(-12deg); }
+}
+@keyframes btn-sparkle-glow {
+  0%, 100% { box-shadow: 0 8px 24px -6px hsl(24 95% 53% / 0.55), 0 0 0 0 hsl(24 95% 53% / 0.5); }
+  50% { box-shadow: 0 10px 30px -4px hsl(24 95% 53% / 0.75), 0 0 0 6px hsl(24 95% 53% / 0); }
+}
+.btn-sparkle {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: hsl(24 95% 53%); /* tailwind orange-500 */
+  color: #fff !important;
+  font-weight: 600;
+  animation: btn-sparkle-glow 2.4s ease-in-out infinite;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.btn-sparkle:hover {
+  background-color: hsl(21 90% 48%); /* orange-600 */
+  transform: scale(1.03);
+}
+.btn-sparkle::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  animation: btn-sparkle-shimmer 2.6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+.btn-sparkle > * { position: relative; z-index: 2; }
+
+/* Spotlight overlay for dashboard tour */
+.tour-spotlight {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
 }

@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
+import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
+import { VialSizeSelector } from '@/components/peptide/VialSizeSelector';
+import { getVialSizesFor } from '@/data/vialSizes';
 
 interface PeptideDetailModalProps {
   peptide: Peptide | null;
@@ -343,22 +346,28 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
           {/* Dosing Tiers */}
           <GradientCard>
             <h3 className="font-medium text-foreground mb-3">Dosing Tiers</h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            {(() => {
+              const sizes = peptide.vialSizesMg ?? getVialSizesFor(peptide.id);
+              return sizes && sizes.length > 1 ? (
+                <VialSizeSelector peptideId={peptide.id} sizes={sizes} className="mb-3" />
+              ) : null;
+            })()}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
               <div className="p-2 rounded bg-muted/50">
                 <p className="text-muted-foreground text-xs">Beginner</p>
-                <p className="text-foreground font-medium">{peptide.dosing.beginner}</p>
+                <RecommendedDoseDisplay doseString={peptide.dosing.beginner} peptideId={peptide.id} />
               </div>
               <div className="p-2 rounded bg-muted/50">
                 <p className="text-muted-foreground text-xs">Intermediate</p>
-                <p className="text-foreground font-medium">{peptide.dosing.intermediate}</p>
+                <RecommendedDoseDisplay doseString={peptide.dosing.intermediate} peptideId={peptide.id} />
               </div>
               <div className="p-2 rounded bg-muted/50">
                 <p className="text-muted-foreground text-xs">Advanced</p>
-                <p className="text-foreground font-medium">{peptide.dosing.advanced}</p>
+                <RecommendedDoseDisplay doseString={peptide.dosing.advanced} peptideId={peptide.id} />
               </div>
               <div className="p-2 rounded bg-primary/20 border border-primary/30">
                 <p className="text-primary text-xs">Athlete</p>
-                <p className="text-foreground font-medium">{peptide.dosing.athlete}</p>
+                <RecommendedDoseDisplay doseString={peptide.dosing.athlete} peptideId={peptide.id} />
               </div>
             </div>
             <div className="text-xs text-muted-foreground mt-2 space-y-1">
@@ -437,12 +446,12 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
                     </div>
                   ))}
                   <Link
-                    to="/coa-verification"
+                    to="/bloodwork"
                     className="flex items-center gap-1 text-xs text-primary hover:underline mt-2"
                     onClick={() => onOpenChange(false)}
                   >
                     <Shield size={12} />
-                    View all COA certificates →
+                    View bloodwork analysis →
                   </Link>
                 </div>
               )}
@@ -469,10 +478,12 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
                 <p className="text-2xl font-bold text-foreground">${peptide.supplier.price}</p>
               </div>
             </div>
-            <Button className="w-full gap-2">
-              <ShoppingCart size={16} />
-              Order Now
-              <ExternalLink size={14} />
+            <Button className="w-full gap-2" asChild>
+              <a href="https://www.ridethetide.site" target="_blank" rel="noopener noreferrer">
+                <ShoppingCart size={16} />
+                Buy Peptides
+                <ExternalLink size={14} />
+              </a>
             </Button>
           </GradientCard>
 

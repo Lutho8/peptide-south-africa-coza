@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   SCHEDULED_REMINDERS: 'peptide_app_scheduled_reminders',
   ACTIVE_STACK: 'peptide_app_active_stack',
   DAILY_DOSES: 'peptide-daily-doses',
+  DOSAGE_PRESETS: 'peptide_app_dosage_presets',
 } as const;
 
 // ===== Per-user namespacing =====
@@ -340,6 +341,48 @@ export function getActiveStack(): ActiveStackItem[] {
 
 export function saveActiveStack(stack: ActiveStackItem[]): void {
   setStoredData(STORAGE_KEYS.ACTIVE_STACK, stack);
+}
+
+// Dosage Presets Storage
+export type VialUnitType = 'mg' | 'IU' | 'units';
+
+export interface DosagePreset {
+  id: string;
+  name: string;
+  peptideId?: string;
+  blendId?: string;
+  /** Total vial amount in `vialUnitType`. Stored in `vialSize` for back-compat. */
+  vialSize: string;
+  bacWater: string;
+  targetDose: string;
+  syringeType: 'u100' | 'u40' | 'u50';
+  /** Unit type for the vial amount (and target dose). Defaults to 'mg'. */
+  vialUnitType?: VialUnitType;
+  createdAt: string;
+}
+
+export function getDosagePresets(): DosagePreset[] {
+  return getStoredData(STORAGE_KEYS.DOSAGE_PRESETS, [] as DosagePreset[]);
+}
+
+export function saveDosagePreset(preset: DosagePreset): void {
+  const presets = getDosagePresets();
+  const idx = presets.findIndex(p => p.id === preset.id);
+  if (idx >= 0) presets[idx] = preset;
+  else presets.unshift(preset);
+  setStoredData(STORAGE_KEYS.DOSAGE_PRESETS, presets);
+}
+
+export function deleteDosagePreset(id: string): void {
+  setStoredData(STORAGE_KEYS.DOSAGE_PRESETS, getDosagePresets().filter(p => p.id !== id));
+}
+
+// Most recent saved preset for a peptide, if any.
+export function getDosagePresetForPeptide(peptideId: string | undefined): DosagePreset | undefined {
+  if (!peptideId) return undefined;
+  const presets = getDosagePresets().filter(p => p.peptideId === peptideId);
+  if (presets.length === 0) return undefined;
+  return [...presets].sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))[0];
 }
 
 export { STORAGE_KEYS };

@@ -8,7 +8,9 @@ import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { useProfileSync } from '@/hooks/useProfileSync';
+import { useCloudSync } from '@/hooks/useCloudSync';
 import { useScreenTransition } from '@/hooks/useScreenTransition';
+
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -32,6 +34,7 @@ const TransformationScreen = lazy(() => import('@/screens/TransformationScreen')
 const SettingsScreen = lazy(() => import('@/screens/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 
+
 // Lazy load modals
 const BodyCompositionModal = lazy(() => import('@/components/modals/BodyCompositionModal').then(m => ({ default: m.BodyCompositionModal })));
 const DoseTrackerModal = lazy(() => import('@/components/modals/DoseTrackerModal').then(m => ({ default: m.DoseTrackerModal })));
@@ -41,6 +44,7 @@ const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').t
 const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
 const ProfileSetupWizard = lazy(() => import('@/components/onboarding/ProfileSetupWizard').then(m => ({ default: m.ProfileSetupWizard })));
+const InstallAppStep = lazy(() => import('@/components/onboarding/InstallAppStep').then(m => ({ default: m.InstallAppStep })));
 
 const ScreenLoaderHome = () => <HomeSkeleton />;
 const ScreenLoaderList = () => <ListSkeleton />;
@@ -54,6 +58,11 @@ const Index = () => {
   const { user, signOut, isLoading } = useAuth();
   const { isLoading: accessLoading } = useAccessControl();
   const { hydrated: profileHydrated } = useProfileSync();
+  // Mount cloud sync at the app shell so the stack (and other cloud data)
+  // hydrates as soon as the user is authenticated, regardless of which tab
+  // they happen to land on. Without this, hydration only ran when the user
+  // opened the My Stack screen, causing the home preview to look empty.
+  useCloudSync();
   const { getDirection, getTransitionVariants } = useScreenTransition();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
@@ -67,6 +76,38 @@ const Index = () => {
   const [bloodworkOpen, setBloodworkOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [profileSetupOpen, setProfileSetupOpen] = useState(false);
+  const [installStepOpen, setInstallStepOpen] = useState(false);
+
+  // Mark install_completed when user opens app from home screen (standalone)
+  useEffect(() => {
+    if (!user) return;
+    import('@/lib/pwaInstall').then(({ isStandalone }) => {
+      if (isStandalone()) {
+        import('@/lib/onboardingProgress').then(({ markStep }) => {
+          markStep('install_completed', { userId: user.id, meta: { source: 'standalone_launch' } });
+          markStep('install_attempted', { userId: user.id });
+        });
+      }
+    });
+    import('@/lib/onboardingProgress').then(({ markStep }) => markStep('account_created', { userId: user.id }));
+  }, [user]);
+
+  // Show install onboarding once after signup, only on mobile and if not yet installed
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const pending = localStorage.getItem('rtd-install-prompt-pending') === '1';
+      if (!pending) return;
+      const isStandaloneNow = window.matchMedia('(display-mode: standalone)').matches;
+      const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+      if (isStandaloneNow || !isMobile) {
+        localStorage.removeItem('rtd-install-prompt-pending');
+        return;
+      }
+      const t = setTimeout(() => setInstallStepOpen(true), 800);
+      return () => clearTimeout(t);
+    } catch {}
+  }, [user]);
 
   // Auto-open the profile setup wizard once per user — wait for cloud hydration first
   // so we don't prompt a user who already has a profile saved on another device.
@@ -199,7 +240,7 @@ const Index = () => {
     );
   }
 
-  // Landing page for unauthenticated users
+  // Unauthenticated visitors land directly on the landing page
   if (!user) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
@@ -207,7 +248,7 @@ const Index = () => {
       </Suspense>
     );
   }
-  
+
   // Landing page for authenticated users browsing public content
   if (showLandingPage) {
     return (
@@ -239,7 +280,7 @@ const Index = () => {
       <AppHeader onLogoClick={handleLogoClick} />
 
       {/* User Auth Button */}
-      <div className="fixed top-4 right-16 z-50">
+      <div className="fixed top-4 right-16 z-50" data-tour="profile-avatar">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" className="rounded-full bg-card border-border touch-target">
@@ -302,6 +343,9 @@ const Index = () => {
             open={profileSetupOpen}
             onOpenChange={setProfileSetupOpen}
           />
+        )}
+        {installStepOpen && (
+          <InstallAppStep open={installStepOpen} onClose={() => setInstallStepOpen(false)} />
         )}
       </Suspense>
     </div>

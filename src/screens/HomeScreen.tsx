@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { NewsTicker } from '@/components/home/NewsTicker';
 import { BodyCompositionCard } from '@/components/home/BodyCompositionCard';
@@ -13,7 +14,10 @@ import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
 import { BookCallSection } from '@/components/booking/BookCallSection';
 import { WelcomeGuide } from '@/components/home/WelcomeGuide';
+import { ReorderWidget } from '@/components/home/ReorderWidget';
+import { NextClubEventCard } from '@/components/home/NextClubEventCard';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
+import { DashboardTour } from '@/components/onboarding/DashboardTour';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
@@ -68,6 +72,14 @@ export function HomeScreen({
   const { reminders, refreshReminders } = useDoseReminders();
   const { refreshDoses } = useDailyDoses();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [tourForceKey, setTourForceKey] = useState(0);
+
+  useEffect(() => {
+    const onStart = () => setTourForceKey(k => k + 1);
+    window.addEventListener('rtd-start-tour', onStart);
+    return () => window.removeEventListener('rtd-start-tour', onStart);
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([refreshDoses(), refreshReminders()]);
@@ -97,6 +109,7 @@ export function HomeScreen({
       <motion.div 
         className="flex items-center justify-between"
         variants={itemVariants}
+        data-tour="welcome-header"
       >
         <div>
           <h1 className="text-2xl font-bold text-foreground">Welcome back,</h1>
@@ -132,7 +145,7 @@ export function HomeScreen({
       </motion.div>
 
       {/* Today's Doses Summary */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} data-tour="todays-doses">
         <TodaysDoses onViewTracker={onOpenDoseTracker} />
       </motion.div>
 
@@ -140,7 +153,7 @@ export function HomeScreen({
       <motion.div variants={itemVariants}>
         <TodaysReminders 
           reminders={reminders} 
-          onViewSettings={onOpenSettings}
+          onViewSettings={() => navigate('/reminders/today')}
           onMarkAsTaken={(peptideName, dose, time) => {
             // Dispatch event to trigger dose logging via NotificationActionModal
             const event = new CustomEvent('doseNotificationClick', {
@@ -172,7 +185,7 @@ export function HomeScreen({
       </motion.div>
 
       {/* Quick Actions Grid */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} data-tour="quick-actions">
         <QuickActions
           onDoseTracker={onOpenDoseTracker}
           onBodyStats={onOpenBodyComposition}
@@ -194,11 +207,20 @@ export function HomeScreen({
         <BookCallSection />
       </motion.div>
 
+      {/* Cross-property widgets */}
+      <motion.div variants={itemVariants} className="grid gap-3 sm:grid-cols-2">
+        <ReorderWidget />
+        <NextClubEventCard />
+      </motion.div>
+
       {/* Safety Disclaimer */}
       <motion.div variants={itemVariants}>
         <SafetyDisclaimer />
       </motion.div>
       </motion.div>
+
+      {/* First-visit guided dashboard tour */}
+      {user && <DashboardTour key={tourForceKey} force={tourForceKey > 0 ? true : undefined} />}
     </PullToRefresh>
   );
 }

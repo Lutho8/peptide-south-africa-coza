@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -126,6 +126,12 @@ export default function AdminDashboard() {
             <TabsTrigger value="coa" className="gap-1.5">
               <Upload className="h-4 w-4" />
               COA Upload
+            </TabsTrigger>
+            <TabsTrigger value="seo" className="gap-1.5" asChild>
+              <Link to="/admin/seo">
+                <Search className="h-4 w-4" />
+                SEO / Search Console
+              </Link>
             </TabsTrigger>
           </TabsList>
 

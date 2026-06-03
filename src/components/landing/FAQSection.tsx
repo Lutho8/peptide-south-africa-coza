@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, HelpCircle, Shield, FlaskConical, Wrench, Info, CreditCard } from 'lucide-react';
+import { ChevronDown, HelpCircle, Shield, FlaskConical, Wrench, Info, CreditCard, Syringe } from 'lucide-react';
 
 export const faqCategories = [
   {
@@ -31,6 +31,37 @@ export const faqCategories = [
     ],
   },
   {
+    id: 'dosing-adherence',
+    title: 'Dosing & Adherence',
+    icon: Syringe,
+    faqs: [
+      {
+        q: 'How do I know the right starting dose?',
+        a: 'Start at the lowest researched dose for the specific peptide and titrate up only if needed. Each peptide profile in Ride The Tide lists a conservative starting range based on published literature. Body weight, goals, and prior experience all matter — when in doubt, start lower than you think and consult a qualified healthcare professional.',
+      },
+      {
+        q: 'mg, IU, and U-40 units — what is the difference?',
+        a: 'mg (milligrams) measures mass. IU (international units) is a standardized activity unit used for some peptides like HCG and HGH. U-40/U-100 refers to insulin syringe markings — U-100 means 100 units = 1 mL. The Reconstitution Calculator converts your vial size and bacteriostatic water volume into the exact insulin-syringe units to draw. Ride The Tide never uses mcg.',
+      },
+      {
+        q: 'What if I miss a dose?',
+        a: 'For most short half-life peptides (BPC-157, TB-500, GHRPs), take the missed dose as soon as you remember if it is the same day, otherwise skip and resume the next scheduled dose. Never double up. For long half-life compounds (semaglutide, tirzepatide), consult the prescribing guidance — doubling can cause significant side effects.',
+      },
+      {
+        q: 'How strict do I need to be with timing?',
+        a: 'GH-releasing peptides (CJC-1295, Ipamorelin, GHRP-6) are best dosed on an empty stomach (≥2 hours after food, ≥30 min before food) to avoid blunting the GH pulse. Most healing and metabolic peptides are more forgiving — consistency over weeks matters more than perfect timing on a single day.',
+      },
+      {
+        q: 'Can I stack peptides safely?',
+        a: 'Some peptides are synergistic (CJC-1295 + Ipamorelin), some are compatible (BPC-157 + TB-500), and some require caution or should be avoided together. Use the Stacking Matrix in Ride The Tide before combining compounds, and never introduce more than one new peptide at a time so you can attribute any effects.',
+      },
+      {
+        q: 'When should I cycle off?',
+        a: 'Most growth-hormone secretagogues are cycled 8–12 weeks on, 4 weeks off, to preserve receptor sensitivity. Healing peptides like BPC-157 are typically used until the issue resolves. Cycle length depends on the compound, your goal, and bloodwork — Ride The Tide cycle templates default to research-backed durations and warn you when a cycle is overdue.',
+      },
+    ],
+  },
+  {
     id: 'safety',
     title: 'Safety',
     icon: Shield,
@@ -54,6 +85,18 @@ export const faqCategories = [
       {
         q: 'What are common side effects of peptides?',
         a: 'Common side effects vary by peptide but may include injection site reactions (redness, swelling), water retention, increased hunger or decreased appetite, headaches, and fatigue. GH-releasing peptides may cause tingling or numbness. Serious side effects are rare but possible with improper dosing.',
+      },
+      {
+        q: 'When should I consult a doctor or endocrinologist?',
+        a: 'Always speak with a qualified healthcare professional before starting any peptide protocol — and especially before using GH-releasing compounds, GLP-1 agonists, or anything affecting hormones if you have a history of cancer, diabetes, thyroid disease, cardiovascular disease, or are on prescription medication. An endocrinologist is the right specialist for HPA-axis or growth-hormone-related questions.',
+      },
+      {
+        q: 'What bloodwork should I run before and during a cycle?',
+        a: 'Baseline at minimum: full blood count, comprehensive metabolic panel, lipid panel, HbA1c, fasting glucose & insulin, IGF-1 (for GH peptides), TSH, free T3/T4, total & free testosterone, estradiol, and inflammatory markers (hs-CRP). Retest 8–12 weeks into a cycle and again 4 weeks after stopping. The Bloodwork tracker in Ride The Tide flags out-of-range markers automatically.',
+      },
+      {
+        q: 'Red-flag symptoms — when do I stop immediately?',
+        a: 'Stop immediately and seek medical attention for: severe or persistent headaches, vision changes, chest pain, shortness of breath, signs of an allergic reaction (rash, swelling, difficulty breathing), uncontrolled blood pressure spikes, severe injection-site infection, or any symptom that feels seriously out of the ordinary. Do not "push through" — peptides are research compounds, not prescription medication.',
       },
     ],
   },
@@ -106,11 +149,11 @@ export const faqCategories = [
     faqs: [
       {
         q: 'What does it cost to use Ride The Tide?',
-        a: 'Ride The Tide is free to start. The free tier gives you full access to the peptide research database, dose and reconstitution calculators, blends and stacks tools, COA verification, and protocol tracking. The monthly group Q&A on Zoom and 1:1 expert calls are exclusive to Premium members (R4.99/month or R49/year, ZAR).',
+        a: 'Nothing. Ride The Tide is 100% free for registered researchers. You get full access to the peptide database, dose and reconstitution calculators, blends and stacks tools, COA verification, protocol tracking, bloodwork integration, and the monthly group Q&A. No paywalls, no premium tier, no credit card required.',
       },
       {
         q: 'How do I join the monthly Live Q&A?',
-        a: 'The monthly Q&A is exclusive to Premium members. Upgrade from the Pricing section, then reserve your seat from the home page or the "Live Q&A" link in the footer. Sessions run on Zoom on the first Saturday of each month and cover dosage, stacking, cycles, and protocol questions.',
+        a: 'The monthly Q&A is free for all registered researchers. Reserve your seat from the home page or the "Live Q&A" link in the footer. Sessions run on Zoom on the first Saturday of each month and cover dosage, stacking, cycles, and protocol questions.',
       },
       {
         q: 'Can I book a 1-on-1 consultation?',
@@ -128,28 +171,24 @@ export const faqCategories = [
   },
   {
     id: 'pricing',
-    title: 'Pricing & Membership',
+    title: 'Access & Membership',
     icon: CreditCard,
     faqs: [
       {
-        q: "What's included in the free tier?",
-        a: 'The free tier gives you full access to the peptide research database (98+ profiles), reconstitution and dose calculators, the stack and blend builder, COA verification, and protocol tracking. No credit card required, free forever. The monthly group Q&A and 1:1 calls are Premium-only.',
+        q: "What's included for free?",
+        a: 'Everything. All 98+ peptide profiles, reconstitution and dose calculators, the stack and blend builder, COA verification, protocol tracking, dose logging, bloodwork integration, AI insights, advanced cycle planning, the monthly group Q&A, and 1:1 expert calls. No credit card required, free forever.',
       },
       {
-        q: 'What does Premium add?',
-        a: 'Premium (R4.99/month or R49/year) unlocks the exclusive monthly group Q&A on Zoom, 1:1 expert consultation calls, AI-powered bloodwork insights, advanced cycle planning with safety alerts, priority WhatsApp and email support, and early access to new tools as they launch.',
+        q: 'Is there a paid tier I am missing?',
+        a: 'No. We removed all paywalls. Every feature in the app is free for registered researchers. If you want to support the project, the best way is to shop research peptides at ridethetide.site — that is what funds the tracker.',
       },
       {
-        q: 'How do I cancel my Premium subscription?',
-        a: 'You can cancel anytime from your account settings — no questions asked, no retention calls. Your Premium access remains active until the end of your current billing period, then you automatically revert to the free tier with all your data intact.',
-      },
-      {
-        q: "What's your refund policy?",
-        a: "If something is genuinely wrong with the service in your first 14 days, email us at contact@ridethetide.app and we'll make it right. Because Premium is priced at R4.99/month, the easiest path is usually to simply cancel — you won't be billed again.",
+        q: 'Where do I buy research peptides?',
+        a: 'Our sister site Ride The Tide Research Peptides at ridethetide.site stocks COA-verified peptides and ships from South Africa. The tracker and the shop are separate properties but built by the same team.',
       },
       {
         q: 'Is Ride The Tide South African?',
-        a: "Yes 🇿🇦 — Ride The Tide is built and operated from South Africa, with prices in ZAR (South African Rand) and local WhatsApp + email support. We serve a global research community but we're proudly local.",
+        a: "Yes 🇿🇦 — Ride The Tide is built and operated from Cape Town, with local WhatsApp + email support. We serve a global research community but we're proudly local.",
       },
     ],
   },

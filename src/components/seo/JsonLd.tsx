@@ -33,8 +33,8 @@ export function buildOrganizationSchema() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Ride The Tide',
-    url: 'https://peptide-mastery.lovable.app',
-    logo: 'https://peptide-mastery.lovable.app/logo-animated.png',
+    url: 'https://ridethetide.info',
+    logo: 'https://ridethetide.info/logo-animated.png',
     description: 'Peptide research platform providing protocol tracking, dosage guidance, and biomarker analysis.',
     sameAs: [],
     knowsAbout: [
@@ -50,11 +50,11 @@ export function buildWebSiteSchema() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Ride The Tide – Peptide Research & Protocol Platform',
-    url: 'https://peptide-mastery.lovable.app',
+    url: 'https://ridethetide.info',
     description: 'Research-backed peptide database with protocol tracking, reconstitution calculators, and AI-powered biomarker analysis.',
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://peptide-mastery.lovable.app/peptides?q={search_term_string}',
+      target: 'https://ridethetide.info/peptides?q={search_term_string}',
       'query-input': 'required name=search_term_string'
     }
   };
@@ -116,7 +116,7 @@ export function buildPeptideSchema(peptide: {
     '@context': 'https://schema.org',
     '@type': 'MedicalEntity',
     name: peptide.name,
-    url: `https://peptide-mastery.lovable.app/peptides/${peptide.slug}`,
+    url: `https://ridethetide.info/peptides/${peptide.slug}`,
     description: peptide.description,
     medicineSystem: 'WesternConventional',
     relevantSpecialty: ['Endocrinology', 'Sports Medicine', 'Anti-Aging Medicine'],

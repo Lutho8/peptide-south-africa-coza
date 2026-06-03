@@ -2,10 +2,16 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 export default function Disclaimer() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Research Disclaimer | Ride The Tide"
+        description="Peptides referenced on Ride The Tide are research compounds not approved by the FDA. The platform is for educational and research use only."
+        canonical="https://ridethetide.info/disclaimer"
+      />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Link to="/">
           <Button variant="ghost" className="mb-6">
