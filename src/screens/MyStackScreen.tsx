@@ -383,6 +383,7 @@ export function MyStackScreen() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profile, setProfile] = useState(userProfile);
   const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [editingCycleId, setEditingCycleId] = useState<string | null>(null);
 
   // Start-cycle date picker dialog state
   const [startCycleDialogOpen, setStartCycleDialogOpen] = useState(false);
