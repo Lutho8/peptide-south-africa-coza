@@ -19,6 +19,7 @@ import {
 import { Plus, ChevronLeft, ChevronRight, Play, Pause, Save, Bell, FlaskConical, Calendar, Sparkles, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { EditCyclePanel } from '@/components/doses/EditCyclePanel';
+import { DosingReference } from '@/components/doses/DosingReference';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { BulkReminderModal } from './BulkReminderModal';
@@ -426,6 +427,9 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                     </div>
                     <StatusBadge status={cycle.status} />
                   </div>
+
+                  <DosingReference peptideId={cycle.peptideId} dose={cycle.dose} className="mt-2" />
+
 
                   <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-border/50 text-xs">
                     <div>
