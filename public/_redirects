@@ -1,2 +1,11 @@
-# SPA redirect - all routes serve index.html
-/*    /index.html   200
+# SPA Fallback - all routes serve index.html
+/safety/*         /index.html   200
+/injection-sites  /index.html   200
+/injection-sites/* /index.html  200
+/analytics        /index.html   200
+/analytics/*      /index.html   200
+/inventory        /index.html   200
+/inventory/*      /index.html   200
+
+# Catch-all fallback
+/*                /index.html   200
