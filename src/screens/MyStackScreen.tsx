@@ -171,22 +171,64 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, isEditing, 
               </p>
             )}
             {/* Inline cycle action buttons */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {cycle.status === 'active' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 gap-1.5 text-xs h-7"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEndCycle?.(cycle);
-                  }}
-                >
-                  <Square size={10} />
-                  End Cycle
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-7 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePauseEdit?.(cycle);
+                    }}
+                  >
+                    <Pencil size={10} />
+                    {isEditing ? 'Close editor' : 'Edit & pause'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEndCycle?.(cycle);
+                    }}
+                  >
+                    <Square size={10} />
+                    End Cycle
+                  </Button>
+                </>
               )}
-              {(cycle.status === 'break' || cycleInfo.isOverdue) && (
+              {cycle.status === 'break' && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-7 border-primary/30 text-primary hover:bg-primary/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onResume?.(cycle);
+                    }}
+                  >
+                    <Play size={10} />
+                    Resume
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePauseEdit?.(cycle);
+                    }}
+                  >
+                    <Pencil size={10} />
+                    {isEditing ? 'Close editor' : 'Edit'}
+                  </Button>
+                </>
+              )}
+              {cycleInfo.isOverdue && cycle.status === 'active' && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -197,15 +239,27 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, isEditing, 
                   }}
                 >
                   <RotateCcw size={10} />
-                  Restart Cycle
+                  Restart
                 </Button>
               )}
             </div>
+
+            {/* Inline edit/pause panel */}
+            <AnimatePresence>
+              {isEditing && cycle && onSavePauseEdit && (
+                <EditCyclePanel
+                  cycle={cycle}
+                  onSave={onSavePauseEdit}
+                  onCancel={() => onTogglePauseEdit?.(cycle)}
+                />
+              )}
+            </AnimatePresence>
           </div>
         )}
 
         <CollapsibleContent>
           <div className="mt-4 pt-4 border-t border-border/50 space-y-4">
+            <DosingReference peptideId={peptideId} dose={dose} />
             {blendData ? (
               <>
                 <div>
