@@ -530,6 +530,36 @@ export function MyStackScreen() {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
   };
 
+  const handleTogglePauseEdit = (cycle: Cycle) => {
+    setEditingCycleId(prev => (prev === cycle.id ? null : cycle.id));
+  };
+
+  const handleSavePauseEdit = (updated: Cycle) => {
+    updateCycle(updated);
+    setCycles(getCycles());
+    setEditingCycleId(null);
+    toast({
+      title: 'Cycle paused',
+      description: `${updated.peptideName} is paused. Resume when you're back on track.`,
+    });
+  };
+
+  const handleResumeCycle = (cycle: Cycle) => {
+    const today = new Date().toISOString().split('T')[0];
+    const updated: Cycle = {
+      ...cycle,
+      status: 'active',
+      resumedAt: today,
+      pauseReason: undefined,
+    };
+    updateCycle(updated);
+    setCycles(getCycles());
+    toast({
+      title: '▶️ Cycle resumed',
+      description: `${cycle.peptideName} is active again.`,
+    });
+  };
+
   return (
     <div className="pb-24 space-y-6 fade-in">
       {/* User Profile Header */}
@@ -673,9 +703,13 @@ export function MyStackScreen() {
                 dose={item.dose}
                 frequency={item.frequency}
                 cycle={getCycleForPeptide(item.peptideId)}
+                isEditing={editingCycleId === getCycleForPeptide(item.peptideId)?.id}
                 onStartCycle={openStartCycleDialog}
                 onEndCycle={handleEndCycle}
                 onRestartCycle={handleRestartCycle}
+                onTogglePauseEdit={handleTogglePauseEdit}
+                onSavePauseEdit={handleSavePauseEdit}
+                onResume={handleResumeCycle}
               />
             );
           })
