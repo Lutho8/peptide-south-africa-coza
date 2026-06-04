@@ -6,7 +6,7 @@ import { userProfile, stackOptimizations } from '@/data/userData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCloudSync, useSyncPhase } from '@/hooks/useCloudSync';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon, Undo2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon, Undo2, Pause, Pencil } from 'lucide-react';
 import { getGoalLabels } from '@/data/goalMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,9 @@ import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
 import { Badge } from '@/components/ui/badge';
 import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
 import { Progress } from '@/components/ui/progress';
+import { DosingReference } from '@/components/doses/DosingReference';
+import { EditCyclePanel } from '@/components/doses/EditCyclePanel';
+import { AnimatePresence } from 'framer-motion';
 
 // --- Stack Item Card ---
 interface StackItemProps {
@@ -33,9 +36,13 @@ interface StackItemProps {
   frequency: string;
   peptideId: string;
   cycle?: Cycle;
+  isEditing?: boolean;
   onStartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
   onEndCycle?: (cycle: Cycle) => void;
   onRestartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
+  onTogglePauseEdit?: (cycle: Cycle) => void;
+  onSavePauseEdit?: (cycle: Cycle) => void;
+  onResume?: (cycle: Cycle) => void;
 }
 
 function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number; isNearing: boolean; isOverdue: boolean } {
@@ -52,13 +59,20 @@ function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number
   };
 }
 
-function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycle, onEndCycle, onRestartCycle }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
   if (!peptide) return null;
 
   const cycleInfo = cycle ? getCycleProgress(cycle) : null;
+  const pauseLabel = cycle?.pauseReason === 'out_of_stock'
+    ? 'Paused — out of peptides'
+    : cycle?.pauseReason === 'missed_doses'
+      ? 'Paused — catching up'
+      : cycle?.pauseReason === 'other'
+        ? 'Paused'
+        : null;
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -76,6 +90,20 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
               <div className="text-left">
                 <h4 className="font-semibold text-foreground">{peptide.name}</h4>
                 <p className="text-sm text-muted-foreground">{dose} • {frequency}</p>
+                {(pauseLabel || (cycle?.missedDays && cycle.missedDays > 0)) && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {pauseLabel && cycle?.status === 'break' && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-[10px]">
+                        <Pause size={9} /> {pauseLabel}
+                      </span>
+                    )}
+                    {cycle?.missedDays && cycle.missedDays > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 text-amber-300 px-2 py-0.5 text-[10px]">
+                        {cycle.missedDays}d missed
+                      </span>
+                    )}
+                  </div>
+                )}
                 {blendData && (
                   <div className="flex flex-wrap gap-1 mt-1">
                     {blendData.components.slice(0, 3).map((c, i) => (
@@ -143,22 +171,64 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
               </p>
             )}
             {/* Inline cycle action buttons */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {cycle.status === 'active' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 gap-1.5 text-xs h-7"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEndCycle?.(cycle);
-                  }}
-                >
-                  <Square size={10} />
-                  End Cycle
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-7 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePauseEdit?.(cycle);
+                    }}
+                  >
+                    <Pencil size={10} />
+                    {isEditing ? 'Close editor' : 'Edit & pause'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEndCycle?.(cycle);
+                    }}
+                  >
+                    <Square size={10} />
+                    End Cycle
+                  </Button>
+                </>
               )}
-              {(cycle.status === 'break' || cycleInfo.isOverdue) && (
+              {cycle.status === 'break' && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-7 border-primary/30 text-primary hover:bg-primary/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onResume?.(cycle);
+                    }}
+                  >
+                    <Play size={10} />
+                    Resume
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePauseEdit?.(cycle);
+                    }}
+                  >
+                    <Pencil size={10} />
+                    {isEditing ? 'Close editor' : 'Edit'}
+                  </Button>
+                </>
+              )}
+              {cycleInfo.isOverdue && cycle.status === 'active' && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -169,15 +239,27 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, onStartCycl
                   }}
                 >
                   <RotateCcw size={10} />
-                  Restart Cycle
+                  Restart
                 </Button>
               )}
             </div>
+
+            {/* Inline edit/pause panel */}
+            <AnimatePresence>
+              {isEditing && cycle && onSavePauseEdit && (
+                <EditCyclePanel
+                  cycle={cycle}
+                  onSave={onSavePauseEdit}
+                  onCancel={() => onTogglePauseEdit?.(cycle)}
+                />
+              )}
+            </AnimatePresence>
           </div>
         )}
 
         <CollapsibleContent>
           <div className="mt-4 pt-4 border-t border-border/50 space-y-4">
+            <DosingReference peptideId={peptideId} dose={dose} />
             {blendData ? (
               <>
                 <div>
@@ -301,6 +383,7 @@ export function MyStackScreen() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profile, setProfile] = useState(userProfile);
   const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [editingCycleId, setEditingCycleId] = useState<string | null>(null);
 
   // Start-cycle date picker dialog state
   const [startCycleDialogOpen, setStartCycleDialogOpen] = useState(false);
@@ -447,6 +530,36 @@ export function MyStackScreen() {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
   };
 
+  const handleTogglePauseEdit = (cycle: Cycle) => {
+    setEditingCycleId(prev => (prev === cycle.id ? null : cycle.id));
+  };
+
+  const handleSavePauseEdit = (updated: Cycle) => {
+    updateCycle(updated);
+    setCycles(getCycles());
+    setEditingCycleId(null);
+    toast({
+      title: 'Cycle paused',
+      description: `${updated.peptideName} is paused. Resume when you're back on track.`,
+    });
+  };
+
+  const handleResumeCycle = (cycle: Cycle) => {
+    const today = new Date().toISOString().split('T')[0];
+    const updated: Cycle = {
+      ...cycle,
+      status: 'active',
+      resumedAt: today,
+      pauseReason: undefined,
+    };
+    updateCycle(updated);
+    setCycles(getCycles());
+    toast({
+      title: '▶️ Cycle resumed',
+      description: `${cycle.peptideName} is active again.`,
+    });
+  };
+
   return (
     <div className="pb-24 space-y-6 fade-in">
       {/* User Profile Header */}
@@ -590,9 +703,13 @@ export function MyStackScreen() {
                 dose={item.dose}
                 frequency={item.frequency}
                 cycle={getCycleForPeptide(item.peptideId)}
+                isEditing={editingCycleId === getCycleForPeptide(item.peptideId)?.id}
                 onStartCycle={openStartCycleDialog}
                 onEndCycle={handleEndCycle}
                 onRestartCycle={handleRestartCycle}
+                onTogglePauseEdit={handleTogglePauseEdit}
+                onSavePauseEdit={handleSavePauseEdit}
+                onResume={handleResumeCycle}
               />
             );
           })

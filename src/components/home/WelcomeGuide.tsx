@@ -71,7 +71,7 @@ export function WelcomeGuide({ onDoseTracker, onBodyStats, onCycles, onResearch 
           transition={{ duration: 0.3 }}
           className="overflow-hidden"
         >
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 relative">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 sm:p-4 relative w-full max-w-md mx-auto">
             <button
               onClick={handleDismiss}
               className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted transition-colors touch-target flex items-center justify-center"

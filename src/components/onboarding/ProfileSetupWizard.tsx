@@ -214,7 +214,7 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleSkip(); }}>
-      <DialogContent className="max-w-md max-h-[92vh] overflow-y-auto bg-background border-border p-0">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-md sm:max-w-md max-h-[92dvh] overflow-y-auto bg-background border-border p-0 mx-auto rounded-xl">
         <div className="p-6 pb-2">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-2">

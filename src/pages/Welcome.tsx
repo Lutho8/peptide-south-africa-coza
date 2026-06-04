@@ -17,32 +17,32 @@ export default function Welcome() {
   }, [user, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(222_47%_11%)] via-background to-[hsl(217_33%_17%)] flex items-center justify-center px-4 py-12">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-[hsl(222_47%_11%)] via-background to-[hsl(217_33%_17%)] flex items-center justify-center px-4 py-8 sm:py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-2xl text-center"
+        className="w-full max-w-2xl mx-auto text-center"
       >
-        <div className="mb-8 flex justify-center">
+        <div className="mb-6 sm:mb-8 flex justify-center">
           <AnimatedLogo size="lg" showText={false} />
         </div>
 
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.1]">
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.1] text-balance">
           Track Your Protocol.{" "}
           <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-flow">
             See What's Actually Working.
           </span>
         </h1>
 
-        <p className="mt-6 mx-auto max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed">
+        <p className="mt-5 sm:mt-6 mx-auto max-w-xl text-sm sm:text-lg text-muted-foreground leading-relaxed text-pretty">
           The only free peptide tracker built for South African researchers. Dose logging,
           bloodwork integration, monthly expert Q&amp;As.{" "}
           <span className="text-foreground font-semibold">No paywalls. Ever.</span>
         </p>
 
-        <div className="mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-          <Link to="/">
+        <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center">
+          <Link to="/" className="w-full sm:w-auto">
             <Button
               size="lg"
               className="w-full sm:w-auto h-14 px-8 text-base font-semibold gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-xl shadow-primary/25 hover:opacity-95"
@@ -51,7 +51,7 @@ export default function Welcome() {
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
-          <a href={SHOP_URL}>
+          <a href={SHOP_URL} className="w-full sm:w-auto">
             <Button
               size="lg"
               className="btn-sparkle w-full sm:w-auto h-14 px-8 text-base gap-2"
@@ -62,7 +62,7 @@ export default function Welcome() {
           </a>
         </div>
 
-        <p className="mt-10 text-xs text-muted-foreground">
+        <p className="mt-8 sm:mt-10 text-xs text-muted-foreground">
           Built in Cape Town 🇿🇦 · For research use only · Not FDA approved.
         </p>
       </motion.div>
