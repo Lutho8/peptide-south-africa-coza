@@ -51,27 +51,27 @@ function toMs(d: number | string | undefined): number {
 }
 
 export interface ExpirationStatus {
-  status: "ok" | "expiring" | "expired";
+  status: "ok" | "expiring" | "expired" | "valid" | "expiring-soon";
   daysRemaining: number;
 }
 
 export function getExpirationStatus(expirationDate: number | string): ExpirationStatus {
   const days = Math.floor((toMs(expirationDate) - Date.now()) / (1000 * 60 * 60 * 24));
-  const status: ExpirationStatus["status"] = days <= 0 ? "expired" : days <= 30 ? "expiring" : "ok";
+  const status: ExpirationStatus["status"] = days <= 0 ? "expired" : days <= 30 ? "expiring-soon" : "valid";
   return { status, daysRemaining: days };
 }
 
 export interface ReconstitutionStatus {
-  status: "fresh" | "aging" | "expired" | "unreconstituted";
+  status: "fresh" | "aging" | "expired" | "unreconstituted" | "not-reconstituted" | "expiring-soon";
   daysRemaining: number;
 }
 
 export function getReconstitutionStatus(reconstitutionDate?: number | string): ReconstitutionStatus {
-  if (!reconstitutionDate) return { status: "unreconstituted", daysRemaining: 28 };
+  if (!reconstitutionDate) return { status: "not-reconstituted", daysRemaining: 28 };
   const daysSince = Math.floor((Date.now() - toMs(reconstitutionDate)) / (1000 * 60 * 60 * 24));
   const daysRemaining = 28 - daysSince;
   const status: ReconstitutionStatus["status"] =
-    daysSince >= 28 ? "expired" : daysSince >= 21 ? "aging" : "fresh";
+    daysSince >= 28 ? "expired" : daysSince >= 21 ? "expiring-soon" : "fresh";
   return { status, daysRemaining };
 }
 
