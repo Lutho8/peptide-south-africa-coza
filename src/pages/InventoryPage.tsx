@@ -36,7 +36,8 @@ const pageVariants = {
 };
 
 // ===== Helpers =====
-function formatDate(ts: number): string {
+function formatDate(ts: number | string | undefined): string {
+  if (ts == null) return "—";
   return new Date(ts).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -44,12 +45,13 @@ function formatDate(ts: number): string {
   });
 }
 
-function daysUntil(ts: number): number {
-  return Math.ceil((ts - Date.now()) / (1000 * 60 * 60 * 24));
+function daysUntil(ts: number | string): number {
+  const t = typeof ts === "number" ? ts : new Date(ts).getTime();
+  return Math.ceil((t - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
 function getStockPercent(item: InventoryItem): number {
-  return Math.round((item.remainingMg / item.vialSizeMg) * 100);
+  return Math.round(((item.remainingMg ?? 0) / item.vialSizeMg) * 100);
 }
 
 function getStockColor(percent: number): string {
