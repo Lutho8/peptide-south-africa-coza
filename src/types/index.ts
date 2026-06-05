@@ -61,13 +61,18 @@ export interface InventoryItem {
   peptideId: string;
   peptideName: string;
   vialSizeMg: number;
-  remainingMg: number;
-  concentrationMgMl: number;
-  volumeMl: number;
-  openedDate: number;
-  expirationDate: number;
+  remainingMg?: number;
+  concentrationMgMl?: number;
+  volumeMl?: number;
+  openedDate?: number;
+  expirationDate: number | string;
   batchNumber?: string;
   supplier?: string;
+  quantity?: number;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  reconstitutionDate?: string | number;
+  reconstitutionVolumeMl?: number;
 }
 
 export interface InventoryAlert {
@@ -77,6 +82,8 @@ export interface InventoryAlert {
   peptideName: string;
   message: string;
   severity: "warning" | "danger";
+  item?: InventoryItem;
+  alert?: string;
 }
 
 export interface PKSimulationResult {
