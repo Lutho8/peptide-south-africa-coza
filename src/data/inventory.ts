@@ -45,63 +45,88 @@ export function calculateRemainingDoses(
   return dose > 0 ? Math.floor(remaining / dose) : 0;
 }
 
-export function getExpirationStatus(expirationDate: number): "ok" | "expiring" | "expired" {
-  const days = (expirationDate - Date.now()) / (1000 * 60 * 60 * 24);
-  if (days <= 0) return "expired";
-  if (days <= 30) return "expiring";
-  return "ok";
+function toMs(d: number | string | undefined): number {
+  if (d == null) return 0;
+  return typeof d === "number" ? d : new Date(d).getTime();
 }
 
-export function getReconstitutionStatus(reconstitutionDate?: number): "fresh" | "aging" | "expired" | "unreconstituted" {
-  if (!reconstitutionDate) return "unreconstituted";
-  const days = (Date.now() - reconstitutionDate) / (1000 * 60 * 60 * 24);
-  if (days >= 28) return "expired";
-  if (days >= 21) return "aging";
-  return "fresh";
+export interface ExpirationStatus {
+  status: "ok" | "expiring" | "expired";
+  daysRemaining: number;
 }
 
-export function getLowStockAlerts(items: InventoryItem[]): InventoryAlert[] {
-  return checkInventoryAlerts(items).filter((a) => a.type === "low_stock");
+export function getExpirationStatus(expirationDate: number | string): ExpirationStatus {
+  const days = Math.floor((toMs(expirationDate) - Date.now()) / (1000 * 60 * 60 * 24));
+  const status: ExpirationStatus["status"] = days <= 0 ? "expired" : days <= 30 ? "expiring" : "ok";
+  return { status, daysRemaining: days };
 }
 
+export interface ReconstitutionStatus {
+  status: "fresh" | "aging" | "expired" | "unreconstituted";
+  daysRemaining: number;
+}
+
+export function getReconstitutionStatus(reconstitutionDate?: number | string): ReconstitutionStatus {
+  if (!reconstitutionDate) return { status: "unreconstituted", daysRemaining: 28 };
+  const daysSince = Math.floor((Date.now() - toMs(reconstitutionDate)) / (1000 * 60 * 60 * 24));
+  const daysRemaining = 28 - daysSince;
+  const status: ReconstitutionStatus["status"] =
+    daysSince >= 28 ? "expired" : daysSince >= 21 ? "aging" : "fresh";
+  return { status, daysRemaining };
+}
+
+export function getLowStockAlerts(items: InventoryItem[], _usages?: DoseUsage[]): InventoryAlert[] {
+  return checkInventoryAlerts(items);
+}
 
 export function checkInventoryAlerts(items: InventoryItem[]): InventoryAlert[] {
   const now = Date.now();
   const alerts: InventoryAlert[] = [];
 
   for (const item of items) {
-    if (item.remainingMg <= 10) {
+    const remainingMg = item.remainingMg ?? 0;
+    if (remainingMg <= 10) {
+      const msg = `${item.peptideName} has ${remainingMg.toFixed(1)}mg remaining`;
       alerts.push({
         id: `low-${item.id}`,
         type: "low_stock",
         itemId: item.id,
         peptideName: item.peptideName,
-        message: `${item.peptideName} has ${item.remainingMg.toFixed(1)}mg remaining`,
+        message: msg,
         severity: "warning",
+        item,
+        alert: msg,
       });
     }
 
-    const daysUntilExpiry = (item.expirationDate - now) / (1000 * 60 * 60 * 24);
+    const daysUntilExpiry = (toMs(item.expirationDate) - now) / (1000 * 60 * 60 * 24);
     if (daysUntilExpiry <= 0) {
+      const msg = `${item.peptideName} vial has expired`;
       alerts.push({
         id: `expired-${item.id}`,
         type: "expired",
         itemId: item.id,
         peptideName: item.peptideName,
-        message: `${item.peptideName} vial has expired`,
+        message: msg,
         severity: "danger",
+        item,
+        alert: msg,
       });
     } else if (daysUntilExpiry <= 30) {
+      const msg = `${item.peptideName} expires in ${Math.ceil(daysUntilExpiry)} days`;
       alerts.push({
         id: `expiring-${item.id}`,
         type: "expiring_soon",
         itemId: item.id,
         peptideName: item.peptideName,
-        message: `${item.peptideName} expires in ${Math.ceil(daysUntilExpiry)} days`,
+        message: msg,
         severity: "warning",
+        item,
+        alert: msg,
       });
     }
   }
 
   return alerts;
 }
+
