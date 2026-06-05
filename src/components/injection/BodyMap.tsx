@@ -172,7 +172,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
               // Front view: hide glutes and triceps
               return site.zone !== 'glute' && site.zone !== 'tricep';
             }).map((site) => {
-              let status = getSiteStatus(site.id);
+              let status: keyof typeof STATUS_CONFIG = getSiteStatus(site.id);
               const isSelected = selectedSite === site.id;
               const isSuggested = suggestedSite === site.id;
               const isDisabled = disabledSites.includes(site.id) || status === 'disabled';
