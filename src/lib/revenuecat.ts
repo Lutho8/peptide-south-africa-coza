@@ -48,7 +48,7 @@ export async function initializeBilling(userId: string): Promise<BillingResult> 
   if (initialized && initializingFor === userId) return { ok: true };
 
   try {
-    const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
+    const { Purchases, LOG_LEVEL } = await import(/* @vite-ignore */ ('@revenuecat/purchases-capacitor' as string));
     if (!initialized) {
       await Purchases.setLogLevel({ level: LOG_LEVEL.WARN });
       await Purchases.configure({ apiKey, appUserID: userId });
@@ -67,7 +67,7 @@ export async function initializeBilling(userId: string): Promise<BillingResult> 
 export async function getOffering(): Promise<unknown | null> {
   if (!isNative()) return null;
   try {
-    const { Purchases } = await import('@revenuecat/purchases-capacitor');
+    const { Purchases } = await import(/* @vite-ignore */ ('@revenuecat/purchases-capacitor' as string));
     const result: any = await Purchases.getOfferings();
     const offering = result?.all?.[OFFERING_ID] ?? result?.current;
     if (!offering) return null;
@@ -91,7 +91,7 @@ function hasPremiumEntitlement(customerInfo: any): boolean {
 export async function purchaseWeekly(): Promise<BillingResult> {
   if (!isNative()) return { ok: false, isPremium: false, reason: 'not-native' };
   try {
-    const { Purchases } = await import('@revenuecat/purchases-capacitor');
+    const { Purchases } = await import(/* @vite-ignore */ ('@revenuecat/purchases-capacitor' as string));
     const pkg = await getOffering();
     if (!pkg) return { ok: false, isPremium: false, reason: 'no-offering', error: `No package found in offering "${OFFERING_ID}"` };
     const result: any = await Purchases.purchasePackage({ aPackage: pkg as any });
@@ -107,7 +107,7 @@ export async function purchaseWeekly(): Promise<BillingResult> {
 export async function restorePurchases(): Promise<BillingResult> {
   if (!isNative()) return { ok: false, isPremium: false, reason: 'not-native' };
   try {
-    const { Purchases } = await import('@revenuecat/purchases-capacitor');
+    const { Purchases } = await import(/* @vite-ignore */ ('@revenuecat/purchases-capacitor' as string));
     const result: any = await Purchases.restorePurchases();
     return { ok: true, isPremium: hasPremiumEntitlement(result?.customerInfo) };
   } catch (e) {
@@ -118,7 +118,7 @@ export async function restorePurchases(): Promise<BillingResult> {
 export async function checkSubscriptionStatus(): Promise<{ isPremium: boolean }> {
   if (!isNative()) return { isPremium: false };
   try {
-    const { Purchases } = await import('@revenuecat/purchases-capacitor');
+    const { Purchases } = await import(/* @vite-ignore */ ('@revenuecat/purchases-capacitor' as string));
     const result: any = await Purchases.getCustomerInfo();
     return { isPremium: hasPremiumEntitlement(result?.customerInfo) };
   } catch {
