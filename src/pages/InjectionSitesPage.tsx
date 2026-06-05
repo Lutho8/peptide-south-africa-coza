@@ -60,7 +60,7 @@ const ZONE_COLORS: Record<string, { bg: string; border: string; text: string; ac
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
   exit: { opacity: 0, y: -12, transition: { duration: 0.3 } },
 };
 
