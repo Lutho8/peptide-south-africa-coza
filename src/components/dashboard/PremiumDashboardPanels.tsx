@@ -399,9 +399,9 @@ function VialInventoryAlertsCard() {
   const navigate = useNavigate();
   const { items, alerts } = useInventory();
 
-  const lowStockItems = items.filter((i) => i.remainingMg / i.vialSizeMg <= 0.3);
+  const lowStockItems = items.filter((i) => (i.remainingMg ?? 0) / i.vialSizeMg <= 0.3);
   const expiringItems = items.filter(
-    (i) => i.expirationDate - Date.now() <= 30 * 24 * 3600 * 1000
+    (i) => (typeof i.expirationDate === "number" ? i.expirationDate : new Date(i.expirationDate).getTime()) - Date.now() <= 30 * 24 * 3600 * 1000
   );
 
   return (
