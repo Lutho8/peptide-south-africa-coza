@@ -136,13 +136,16 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
-                Cycle Day {cycleInfo.daysElapsed}/{cycle.plannedDuration}
+                Dose {cycleInfo.dosesLogged}/{cycleInfo.dosesPlanned} logged
+                {cycleInfo.dosesBehind > 0 && cycle.status === 'active' && (
+                  <span className="ml-1 text-amber-400">· {cycleInfo.dosesBehind} behind</span>
+                )}
               </span>
               <Badge
                 variant={cycleInfo.isOverdue ? "destructive" : cycleInfo.isNearing ? "secondary" : "outline"}
                 className="text-[10px]"
               >
-                {cycle.status === 'break' ? 'On Break' : cycleInfo.isOverdue ? 'Overdue' : cycleInfo.isNearing ? 'Nearing End' : 'Active'}
+                {cycleStatusLabel(cycleInfo, cycle.status)}
               </Badge>
             </div>
             <div className="w-full h-2 rounded-full bg-muted">
