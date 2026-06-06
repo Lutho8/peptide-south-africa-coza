@@ -2,7 +2,7 @@ import { getCycles, Cycle } from '@/services/storage';
 import { findPeptideOrBlend } from '@/data/blendAdapters';
 import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { showNotification, isNotificationSupported } from '@/services/notifications';
-import { getStoredData, STORAGE_KEYS } from '@/services/storage';
+import { getStoredData } from '@/services/storage';
 import type { DailyDoseEntry } from '@/hooks/useDailyDoses';
 import { getCycleProgress } from '@/lib/cycleProgress';
 
