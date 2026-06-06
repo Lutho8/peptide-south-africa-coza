@@ -38,6 +38,7 @@ interface StackItemProps {
   frequency: string;
   peptideId: string;
   cycle?: Cycle;
+  doses?: DailyDoseEntry[];
   isEditing?: boolean;
   onStartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
   onEndCycle?: (cycle: Cycle) => void;
@@ -47,21 +48,7 @@ interface StackItemProps {
   onResume?: (cycle: Cycle) => void;
 }
 
-function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number; isNearing: boolean; isOverdue: boolean } {
-  const start = new Date(cycle.startDate);
-  const now = new Date();
-  const daysElapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const progress = Math.min((daysElapsed / cycle.plannedDuration) * 100, 100);
-  const warningThreshold = cycle.plannedDuration * 0.85;
-  return {
-    daysElapsed,
-    progress,
-    isNearing: daysElapsed >= warningThreshold && daysElapsed < cycle.plannedDuration,
-    isOverdue: daysElapsed >= cycle.plannedDuration,
-  };
-}
-
-function StackItemCard({ peptide, dose, frequency, peptideId, cycle, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
