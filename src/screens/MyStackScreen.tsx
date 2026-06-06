@@ -781,7 +781,7 @@ export function MyStackScreen() {
           <h3 className="text-lg font-semibold text-foreground mb-3">Active Cycles</h3>
           <div className="space-y-2">
             {cycles.filter(c => c.status === 'active' || c.status === 'break').map((cycle) => {
-              const info = getCycleProgress(cycle);
+              const info = computeCycleProgress(cycle, doses);
               return (
                 <GradientCard key={cycle.id} className="p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -801,7 +801,7 @@ export function MyStackScreen() {
                     />
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Day {info.daysElapsed}/{cycle.plannedDuration} • {cycle.breakDuration}d break after
+                    Dose {info.dosesLogged}/{info.dosesPlanned} · {info.calendarDays}d in · {cycle.breakDuration}d break after
                   </p>
                 </GradientCard>
               );
