@@ -37,11 +37,8 @@ function wasNotificationSent(cycleId: string, type: 'warning' | 'overdue'): bool
   );
 }
 
-function getDaysElapsed(startDate: string): number {
-  const start = new Date(startDate);
-  const now = new Date();
-  return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-}
+
+
 
 function getProtocolForCycle(cycle: Cycle): { maxDays: number; breakDays: number } | null {
   // Try peptide cycleProtocol first
