@@ -28,6 +28,8 @@ import { Progress } from '@/components/ui/progress';
 import { DosingReference } from '@/components/doses/DosingReference';
 import { EditCyclePanel } from '@/components/doses/EditCyclePanel';
 import { AnimatePresence } from 'framer-motion';
+import { useDailyDoses, type DailyDoseEntry } from '@/hooks/useDailyDoses';
+import { getCycleProgress as computeCycleProgress, cycleStatusLabel } from '@/lib/cycleProgress';
 
 // --- Stack Item Card ---
 interface StackItemProps {
