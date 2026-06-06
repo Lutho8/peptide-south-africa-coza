@@ -696,6 +696,7 @@ export function MyStackScreen() {
                 dose={item.dose}
                 frequency={item.frequency}
                 cycle={getCycleForPeptide(item.peptideId)}
+                doses={doses}
                 isEditing={editingCycleId === getCycleForPeptide(item.peptideId)?.id}
                 onStartCycle={openStartCycleDialog}
                 onEndCycle={handleEndCycle}
