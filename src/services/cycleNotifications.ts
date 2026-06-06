@@ -69,6 +69,9 @@ export function checkCycleNotifications(): void {
   if (!isNotificationSupported() || Notification.permission !== 'granted') return;
 
   const cycles = getCycles();
+  // Logged doses drive cycle progress so a paused/skipped schedule doesn't
+  // trigger end-of-cycle alerts based on wall-clock time alone.
+  const doses = getStoredData<DailyDoseEntry[]>('peptide-daily-doses', []);
 
   cycles
     .filter(c => c.status === 'active')
@@ -76,15 +79,15 @@ export function checkCycleNotifications(): void {
       const protocol = getProtocolForCycle(cycle);
       if (!protocol) return;
 
-      const daysElapsed = getDaysElapsed(cycle.startDate);
-      const daysRemaining = protocol.maxDays - daysElapsed;
-      const warningThreshold = Math.min(7, Math.floor(protocol.maxDays * 0.15)); // 15% or 7 days
+      const progress = getCycleProgress(cycle, doses);
+      const dosesRemaining = progress.dosesPlanned - progress.dosesLogged;
+      const warningThreshold = Math.max(1, Math.floor(progress.dosesPlanned * 0.15));
 
-      // Warning: nearing end (at 85% completion)
-      if (daysRemaining <= warningThreshold && daysRemaining > 0) {
+      // Warning: 85% of planned doses logged
+      if (dosesRemaining <= warningThreshold && dosesRemaining > 0) {
         if (!wasNotificationSent(cycle.id, 'warning')) {
           showNotification(`⏰ ${cycle.peptideName} — Cycle Ending Soon`, {
-            body: `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} remaining in your recommended ${protocol.maxDays}-day cycle. Plan your ${protocol.breakDays}-day break.`,
+            body: `${dosesRemaining} dose${dosesRemaining > 1 ? 's' : ''} left in your ${progress.dosesPlanned}-dose cycle. Plan your ${protocol.breakDays}-day break.`,
             tag: `cycle-warning-${cycle.id}`,
             requireInteraction: true,
           });
@@ -92,12 +95,11 @@ export function checkCycleNotifications(): void {
         }
       }
 
-      // Overdue: exceeded recommended duration
-      if (daysRemaining <= 0) {
+      // Overdue: all planned doses logged
+      if (progress.isOverdue) {
         if (!wasNotificationSent(cycle.id, 'overdue')) {
-          const overdueDays = Math.abs(daysRemaining);
-          showNotification(`🛑 ${cycle.peptideName} — Break Overdue`, {
-            body: `You've exceeded the recommended cycle by ${overdueDays} day${overdueDays > 1 ? 's' : ''}. Take a ${protocol.breakDays}-day break to maintain receptor sensitivity and safety.`,
+          showNotification(`🛑 ${cycle.peptideName} — Cycle Complete`, {
+            body: `You've logged all ${progress.dosesPlanned} planned doses. Take a ${protocol.breakDays}-day break to maintain receptor sensitivity and safety.`,
             tag: `cycle-overdue-${cycle.id}`,
             requireInteraction: true,
           });
