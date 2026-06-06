@@ -28,6 +28,8 @@ import { Progress } from '@/components/ui/progress';
 import { DosingReference } from '@/components/doses/DosingReference';
 import { EditCyclePanel } from '@/components/doses/EditCyclePanel';
 import { AnimatePresence } from 'framer-motion';
+import { useDailyDoses, type DailyDoseEntry } from '@/hooks/useDailyDoses';
+import { getCycleProgress as computeCycleProgress, cycleStatusLabel } from '@/lib/cycleProgress';
 
 // --- Stack Item Card ---
 interface StackItemProps {
@@ -36,6 +38,7 @@ interface StackItemProps {
   frequency: string;
   peptideId: string;
   cycle?: Cycle;
+  doses?: DailyDoseEntry[];
   isEditing?: boolean;
   onStartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
   onEndCycle?: (cycle: Cycle) => void;
@@ -45,27 +48,13 @@ interface StackItemProps {
   onResume?: (cycle: Cycle) => void;
 }
 
-function getCycleProgress(cycle: Cycle): { daysElapsed: number; progress: number; isNearing: boolean; isOverdue: boolean } {
-  const start = new Date(cycle.startDate);
-  const now = new Date();
-  const daysElapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const progress = Math.min((daysElapsed / cycle.plannedDuration) * 100, 100);
-  const warningThreshold = cycle.plannedDuration * 0.85;
-  return {
-    daysElapsed,
-    progress,
-    isNearing: daysElapsed >= warningThreshold && daysElapsed < cycle.plannedDuration,
-    isOverdue: daysElapsed >= cycle.plannedDuration,
-  };
-}
-
-function StackItemCard({ peptide, dose, frequency, peptideId, cycle, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
   if (!peptide) return null;
 
-  const cycleInfo = cycle ? getCycleProgress(cycle) : null;
+  const cycleInfo = cycle ? computeCycleProgress(cycle, doses || []) : null;
   const pauseLabel = cycle?.pauseReason === 'out_of_stock'
     ? 'Paused — out of peptides'
     : cycle?.pauseReason === 'missed_doses'
@@ -147,13 +136,16 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, isEditing, 
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
-                Cycle Day {cycleInfo.daysElapsed}/{cycle.plannedDuration}
+                Dose {cycleInfo.dosesLogged}/{cycleInfo.dosesPlanned} logged
+                {cycleInfo.dosesBehind > 0 && cycle.status === 'active' && (
+                  <span className="ml-1 text-amber-400">· {cycleInfo.dosesBehind} behind</span>
+                )}
               </span>
               <Badge
                 variant={cycleInfo.isOverdue ? "destructive" : cycleInfo.isNearing ? "secondary" : "outline"}
                 className="text-[10px]"
               >
-                {cycle.status === 'break' ? 'On Break' : cycleInfo.isOverdue ? 'Overdue' : cycleInfo.isNearing ? 'Nearing End' : 'Active'}
+                {cycleStatusLabel(cycleInfo, cycle.status)}
               </Badge>
             </div>
             <div className="w-full h-2 rounded-full bg-muted">
@@ -384,6 +376,7 @@ export function MyStackScreen() {
   const [profile, setProfile] = useState(userProfile);
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [editingCycleId, setEditingCycleId] = useState<string | null>(null);
+  const { doses } = useDailyDoses();
 
   // Start-cycle date picker dialog state
   const [startCycleDialogOpen, setStartCycleDialogOpen] = useState(false);
@@ -703,6 +696,7 @@ export function MyStackScreen() {
                 dose={item.dose}
                 frequency={item.frequency}
                 cycle={getCycleForPeptide(item.peptideId)}
+                doses={doses}
                 isEditing={editingCycleId === getCycleForPeptide(item.peptideId)?.id}
                 onStartCycle={openStartCycleDialog}
                 onEndCycle={handleEndCycle}
@@ -789,7 +783,7 @@ export function MyStackScreen() {
           <h3 className="text-lg font-semibold text-foreground mb-3">Active Cycles</h3>
           <div className="space-y-2">
             {cycles.filter(c => c.status === 'active' || c.status === 'break').map((cycle) => {
-              const info = getCycleProgress(cycle);
+              const info = computeCycleProgress(cycle, doses);
               return (
                 <GradientCard key={cycle.id} className="p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -809,7 +803,7 @@ export function MyStackScreen() {
                     />
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Day {info.daysElapsed}/{cycle.plannedDuration} • {cycle.breakDuration}d break after
+                    Dose {info.dosesLogged}/{info.dosesPlanned} · {info.calendarDays}d in · {cycle.breakDuration}d break after
                   </p>
                 </GradientCard>
               );
