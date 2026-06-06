@@ -376,6 +376,7 @@ export function MyStackScreen() {
   const [profile, setProfile] = useState(userProfile);
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [editingCycleId, setEditingCycleId] = useState<string | null>(null);
+  const { doses } = useDailyDoses();
 
   // Start-cycle date picker dialog state
   const [startCycleDialogOpen, setStartCycleDialogOpen] = useState(false);
