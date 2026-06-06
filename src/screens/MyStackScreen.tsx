@@ -54,7 +54,7 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
 
   if (!peptide) return null;
 
-  const cycleInfo = cycle ? getCycleProgress(cycle) : null;
+  const cycleInfo = cycle ? computeCycleProgress(cycle, doses || []) : null;
   const pauseLabel = cycle?.pauseReason === 'out_of_stock'
     ? 'Paused — out of peptides'
     : cycle?.pauseReason === 'missed_doses'
