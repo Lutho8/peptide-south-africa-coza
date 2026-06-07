@@ -221,16 +221,22 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
     });
   };
 
-  // Get cycle blocks for calendar
-  const getCycleForDay = (day: number): Cycle | undefined => {
+  // For a given day-of-month, return the cycle whose window covers it AND
+  // whether the user actually logged a dose for that cycle's peptide on that
+  // day. Only logged days light up — empty days stay neutral, so the calendar
+  // mirrors the daily log instead of advancing on its own.
+  const getCycleForDay = (day: number): { cycle: Cycle; logged: boolean } | undefined => {
     const dateStr = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return cycles.find(cycle => {
-      const start = new Date(cycle.startDate);
+    for (const { cycle, dates } of cycleLogDates) {
+      const start = cycle.startDate;
+      if (dateStr < start) continue;
       const end = new Date(start);
       end.setDate(end.getDate() + cycle.plannedDuration);
-      const checkDate = new Date(dateStr);
-      return checkDate >= start && checkDate <= end;
-    });
+      const endStr = end.toISOString().split('T')[0];
+      if (dateStr > endStr) continue;
+      return { cycle, logged: dates.has(dateStr) };
+    }
+    return undefined;
   };
 
   const reportDateLabel = latestReport?.report_date || latestReport?.uploaded_at?.split('T')[0] || '';
