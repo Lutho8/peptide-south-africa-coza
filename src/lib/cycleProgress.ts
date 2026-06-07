@@ -129,10 +129,36 @@ export function getCycleProgress(
 
 /** Short status word used in badges / labels. */
 export function cycleStatusLabel(p: CycleProgress, status?: string): string {
-  if (status === 'break') return 'On Break';
+  if (status === 'break') return 'Paused';
   if (p.isOverdue) return 'Complete';
-  if (p.isNearing) return 'Nearing End';
-  if (p.dosesBehind >= 2) return 'Behind';
   if (p.dosesLogged === 0) return 'Not Started';
-  return 'Active';
+  if (p.isNearing) return 'Nearing End';
+  // Weekly / sub-daily cadence: a single missed expected dose pauses the cycle
+  if (p.perWeek < 7 && p.dosesBehind >= 1) return 'Paused';
+  if (p.dosesBehind >= 2) return 'Behind';
+  return 'On Track';
+}
+
+/**
+ * Return the set of YYYY-MM-DD dates with a logged dose for this cycle's peptide,
+ * on or after the cycle start. Used by calendars to highlight only days the user
+ * actually logged — the cycle does not advance for empty days.
+ */
+export function getLoggedDoseDates(
+  cycle: Cycle,
+  doses: DailyDoseEntry[] = [],
+): Set<string> {
+  const slugify = (s: string | undefined | null): string =>
+    (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const cycleSlugs = new Set(
+    [slugify(cycle.peptideId), slugify(cycle.peptideName)].filter(Boolean),
+  );
+  const out = new Set<string>();
+  for (const d of doses) {
+    if (d.date < cycle.startDate) continue;
+    if (cycleSlugs.has(slugify(d.peptide_id)) || cycleSlugs.has(slugify(d.peptide_name))) {
+      out.add(d.date);
+    }
+  }
+  return out;
 }
