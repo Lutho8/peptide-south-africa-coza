@@ -46,7 +46,12 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
   const [reportLoading, setReportLoading] = useState(false);
   const { toast } = useToast();
   const { bulkAddReminders } = useDoseReminders();
+  const { doses } = useDailyDoses();
   const { user } = useAuth();
+
+  // Aggregate per-cycle logged-dose date sets so the calendar can show
+  // exactly which days the user has an entry for.
+  const cycleLogDates = cycles.map(c => ({ cycle: c, dates: getLoggedDoseDates(c, doses) }));
 
   useEffect(() => {
     if (open) {
