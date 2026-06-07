@@ -340,18 +340,18 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
           </div>
 
           {/* Legend */}
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded bg-green-500/50" />
-              <span className="text-muted-foreground">Active</span>
+              <span className="text-muted-foreground">Dose logged</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded border border-dashed border-green-500/50" />
+              <span className="text-muted-foreground">Scheduled, no log</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded bg-blue-500/50" />
               <span className="text-muted-foreground">Break</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-muted" />
-              <span className="text-muted-foreground">Completed</span>
             </div>
           </div>
 
