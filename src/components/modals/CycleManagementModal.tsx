@@ -308,18 +308,25 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                   selectedMonth.getMonth() === today.getMonth() &&
                   selectedMonth.getFullYear() === today.getFullYear();
                 
-                const cycle = getCycleForDay(day);
-                
+                const entry = getCycleForDay(day);
+                const cycle = entry?.cycle;
+                const logged = entry?.logged ?? false;
+
                 return (
                   <div
                     key={day}
                     className={cn(
-                      "aspect-square rounded-lg flex items-center justify-center text-sm transition-all",
+                      "aspect-square rounded-lg flex items-center justify-center text-sm transition-all border border-transparent",
                       isToday && "ring-2 ring-primary",
-                      cycle?.status === 'active' && "bg-green-500/20",
-                      cycle?.status === 'break' && "bg-blue-500/20"
+                      // Cycle window highlighting: only logged days fill solid.
+                      // Empty in-cycle days show a faint dashed outline so users
+                      // can see the cycle is "paused" waiting for a log.
+                      cycle?.status === 'active' && logged && "bg-green-500/30",
+                      cycle?.status === 'active' && !logged && "border-dashed border-green-500/30",
+                      cycle?.status === 'break' && logged && "bg-blue-500/30",
+                      cycle?.status === 'break' && !logged && "border-dashed border-blue-500/30",
                     )}
-                    title={cycle?.peptideName}
+                    title={cycle ? `${cycle.peptideName}${logged ? ' — dose logged' : ' — no log yet'}` : undefined}
                   >
                     <span className={cn(
                       isToday ? "text-primary font-bold" : "text-foreground"
