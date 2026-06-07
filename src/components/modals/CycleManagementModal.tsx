@@ -24,6 +24,8 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { BulkReminderModal } from './BulkReminderModal';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
+import { useDailyDoses } from '@/hooks/useDailyDoses';
+import { getLoggedDoseDates } from '@/lib/cycleProgress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { buildWeeklyScheduleFromReport, expandDays, formatFrequencyFromDays, type ScheduleEntry } from '@/utils/bloodworkSchedule';
@@ -44,7 +46,12 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
   const [reportLoading, setReportLoading] = useState(false);
   const { toast } = useToast();
   const { bulkAddReminders } = useDoseReminders();
+  const { doses } = useDailyDoses();
   const { user } = useAuth();
+
+  // Aggregate per-cycle logged-dose date sets so the calendar can show
+  // exactly which days the user has an entry for.
+  const cycleLogDates = cycles.map(c => ({ cycle: c, dates: getLoggedDoseDates(c, doses) }));
 
   useEffect(() => {
     if (open) {
@@ -127,13 +134,47 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
       return;
     }
 
+    const peptideId = newCycle.peptideName?.toLowerCase().replace(/\s+/g, '-') || '';
+    const peptideNameLower = (newCycle.peptideName || '').toLowerCase();
+    const requestedStart = newCycle.startDate || new Date().toISOString().split('T')[0];
+
+    // Validation: the cycle start must align with an actual daily-log entry.
+    // We snap the start date to the first logged dose for this peptide on or
+    // after the requested date — preventing cycles from advancing days the
+    // user never logged.
+    const matchingLogs = doses
+      .filter(d =>
+        d.peptide_id?.toLowerCase() === peptideId ||
+        d.peptide_name?.toLowerCase() === peptideNameLower,
+      )
+      .map(d => d.date)
+      .sort();
+    const firstMatch = matchingLogs.find(date => date >= requestedStart) ?? matchingLogs[0];
+
+    if (!firstMatch) {
+      toast({
+        title: 'Log a dose first',
+        description: `Add a ${newCycle.peptideName} entry to your daily log, then start the cycle from that date.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const startDate = firstMatch;
+    if (startDate !== requestedStart) {
+      toast({
+        title: 'Start date adjusted',
+        description: `Snapped to ${startDate} — your first logged ${newCycle.peptideName} dose.`,
+      });
+    }
+
     const cycle: Cycle = {
       id: `cycle-${Date.now()}`,
-      peptideId: newCycle.peptideName?.toLowerCase().replace(/\s+/g, '-') || '',
+      peptideId,
       peptideName: newCycle.peptideName || '',
       dose: newCycle.dose || '',
       frequency: newCycle.frequency || 'Daily',
-      startDate: newCycle.startDate || new Date().toISOString().split('T')[0],
+      startDate,
       plannedDuration: newCycle.plannedDuration || 90,
       breakDuration: newCycle.breakDuration || 30,
       status: 'active',
@@ -144,7 +185,7 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
     setCycles([...cycles, cycle]);
     setNewCycle({});
     setShowAddCycle(false);
-    
+
     toast({
       title: "Cycle started",
       description: `${cycle.peptideName} cycle has been added.`,
@@ -180,16 +221,22 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
     });
   };
 
-  // Get cycle blocks for calendar
-  const getCycleForDay = (day: number): Cycle | undefined => {
+  // For a given day-of-month, return the cycle whose window covers it AND
+  // whether the user actually logged a dose for that cycle's peptide on that
+  // day. Only logged days light up — empty days stay neutral, so the calendar
+  // mirrors the daily log instead of advancing on its own.
+  const getCycleForDay = (day: number): { cycle: Cycle; logged: boolean } | undefined => {
     const dateStr = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return cycles.find(cycle => {
-      const start = new Date(cycle.startDate);
+    for (const { cycle, dates } of cycleLogDates) {
+      const start = cycle.startDate;
+      if (dateStr < start) continue;
       const end = new Date(start);
       end.setDate(end.getDate() + cycle.plannedDuration);
-      const checkDate = new Date(dateStr);
-      return checkDate >= start && checkDate <= end;
-    });
+      const endStr = end.toISOString().split('T')[0];
+      if (dateStr > endStr) continue;
+      return { cycle, logged: dates.has(dateStr) };
+    }
+    return undefined;
   };
 
   const reportDateLabel = latestReport?.report_date || latestReport?.uploaded_at?.split('T')[0] || '';
@@ -261,18 +308,25 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
                   selectedMonth.getMonth() === today.getMonth() &&
                   selectedMonth.getFullYear() === today.getFullYear();
                 
-                const cycle = getCycleForDay(day);
-                
+                const entry = getCycleForDay(day);
+                const cycle = entry?.cycle;
+                const logged = entry?.logged ?? false;
+
                 return (
                   <div
                     key={day}
                     className={cn(
-                      "aspect-square rounded-lg flex items-center justify-center text-sm transition-all",
+                      "aspect-square rounded-lg flex items-center justify-center text-sm transition-all border border-transparent",
                       isToday && "ring-2 ring-primary",
-                      cycle?.status === 'active' && "bg-green-500/20",
-                      cycle?.status === 'break' && "bg-blue-500/20"
+                      // Cycle window highlighting: only logged days fill solid.
+                      // Empty in-cycle days show a faint dashed outline so users
+                      // can see the cycle is "paused" waiting for a log.
+                      cycle?.status === 'active' && logged && "bg-green-500/30",
+                      cycle?.status === 'active' && !logged && "border-dashed border-green-500/30",
+                      cycle?.status === 'break' && logged && "bg-blue-500/30",
+                      cycle?.status === 'break' && !logged && "border-dashed border-blue-500/30",
                     )}
-                    title={cycle?.peptideName}
+                    title={cycle ? `${cycle.peptideName}${logged ? ' — dose logged' : ' — no log yet'}` : undefined}
                   >
                     <span className={cn(
                       isToday ? "text-primary font-bold" : "text-foreground"
@@ -286,18 +340,18 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
           </div>
 
           {/* Legend */}
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded bg-green-500/50" />
-              <span className="text-muted-foreground">Active</span>
+              <span className="text-muted-foreground">Dose logged</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded border border-dashed border-green-500/50" />
+              <span className="text-muted-foreground">Scheduled, no log</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded bg-blue-500/50" />
               <span className="text-muted-foreground">Break</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-muted" />
-              <span className="text-muted-foreground">Completed</span>
             </div>
           </div>
 
