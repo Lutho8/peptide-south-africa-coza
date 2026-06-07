@@ -25,7 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BulkReminderModal } from './BulkReminderModal';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
-import { getLoggedDoseDates, getCycleProgress, cycleStatusLabel } from '@/lib/cycleProgress';
+import { getLoggedDoseDates } from '@/lib/cycleProgress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { buildWeeklyScheduleFromReport, expandDays, formatFrequencyFromDays, type ScheduleEntry } from '@/utils/bloodworkSchedule';
