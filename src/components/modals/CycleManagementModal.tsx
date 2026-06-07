@@ -134,13 +134,47 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
       return;
     }
 
+    const peptideId = newCycle.peptideName?.toLowerCase().replace(/\s+/g, '-') || '';
+    const peptideNameLower = (newCycle.peptideName || '').toLowerCase();
+    const requestedStart = newCycle.startDate || new Date().toISOString().split('T')[0];
+
+    // Validation: the cycle start must align with an actual daily-log entry.
+    // We snap the start date to the first logged dose for this peptide on or
+    // after the requested date — preventing cycles from advancing days the
+    // user never logged.
+    const matchingLogs = doses
+      .filter(d =>
+        d.peptide_id?.toLowerCase() === peptideId ||
+        d.peptide_name?.toLowerCase() === peptideNameLower,
+      )
+      .map(d => d.date)
+      .sort();
+    const firstMatch = matchingLogs.find(date => date >= requestedStart) ?? matchingLogs[0];
+
+    if (!firstMatch) {
+      toast({
+        title: 'Log a dose first',
+        description: `Add a ${newCycle.peptideName} entry to your daily log, then start the cycle from that date.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const startDate = firstMatch;
+    if (startDate !== requestedStart) {
+      toast({
+        title: 'Start date adjusted',
+        description: `Snapped to ${startDate} — your first logged ${newCycle.peptideName} dose.`,
+      });
+    }
+
     const cycle: Cycle = {
       id: `cycle-${Date.now()}`,
-      peptideId: newCycle.peptideName?.toLowerCase().replace(/\s+/g, '-') || '',
+      peptideId,
       peptideName: newCycle.peptideName || '',
       dose: newCycle.dose || '',
       frequency: newCycle.frequency || 'Daily',
-      startDate: newCycle.startDate || new Date().toISOString().split('T')[0],
+      startDate,
       plannedDuration: newCycle.plannedDuration || 90,
       breakDuration: newCycle.breakDuration || 30,
       status: 'active',
@@ -151,7 +185,7 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
     setCycles([...cycles, cycle]);
     setNewCycle({});
     setShowAddCycle(false);
-    
+
     toast({
       title: "Cycle started",
       description: `${cycle.peptideName} cycle has been added.`,
