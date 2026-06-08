@@ -122,8 +122,18 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
               {result.biomarkers.length} biomarkers analysed · {result.goals.length} goals
             </p>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3 flex-wrap">
             {typeof result.health_score === 'number' && <HealthScoreRing score={result.health_score} />}
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('bloodwork-stack-cart') || document.querySelector('[data-bloodwork-patterns]');
+                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
+              className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/20 transition-colors"
+            >
+              <ShoppingBag size={14} /> Shop my stack
+            </button>
             <button
               type="button"
               onClick={onDownload}
@@ -134,6 +144,21 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
           </div>
         </div>
       </header>
+
+      {/* SYSTEM DASHBOARD */}
+      <SystemDashboard
+        systems={summarizeSystems(result.biomarkers)}
+        onSelect={(cats) => {
+          setStatusFilter('all');
+          setSearch('');
+          const first = cats[0];
+          const el = document.querySelector(`[data-bm-category="${first}"]`);
+          el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
+      />
+
+      {/* PATTERN DETECTION */}
+      <PatternDetection patterns={detectPatterns(result.biomarkers)} />
 
       {/* BIOMARKER PANEL */}
       <section>
