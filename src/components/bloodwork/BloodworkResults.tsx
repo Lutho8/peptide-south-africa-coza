@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Search, X } from 'lucide-react';
+import { Download, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Search, X, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtocolSections, Protocol } from './ProtocolSections';
+import { SystemDashboard } from './SystemDashboard';
+import { PatternDetection } from './PatternDetection';
+import { StackCartProvider } from './StackCartContext';
+import { StackCartBar } from './StackCartBar';
+import { BloodworkOnboarding } from './BloodworkOnboarding';
+import { summarizeSystems } from '@/lib/bloodwork/systems';
+import { detectPatterns } from '@/lib/bloodwork/patterns';
 
 export interface ResultBiomarker {
   name: string;
