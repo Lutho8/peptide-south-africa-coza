@@ -7,6 +7,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { startCycleNotificationChecker, stopCycleNotificationChecker } from "@/services/cycleNotifications";
 import { Loader2 } from "lucide-react";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 
 // Lazy load all route pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -89,6 +90,7 @@ const App = () => {
             </Suspense>
           </HashRouter>
           <WhatsAppFab />
+          <VercelAnalytics />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
