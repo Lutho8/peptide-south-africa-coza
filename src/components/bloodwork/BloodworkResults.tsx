@@ -50,7 +50,18 @@ interface Props {
   labReportId: string | null;
 }
 
-export function BloodworkResults({ result, onDownload, labReportId }: Props) {
+export function BloodworkResults(props: Props) {
+  const patternsTop = detectPatterns(props.result.biomarkers);
+  return (
+    <StackCartProvider>
+      <BloodworkResultsInner {...props} />
+      <StackCartBar patternIds={patternsTop.map((p) => p.id)} />
+      <BloodworkOnboarding />
+    </StackCartProvider>
+  );
+}
+
+function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
