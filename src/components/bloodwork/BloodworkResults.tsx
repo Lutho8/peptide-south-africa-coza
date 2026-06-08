@@ -241,7 +241,7 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
         ) : (
           <div className="space-y-6">
             {visibleCategories.map((cat) => (
-              <div key={cat}>
+              <div key={cat} data-bm-category={cat}>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{CATEGORY_LABELS[cat]}</p>
                 <div className="rounded-xl border border-border/50 overflow-hidden">
                   {grouped[cat].map((bm, i) => (
