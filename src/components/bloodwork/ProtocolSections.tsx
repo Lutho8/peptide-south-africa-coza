@@ -1,9 +1,8 @@
-import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { Plus, Check } from 'lucide-react';
 import { StackPeptideCard, StackPeptide } from './StackPeptideCard';
 import { AdherenceChecklist } from './AdherenceChecklist';
-import { captureLead } from '@/lib/crm';
-import { useAuth } from '@/contexts/AuthContext';
 import { useProtocolAdherence } from '@/hooks/useProtocolAdherence';
+import { useStackCart, slugify } from './StackCartContext';
 
 export interface SupplementItem {
   name: string;
