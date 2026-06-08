@@ -1,7 +1,8 @@
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Plus, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { captureLead } from '@/lib/crm';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStackCart, slugify } from './StackCartContext';
 
 export interface StackPeptide {
   name: string;
@@ -19,8 +20,10 @@ interface Props {
 
 export function StackPeptideCard({ peptide, index }: Props) {
   const { user } = useAuth();
-  const slug = peptide.slug || peptide.name.toLowerCase().replace(/\s+/g, '-');
-  const shopUrl = `https://www.ridethetide.site/shop?q=${encodeURIComponent(slug)}`;
+  const { has, toggle } = useStackCart();
+  const slug = peptide.slug || slugify(peptide.name);
+  const inCart = has(slug);
+  const shopUrl = `https://www.ridethetide.site/shop?q=${encodeURIComponent(slug)}&utm_source=app&utm_medium=bloodwork&utm_campaign=peptide`;
 
   const handleClick = () => {
     void captureLead({
@@ -33,7 +36,10 @@ export function StackPeptideCard({ peptide, index }: Props) {
   };
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card/40 p-4">
+    <div className={cn(
+      'rounded-xl border bg-card/40 p-4 transition-colors',
+      inCart ? 'border-primary/60 bg-primary/5' : 'border-border/60'
+    )}>
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-mono text-[10px] text-muted-foreground">{String(index + 1).padStart(2, '0')}</span>
@@ -68,15 +74,29 @@ export function StackPeptideCard({ peptide, index }: Props) {
         <p className="text-xs text-foreground">{peptide.dosing}</p>
       </div>
 
-      <a
-        href={shopUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={handleClick}
-        className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary hover:underline"
-      >
-        Buy Peptides <ExternalLink size={11} />
-      </a>
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => toggle({ name: peptide.name, slug })}
+          className={cn(
+            'inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors',
+            inCart
+              ? 'border-green-500/40 bg-green-500/10 text-green-500'
+              : 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
+          )}
+        >
+          {inCart ? <><Check size={11} /> In stack</> : <><Plus size={11} /> Add</>}
+        </button>
+        <a
+          href={shopUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleClick}
+          className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary hover:underline"
+        >
+          Shop <ExternalLink size={11} />
+        </a>
+      </div>
     </div>
   );
 }
