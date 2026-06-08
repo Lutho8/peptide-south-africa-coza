@@ -1,59 +1,57 @@
-## 1. TS2307 shim verification
+## Bloodwork Results Enhancement
 
-`src/vite-env.d.ts` now declares `@revenuecat/purchases-capacitor` with the `LOG_LEVEL` const and the `Purchases` object (`setLogLevel`, `configure`, `logIn`, `getOfferings`, `purchasePackage`, `restorePurchases`, `getCustomerInfo`) — exactly the surface used by `src/lib/revenuecat.ts`. That resolves TS2307 at all five call sites without pulling the native-only package into the web bundle.
+Add three new sections above the existing biomarker panel in `BloodworkResults.tsx`, plus a stack-builder cart that replaces the static "Buy this stack" CTA in `ProtocolSections.tsx`. All link to https://www.ridethetide.site/ with UTM tracking.
 
-In build mode I'll run `tsc --noEmit` (via the harness build) to confirm no new type errors are introduced — specifically watching for: implicit-any on the `unknown`-typed returns inside `revenuecat.ts`, and any incidental Variants/EaseDef regressions touched in earlier passes. If a downstream `.then((res) => …)` complains about `unknown`, I'll narrow with a small inline type assertion at the call site (no behavior change).
+### 1. System Dashboard (6 cards at top)
+New component `SystemDashboard.tsx`. Six health systems mapped from biomarker categories:
 
-## 2. Cycle counting driven by daily-log entries
+| Card | Sourced from biomarker categories |
+|---|---|
+| Hormones | hormone, thyroid |
+| Metabolic | metabolic |
+| Cardiovascular | lipid |
+| Liver | liver |
+| Kidney | kidney |
+| Immune & Inflammation | inflammation |
 
-### Current behavior (the bug)
-`getCycleProgress` in `src/screens/MyStackScreen.tsx` and `getDaysElapsed` in `src/services/cycleNotifications.ts` both compute elapsed days as wall-clock `floor((now - startDate) / 1day)`. A missed day still advances the cycle. Weekly peptides (e.g. Reta) are counted exactly like daily ones (e.g. Tesa).
+Each card shows: icon, system name, status pill (Optimal / Watch / Action — derived from worst biomarker status in the group), count of flagged markers, and a sparkline-style ring. Click a card → scrolls to / filters the biomarker panel by that category. Rendered as a responsive grid (3 cols desktop, 2 mobile).
 
-### New behavior
-Cycle "day count" = number of **expected dose occurrences** that the user has actually logged in `daily_doses` for that peptide, between `cycle.startDate` and today.
+### 2. Pattern Detection
+New component `PatternDetection.tsx` + pure helper `src/lib/bloodwork/patterns.ts`. Helper takes `ResultBiomarker[]` and returns matched patterns from a rules table, e.g.:
 
-- For a **daily** peptide: count = distinct logged dates with a dose for that peptide.
-- For a **weekly / Nx-per-week** peptide: count = number of logged doses for that peptide (capped at expected-to-date based on frequency).
-- A day with no log for the peptide does not advance the cycle — the cycle effectively pauses.
-- `plannedDuration` is reinterpreted as "expected number of doses in the cycle" (derived from frequency × cycle length in weeks) so progress %, "nearing end", and "overdue" remain meaningful.
+- **Immune Dysregulation + Metabolic Stress** — high CRP/WBC + high fasting glucose/HbA1c/insulin
+- **Androgen Decline** — low total/free testosterone + high SHBG
+- **Cardiometabolic Risk** — high ApoB/LDL + low HDL + high triglycerides
+- **Thyroid Slowdown** — high TSH + low free T3/T4
+- **Liver Strain** — high ALT/AST/GGT
+- **Inflammation-Driven Fatigue** — high hs-CRP + low ferritin/vit D
 
-### Implementation steps
+UI: stacked cards under the dashboard. Each shows pattern name, plain-English explanation, the contributing biomarkers as chips, and a "View suggested stack" button that jumps to the matching peptides in the stack builder.
 
-1. **New helper** `src/lib/cycleProgress.ts`
-   - `parseFrequency(freq: string): { perWeek: number; isDaily: boolean }` — leverages existing `src/utils/frequencyParser.ts` if compatible; otherwise small regex for "once a week", "every night", "Nx/week", "EOD".
-   - `getExpectedDoses(cycle, frequency, asOf = new Date()): number` — expected dose occurrences from `startDate` up to `asOf`.
-   - `getLoggedDoses(cycle, peptideId, doses): number` — count of `daily_doses` rows for that peptide between `startDate` and today.
-   - `getCycleProgress(cycle, frequency, doses)` returns `{ dosesLogged, dosesExpected, dosesPlanned, progress, isNearing, isOverdue }`.
+### 3. Stack Builder Cart
+New component `StackBuilder.tsx` replacing the single buy-link in `ProtocolSections.tsx`'s Peptide Stack section. Behavior:
 
-2. **Wire in `src/screens/MyStackScreen.tsx`**
-   - Replace the local `getCycleProgress` with the new helper.
-   - Pull `doses` from `useDailyDoses()` (already imported elsewhere in app shell) and pass through.
-   - Update the two progress UIs (lines ~145 and ~808) to read `Dose X/Y` instead of `Day X/Y`, keeping the same visual.
-   - Keep the inline label readable: e.g. `Dose 4 / 12 logged` plus a smaller `Week 2 of 6` hint derived from wall-clock for context.
+- Each `StackPeptideCard` gets a checkbox / "Add" toggle.
+- Selected peptides accumulate in a sticky bottom cart bar (count + names).
+- Cart has primary CTA **"Buy Stack on RideTheTide"** → opens `https://www.ridethetide.site/shop?utm_source=app&utm_medium=bloodwork&utm_campaign=stack&items=<slug,slug>` in new tab.
+- Fires `captureLead` (`source: 'bloodwork_stack_buy'`, payload includes selected peptide slugs + matched patterns) before navigation, reusing the existing CRM hook.
+- Empty-state CTA: "Select peptides to build your stack" with a "Select all recommended" shortcut.
 
-3. **Wire in `src/components/modals/CycleManagementModal.tsx`**
-   - Same swap at line ~187. Show logged-vs-expected so users see when they're behind schedule (e.g. weekly Reta missed → 0/2 instead of "Day 14").
+### 4. Onboarding / Purchase Nudge Improvements
+- Add a one-time **results onboarding overlay** (3 tooltips: "Here's your system view" → "These are your patterns" → "Build & buy your stack"). Stored in `localStorage` (`rtd_bloodwork_onboarded_v1`).
+- After results render, a slide-in toast appears at 8s if no peptide has been added to the cart: "Ready to start? Shop your protocol on RideTheTide →".
+- The existing "Download PDF" button stays; add a secondary **"Shop my stack"** button next to it in the header that scrolls to the cart.
 
-4. **Wire in `src/services/cycleNotifications.ts`**
-   - `getDaysElapsed` becomes `getDosesLogged`. "Cycle ending soon" / "overdue" notifications fire based on logged-dose progress vs. planned, so a paused cycle doesn't spam end-of-cycle alerts.
+### Wiring
+- `BloodworkResults.tsx` mounts: `<SystemDashboard>`, `<PatternDetection>`, then the existing biomarker panel, insights, and `<ProtocolSections>` (which now renders `<StackBuilder>`).
+- Selected-peptide state lifts to `BloodworkResults` via a `StackCartProvider` (React context in `src/components/bloodwork/StackCartContext.tsx`) so the sticky cart, header button, and protocol-section cards all share it.
+- All shop links use the canonical `https://www.ridethetide.site/shop` (per project memory — apex is broken, always use `www`).
 
-5. **Edge cases**
-   - Cycle started today, no logs yet → `0 / N`, progress 0%, not overdue.
-   - User logs multiple doses same day for a daily peptide → counted once (distinct date).
-   - Frequency string unparseable → fall back to current wall-clock behavior and log a warning.
-   - Existing cycles with no frequency stored → treat as daily.
+### Technical notes (files touched)
+- New: `src/components/bloodwork/SystemDashboard.tsx`, `PatternDetection.tsx`, `StackBuilder.tsx`, `StackCartBar.tsx`, `StackCartContext.tsx`, `BloodworkOnboarding.tsx`
+- New: `src/lib/bloodwork/patterns.ts`, `src/lib/bloodwork/systems.ts`
+- Edit: `src/components/bloodwork/BloodworkResults.tsx` (mount new sections, header CTA, provider)
+- Edit: `src/components/bloodwork/ProtocolSections.tsx` (replace single buy CTA with `<StackBuilder>`)
+- Edit: `src/components/bloodwork/StackPeptideCard.tsx` (add `selectable` + `selected` props with checkbox)
 
-### Files touched
-- `src/lib/cycleProgress.ts` (new)
-- `src/screens/MyStackScreen.tsx`
-- `src/components/modals/CycleManagementModal.tsx`
-- `src/services/cycleNotifications.ts`
-
-### Out of scope
-- Schema changes. We derive everything from existing `daily_doses` rows and the `Cycle` object's existing `frequency` field.
-- Changing how cycles are *started* (still user-initiated from MyStack / modal).
-- Touching `src/integrations/supabase/*` or `.env`.
-
-### Verification
-- Build passes (TS clean, no Rollup resolve errors).
-- Manual: start a weekly cycle, log 1 dose, confirm progress reads `1 / N` and doesn't advance until the next log; start a daily cycle, skip a day, confirm count holds.
+No DB or edge-function changes. No new dependencies. Pure presentation + client logic.
