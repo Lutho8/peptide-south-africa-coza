@@ -81,26 +81,27 @@ export function ProtocolSections({ protocol, goals: _goals, labReportId }: Props
           {protocol.stack_summary && (
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">{protocol.stack_summary}</p>
           )}
-          <a
-            href="https://www.ridethetide.site/shop"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleBuyStack}
-            className="group flex items-center justify-between gap-3 mb-5 rounded-xl border border-primary/40 bg-gradient-to-r from-primary/15 via-primary/10 to-transparent p-4 hover:border-primary transition-all"
+          <button
+            type="button"
+            onClick={handleAddAll}
+            disabled={allInCart}
+            className="group w-full flex items-center justify-between gap-3 mb-5 rounded-xl border border-primary/40 bg-gradient-to-r from-primary/15 via-primary/10 to-transparent p-4 hover:border-primary transition-all disabled:opacity-80 disabled:cursor-default text-left"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <ShoppingBag size={18} className="text-primary shrink-0" />
+              {allInCart ? <Check size={18} className="text-green-500 shrink-0" /> : <Plus size={18} className="text-primary shrink-0" />}
               <div className="min-w-0">
                 <p className="text-sm font-bold uppercase tracking-wider text-foreground">
-                  Buy this stack on RideTheTide.site/shop
+                  {allInCart ? 'All peptides in your stack' : 'Add all to stack'}
                 </p>
                 <p className="text-[11px] text-muted-foreground truncate">
-                  Lab-verified vendors · ships discreetly · research-grade
+                  Review at the cart, then buy on RideTheTide.site/shop
                 </p>
               </div>
             </div>
-            <ArrowRight size={16} className="text-primary group-hover:translate-x-1 transition-transform shrink-0" />
-          </a>
+            <span className="text-[10px] font-mono tabular-nums text-primary shrink-0">
+              {allStackItems.length} item{allStackItems.length === 1 ? '' : 's'}
+            </span>
+          </button>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {protocol.stack.map((p, i) => (
               <StackPeptideCard key={`${p.name}-${i}`} peptide={p} index={i} />
