@@ -47,18 +47,18 @@ interface Props {
   labReportId: string | null;
 }
 
-export function ProtocolSections({ protocol, goals, labReportId }: Props) {
-  const { user } = useAuth();
+export function ProtocolSections({ protocol, goals: _goals, labReportId }: Props) {
   const adherence = useProtocolAdherence(labReportId);
+  const { addMany, has } = useStackCart();
 
-  const handleBuyStack = () => {
-    void captureLead({
-      email: user?.email,
-      source: 'bloodwork_stack_buy',
-      planInterest: 'premium',
-      activityType: 'premium_click',
-      activityData: { goals, peptides: protocol.stack?.map((p) => p.name) ?? [] },
-    });
+  const allStackItems = (protocol.stack ?? []).map((p) => ({
+    name: p.name,
+    slug: p.slug || slugify(p.name),
+  }));
+  const allInCart = allStackItems.length > 0 && allStackItems.every((i) => has(i.slug));
+
+  const handleAddAll = () => {
+    addMany(allStackItems);
   };
 
   const supplementItems = (protocol.supplements ?? []).map((s) => ({
