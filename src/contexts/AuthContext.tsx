@@ -8,6 +8,8 @@ import {
   initializeStorage,
 } from '@/services/storage';
 import { clearAllScheduledNotifications } from '@/services/pushScheduler';
+import { shouldPromptForMigration } from '@/services/migration';
+import { DataMigrationModal } from '@/components/auth/DataMigrationModal';
 
 interface AuthContextType {
   user: User | null;
@@ -85,8 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [showMigrationModal, setShowMigrationModal] = React.useState(false);
   const prevUserIdRef = React.useRef<string | null>(null);
   const initializedRef = React.useRef(false);
+  const migrationCheckedRef = React.useRef(false);
 
   React.useEffect(() => {
     ensureLegacyCleared();
@@ -113,6 +117,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           toast.success(`Welcome back, ${displayName} — loading your data`, {
             duration: 3500,
           });
+
+          // Prompt for data migration if old-namespaced localStorage exists
+          if (!migrationCheckedRef.current && shouldPromptForMigration(newId)) {
+            setShowMigrationModal(true);
+          }
         }
 
         prevUserIdRef.current = newId;
@@ -216,6 +225,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ user, session, isLoading, signUp, signIn, signInWithOAuth, signOut }}>
       {children}
+      {user && (
+        <DataMigrationModal
+          userId={user.id}
+          open={showMigrationModal}
+          onClose={() => {
+            setShowMigrationModal(false);
+            migrationCheckedRef.current = true;
+          }}
+        />
+      )}
     </AuthContext.Provider>
   );
 }
