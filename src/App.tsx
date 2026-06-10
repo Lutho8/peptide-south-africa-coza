@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,6 +30,7 @@ const SEOVerifyPage = lazy(() => import("./pages/admin/SEOVerifyPage"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const BlogIndexPage = lazy(() => import("./pages/BlogIndexPage"));
 const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
 // NEW: Premium feature pages
 const SafetyCenter = lazy(() => import("./pages/SafetyPage"));
@@ -44,11 +45,41 @@ import '@/i18n';
 
 const queryClient = new QueryClient();
 
+/**
+ * Detect if the current URL is an OAuth callback.
+ * OAuth providers redirect to /auth/callback?code=xxx
+ * With HashRouter, we need to detect this BEFORE the router renders
+ * because HashRouter only handles hash-based routes.
+ */
+function isOAuthCallback(): boolean {
+  const pathname = window.location.pathname;
+  const search = window.location.search;
+  return (
+    pathname === '/auth/callback' ||
+    pathname === '/auth/callback/' ||
+    (search.includes('code=') && search.includes('type='))
+  );
+}
+
 const App = () => {
+  const [isCallback, setIsCallback] = useState(() => isOAuthCallback());
+
   useEffect(() => {
     startCycleNotificationChecker();
     return () => stopCycleNotificationChecker();
   }, []);
+
+  // If this is an OAuth callback, render the callback handler directly
+  // bypassing HashRouter so the code exchange can happen immediately.
+  if (isCallback) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+          <AuthCallback />
+        </Suspense>
+      </QueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

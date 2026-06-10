@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, Provider } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -15,6 +15,7 @@ interface AuthContextType {
   isLoading: boolean;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithOAuth: (provider: Provider) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -37,6 +38,47 @@ function applyUserScope(currentUser: User | null, _prevUserId: string | null) {
   setActiveUserId(newUserId);
   // Seed defaults only if this user/guest has no namespaced data yet.
   initializeStorage();
+}
+
+/**
+ * Detect and process an OAuth callback that landed on the root path.
+ * With HashRouter, OAuth providers may redirect to /?code=xxx (root with query params).
+ * This function checks for the code and exchanges it for a session.
+ */
+async function handleRootOAuthCallback(): Promise<boolean> {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+
+  if (error) {
+    console.error('OAuth provider error:', error, params.get('error_description'));
+    // Clean the URL so the error doesn't persist on refresh
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return false;
+  }
+
+  if (!code) return false;
+
+  try {
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    if (exchangeError) {
+      console.error('OAuth code exchange error:', exchangeError);
+      toast.error('Sign-in failed. Please try again.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return false;
+    }
+
+    if (data.session) {
+      // Clean the code from the URL so it doesn't get reused on refresh
+      window.history.replaceState({}, document.title, window.location.pathname);
+      toast.success('Signed in successfully');
+      return true;
+    }
+  } catch (err) {
+    console.error('Unexpected error during OAuth callback:', err);
+  }
+
+  return false;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -81,6 +123,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     };
 
+    // Check for OAuth callback on the root path BEFORE setting up listeners
+    // This handles cases where OAuth providers redirect to /?code=xxx
+    const isCallbackPath = window.location.pathname === '/auth/callback' || window.location.pathname === '/auth/callback/';
+    if (!isCallbackPath) {
+      handleRootOAuthCallback().then((handled) => {
+        if (handled) {
+          // Refresh session after successful OAuth exchange
+          supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+            handleAuth(currentSession);
+          });
+        }
+      });
+    }
+
     // Set up auth state listener BEFORE checking session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, currentSession) => {
@@ -101,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: { display_name: displayName },
       },
     });
@@ -116,6 +172,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   };
 
+  const signInWithOAuth = async (provider: Provider) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        return { error: error as Error };
+      }
+
+      // If no URL was returned, something went wrong
+      if (!data.url) {
+        return { error: new Error('No OAuth redirect URL returned') };
+      }
+
+      // The signInWithOAuth call may redirect the browser automatically.
+      // If it doesn't, we redirect manually.
+      if (typeof window !== 'undefined' && window.location.href !== data.url) {
+        window.location.href = data.url;
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error(String(err)) };
+    }
+  };
+
   const signOut = async () => {
     // Clear scheduled reminders + active OS notifications BEFORE auth sign-out
     // so the previous user's reminders never fire for the next user.
@@ -128,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, isLoading, signUp, signIn, signInWithOAuth, signOut }}>
       {children}
     </AuthContext.Provider>
   );

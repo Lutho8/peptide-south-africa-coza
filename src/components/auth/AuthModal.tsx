@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
-import { lovable } from '@/integrations/lovable';
 import { toast } from 'sonner';
 import { Loader2, Mail, Lock, User } from 'lucide-react';
 import { z } from 'zod';
@@ -28,14 +27,12 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithOAuth } = useAuth();
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
+      const { error } = await signInWithOAuth('google');
       if (error) {
         toast.error(error.message || 'Google sign-in failed');
       }
@@ -49,9 +46,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   const handleAppleSignIn = async () => {
     setIsAppleLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth("apple", {
-        redirect_uri: window.location.origin,
-      });
+      const { error } = await signInWithOAuth('apple');
       if (error) {
         toast.error(error.message || 'Apple sign-in failed');
       }
