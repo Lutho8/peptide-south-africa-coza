@@ -218,10 +218,8 @@ ${query ? `Specific concern: ${query}` : ""}`;
 
   } catch (error) {
     console.error("Peptide AI agent error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
