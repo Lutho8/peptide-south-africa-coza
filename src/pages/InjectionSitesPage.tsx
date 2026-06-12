@@ -140,6 +140,25 @@ function timeAgo(timestamp: number): string {
 export default function InjectionSitesPage() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const { sites, records, logRecord, isCloud } = useInjectionRecordsCloud();
+
+  const cloudNextSites = useMemo(
+    () => rankNextSites(sites, records, "subcutaneous"),
+    [sites, records]
+  );
+  const topCloudSuggestion = cloudNextSites[0];
+
+  const handleQuickLog = async () => {
+    if (!topCloudSuggestion) return;
+    const { error } = await logRecord({
+      siteId: topCloudSuggestion.site.id,
+      peptideId: "manual",
+      peptideName: "Manual Entry",
+      route: "subcutaneous",
+    });
+    if (error) toast.error(error);
+    else toast.success(`Logged ${topCloudSuggestion.site.display_name}`);
+  };
 
   const filteredRecords = useMemo(() => {
     let records = [...DEMO_RECORDS].sort((a, b) => b.timestamp - a.timestamp);
