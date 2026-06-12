@@ -19,12 +19,12 @@ export function TransformationScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-3"
       >
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-          <Sparkles size={24} className="text-primary-foreground" />
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
+          <Trophy size={24} className="text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Transformation</h1>
-          <p className="text-sm text-muted-foreground">See your progress at a glance</p>
+          <h1 className="text-2xl font-bold text-foreground">Results</h1>
+          <p className="text-sm text-muted-foreground">Your outcomes, measurements & momentum</p>
         </div>
       </motion.div>
 
