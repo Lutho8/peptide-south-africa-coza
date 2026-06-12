@@ -117,7 +117,7 @@ export function rankNextSites(
       lastUsed.set(r.site_id, t);
     }
   }
-  const lastRecord = records[0];
+  
 
   return sites
     .filter((s) => s.recommended_routes.includes(route))
