@@ -307,6 +307,10 @@ export default function InventoryPage() {
                   Track stock levels, expiration dates, and usage
                 </p>
               </div>
+              <Badge variant={syncedToCloud ? "default" : "secondary"} className="gap-1.5 ml-2 hidden sm:inline-flex">
+                {syncedToCloud ? <Cloud className="h-3 w-3" /> : <CloudOff className="h-3 w-3" />}
+                {syncedToCloud ? "Synced" : "Local"}
+              </Badge>
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
