@@ -276,12 +276,30 @@ export function PKSimulatorPage() {
           </p>
         </div>
         {doses.length > 0 && (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <ActiveLevelBadge
               peptideId={selectedPeptideId}
               doses={doses}
               size="md"
             />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Export PNG
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              disabled={exporting}
+            >
+              <Share2 className="h-3.5 w-3.5 mr-1.5" />
+              Share
+            </Button>
             <Button variant="outline" size="sm" onClick={clearDoses}>
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
               Reset
@@ -293,7 +311,7 @@ export function PKSimulatorPage() {
       {/* Top control bar */}
       <Card>
         <CardContent className="pt-5 pb-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Peptide Selector */}
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Peptide</Label>
