@@ -1,4 +1,4 @@
-import { Home, Layers, CalendarDays, Calculator, Sparkles } from 'lucide-react';
+import { Home, Layers, CalendarDays, Calculator, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -15,7 +15,7 @@ const tabs = [
   { id: 'stack' as const, icon: Layers, label: 'My Stack' },
   { id: 'daily-log' as const, icon: CalendarDays, label: 'Daily Log' },
   { id: 'dosage' as const, icon: Calculator, label: 'Dosage' },
-  { id: 'transformation' as const, icon: Sparkles, label: 'Transform' },
+  { id: 'transformation' as const, icon: Trophy, label: 'Results' },
 ];
 
 export function BottomNav({ activeTab, onTabChange, pendingReminders = 0 }: BottomNavProps) {

@@ -106,7 +106,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm bg-background border-border">
+      <DialogContent className="max-w-sm w-[calc(100%-2rem)] mx-auto bg-background border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground text-center">
             {mode === 'signin' ? 'Sign In' : 'Create Account'}
@@ -118,7 +118,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
           <Button
             type="button"
             variant="outline"
-            className="w-full flex items-center justify-center gap-2"
+            className="w-full h-12 flex items-center justify-center gap-2 text-base"
             onClick={handleGoogleSignIn}
             disabled={isGoogleLoading || isAppleLoading}
           >
@@ -151,7 +151,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
             <Button
               type="button"
               variant="outline"
-              className="w-full flex items-center justify-center gap-2"
+              className="w-full h-12 flex items-center justify-center gap-2 text-base"
               onClick={handleAppleSignIn}
               disabled={isAppleLoading || isGoogleLoading}
             >
@@ -226,7 +226,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {mode === 'signin' ? 'Sign In' : 'Create Account'}
           </Button>
