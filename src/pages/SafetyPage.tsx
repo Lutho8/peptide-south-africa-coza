@@ -247,6 +247,7 @@ export default function SafetyPage() {
                 Last AI review: {formatRelativeTime(lastAIReview)}
               </Badge>
             )}
+          </motion.div>
         </div>
       </div>
 
