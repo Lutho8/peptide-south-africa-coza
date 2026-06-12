@@ -95,7 +95,8 @@ function SafetyCheckCard({ peptideId, peptideName }: { peptideId: string; peptid
 }
 
 export default function SafetyPage() {
-  const [profile, setProfile] = useSafetyProfile();
+  const { profile, setProfile } = useSafetyProfileCloud();
+  const { user } = useAuth();
 
   const [formState, setFormState] = useState<Partial<UserSafetyProfile>>({
     age: profile?.age ?? 30,
