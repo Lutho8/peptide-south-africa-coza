@@ -200,7 +200,7 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
         const { error } = await supabase.from('body_composition').insert(
           newEntries.map((e: Record<string, unknown>) => ({
             user_id: currentUserId,
-            date: e.date,
+            date: String(e.date),
             weight: Number(e.weight) || 0,
             bmi: Number(e.bmi) || 0,
             body_fat: Number(e.bodyFat) || 0,
@@ -227,9 +227,9 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
       const { error } = await supabase.from('user_stacks').upsert(
         stack.map((item: Record<string, unknown>) => ({
           user_id: currentUserId,
-          peptide_id: item.peptideId,
-          dose: item.dose,
-          frequency: item.frequency,
+          peptide_id: String(item.peptideId ?? ''),
+          dose: String(item.dose ?? ''),
+          frequency: String(item.frequency ?? ''),
         })),
         { onConflict: 'user_id,peptide_id' }
       );
@@ -242,12 +242,12 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
       const { error } = await supabase.from('dose_reminders').insert(
         reminders.map((r: Record<string, unknown>) => ({
           user_id: currentUserId,
-          peptide_id: r.peptideId,
-          peptide_name: r.peptideName,
-          dose: r.dose,
-          time: r.time,
-          days: r.days,
-          enabled: r.enabled ?? true,
+          peptide_id: String(r.peptideId ?? ''),
+          peptide_name: String(r.peptideName ?? ''),
+          dose: String(r.dose ?? ''),
+          time: String(r.time ?? ''),
+          days: Array.isArray(r.days) ? (r.days as string[]) : [],
+          enabled: (r.enabled as boolean | undefined) ?? true,
         }))
       );
       if (error) errors.push(`Reminders: ${error.message}`);

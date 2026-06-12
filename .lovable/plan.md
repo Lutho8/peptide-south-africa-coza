@@ -1,57 +1,48 @@
-## Bloodwork Results Enhancement
+## Plan: Fix OAuth sign-in + Bloodwork CTAs
 
-Add three new sections above the existing biomarker panel in `BloodworkResults.tsx`, plus a stack-builder cart that replaces the static "Buy this stack" CTA in `ProtocolSections.tsx`. All link to https://www.ridethetide.site/ with UTM tracking.
+Two distinct bugs. Both fixed in one pass.
 
-### 1. System Dashboard (6 cards at top)
-New component `SystemDashboard.tsx`. Six health systems mapped from biomarker categories:
+---
 
-| Card | Sourced from biomarker categories |
-|---|---|
-| Hormones | hormone, thyroid |
-| Metabolic | metabolic |
-| Cardiovascular | lipid |
-| Liver | liver |
-| Kidney | kidney |
-| Immune & Inflammation | inflammation |
+### 1. Google / Apple sign-in does not work
 
-Each card shows: icon, system name, status pill (Optimal / Watch / Action — derived from worst biomarker status in the group), count of flagged markers, and a sparkline-style ring. Click a card → scrolls to / filters the biomarker panel by that category. Rendered as a responsive grid (3 cols desktop, 2 mobile).
+**Root cause.** `src/contexts/AuthContext.tsx` calls `supabase.auth.signInWithOAuth` directly. This project already has the Lovable-managed OAuth shim (`src/integrations/lovable/index.ts` + `@lovable.dev/cloud-auth-js`), which is the supported path on Lovable Cloud. The raw Supabase call needs the provider configured in the dashboard and proper redirect URLs — on Lovable Cloud projects this is the wrong call and silently fails / loops.
 
-### 2. Pattern Detection
-New component `PatternDetection.tsx` + pure helper `src/lib/bloodwork/patterns.ts`. Helper takes `ResultBiomarker[]` and returns matched patterns from a rules table, e.g.:
+Apple is also gated behind a hardcoded `APPLE_SIGNIN_ENABLED = false` in `AuthModal.tsx`, so the Apple button is never rendered.
 
-- **Immune Dysregulation + Metabolic Stress** — high CRP/WBC + high fasting glucose/HbA1c/insulin
-- **Androgen Decline** — low total/free testosterone + high SHBG
-- **Cardiometabolic Risk** — high ApoB/LDL + low HDL + high triglycerides
-- **Thyroid Slowdown** — high TSH + low free T3/T4
-- **Liver Strain** — high ALT/AST/GGT
-- **Inflammation-Driven Fatigue** — high hs-CRP + low ferritin/vit D
+**Changes**
+- Update `AuthContext.signInWithOAuth` to call `lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin })` and handle the `{ redirected, error, tokens }` result per the managed-OAuth contract. Keep the existing signature so `AuthModal` doesn't change shape.
+- Re-run `supabase--configure_social_auth` with `providers: ["google", "apple"]` so both managed providers are wired up on the backend.
+- Flip `APPLE_SIGNIN_ENABLED = true` in `AuthModal.tsx` so the Apple button renders.
+- Keep the existing root-path `handleRootOAuthCallback` for backward compatibility, but stop relying on it as the primary path (managed flow sets the session directly).
 
-UI: stacked cards under the dashboard. Each shows pattern name, plain-English explanation, the contributing biomarkers as chips, and a "View suggested stack" button that jumps to the matching peptides in the stack builder.
+---
 
-### 3. Stack Builder Cart
-New component `StackBuilder.tsx` replacing the single buy-link in `ProtocolSections.tsx`'s Peptide Stack section. Behavior:
+### 2. "Run Baseline" / "Run Deep Decode" don't push results
 
-- Each `StackPeptideCard` gets a checkbox / "Add" toggle.
-- Selected peptides accumulate in a sticky bottom cart bar (count + names).
-- Cart has primary CTA **"Buy Stack on RideTheTide"** → opens `https://www.ridethetide.site/shop?utm_source=app&utm_medium=bloodwork&utm_campaign=stack&items=<slug,slug>` in new tab.
-- Fires `captureLead` (`source: 'bloodwork_stack_buy'`, payload includes selected peptide slugs + matched patterns) before navigation, reusing the existing CRM hook.
-- Empty-state CTA: "Select peptides to build your stack" with a "Select all recommended" shortcut.
+**What's happening.** `runScan` in `BloodworkPage.tsx` swallows several failure modes:
+- File-size error sets `error` but `progress` is never started, so the `ScanError` panel renders without context and the user sees no transition.
+- `mapScanError` returns an empty string for aborts, which causes the catch branch to reset progress silently — any non-Error throw (e.g. a JSON-parse failure inside the function) can fall into a path where `running` clears but the user sees nothing happen.
+- The `analyze-lab-report` edge function failures only surface their `fnError.message`, which for non-2xx responses from `supabase.functions.invoke` is the generic `"Edge Function returned a non-2xx status code"` — invisible to the user.
 
-### 4. Onboarding / Purchase Nudge Improvements
-- Add a one-time **results onboarding overlay** (3 tooltips: "Here's your system view" → "These are your patterns" → "Build & buy your stack"). Stored in `localStorage` (`rtd_bloodwork_onboarded_v1`).
-- After results render, a slide-in toast appears at 8s if no peptide has been added to the cart: "Ready to start? Shop your protocol on RideTheTide →".
-- The existing "Download PDF" button stays; add a secondary **"Shop my stack"** button next to it in the header that scrolls to the cart.
+DB/storage are fine (`lab-reports` bucket exists, `lab_reports` table + RLS in place).
 
-### Wiring
-- `BloodworkResults.tsx` mounts: `<SystemDashboard>`, `<PatternDetection>`, then the existing biomarker panel, insights, and `<ProtocolSections>` (which now renders `<StackBuilder>`).
-- Selected-peptide state lifts to `BloodworkResults` via a `StackCartProvider` (React context in `src/components/bloodwork/StackCartContext.tsx`) so the sticky cart, header button, and protocol-section cards all share it.
-- All shop links use the canonical `https://www.ridethetide.site/shop` (per project memory — apex is broken, always use `www`).
+**Changes**
+- In `BloodworkPage.runScan`:
+  - When the edge function returns `fnError`, also pull `data?.error` / `data?.message` from the response body and include it in the thrown message, so the wizard's `ScanError` panel shows the real reason (quota, parse failure, etc.).
+  - Always `progress.start()` before any early-return validation (file size) so the status panel actually mounts.
+  - Treat empty `mapScanError` results as a generic "Scan was cancelled or failed silently — please retry" instead of resetting with no UI.
+- In `supabase/functions/analyze-lab-report/index.ts`: ensure every error path returns `{ error: <human message> }` with a 200 (or include the body on non-2xx) so the client can surface it. No business-logic change.
+- Add `console.error` breadcrumbs around upload / insert / invoke so failures show up in the browser console for future debugging.
 
-### Technical notes (files touched)
-- New: `src/components/bloodwork/SystemDashboard.tsx`, `PatternDetection.tsx`, `StackBuilder.tsx`, `StackCartBar.tsx`, `StackCartContext.tsx`, `BloodworkOnboarding.tsx`
-- New: `src/lib/bloodwork/patterns.ts`, `src/lib/bloodwork/systems.ts`
-- Edit: `src/components/bloodwork/BloodworkResults.tsx` (mount new sections, header CTA, provider)
-- Edit: `src/components/bloodwork/ProtocolSections.tsx` (replace single buy CTA with `<StackBuilder>`)
-- Edit: `src/components/bloodwork/StackPeptideCard.tsx` (add `selectable` + `selected` props with checkbox)
+---
 
-No DB or edge-function changes. No new dependencies. Pure presentation + client logic.
+### Files touched
+
+- `src/contexts/AuthContext.tsx` — swap to `lovable.auth.signInWithOAuth`.
+- `src/components/auth/AuthModal.tsx` — enable Apple button.
+- `src/pages/BloodworkPage.tsx` — surface edge-function errors, fix early-return UX, add breadcrumbs.
+- `supabase/functions/analyze-lab-report/index.ts` — normalize error responses.
+- Backend: call `supabase--configure_social_auth` with `["google","apple"]`.
+
+No DB migrations, no new dependencies, no UI redesign.

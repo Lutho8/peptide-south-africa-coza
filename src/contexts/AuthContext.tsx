@@ -2,6 +2,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { User, Session, Provider } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 import {
   setActiveUserId,
   clearLegacyGlobalKeys,
@@ -183,30 +184,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithOAuth = async (provider: Provider) => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+      if (provider !== 'google' && provider !== 'apple') {
+        return { error: new Error(`Provider ${provider} not supported`) };
+      }
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
       });
-
-      if (error) {
-        return { error: error as Error };
+      if (result.error) {
+        console.error('[OAuth] error:', result.error);
+        const err = result.error;
+        return { error: err instanceof Error ? err : new Error(String(err)) };
       }
-
-      // If no URL was returned, something went wrong
-      if (!data.url) {
-        return { error: new Error('No OAuth redirect URL returned') };
-      }
-
-      // The signInWithOAuth call may redirect the browser automatically.
-      // If it doesn't, we redirect manually.
-      if (typeof window !== 'undefined' && window.location.href !== data.url) {
-        window.location.href = data.url;
-      }
-
+      // result.redirected => browser navigates to provider; otherwise tokens were set on the session.
       return { error: null };
     } catch (err) {
+      console.error('[OAuth] unexpected:', err);
       return { error: err instanceof Error ? err : new Error(String(err)) };
     }
   };
