@@ -1,48 +1,89 @@
-## Plan: Fix OAuth sign-in + Bloodwork CTAs
+# Plan: Login Continuity, Apple Sign-In, and Bloodwork Funnel v2
 
-Two distinct bugs. Both fixed in one pass.
+## 1. Cycle history continuity for returning users
+Scope per your answer: just verify existing data loads after login (no DB migration).
 
----
+- Audit `src/services/storage.ts` (`getCycles`, `saveCycle`, etc.) and confirm cycle history is read from the same `peptide_app_cycles` localStorage key regardless of which user is signed in, so signing out and back in on the same device preserves history.
+- Audit `signOut` in `AuthContext` and the migration modal flow to confirm we never wipe `peptide_app_cycles` on logout or on a new sign-in.
+- Add a tiny `console.info('[cycles] loaded N from local store')` breadcrumb on app boot so we can spot accidental resets in the field.
+- No DB schema work, no UI change.
 
-### 1. Google / Apple sign-in does not work
+> Note: because cycles live only in localStorage, switching devices still loses history. If you want cross-device cycle sync later, that becomes a separate task (new `user_cycles` table + migration).
 
-**Root cause.** `src/contexts/AuthContext.tsx` calls `supabase.auth.signInWithOAuth` directly. This project already has the Lovable-managed OAuth shim (`src/integrations/lovable/index.ts` + `@lovable.dev/cloud-auth-js`), which is the supported path on Lovable Cloud. The raw Supabase call needs the provider configured in the dashboard and proper redirect URLs — on Lovable Cloud projects this is the wrong call and silently fails / loops.
+## 2. Apple Sign-In — make it visible & working again
+- Re-run the managed social auth configuration with both `google` and `apple` enabled so the provider is re-registered on Lovable Cloud.
+- Keep `APPLE_SIGNIN_ENABLED = true` in `AuthModal.tsx` (already set) and double-check the Apple button renders in both `signin` and `signup` modes.
+- Keep `AuthContext.signInWithOAuth` on `lovable.auth.signInWithOAuth('apple', { redirect_uri: window.location.origin })` and surface real error text in the toast.
+- Add a "Test on published URL" note in the UI dev log: managed OAuth callbacks may not complete inside the iframe preview; the button itself must still render and the click must reach the provider.
+- Verify by:
+  1. Opening AuthModal → Apple button visible.
+  2. Clicking → network call to `/~oauth/initiate?provider=apple` returns 200/redirect.
+  3. On the published URL, full round-trip completes and session is set.
 
-Apple is also gated behind a hardcoded `APPLE_SIGNIN_ENABLED = false` in `AuthModal.tsx`, so the Apple button is never rendered.
+## 3. Bloodwork v2 — Onboarding → Analysis → Stack → Checkout
+Builds on existing `BloodworkOnboarding`, `SystemDashboard`, `PatternDetection`, `StackCartBar`, and `patterns.ts`/`systems.ts`.
 
-**Changes**
-- Update `AuthContext.signInWithOAuth` to call `lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin })` and handle the `{ redirected, error, tokens }` result per the managed-OAuth contract. Keep the existing signature so `AuthModal` doesn't change shape.
-- Re-run `supabase--configure_social_auth` with `providers: ["google", "apple"]` so both managed providers are wired up on the backend.
-- Flip `APPLE_SIGNIN_ENABLED = true` in `AuthModal.tsx` so the Apple button renders.
-- Keep the existing root-path `handleRootOAuthCallback` for backward compatibility, but stop relying on it as the primary path (managed flow sets the session directly).
+### 3a. Onboarding (guest-friendly)
+- New `BloodworkUploader` with drag-and-drop zone (PDF/JPG/PNG), progress bar, and three entry paths:
+  1. **Drop file** → auto-extract via `analyze-lab-report` edge function.
+  2. **Take photo** (mobile camera input).
+  3. **Manual entry fallback** → existing biomarker form, pre-grouped by system.
+- Guest mode: results are computed and shown without forcing sign-in; persisted in `sessionStorage` until the user creates an account, then upserted to `lab_reports`.
 
----
+### 3b. Analysis engine — 6 system cards
+- Extend `src/lib/bloodwork/systems.ts` to cover: Immune, Metabolic, Hormonal, Cardiovascular, Liver/Kidney, Inflammatory.
+- Each card renders: status pill (Optimal / Watch / Action), top 1–2 driver biomarkers with value vs. optimal range, and a one-line plain-language explanation.
+- Pattern detection (`patterns.ts`) already supports combos like "Immune Dysregulation + Metabolic Stress" — extend with 4–6 more pairings and surface them as a banner above the cards.
 
-### 2. "Run Baseline" / "Run Deep Decode" don't push results
+### 3c. Peptide recommendations
+- New `RecommendationEngine` ranks peptides per detected pattern/system using the existing stacking matrix and biomarker→peptide mapping.
+- Each recommendation card shows: peptide name, why-it-was-picked (biomarker drivers), suggested protocol (dose mg/IU/units, frequency, duration), expected outcomes (timeframe + measurable marker), and a safety warnings accordion (contraindications, interactions, "research only" disclaimer).
 
-**What's happening.** `runScan` in `BloodworkPage.tsx` swallows several failure modes:
-- File-size error sets `error` but `progress` is never started, so the `ScanError` panel renders without context and the user sees no transition.
-- `mapScanError` returns an empty string for aborts, which causes the catch branch to reset progress silently — any non-Error throw (e.g. a JSON-parse failure inside the function) can fall into a path where `running` clears but the user sees nothing happen.
-- The `analyze-lab-report` edge function failures only surface their `fnError.message`, which for non-2xx responses from `supabase.functions.invoke` is the generic `"Edge Function returned a non-2xx status code"` — invisible to the user.
+### 3d. Stack builder & checkout deep link
+- Multi-select cart already in `StackCartContext` — add quantity-less "add/remove" toggles on every recommendation card and a sticky `StackCartBar` summary.
+- "Buy Stack" CTA builds a deep link to `https://www.ridethetide.site/cart/add?items=<sku>,<sku>&utm_source=rtdinfo&utm_medium=bloodwork&utm_campaign=stack_v2` and opens in a new tab.
+- Post-purchase: on return to the app with `?stack_activated=1`, auto-create a `user_stacks` row and offer "Activate protocol now" → schedules dose reminders.
 
-DB/storage are fine (`lab-reports` bucket exists, `lab_reports` table + RLS in place).
+### 3e. UX spec
+- Visual language: Apple-Health-style ring/status pills, InsideTracker-style biomarker bars with optimal-range shading; mobile-first single column on <768px, two-column on ≥768px.
+- Stick to design tokens (primary `#3B82F6`, glassmorphism surfaces, Framer Motion fades — no custom hex in components).
+- Touch targets ≥44px, content-visibility: auto on card lists.
 
-**Changes**
-- In `BloodworkPage.runScan`:
-  - When the edge function returns `fnError`, also pull `data?.error` / `data?.message` from the response body and include it in the thrown message, so the wizard's `ScanError` panel shows the real reason (quota, parse failure, etc.).
-  - Always `progress.start()` before any early-return validation (file size) so the status panel actually mounts.
-  - Treat empty `mapScanError` results as a generic "Scan was cancelled or failed silently — please retry" instead of resetting with no UI.
-- In `supabase/functions/analyze-lab-report/index.ts`: ensure every error path returns `{ error: <human message> }` with a 200 (or include the body on non-2xx) so the client can surface it. No business-logic change.
-- Add `console.error` breadcrumbs around upload / insert / invoke so failures show up in the browser console for future debugging.
+### 3f. Conversion funnel
+guest upload → analysis dashboard → "Save your results" account creation (email + Google + Apple) → stack builder → checkout deep link → post-purchase protocol activation. Each step emits an analytics event (`bw_upload_started`, `bw_analysis_viewed`, `bw_signup`, `bw_stack_built`, `bw_checkout_clicked`, `bw_protocol_activated`).
 
----
+### 3g. Technical API (edge functions)
+Eight endpoints under `supabase/functions/`:
+1. `analyze-lab-report` (exists) — PDF/image → biomarker JSON (Gemini vision).
+2. `extract-biomarkers-manual` — validates manual entries against reference ranges.
+3. `score-systems` — biomarkers → 6-system status.
+4. `detect-patterns` — system scores → pattern list.
+5. `rank-peptides` — pattern+biomarker context → ranked peptide list with protocols.
+6. `build-stack-link` — peptide ids → ridethetide.site cart URL with UTM.
+7. `activate-protocol` — stack id → creates `dose_reminders` rows.
+8. `bw-event` — analytics passthrough.
 
-### Files touched
+PDF parser requirement: pdf.js extraction → fallback to Gemini vision when text layer is empty. Shared auth with the shop is handled by the deep-link UTM + (future) signed token; not in scope for this pass.
 
-- `src/contexts/AuthContext.tsx` — swap to `lovable.auth.signInWithOAuth`.
-- `src/components/auth/AuthModal.tsx` — enable Apple button.
-- `src/pages/BloodworkPage.tsx` — surface edge-function errors, fix early-return UX, add breadcrumbs.
-- `supabase/functions/analyze-lab-report/index.ts` — normalize error responses.
-- Backend: call `supabase--configure_social_auth` with `["google","apple"]`.
+### 3h. A/B roadmap + success metrics
+Tracked client-side and ready for an experiment flag:
+- **Tests:** (1) hero copy "Free Lab Analysis" vs "Decode Your Bloodwork", (2) auto-upload vs choose-method screen, (3) ranked list vs grouped-by-system, (4) sticky vs inline Buy Stack CTA, (5) post-purchase "Activate now" modal vs banner.
+- **Metrics:** upload-completion rate, analysis-view rate, signup conversion, stack add-rate, checkout click-through, protocol-activation rate.
 
-No DB migrations, no new dependencies, no UI redesign.
+### 3i. Competitive differentiation (copy on landing strip)
+Add a small "Why Ride The Tide" strip: open vs closed analysis, free for all members, South-Africa focused, integrated with the shop and Cape Town Peptide Club ecosystem.
+
+## Files to touch
+- `src/contexts/AuthContext.tsx` — breadcrumb logs, leave OAuth path as-is.
+- `src/components/auth/AuthModal.tsx` — verify Apple button render.
+- `src/components/bloodwork/` — new `BloodworkUploader.tsx`, `RecommendationsList.tsx`, `RecommendationCard.tsx`, `WhyRTDStrip.tsx`; extend `SystemDashboard.tsx`, `PatternDetection.tsx`, `StackCartBar.tsx`, `BloodworkOnboarding.tsx`, `BloodworkResults.tsx`.
+- `src/lib/bloodwork/` — extend `systems.ts`, `patterns.ts`; new `recommendations.ts`, `stackLink.ts`, `analytics.ts`.
+- `src/pages/BloodworkPage.tsx` — wire guest flow, post-purchase return handler.
+- `supabase/functions/` — add `score-systems`, `detect-patterns`, `rank-peptides`, `build-stack-link`, `activate-protocol`, `extract-biomarkers-manual`, `bw-event` (no DB schema changes; reuses `lab_reports`, `user_stacks`, `dose_reminders`).
+
+## Out of scope (call out explicitly)
+- Cross-device cycle sync (would need a new `user_cycles` table + migration).
+- Shared SSO token with the shop (UTM-only handoff for now).
+- Stripe/PayPal — checkout stays on ridethetide.site per the no-paywall rule.
+
+Ready to implement on approval.
