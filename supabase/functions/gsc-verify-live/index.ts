@@ -1,19 +1,61 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const ALLOWED_HOSTS = new Set([
+  "ridethetide.info",
+  "www.ridethetide.info",
+]);
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Admin auth
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const authHeader = req.headers.get("Authorization") || "";
+  const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: isAdmin } = await userClient.rpc("has_role", { _user_id: user.id, _role: "admin" });
+  if (!isAdmin) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   let url = "https://ridethetide.info/";
   try { const body = await req.json(); if (body?.url) url = String(body.url); } catch {}
   if (!/^https?:\/\//.test(url)) url = "https://" + url;
 
+  // Restrict fetched origin to prevent SSRF
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return new Response(JSON.stringify({ ok: false, error: "Invalid URL" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (!ALLOWED_HOSTS.has(parsedUrl.hostname) || (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:")) {
+    return new Response(JSON.stringify({ ok: false, error: "Host not allowed" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   let html = "";
   let status = 0;
   try {
-    const res = await fetch(url, { headers: { "User-Agent": "RideTheTide-SEO-Check/1.0" } });
+    const res = await fetch(parsedUrl.toString(), { headers: { "User-Agent": "RideTheTide-SEO-Check/1.0" } });
     status = res.status;
     html = await res.text();
   } catch (e) {

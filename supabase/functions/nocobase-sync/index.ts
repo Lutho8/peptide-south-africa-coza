@@ -276,7 +276,7 @@ Deno.serve(async (req) => {
       console.log('ADMIN_NOTIFY', JSON.stringify(adminPayload));
     }
 
-    return new Response(JSON.stringify({ ok: true, leadId, admin: ADMIN_EMAIL }), {
+    return new Response(JSON.stringify({ ok: true, leadId }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
