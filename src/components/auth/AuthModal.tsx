@@ -29,8 +29,8 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const { signIn, signUp, signInWithOAuth } = useAuth();
 
-  // Toggle to true once Apple Developer account + Supabase Apple provider are configured
-  const APPLE_SIGNIN_ENABLED = false;
+  // Apple Sign In via Lovable Cloud managed OAuth
+  const APPLE_SIGNIN_ENABLED = true;
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
