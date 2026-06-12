@@ -370,7 +370,26 @@ export function PKSimulatorPage() {
               </Tabs>
             </div>
 
-            {/* PK Params summary */}
+            {/* Admin Route */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium flex items-center gap-1.5">
+                <Syringe className="h-3 w-3" />
+                Route
+              </Label>
+              <Select value={route} onValueChange={(v) => setRoute(v as AdminRoute)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SUPPORTED_ROUTES.map((r) => (
+                    <SelectItem key={r} value={r} className="text-sm">
+                      {ROUTE_LABELS[r]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="text-[10px] h-6">
                 t½ {formatDuration(params.halfLifeHours)}
