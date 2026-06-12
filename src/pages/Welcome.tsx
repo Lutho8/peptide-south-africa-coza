@@ -41,20 +41,21 @@ export default function Welcome() {
           <span className="text-foreground font-semibold">No paywalls. Ever.</span>
         </p>
 
-        <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center">
+        <div className="mt-8 sm:mt-10 mx-auto flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center sm:items-center sm:gap-4">
           <Link to="/" className="w-full sm:w-auto">
             <Button
               size="lg"
-              className="w-full sm:w-auto h-14 px-8 text-base font-semibold gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-xl shadow-primary/25 hover:opacity-95"
+              className="w-full sm:w-auto h-14 px-8 text-base font-bold gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-2xl shadow-primary/40 hover:shadow-primary/60 hover:scale-[1.02] transition-all ring-2 ring-primary/20"
             >
-              Start Tracking Free
-              <ArrowRight className="w-4 h-4" />
+              Sign In / Start Free
+              <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
-          <a href={SHOP_URL} className="w-full sm:w-auto">
+          <a href={SHOP_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
             <Button
               size="lg"
-              className="btn-sparkle w-full sm:w-auto h-14 px-8 text-base gap-2"
+              variant="outline"
+              className="w-full sm:w-auto h-14 px-8 text-base gap-2 border-primary/30 hover:border-primary/60"
             >
               <ShoppingBag className="w-4 h-4" />
               Buy Peptides
