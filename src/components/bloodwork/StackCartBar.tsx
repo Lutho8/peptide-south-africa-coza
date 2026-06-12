@@ -3,6 +3,8 @@ import { ShoppingBag, X, ArrowRight } from 'lucide-react';
 import { useStackCart } from './StackCartContext';
 import { captureLead } from '@/lib/crm';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildStackLink } from '@/lib/bloodwork/stackLink';
+import { trackBwEvent } from '@/lib/bloodwork/analytics';
 
 interface Props {
   patternIds?: string[];
@@ -13,8 +15,11 @@ export function StackCartBar({ patternIds = [] }: Props) {
   const { user } = useAuth();
 
   const handleBuy = () => {
-    const itemsParam = items.map((i) => i.slug).join(',');
-    const url = `https://www.ridethetide.site/shop?utm_source=app&utm_medium=bloodwork&utm_campaign=stack&items=${encodeURIComponent(itemsParam)}`;
+    const url = buildStackLink(items.map((i) => ({ slug: i.slug, name: i.name })), {
+      patternIds,
+    });
+    trackBwEvent('bw_stack_built', { peptides: items.map((i) => i.slug), patterns: patternIds });
+    trackBwEvent('bw_checkout_clicked', { peptides: items.map((i) => i.slug), patterns: patternIds });
     void captureLead({
       email: user?.email,
       source: 'bloodwork_stack_buy',
