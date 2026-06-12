@@ -168,14 +168,14 @@ export default function SafetyPage() {
     let cancelled = false;
     supabase
       .from("safety_checks")
-      .select("checked_at")
+      .select("created_at")
       .eq("user_id", user.id)
-      .order("checked_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        if (!cancelled && data?.checked_at) {
-          setLastAIReview(new Date(data.checked_at as string).getTime());
+        if (!cancelled && data?.created_at) {
+          setLastAIReview(new Date(data.created_at as string).getTime());
         }
       });
     return () => { cancelled = true; };
