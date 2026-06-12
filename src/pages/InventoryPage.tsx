@@ -11,6 +11,8 @@ import {
   CalendarClock,
   ChevronRight,
   X,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -231,7 +233,7 @@ function VialCard({
 
 // ===== Main Component =====
 export default function InventoryPage() {
-  const { items, alerts, addItem, removeItem, recordDose } = useInventory();
+  const { items, alerts, addItem, removeItem, recordDose, syncedToCloud } = useInventory();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Seed demo data if empty
