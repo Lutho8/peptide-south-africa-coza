@@ -592,16 +592,25 @@ export function PKSimulatorPage() {
 
         {/* Right panel - Visualization + Stats */}
         <div className="lg:col-span-2 space-y-4">
-          {/* PK Curve */}
-          <PKCurve
-            peptideId={selectedPeptideId}
-            doses={doses}
-            height={420}
-            timeWindowHours={timeWindowHours}
-            timeStepMinutes={30}
-            showTherapeuticWindow={!!therapeutic}
-            title={`${params.peptideName} - ${timeWindowHours / 24}-Day Profile`}
-          />
+          {/* PK Curve (wrapped for PNG export) */}
+          <div ref={exportRef} className="relative bg-background rounded-lg">
+            <PKCurve
+              peptideId={selectedPeptideId}
+              doses={doses}
+              height={420}
+              timeWindowHours={timeWindowHours}
+              timeStepMinutes={30}
+              showTherapeuticWindow={!!therapeutic}
+              title={`${params.peptideName} - ${timeWindowHours / 24}-Day Profile`}
+              paramsOverride={params}
+            />
+            <div className="px-4 py-2 flex items-center justify-between text-[10px] text-muted-foreground border-t">
+              <span>
+                Route: {ROUTE_LABELS[route]} • F {(params.bioavailability * 100).toFixed(0)}% • tmax {formatDuration(params.timeToPeakHours)}
+              </span>
+              <span className="font-medium">Ride The Tide • ridethetide.info</span>
+            </div>
+          </div>
 
           {/* Stats Panel */}
           {result && doses.length > 0 && (
