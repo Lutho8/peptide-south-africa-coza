@@ -8,8 +8,10 @@ import { PatternDetection } from './PatternDetection';
 import { StackCartProvider } from './StackCartContext';
 import { StackCartBar } from './StackCartBar';
 import { BloodworkOnboarding } from './BloodworkOnboarding';
+import { WhyRTDStrip } from './WhyRTDStrip';
 import { summarizeSystems } from '@/lib/bloodwork/systems';
 import { detectPatterns } from '@/lib/bloodwork/patterns';
+import { trackBwEvent } from '@/lib/bloodwork/analytics';
 
 export interface ResultBiomarker {
   name: string;
@@ -52,9 +54,18 @@ interface Props {
 
 export function BloodworkResults(props: Props) {
   const patternsTop = detectPatterns(props.result.biomarkers);
+  useEffect(() => {
+    trackBwEvent('bw_analysis_viewed', {
+      scanType: props.result.scan_type,
+      patterns: patternsTop.map((p) => p.id),
+      biomarkerCount: props.result.biomarkers.length,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <StackCartProvider>
       <BloodworkResultsInner {...props} />
+      <WhyRTDStrip />
       <StackCartBar patternIds={patternsTop.map((p) => p.id)} />
       <BloodworkOnboarding />
     </StackCartProvider>

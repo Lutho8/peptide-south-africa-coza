@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, FlaskConical } from 'lucide-react';
+import { ArrowLeft, FlaskConical, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -9,6 +9,7 @@ import { useMembership } from '@/hooks/useMembership';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { captureLead } from '@/lib/crm';
+import { trackBwEvent } from '@/lib/bloodwork/analytics';
 
 import { ScanFormState } from '@/components/bloodwork/ScanForm';
 import { BloodworkResults, BloodworkScanResult } from '@/components/bloodwork/BloodworkResults';
