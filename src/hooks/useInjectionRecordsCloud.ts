@@ -127,9 +127,7 @@ export function rankNextSites(
       const cooldownClear = sinceMs >= cooldownMs;
       let score = sinceMs === Infinity ? 1e9 : sinceMs / 3600000; // hours since use
       if (!cooldownClear) score -= 1e6;
-      if (lastRecord && site.side !== lastRecord.site_id.endsWith("-l") ? "L" : "R") {
-        // prefer opposite side rotation (lightweight heuristic on id suffix)
-      }
+      // (Side rotation heuristic intentionally omitted; recommended_routes filter is enough.)
       const reason = !cooldownClear
         ? `In ${cooldownDays}-day cooldown`
         : last
