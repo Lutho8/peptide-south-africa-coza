@@ -44,7 +44,7 @@ export function useSafetyProfileCloud(): {
   const [profile, setProfileState] = useState<UserSafetyProfile | null>(loadLocal);
   const [loading, setLoading] = useState(false);
 
-  // Fetch from cloud when authed
+  // Fetch from cloud when authed; migrate local → cloud on first load if cloud is empty
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -55,14 +55,32 @@ export function useSafetyProfileCloud(): {
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (!cancelled) {
-        if (!error && data) {
-          const p = rowToProfile(data);
-          setProfileState(p);
-          saveLocal(p);
+      if (cancelled) return;
+
+      if (!error && data) {
+        const p = rowToProfile(data);
+        setProfileState(p);
+        saveLocal(p);
+      } else if (!error && !data) {
+        // Cloud empty — migrate local profile if present
+        const local = loadLocal();
+        if (local && (local.medications?.length || local.conditions?.length || local.allergies?.length)) {
+          const { error: upErr } = await supabase
+            .from("safety_profiles")
+            .upsert({
+              user_id: user.id,
+              medications: local.medications,
+              conditions: local.conditions,
+              allergies: local.allergies,
+              is_pregnant: local.isPregnant,
+              age: local.age,
+            }, { onConflict: "user_id" });
+          if (!upErr) {
+            setProfileState({ ...local, lastUpdated: Date.now() });
+          }
         }
-        setLoading(false);
       }
+      setLoading(false);
     }
     load();
     return () => { cancelled = true; };
