@@ -13,7 +13,7 @@
  * Uses Recharts for visualization via PKCurve component.
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -42,9 +42,12 @@ import {
   Settings2,
   RotateCcw,
   ChevronDown,
+  Download,
+  Share2,
+  Syringe,
 } from "lucide-react";
 
-import type { DoseEvent } from "@/lib/pk/types";
+import type { DoseEvent, AdminRoute } from "@/lib/pk/types";
 import {
   simulatePK,
   calculateCurrentLevel,
@@ -59,8 +62,11 @@ import {
   getAllPeptides,
   getPeptidesByCategory,
 } from "@/lib/pk/compounds";
+import { adjustParamsForRoute, ROUTE_LABELS, SUPPORTED_ROUTES } from "@/lib/pk/routes";
+import { exportNodeToPng, sharePngBlob } from "@/lib/pk/exportPng";
 import { PKCurve } from "./PKCurve";
 import { ActiveLevelBadge } from "./ActiveLevelBadge";
+import { toast } from "sonner";
 
 /** Pre-built time window presets */
 const TIME_WINDOWS = [
@@ -93,11 +99,18 @@ export function PKSimulatorPage() {
   const [timeWindow, setTimeWindow] = useState<string>("168");
   const [scheduleFreq, setScheduleFreq] = useState<string>("24");
   const [activeTab, setActiveTab] = useState<string>("curve");
+  const [route, setRoute] = useState<AdminRoute>("subcutaneous");
+  const [exporting, setExporting] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   // === Derived state ===
-  const params = useMemo(
+  const baseParams = useMemo(
     () => getPKParameters(selectedPeptideId),
     [selectedPeptideId]
+  );
+  const params = useMemo(
+    () => (baseParams ? adjustParamsForRoute(baseParams, route) : undefined),
+    [baseParams, route]
   );
   const therapeutic = useMemo(
     () => getTherapeuticWindow(selectedPeptideId),
