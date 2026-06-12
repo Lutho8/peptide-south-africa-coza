@@ -1,89 +1,114 @@
-# Plan: Login Continuity, Apple Sign-In, and Bloodwork Funnel v2
 
-## 1. Cycle history continuity for returning users
-Scope per your answer: just verify existing data loads after login (no DB migration).
+# Clinical-Grade v2: 5 Pillar Rebuild
 
-- Audit `src/services/storage.ts` (`getCycles`, `saveCycle`, etc.) and confirm cycle history is read from the same `peptide_app_cycles` localStorage key regardless of which user is signed in, so signing out and back in on the same device preserves history.
-- Audit `signOut` in `AuthContext` and the migration modal flow to confirm we never wipe `peptide_app_cycles` on logout or on a new sign-in.
-- Add a tiny `console.info('[cycles] loaded N from local store')` breadcrumb on app boot so we can spot accidental resets in the field.
-- No DB schema work, no UI change.
+Goal: elevate Ride The Tide from "good basic tracker" to a Pinned.life-class clinical platform. Each of the 5 existing modules is rebuilt against Pinned parity, backed by Lovable Cloud sync, and enriched with Lovable AI lookups for safety reasoning.
 
-> Note: because cycles live only in localStorage, switching devices still loses history. If you want cross-device cycle sync later, that becomes a separate task (new `user_cycles` table + migration).
+## 1. Safety Engine v2 — AI-Assisted Clinical Checks
 
-## 2. Apple Sign-In — make it visible & working again
-- Re-run the managed social auth configuration with both `google` and `apple` enabled so the provider is re-registered on Lovable Cloud.
-- Keep `APPLE_SIGNIN_ENABLED = true` in `AuthModal.tsx` (already set) and double-check the Apple button renders in both `signin` and `signup` modes.
-- Keep `AuthContext.signInWithOAuth` on `lovable.auth.signInWithOAuth('apple', { redirect_uri: window.location.origin })` and surface real error text in the toast.
-- Add a "Test on published URL" note in the UI dev log: managed OAuth callbacks may not complete inside the iframe preview; the button itself must still render and the click must reach the provider.
-- Verify by:
-  1. Opening AuthModal → Apple button visible.
-  2. Clicking → network call to `/~oauth/initiate?provider=apple` returns 200/redirect.
-  3. On the published URL, full round-trip completes and session is set.
+**UX**
+- Dedicated `/safety` route with 3 tabs: Profile, Interaction Checker, Active Alerts.
+- Profile wizard: meds, conditions, allergies, pregnancy, age, sex, weight, kidney/liver status, oncology history.
+- On every new dose log or stack edit, run a safety check banner: green ✓ / amber caution / red contraindicated.
+- "Why?" expander shows reasoning + source disclaimer ("AI-assisted research summary, not medical advice").
 
-## 3. Bloodwork v2 — Onboarding → Analysis → Stack → Checkout
-Builds on existing `BloodworkOnboarding`, `SystemDashboard`, `PatternDetection`, `StackCartBar`, and `patterns.ts`/`systems.ts`.
+**Engine**
+- Local hard-rules layer (immediate, free): contraindications, age gates, pregnancy, allergy match using `src/lib/safety/contraindications.ts` (expanded).
+- AI layer via Lovable AI Gateway (`google/gemini-3-flash-preview`) for nuanced peptide↔drug, peptide↔condition, and peptide↔peptide interaction reasoning. Structured output (Zod): `{status, severity, mechanism, recommendation, references[]}`.
+- Cached per (peptideId, profileHash) for 7 days in `safety_checks` table to avoid burning credits.
 
-### 3a. Onboarding (guest-friendly)
-- New `BloodworkUploader` with drag-and-drop zone (PDF/JPG/PNG), progress bar, and three entry paths:
-  1. **Drop file** → auto-extract via `analyze-lab-report` edge function.
-  2. **Take photo** (mobile camera input).
-  3. **Manual entry fallback** → existing biomarker form, pre-grouped by system.
-- Guest mode: results are computed and shown without forcing sign-in; persisted in `sessionStorage` until the user creates an account, then upserted to `lab_reports`.
+**Cloud**
+- `safety_profiles` (1:1 user), `safety_checks` (cache).
 
-### 3b. Analysis engine — 6 system cards
-- Extend `src/lib/bloodwork/systems.ts` to cover: Immune, Metabolic, Hormonal, Cardiovascular, Liver/Kidney, Inflammatory.
-- Each card renders: status pill (Optimal / Watch / Action), top 1–2 driver biomarkers with value vs. optimal range, and a one-line plain-language explanation.
-- Pattern detection (`patterns.ts`) already supports combos like "Immune Dysregulation + Metabolic Stress" — extend with 4–6 more pairings and surface them as a banner above the cards.
+## 2. PK Engine v2 — Validated Curves
 
-### 3c. Peptide recommendations
-- New `RecommendationEngine` ranks peptides per detected pattern/system using the existing stacking matrix and biomarker→peptide mapping.
-- Each recommendation card shows: peptide name, why-it-was-picked (biomarker drivers), suggested protocol (dose mg/IU/units, frequency, duration), expected outcomes (timeframe + measurable marker), and a safety warnings accordion (contraindications, interactions, "research only" disclaimer).
+**UX**
+- `/pk` page upgraded: multi-peptide overlay, dose markers, Cmax/Tmax/AUC, steady-state line, "active level right now" badge.
+- Per-peptide injection form (subq/IM/IV/intranasal) modifies absorption k_a.
+- Shareable PNG export for clinicians.
 
-### 3d. Stack builder & checkout deep link
-- Multi-select cart already in `StackCartContext` — add quantity-less "add/remove" toggles on every recommendation card and a sticky `StackCartBar` summary.
-- "Buy Stack" CTA builds a deep link to `https://www.ridethetide.site/cart/add?items=<sku>,<sku>&utm_source=rtdinfo&utm_medium=bloodwork&utm_campaign=stack_v2` and opens in a new tab.
-- Post-purchase: on return to the app with `?stack_activated=1`, auto-create a `user_stacks` row and offer "Activate protocol now" → schedules dose reminders.
+**Engine**
+- Move from single half-life to 1-compartment PK with bioavailability F, k_a, k_e per route. Validated parameters table in `src/lib/pk/compounds.ts` (curated literature values).
+- Engine simulates rolling 7/14/30-day windows from real `daily_doses` rows (cloud).
 
-### 3e. UX spec
-- Visual language: Apple-Health-style ring/status pills, InsideTracker-style biomarker bars with optimal-range shading; mobile-first single column on <768px, two-column on ≥768px.
-- Stick to design tokens (primary `#3B82F6`, glassmorphism surfaces, Framer Motion fades — no custom hex in components).
-- Touch targets ≥44px, content-visibility: auto on card lists.
+**Cloud**
+- Reuse `daily_doses`; add `pk_user_overrides` for personal half-life tweaks (advanced users).
 
-### 3f. Conversion funnel
-guest upload → analysis dashboard → "Save your results" account creation (email + Google + Apple) → stack builder → checkout deep link → post-purchase protocol activation. Each step emits an analytics event (`bw_upload_started`, `bw_analysis_viewed`, `bw_signup`, `bw_stack_built`, `bw_checkout_clicked`, `bw_protocol_activated`).
+## 3. Injection Site Rotation Map v2
 
-### 3g. Technical API (edge functions)
-Eight endpoints under `supabase/functions/`:
-1. `analyze-lab-report` (exists) — PDF/image → biomarker JSON (Gemini vision).
-2. `extract-biomarkers-manual` — validates manual entries against reference ranges.
-3. `score-systems` — biomarkers → 6-system status.
-4. `detect-patterns` — system scores → pattern list.
-5. `rank-peptides` — pattern+biomarker context → ranked peptide list with protocols.
-6. `build-stack-link` — peptide ids → ridethetide.site cart URL with UTM.
-7. `activate-protocol` — stack id → creates `dose_reminders` rows.
-8. `bw-event` — analytics passthrough.
+**UX**
+- Full-body SVG (front/back, male/female toggle) with 14 zones (abdomen quadrants, thighs, glutes, deltoids, lats).
+- Heatmap of last 30 days; zone color = days since last use.
+- "Suggest next site" button uses rotation algorithm respecting min 7-day cooldown per zone and avoiding consecutive same-side.
+- Photo annotation: tap zone to log; optional lump/bruise note.
 
-PDF parser requirement: pdf.js extraction → fallback to Gemini vision when text layer is empty. Shared auth with the shop is handled by the deep-link UTM + (future) signed token; not in scope for this pass.
+**Engine**
+- Rotation algorithm in `src/lib/injection/rotation.ts` (upgrade): scores zones by cooldown, last bruise report, user-disabled zones.
 
-### 3h. A/B roadmap + success metrics
-Tracked client-side and ready for an experiment flag:
-- **Tests:** (1) hero copy "Free Lab Analysis" vs "Decode Your Bloodwork", (2) auto-upload vs choose-method screen, (3) ranked list vs grouped-by-system, (4) sticky vs inline Buy Stack CTA, (5) post-purchase "Activate now" modal vs banner.
-- **Metrics:** upload-completion rate, analysis-view rate, signup conversion, stack add-rate, checkout click-through, protocol-activation rate.
+**Cloud**
+- `injection_sites` (per-user enabled zones, custom labels), `injection_records` (per-dose log with zone, notes, side-effect tags).
 
-### 3i. Competitive differentiation (copy on landing strip)
-Add a small "Why Ride The Tide" strip: open vs closed analysis, free for all members, South-Africa focused, integrated with the shop and Cape Town Peptide Club ecosystem.
+## 4. Vial Inventory v2
 
-## Files to touch
-- `src/contexts/AuthContext.tsx` — breadcrumb logs, leave OAuth path as-is.
-- `src/components/auth/AuthModal.tsx` — verify Apple button render.
-- `src/components/bloodwork/` — new `BloodworkUploader.tsx`, `RecommendationsList.tsx`, `RecommendationCard.tsx`, `WhyRTDStrip.tsx`; extend `SystemDashboard.tsx`, `PatternDetection.tsx`, `StackCartBar.tsx`, `BloodworkOnboarding.tsx`, `BloodworkResults.tsx`.
-- `src/lib/bloodwork/` — extend `systems.ts`, `patterns.ts`; new `recommendations.ts`, `stackLink.ts`, `analytics.ts`.
-- `src/pages/BloodworkPage.tsx` — wire guest flow, post-purchase return handler.
-- `supabase/functions/` — add `score-systems`, `detect-patterns`, `rank-peptides`, `build-stack-link`, `activate-protocol`, `extract-biomarkers-manual`, `bw-event` (no DB schema changes; reuses `lab_reports`, `user_stacks`, `dose_reminders`).
+**UX**
+- Inventory list with reconstitution wizard (already exists — keep), expiration progress ring, "days left at current pace" projection from real dose history.
+- Reorder reminder when projected days < 7 → deep link to `https://www.ridethetide.site` with peptide query.
+- Batch/COA link per vial; scan-to-add via Capacitor camera (QR on label).
 
-## Out of scope (call out explicitly)
-- Cross-device cycle sync (would need a new `user_cycles` table + migration).
-- Shared SSO token with the shop (UTM-only handoff for now).
-- Stripe/PayPal — checkout stays on ridethetide.site per the no-paywall rule.
+**Engine**
+- `daysLeftAtPace = remainingMg / avgDailyMg(last 14d)`.
+- Auto-decrement remainingMg on dose log via DB trigger.
 
-Ready to implement on approval.
+**Cloud**
+- `inventory_items` (replaces localStorage). Trigger on `daily_doses` insert decrements matching active vial.
+
+## 5. Bio-Feedback + Correlation Engine v2
+
+**UX**
+- `/feedback` daily journal: sleep, energy, libido, mood, soreness, side-effects (0–10 sliders), optional notes/photos.
+- Weekly auto-report card: top 3 correlations across peptides × metrics, with confidence band.
+- AI narrative: "This week your sleep improved 22% on days you dosed BPC-157 within 6h of bedtime." (Lovable AI summary over correlation output.)
+
+**Engine**
+- Keep Pearson correlation, add lag analysis (1, 3, 7-day shift) and minimum-n gate (n≥7 per pair). Adjust trend thresholds and confidence to standard error.
+- Weekly summary job triggered on `/feedback` load (no scheduled function needed initially).
+
+**Cloud**
+- `feedback_entries` table with RLS scoped to user.
+
+## Cross-cutting
+
+- Migrate localStorage → Cloud on first login via existing `DataMigrationModal` (extend to cover safety, sites, inventory, feedback).
+- New nav entries under "Clinical" group in BottomNav / More panel.
+- All 5 modules behind feature flag `clinicalV2=true` defaulting on; legacy code kept for one release.
+- Disclaimers ("research only, not medical advice") on every AI output per existing Core memory.
+
+## Technical notes
+
+**New tables** (all with RLS `user_id = auth.uid()`, GRANTs to authenticated + service_role):
+- `safety_profiles`, `safety_checks`, `pk_user_overrides`, `injection_sites`, `injection_records`, `inventory_items`, `feedback_entries`.
+
+**Edge functions**:
+- `safety-check` — calls Lovable AI with structured output, writes cache row.
+- `weekly-feedback-report` — runs correlations + AI narrative on demand.
+
+**Files to add/edit (high-level)**:
+- `src/pages/SafetyPage.tsx` (upgrade), `src/pages/PKPage.tsx`, `src/pages/InjectionSitesPage.tsx` (upgrade), `src/pages/InventoryPage.tsx` (upgrade), `src/pages/FeedbackPage.tsx` (new).
+- `src/lib/safety/*`, `src/lib/pk/*`, `src/lib/injection/rotation.ts`, `src/lib/feedback/*` — engine upgrades.
+- Sync hooks: `useSafetyProfile`, `useInventory`, `useFeedback`, `useInjectionSites` — swap localStorage for Supabase queries with optimistic updates and offline fallback to existing localStorage cache.
+- `supabase/functions/safety-check/index.ts`, `supabase/functions/weekly-feedback-report/index.ts`.
+
+## Out of scope (for now)
+
+- Real drug DB licensing (RxNorm/DrugBank).
+- HIPAA/MDR clearance — copy stays "research only".
+- Wearable integrations beyond existing Renpho scale.
+
+## Phasing (so you can ship in slices)
+
+```text
+Phase A  Safety v2 + PK v2          (the two biggest differentiators)
+Phase B  Injection rotation v2 + Inventory v2 cloud sync
+Phase C  Feedback v2 + weekly AI report + cross-module dashboard tile
+```
+
+Approve to begin Phase A, or tell me to start with a different phase.

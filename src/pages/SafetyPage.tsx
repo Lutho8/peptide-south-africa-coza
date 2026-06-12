@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Shield, AlertTriangle, CheckCircle, XCircle, Pill, Heart, Baby, Clock, Activity } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Shield, AlertTriangle, CheckCircle, XCircle, Pill, Heart, Baby, Clock, Activity, Sparkles, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { useSafetyProfile, useSafetyCheck } from "@/hooks/useSafety";
+import { useSafetyCheck } from "@/hooks/useSafety";
+import { useSafetyProfileCloud } from "@/hooks/useSafetyProfileCloud";
+import { useAISafetyCheck, AISafetyResult } from "@/hooks/useAISafetyCheck";
+import { useAuth } from "@/contexts/AuthContext";
 import { UserSafetyProfile } from "@/types";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -25,8 +29,17 @@ const DEMO_PEPTIDES = [
   { id: "melanotan-ii", name: "Melanotan II" },
 ];
 
-function SafetyCheckCard({ peptideId, peptideName }: { peptideId: string; peptideName: string }) {
+function SafetyCheckCard({ peptideId, peptideName, profile, canRunAI }: { peptideId: string; peptideName: string; profile: UserSafetyProfile | null; canRunAI: boolean }) {
   const result = useSafetyCheck(peptideId);
+  const { run, loading, result: aiResult, error: aiError } = useAISafetyCheck();
+
+  const merged = aiResult ?? {
+    status: result.status,
+    severity: result.severity,
+    warnings: result.warnings,
+    contraindications: result.contraindications,
+    reasoning: "",
+  } as AISafetyResult;
 
   const statusConfig = {
     safe: { icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-200" },
@@ -35,15 +48,30 @@ function SafetyCheckCard({ peptideId, peptideName }: { peptideId: string; peptid
     unknown: { icon: Activity, color: "text-slate-400", bg: "bg-slate-50", border: "border-slate-200" },
   };
 
-  const config = statusConfig[result.status];
+  const config = statusConfig[merged.status];
   const StatusIcon = config.icon;
 
+  const handleAICheck = async () => {
+    if (!profile) {
+      toast.error("Save your safety profile first");
+      return;
+    }
+    const r = await run(peptideId, peptideName, {
+      medications: profile.medications,
+      conditions: profile.conditions,
+      allergies: profile.allergies,
+      is_pregnant: profile.isPregnant,
+      age: profile.age,
+    });
+    if (r) {
+      toast.success(r.cached ? "Loaded cached AI review" : "AI review complete");
+    } else if (aiError) {
+      toast.error(aiError);
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
-    >
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
       <Card className={cn("border-l-4", config.border, "hover:shadow-md transition-shadow")}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
@@ -53,19 +81,22 @@ function SafetyCheckCard({ peptideId, peptideName }: { peptideId: string; peptid
               </div>
               <div>
                 <h4 className="font-semibold text-sm">{peptideName}</h4>
-                <Badge
-                  variant={result.status === "safe" ? "default" : result.status === "caution" ? "secondary" : "destructive"}
-                  className="mt-1 text-xs capitalize"
-                >
-                  {result.status}
+                <Badge variant={merged.status === "safe" ? "default" : merged.status === "caution" ? "secondary" : "destructive"} className="mt-1 text-xs capitalize">
+                  {merged.status}
                 </Badge>
               </div>
             </div>
+            {canRunAI && (
+              <Button size="sm" variant="ghost" onClick={handleAICheck} disabled={loading} className="gap-1">
+                {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                AI
+              </Button>
+            )}
           </div>
 
-          {result.warnings.length > 0 && (
+          {merged.warnings.length > 0 && (
             <div className="mt-3 space-y-1">
-              {result.warnings.map((w, i) => (
+              {merged.warnings.map((w, i) => (
                 <p key={i} className="text-xs text-amber-700 flex items-start gap-1">
                   <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
                   {w}
@@ -74,9 +105,9 @@ function SafetyCheckCard({ peptideId, peptideName }: { peptideId: string; peptid
             </div>
           )}
 
-          {result.contraindications.length > 0 && (
+          {merged.contraindications.length > 0 && (
             <div className="mt-3 space-y-1">
-              {result.contraindications.map((c, i) => (
+              {merged.contraindications.map((c, i) => (
                 <p key={i} className="text-xs text-red-700 flex items-start gap-1">
                   <XCircle className="h-3 w-3 mt-0.5 shrink-0" />
                   {c}
@@ -84,6 +115,18 @@ function SafetyCheckCard({ peptideId, peptideName }: { peptideId: string; peptid
               ))}
             </div>
           )}
+
+          <AnimatePresence>
+            {aiResult?.reasoning && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-3 p-3 rounded-md bg-primary/5 border border-primary/20">
+                <p className="text-xs font-medium text-primary mb-1 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" /> AI clinical review
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{aiResult.reasoning}</p>
+                <p className="text-[10px] text-muted-foreground/70 mt-2 italic">Research summary, not medical advice.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardContent>
       </Card>
     </motion.div>
@@ -91,7 +134,8 @@ function SafetyCheckCard({ peptideId, peptideName }: { peptideId: string; peptid
 }
 
 export default function SafetyPage() {
-  const [profile, setProfile] = useSafetyProfile();
+  const { profile, setProfile } = useSafetyProfileCloud();
+  const { user } = useAuth();
 
   const [formState, setFormState] = useState<Partial<UserSafetyProfile>>({
     age: profile?.age ?? 30,
@@ -383,7 +427,7 @@ export default function SafetyPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * index }}
                     >
-                      <SafetyCheckCard peptideId={peptide.id} peptideName={peptide.name} />
+                      <SafetyCheckCard peptideId={peptide.id} peptideName={peptide.name} profile={profile} canRunAI={!!user} />
                     </motion.div>
                   ))}
                 </div>
