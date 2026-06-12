@@ -189,8 +189,15 @@ export function deleteDoseSchedule(scheduleId: string): void {
 
 // Cycles Storage
 
+let _cyclesLoggedOnce = false;
 export function getCycles(): Cycle[] {
-  return getStoredData(STORAGE_KEYS.CYCLES, defaultCycles);
+  const cycles = getStoredData(STORAGE_KEYS.CYCLES, defaultCycles);
+  if (!_cyclesLoggedOnce && typeof console !== 'undefined') {
+    _cyclesLoggedOnce = true;
+    // One-shot breadcrumb to catch accidental cycle-history resets in the field.
+    console.info(`[cycles] loaded ${cycles.length} from local store`);
+  }
+  return cycles;
 }
 
 export function saveCycle(cycle: Cycle): void {
