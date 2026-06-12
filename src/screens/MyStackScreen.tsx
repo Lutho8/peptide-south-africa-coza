@@ -710,72 +710,47 @@ export function MyStackScreen() {
         )}
       </div>
 
-      {/* AI Stack Optimizer */}
+      {/* Three clean CTAs — unified AI + Buy stack + Book a consultation */}
       {activeStack.length > 0 && (
-        <AIAgentPanel
-          mode="optimize"
-          currentStack={activeStack.map(item => {
-            const peptide = findPeptideOrBlend(item.peptideId);
-            return peptide?.name || item.peptideId;
-          })}
-          userWeight={profile.weight}
-          userGoals={profile.goals}
-          experienceLevel={profile.experience}
-        />
-      )}
+        <div className="space-y-3" id="stack-ctas">
+          {/* CTA 1: Unified AI recommendation (merged optimize + recommend) */}
+          <AIAgentPanel
+            mode="recommend"
+            currentStack={activeStack.map(item => {
+              const peptide = findPeptideOrBlend(item.peptideId);
+              return peptide?.name || item.peptideId;
+            })}
+            userWeight={profile.weight}
+            userGoals={profile.goals}
+            experienceLevel={profile.experience}
+          />
 
-      {/* AI Personalized Recommendations */}
-      <AIAgentPanel
-        mode="recommend"
-        currentStack={activeStack.map(item => {
-          const peptide = findPeptideOrBlend(item.peptideId);
-          return peptide?.name || item.peptideId;
-        })}
-        userWeight={profile.weight}
-        userGoals={profile.goals}
-        experienceLevel={profile.experience}
-      />
+          {/* CTA 2: Buy this stack — one-tap reorder */}
+          <BuyStackCard
+            items={activeStack.map(item => {
+              const peptide = findPeptideOrBlend(item.peptideId);
+              return { peptideId: item.peptideId, name: peptide?.name };
+            })}
+            medium="my_stack"
+          />
 
-      {/* Stack Optimization Suggestions — only when user has a stack */}
-      {activeStack.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles size={18} className="text-accent" />
-            <h3 className="text-lg font-semibold text-foreground">Quick Optimizations</h3>
-          </div>
-
-          <div className="space-y-2">
-            {stackOptimizations.map((opt, index) => (
-              <GradientCard key={index} className="p-3 premium-border">
-                <div className="flex items-start gap-3">
-                  <div className={cn(
-                    "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
-                    opt.priority === 'high' ? 'bg-destructive' :
-                    opt.priority === 'medium' ? 'bg-warning' : 'bg-longevity'
-                  )} />
-                  <div>
-                    <h4 className="text-sm font-medium text-foreground">{opt.title}</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
-                  </div>
-                </div>
-              </GradientCard>
-            ))}
-          </div>
+          {/* CTA 3: Book a 1:1 consultation */}
+          <a
+            href={`mailto:webinars@fintiba.com?subject=${encodeURIComponent('1:1 Peptide Consultation Request')}&body=${encodeURIComponent("Hi,\n\nI'd like to book a 1:1 peptide consultation call.\n\nPreferred date/time:\nTimezone:\nTopics I want to cover:\n\nThanks!")}`}
+            className="group flex items-center gap-3 rounded-2xl border border-accent/30 bg-card p-4 shadow-md transition hover:border-accent/60 hover:shadow-lg"
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent">
+              <CalendarIcon size={22} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-accent">1:1 expert</p>
+              <h3 className="mt-0.5 text-base font-bold leading-tight text-foreground">Book a consultation</h3>
+              <p className="text-xs text-muted-foreground">60-min Zoom · webinars@fintiba.com</p>
+            </div>
+            <ExternalLink size={18} className="shrink-0 text-muted-foreground transition group-hover:text-accent" />
+          </a>
         </div>
       )}
-
-      {/* Buy Peptides */}
-      <Button
-        className="w-full gap-2"
-        size="lg"
-        asChild
-      >
-        <a href="https://www.ridethetide.site" target="_blank" rel="noopener noreferrer">
-          <ShoppingCart size={18} />
-          Buy Peptides
-          <ExternalLink size={14} />
-        </a>
-      </Button>
 
       {/* Active Cycles Summary */}
       {cycles.length > 0 && (
