@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Droplets, UtensilsCrossed, Camera, CalendarDays, Ruler } from 'lucide-react';
+import { Trophy, Droplets, UtensilsCrossed, Camera, CalendarDays, Ruler } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WaterTracker } from '@/components/tracking/WaterTracker';
 import { FoodLogger } from '@/components/tracking/FoodLogger';

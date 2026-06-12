@@ -227,11 +227,11 @@ export function DashboardTour({ force = false, onClose }: DashboardTourProps) {
             ))}
           </div>
 
-          <div className="flex items-center justify-between gap-2">
-            <Button variant="ghost" size="sm" onClick={close} className="text-muted-foreground">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+            <Button variant="ghost" size="sm" onClick={close} className="text-muted-foreground w-full sm:w-auto h-11">
               Skip tour
             </Button>
-            <Button size="sm" onClick={next} className="bg-orange-500 hover:bg-orange-600 text-white gap-1">
+            <Button size="sm" onClick={next} className="bg-orange-500 hover:bg-orange-600 text-white gap-1 w-full sm:w-auto h-11">
               {stepIdx === STEPS.length - 1 ? 'Got it' : 'Next'}
               <ArrowRight size={14} />
             </Button>
