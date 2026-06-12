@@ -65,10 +65,6 @@ export default function BloodworkPage() {
   const runScan = useCallback(
     async (tier: 'baseline' | 'deep') => {
       if (!user || !form.file) return;
-      if (form.file.size > 10 * 1024 * 1024) {
-        setError('File must be under 10MB. Please upload a smaller file.');
-        return;
-      }
 
       setRunning(tier);
       setResult(null);
@@ -76,6 +72,13 @@ export default function BloodworkPage() {
       lastTierRef.current = tier;
       progress.start();
       abortRef.current = new AbortController();
+
+      if (form.file.size > 10 * 1024 * 1024) {
+        progress.fail();
+        setError('File must be under 10MB. Please upload a smaller file.');
+        setRunning(null);
+        return;
+      }
 
       void captureLead({
         email: user.email,
