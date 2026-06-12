@@ -353,6 +353,146 @@ export type Database = {
         }
         Relationships: []
       }
+      injection_records: {
+        Row: {
+          created_at: string
+          dose_mg: number | null
+          id: string
+          injected_at: string
+          notes: string | null
+          pain_score: number | null
+          peptide_id: string
+          peptide_name: string | null
+          route: string
+          site_id: string
+          swelling_score: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dose_mg?: number | null
+          id?: string
+          injected_at?: string
+          notes?: string | null
+          pain_score?: number | null
+          peptide_id: string
+          peptide_name?: string | null
+          route?: string
+          site_id: string
+          swelling_score?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dose_mg?: number | null
+          id?: string
+          injected_at?: string
+          notes?: string | null
+          pain_score?: number | null
+          peptide_id?: string
+          peptide_name?: string | null
+          route?: string
+          site_id?: string
+          swelling_score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injection_records_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "injection_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      injection_sites: {
+        Row: {
+          display_name: string
+          id: string
+          recommended_routes: string[]
+          region: string
+          side: string
+          svg_path_id: string
+          zone_index: number
+        }
+        Insert: {
+          display_name: string
+          id: string
+          recommended_routes?: string[]
+          region: string
+          side: string
+          svg_path_id: string
+          zone_index: number
+        }
+        Update: {
+          display_name?: string
+          id?: string
+          recommended_routes?: string[]
+          region?: string
+          side?: string
+          svg_path_id?: string
+          zone_index?: number
+        }
+        Relationships: []
+      }
+      inventory_items: {
+        Row: {
+          bac_water_ml: number | null
+          coa_url: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          lot_number: string | null
+          notes: string | null
+          peptide_id: string
+          peptide_name: string
+          reconstituted_at: string | null
+          remaining_mg: number
+          status: string
+          updated_at: string
+          user_id: string
+          vendor: string | null
+          vial_total_mg: number
+        }
+        Insert: {
+          bac_water_ml?: number | null
+          coa_url?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          lot_number?: string | null
+          notes?: string | null
+          peptide_id: string
+          peptide_name: string
+          reconstituted_at?: string | null
+          remaining_mg: number
+          status?: string
+          updated_at?: string
+          user_id: string
+          vendor?: string | null
+          vial_total_mg: number
+        }
+        Update: {
+          bac_water_ml?: number | null
+          coa_url?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          lot_number?: string | null
+          notes?: string | null
+          peptide_id?: string
+          peptide_name?: string
+          reconstituted_at?: string | null
+          remaining_mg?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vendor?: string | null
+          vial_total_mg?: number
+        }
+        Relationships: []
+      }
       lab_reports: {
         Row: {
           ai_insights: string | null
