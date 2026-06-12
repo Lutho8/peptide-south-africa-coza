@@ -9,11 +9,16 @@ import {
   Filter,
   Activity,
   CalendarDays,
+  Cloud,
+  CloudOff,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useInjectionRecordsCloud, rankNextSites } from "@/hooks/useInjectionRecordsCloud";
+import { toast } from "sonner";
 
 // ===== Types =====
 interface BodyZone {
@@ -135,6 +140,25 @@ function timeAgo(timestamp: number): string {
 export default function InjectionSitesPage() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const { sites, records, logRecord, isCloud } = useInjectionRecordsCloud();
+
+  const cloudNextSites = useMemo(
+    () => rankNextSites(sites, records, "subcutaneous"),
+    [sites, records]
+  );
+  const topCloudSuggestion = cloudNextSites[0];
+
+  const handleQuickLog = async () => {
+    if (!topCloudSuggestion) return;
+    const { error } = await logRecord({
+      siteId: topCloudSuggestion.site.id,
+      peptideId: "manual",
+      peptideName: "Manual Entry",
+      route: "subcutaneous",
+    });
+    if (error) toast.error(error);
+    else toast.success(`Logged ${topCloudSuggestion.site.display_name}`);
+  };
 
   const filteredRecords = useMemo(() => {
     let records = [...DEMO_RECORDS].sort((a, b) => b.timestamp - a.timestamp);
@@ -179,7 +203,7 @@ export default function InjectionSitesPage() {
       <div className="border-b bg-card">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <motion.div
-            className="flex items-center gap-4"
+            className="flex flex-wrap items-center gap-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
@@ -187,11 +211,23 @@ export default function InjectionSitesPage() {
             <div className="p-3 rounded-xl bg-primary/10">
               <Syringe className="h-8 w-8 text-primary" />
             </div>
-            <div>
+            <div className="flex-1 min-w-[200px]">
               <h1 className="text-3xl font-bold tracking-tight">Injection Site Manager</h1>
               <p className="text-muted-foreground mt-1">
                 Track rotation, history, and optimal site selection
               </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant={isCloud ? "default" : "secondary"} className="gap-1.5">
+                {isCloud ? <Cloud className="h-3 w-3" /> : <CloudOff className="h-3 w-3" />}
+                {isCloud ? `Cloud · ${records.length} logged` : "Local only"}
+              </Badge>
+              {isCloud && topCloudSuggestion && (
+                <Button size="sm" onClick={handleQuickLog} variant="outline">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  Log {topCloudSuggestion.site.display_name}
+                </Button>
+              )}
             </div>
           </motion.div>
         </div>

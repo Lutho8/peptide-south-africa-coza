@@ -13,7 +13,7 @@
  * Uses Recharts for visualization via PKCurve component.
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -42,9 +42,12 @@ import {
   Settings2,
   RotateCcw,
   ChevronDown,
+  Download,
+  Share2,
+  Syringe,
 } from "lucide-react";
 
-import type { DoseEvent } from "@/lib/pk/types";
+import type { DoseEvent, AdminRoute } from "@/lib/pk/types";
 import {
   simulatePK,
   calculateCurrentLevel,
@@ -59,8 +62,11 @@ import {
   getAllPeptides,
   getPeptidesByCategory,
 } from "@/lib/pk/compounds";
+import { adjustParamsForRoute, ROUTE_LABELS, SUPPORTED_ROUTES } from "@/lib/pk/routes";
+import { exportNodeToPng, sharePngBlob } from "@/lib/pk/exportPng";
 import { PKCurve } from "./PKCurve";
 import { ActiveLevelBadge } from "./ActiveLevelBadge";
+import { toast } from "sonner";
 
 /** Pre-built time window presets */
 const TIME_WINDOWS = [
@@ -93,11 +99,18 @@ export function PKSimulatorPage() {
   const [timeWindow, setTimeWindow] = useState<string>("168");
   const [scheduleFreq, setScheduleFreq] = useState<string>("24");
   const [activeTab, setActiveTab] = useState<string>("curve");
+  const [route, setRoute] = useState<AdminRoute>("subcutaneous");
+  const [exporting, setExporting] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   // === Derived state ===
-  const params = useMemo(
+  const baseParams = useMemo(
     () => getPKParameters(selectedPeptideId),
     [selectedPeptideId]
+  );
+  const params = useMemo(
+    () => (baseParams ? adjustParamsForRoute(baseParams, route) : undefined),
+    [baseParams, route]
   );
   const therapeutic = useMemo(
     () => getTherapeuticWindow(selectedPeptideId),
@@ -158,6 +171,28 @@ export function PKSimulatorPage() {
   const clearDoses = useCallback(() => {
     setDoses([]);
   }, []);
+
+  const handleExport = useCallback(async () => {
+    if (!exportRef.current || !params) return;
+    setExporting(true);
+    const filename = `pk-${selectedPeptideId}-${route}.png`;
+    const blob = await exportNodeToPng(exportRef.current, filename);
+    setExporting(false);
+    if (blob) toast.success("Chart downloaded");
+    else toast.error("Could not export chart");
+  }, [params, selectedPeptideId, route]);
+
+  const handleShare = useCallback(async () => {
+    if (!exportRef.current || !params) return;
+    setExporting(true);
+    const filename = `pk-${selectedPeptideId}-${route}.png`;
+    const blob = await exportNodeToPng(exportRef.current, filename);
+    if (blob) {
+      const shared = await sharePngBlob(blob, filename, `${params.peptideName} PK Curve`);
+      if (!shared) toast.message("Saved to downloads (share not supported)");
+    }
+    setExporting(false);
+  }, [params, selectedPeptideId, route]);
 
   const handlePeptideChange = useCallback(
     (id: string) => {
@@ -241,12 +276,30 @@ export function PKSimulatorPage() {
           </p>
         </div>
         {doses.length > 0 && (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <ActiveLevelBadge
               peptideId={selectedPeptideId}
               doses={doses}
               size="md"
             />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Export PNG
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              disabled={exporting}
+            >
+              <Share2 className="h-3.5 w-3.5 mr-1.5" />
+              Share
+            </Button>
             <Button variant="outline" size="sm" onClick={clearDoses}>
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
               Reset
@@ -258,7 +311,7 @@ export function PKSimulatorPage() {
       {/* Top control bar */}
       <Card>
         <CardContent className="pt-5 pb-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Peptide Selector */}
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Peptide</Label>
@@ -317,7 +370,26 @@ export function PKSimulatorPage() {
               </Tabs>
             </div>
 
-            {/* PK Params summary */}
+            {/* Admin Route */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium flex items-center gap-1.5">
+                <Syringe className="h-3 w-3" />
+                Route
+              </Label>
+              <Select value={route} onValueChange={(v) => setRoute(v as AdminRoute)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SUPPORTED_ROUTES.map((r) => (
+                    <SelectItem key={r} value={r} className="text-sm">
+                      {ROUTE_LABELS[r]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="text-[10px] h-6">
                 t½ {formatDuration(params.halfLifeHours)}
@@ -520,16 +592,25 @@ export function PKSimulatorPage() {
 
         {/* Right panel - Visualization + Stats */}
         <div className="lg:col-span-2 space-y-4">
-          {/* PK Curve */}
-          <PKCurve
-            peptideId={selectedPeptideId}
-            doses={doses}
-            height={420}
-            timeWindowHours={timeWindowHours}
-            timeStepMinutes={30}
-            showTherapeuticWindow={!!therapeutic}
-            title={`${params.peptideName} - ${timeWindowHours / 24}-Day Profile`}
-          />
+          {/* PK Curve (wrapped for PNG export) */}
+          <div ref={exportRef} className="relative bg-background rounded-lg">
+            <PKCurve
+              peptideId={selectedPeptideId}
+              doses={doses}
+              height={420}
+              timeWindowHours={timeWindowHours}
+              timeStepMinutes={30}
+              showTherapeuticWindow={!!therapeutic}
+              title={`${params.peptideName} - ${timeWindowHours / 24}-Day Profile`}
+              paramsOverride={params}
+            />
+            <div className="px-4 py-2 flex items-center justify-between text-[10px] text-muted-foreground border-t">
+              <span>
+                Route: {ROUTE_LABELS[route]} • F {(params.bioavailability * 100).toFixed(0)}% • tmax {formatDuration(params.timeToPeakHours)}
+              </span>
+              <span className="font-medium">Ride The Tide • ridethetide.info</span>
+            </div>
+          </div>
 
           {/* Stats Panel */}
           {result && doses.length > 0 && (

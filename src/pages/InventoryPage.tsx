@@ -11,6 +11,8 @@ import {
   CalendarClock,
   ChevronRight,
   X,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -231,7 +233,7 @@ function VialCard({
 
 // ===== Main Component =====
 export default function InventoryPage() {
-  const { items, alerts, addItem, removeItem, recordDose } = useInventory();
+  const { items, alerts, addItem, removeItem, recordDose, syncedToCloud } = useInventory();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Seed demo data if empty
@@ -305,6 +307,10 @@ export default function InventoryPage() {
                   Track stock levels, expiration dates, and usage
                 </p>
               </div>
+              <Badge variant={syncedToCloud ? "default" : "secondary"} className="gap-1.5 ml-2 hidden sm:inline-flex">
+                {syncedToCloud ? <Cloud className="h-3 w-3" /> : <CloudOff className="h-3 w-3" />}
+                {syncedToCloud ? "Synced" : "Local"}
+              </Badge>
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>

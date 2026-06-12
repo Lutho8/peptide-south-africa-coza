@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, AlertTriangle, CheckCircle, XCircle, Pill, Heart, Baby, Clock, Activity, Sparkles, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,9 +10,22 @@ import { useSafetyCheck } from "@/hooks/useSafety";
 import { useSafetyProfileCloud } from "@/hooks/useSafetyProfileCloud";
 import { useAISafetyCheck, AISafetyResult } from "@/hooks/useAISafetyCheck";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { UserSafetyProfile } from "@/types";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+function formatRelativeTime(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.round(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return `${Math.round(days / 7)}w ago`;
+}
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -148,6 +161,25 @@ export default function SafetyPage() {
   const [medInput, setMedInput] = useState("");
   const [conditionInput, setConditionInput] = useState("");
   const [allergyInput, setAllergyInput] = useState("");
+  const [lastAIReview, setLastAIReview] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    supabase
+      .from("safety_checks")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled && data?.created_at) {
+          setLastAIReview(new Date(data.created_at as string).getTime());
+        }
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const handleSaveProfile = () => {
     const updated: UserSafetyProfile = {
@@ -203,12 +235,18 @@ export default function SafetyPage() {
             <div className="p-3 rounded-xl bg-primary/10">
               <Shield className="h-8 w-8 text-primary" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold tracking-tight">Safety Center</h1>
               <p className="text-muted-foreground mt-1">
                 Manage your safety profile and check peptide interactions
               </p>
             </div>
+            {lastAIReview && (
+              <Badge variant="secondary" className="gap-1.5 text-xs whitespace-nowrap">
+                <Sparkles className="h-3 w-3" />
+                Last AI review: {formatRelativeTime(lastAIReview)}
+              </Badge>
+            )}
           </motion.div>
         </div>
       </div>
