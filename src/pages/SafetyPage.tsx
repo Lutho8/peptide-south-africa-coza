@@ -161,6 +161,25 @@ export default function SafetyPage() {
   const [medInput, setMedInput] = useState("");
   const [conditionInput, setConditionInput] = useState("");
   const [allergyInput, setAllergyInput] = useState("");
+  const [lastAIReview, setLastAIReview] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    supabase
+      .from("safety_checks")
+      .select("checked_at")
+      .eq("user_id", user.id)
+      .order("checked_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled && data?.checked_at) {
+          setLastAIReview(new Date(data.checked_at as string).getTime());
+        }
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const handleSaveProfile = () => {
     const updated: UserSafetyProfile = {
