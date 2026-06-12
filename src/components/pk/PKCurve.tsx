@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Activity } from "lucide-react";
 
-import { DoseEvent } from "@/lib/pk/types";
+import { DoseEvent, PKParameters } from "@/lib/pk/types";
 import {
   simulatePK,
   formatConcentration,
@@ -43,6 +43,8 @@ interface PKCurveProps {
   timeStepMinutes?: number;
   className?: string;
   title?: string;
+  /** Override PK parameters (e.g. route-adjusted). */
+  paramsOverride?: PKParameters;
 }
 
 interface TooltipPayloadItem {
@@ -97,8 +99,12 @@ export function PKCurve({
   timeStepMinutes = 30,
   className,
   title,
+  paramsOverride,
 }: PKCurveProps) {
-  const params = useMemo(() => getPKParameters(peptideId), [peptideId]);
+  const params = useMemo(
+    () => paramsOverride ?? getPKParameters(peptideId),
+    [peptideId, paramsOverride]
+  );
   const therapeutic = useMemo(
     () => (showTherapeuticWindow ? getTherapeuticWindow(peptideId) : undefined),
     [peptideId, showTherapeuticWindow]
