@@ -1,114 +1,80 @@
+# Phase A Polish → Phase B Build
 
-# Clinical-Grade v2: 5 Pillar Rebuild
+## Phase A Polish (ship first)
 
-Goal: elevate Ride The Tide from "good basic tracker" to a Pinned.life-class clinical platform. Each of the 5 existing modules is rebuilt against Pinned parity, backed by Lovable Cloud sync, and enriched with Lovable AI lookups for safety reasoning.
+### 1. Route-aware PK adjustments
+Extend the PK simulator to model different administration routes per peptide.
 
-## 1. Safety Engine v2 — AI-Assisted Clinical Checks
+- Update `src/lib/pk/compounds.ts` so each compound exposes per-route params: `subq`, `im`, `iv`, `intranasal` with their own `bioavailability`, `tmax`, `ka` (absorption), and `t12` overrides where they differ (IV: F=1, instant Cmax; IM: faster ka than subq; intranasal: lower F, fast tmax).
+- Update `src/hooks/usePKSimulator.ts` to accept a `route` per dose entry and resolve params from the route map (fall back to subq).
+- Add a Route selector (`Subq / IM / IV / Intranasal`) in `src/components/pk/PKPanel.tsx` next to dose + interval. Persist last-used route per peptide in `pk_user_overrides` (already in schema).
+- Show a small "Route: SubQ • F=0.8 • tmax 2h" caption under each curve so users see why the shape changed.
 
-**UX**
-- Dedicated `/safety` route with 3 tabs: Profile, Interaction Checker, Active Alerts.
-- Profile wizard: meds, conditions, allergies, pregnancy, age, sex, weight, kidney/liver status, oncology history.
-- On every new dose log or stack edit, run a safety check banner: green ✓ / amber caution / red contraindicated.
-- "Why?" expander shows reasoning + source disclaimer ("AI-assisted research summary, not medical advice").
+### 2. PNG export for PK charts
+- Add `html-to-image` (already common in the stack) or use `dom-to-image-more`. Prefer `html-to-image` for SSR-safe React.
+- New util `src/lib/pk/exportPng.ts` with `exportChartToPng(ref, filename)` → triggers download + returns blob for share sheet.
+- Add "Export PNG" + "Share" buttons in `PKPanel.tsx` header. On native (Capacitor), use `@capacitor/share` if available; otherwise fall back to browser download.
+- Watermark: render a faint "Ride The Tide • ridethetide.info" footer inside the exported node so shared charts carry the brand.
 
-**Engine**
-- Local hard-rules layer (immediate, free): contraindications, age gates, pregnancy, allergy match using `src/lib/safety/contraindications.ts` (expanded).
-- AI layer via Lovable AI Gateway (`google/gemini-3-flash-preview`) for nuanced peptide↔drug, peptide↔condition, and peptide↔peptide interaction reasoning. Structured output (Zod): `{status, severity, mechanism, recommendation, references[]}`.
-- Cached per (peptideId, profileHash) for 7 days in `safety_checks` table to avoid burning credits.
+### 3. Safety v2 small polish
+- Wire `useSafetyProfileCloud` migration: on first authenticated load, if cloud row is empty and `localStorage` has a profile, upload it once then clear local key.
+- Add "Last AI review: <relative time>" badge on the Safety page using `safety_checks.checked_at`.
 
-**Cloud**
-- `safety_profiles` (1:1 user), `safety_checks` (cache).
+---
 
-## 2. PK Engine v2 — Validated Curves
+## Phase B: Injection Rotation v2 + Inventory v2
 
-**UX**
-- `/pk` page upgraded: multi-peptide overlay, dose markers, Cmax/Tmax/AUC, steady-state line, "active level right now" badge.
-- Per-peptide injection form (subq/IM/IV/intranasal) modifies absorption k_a.
-- Shareable PNG export for clinicians.
+### 4. Injection Rotation v2
 
-**Engine**
-- Move from single half-life to 1-compartment PK with bioavailability F, k_a, k_e per route. Validated parameters table in `src/lib/pk/compounds.ts` (curated literature values).
-- Engine simulates rolling 7/14/30-day windows from real `daily_doses` rows (cloud).
+**Data model (migration)**
+- `injection_sites` (catalog, seeded): `id`, `region` (abdomen/thigh/glute/deltoid/triceps), `side` (L/R/center), `zone_index`, `svg_path_id`, `recommended_routes text[]`.
+- `injection_records`: `id`, `user_id`, `site_id` fk, `peptide_id`, `dose_mg`, `route`, `injected_at`, `notes`, `pain_score smallint`, `swelling_score smallint`. RLS `user_id = auth.uid()`. GRANTs for authenticated + service_role.
 
-**Cloud**
-- Reuse `daily_doses`; add `pk_user_overrides` for personal half-life tweaks (advanced users).
+**UI**
+- New page `src/pages/InjectionSitesPage.tsx` route `/injection-sites` (under Clinical nav group).
+- `src/components/injection/BodyMapSVG.tsx` — full-body front+back SVG with 14 zones as `<path id="zone-...">`. Heatmap fill = recency-weighted usage (last 30d). Click a zone → drawer to log injection.
+- `src/components/injection/RotationSuggestion.tsx` — calls `suggestNextSite()` from `src/lib/injection/rotation.ts`.
 
-## 3. Injection Site Rotation Map v2
+**Rotation engine** (`src/lib/injection/rotation.ts`)
+- Inputs: last 30d `injection_records`, configured cooldown (default 7d), route, peptide.
+- Rules: hard-block any zone used in last 7d; prefer side opposite to last injection; prefer least-recently-used zone; respect `recommended_routes`.
+- Output: ranked list of zones with reason strings ("7d cooldown clear", "opposite side rotation").
 
-**UX**
-- Full-body SVG (front/back, male/female toggle) with 14 zones (abdomen quadrants, thighs, glutes, deltoids, lats).
-- Heatmap of last 30 days; zone color = days since last use.
-- "Suggest next site" button uses rotation algorithm respecting min 7-day cooldown per zone and avoiding consecutive same-side.
-- Photo annotation: tap zone to log; optional lump/bruise note.
+**Logging**
+- `src/hooks/useInjectionRecords.ts` — list, create, delete with optimistic updates.
+- Quick-log FAB on home that prefills suggested site + last peptide/dose.
 
-**Engine**
-- Rotation algorithm in `src/lib/injection/rotation.ts` (upgrade): scores zones by cooldown, last bruise report, user-disabled zones.
+### 5. Inventory v2
 
-**Cloud**
-- `injection_sites` (per-user enabled zones, custom labels), `injection_records` (per-dose log with zone, notes, side-effect tags).
+**Data model (migration)**
+- `inventory_items`: `id`, `user_id`, `peptide_id`, `vial_total_mg`, `bac_water_ml`, `reconstituted_at`, `expires_at` (generated: reconstituted_at + 28d), `remaining_mg`, `lot_number`, `vendor`, `coa_url`, `status` (sealed/active/finished/expired), `notes`. RLS + GRANTs as above.
+- DB trigger `on_dose_logged_decrement_inventory`: after insert on `daily_doses`, find oldest active inventory item for that peptide and decrement `remaining_mg`. Mark `finished` at 0.
+- `daysLeftAtPace` computed client-side: `remaining_mg / avgDailyMg(last 14d daily_doses)`.
 
-## 4. Vial Inventory v2
+**UI**
+- New page `src/pages/InventoryPage.tsx` route `/inventory`.
+- `src/components/inventory/VialCard.tsx` — shows remaining bar, expiry countdown (red <3d, amber <7d), `daysLeftAtPace`, COA link.
+- "Add Vial" sheet with reconstitution wizard reusing existing component; auto-sets `expires_at`.
+- Low-stock + expiry alerts surfaced in existing notification center; threshold default 7d.
 
-**UX**
-- Inventory list with reconstitution wizard (already exists — keep), expiration progress ring, "days left at current pace" projection from real dose history.
-- Reorder reminder when projected days < 7 → deep link to `https://www.ridethetide.site` with peptide query.
-- Batch/COA link per vial; scan-to-add via Capacitor camera (QR on label).
+**Migration of existing localStorage inventory**
+- `src/hooks/useInventory.ts` becomes cloud-first with a one-time migrator (mirrors safety profile pattern).
 
-**Engine**
-- `daysLeftAtPace = remainingMg / avgDailyMg(last 14d)`.
-- Auto-decrement remainingMg on dose log via DB trigger.
+---
 
-**Cloud**
-- `inventory_items` (replaces localStorage). Trigger on `daily_doses` insert decrements matching active vial.
+## Technical notes (collapsed for non-technical readers)
 
-## 5. Bio-Feedback + Correlation Engine v2
+- New tables (all RLS scoped `user_id = auth.uid()`, GRANTs to `authenticated` + `service_role`):
+  `injection_sites` (seed-only, read-all authenticated), `injection_records`, `inventory_items`.
+- New edge function: none for Phase B; rotation + inventory math runs client-side.
+- New deps: `html-to-image` (~25kb). No native SDK additions required.
+- Feature flag: keep `clinicalV2=true` flag gating the new nav group; default ON for authenticated users.
+- Out of scope: barcode scan for vial intake, biometric-triggered injection logging, multi-user shared inventory.
 
-**UX**
-- `/feedback` daily journal: sleep, energy, libido, mood, soreness, side-effects (0–10 sliders), optional notes/photos.
-- Weekly auto-report card: top 3 correlations across peptides × metrics, with confidence band.
-- AI narrative: "This week your sleep improved 22% on days you dosed BPC-157 within 6h of bedtime." (Lovable AI summary over correlation output.)
+## Build order
+1. PK route-aware + PNG export (Phase A polish 1+2)
+2. Safety polish (Phase A polish 3)
+3. Inventory v2 migration + UI + trigger
+4. Injection Rotation v2 migration + SVG + engine
 
-**Engine**
-- Keep Pearson correlation, add lag analysis (1, 3, 7-day shift) and minimum-n gate (n≥7 per pair). Adjust trend thresholds and confidence to standard error.
-- Weekly summary job triggered on `/feedback` load (no scheduled function needed initially).
-
-**Cloud**
-- `feedback_entries` table with RLS scoped to user.
-
-## Cross-cutting
-
-- Migrate localStorage → Cloud on first login via existing `DataMigrationModal` (extend to cover safety, sites, inventory, feedback).
-- New nav entries under "Clinical" group in BottomNav / More panel.
-- All 5 modules behind feature flag `clinicalV2=true` defaulting on; legacy code kept for one release.
-- Disclaimers ("research only, not medical advice") on every AI output per existing Core memory.
-
-## Technical notes
-
-**New tables** (all with RLS `user_id = auth.uid()`, GRANTs to authenticated + service_role):
-- `safety_profiles`, `safety_checks`, `pk_user_overrides`, `injection_sites`, `injection_records`, `inventory_items`, `feedback_entries`.
-
-**Edge functions**:
-- `safety-check` — calls Lovable AI with structured output, writes cache row.
-- `weekly-feedback-report` — runs correlations + AI narrative on demand.
-
-**Files to add/edit (high-level)**:
-- `src/pages/SafetyPage.tsx` (upgrade), `src/pages/PKPage.tsx`, `src/pages/InjectionSitesPage.tsx` (upgrade), `src/pages/InventoryPage.tsx` (upgrade), `src/pages/FeedbackPage.tsx` (new).
-- `src/lib/safety/*`, `src/lib/pk/*`, `src/lib/injection/rotation.ts`, `src/lib/feedback/*` — engine upgrades.
-- Sync hooks: `useSafetyProfile`, `useInventory`, `useFeedback`, `useInjectionSites` — swap localStorage for Supabase queries with optimistic updates and offline fallback to existing localStorage cache.
-- `supabase/functions/safety-check/index.ts`, `supabase/functions/weekly-feedback-report/index.ts`.
-
-## Out of scope (for now)
-
-- Real drug DB licensing (RxNorm/DrugBank).
-- HIPAA/MDR clearance — copy stays "research only".
-- Wearable integrations beyond existing Renpho scale.
-
-## Phasing (so you can ship in slices)
-
-```text
-Phase A  Safety v2 + PK v2          (the two biggest differentiators)
-Phase B  Injection rotation v2 + Inventory v2 cloud sync
-Phase C  Feedback v2 + weekly AI report + cross-module dashboard tile
-```
-
-Approve to begin Phase A, or tell me to start with a different phase.
+Approve to proceed with step 1.
