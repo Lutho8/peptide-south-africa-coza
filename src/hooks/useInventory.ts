@@ -172,7 +172,6 @@ export function useInventory(): {
       // Server-side trigger handles auto-decrement when a dose is inserted in
       // daily_doses. For manual recordDose calls (not via daily_doses), update
       // remaining_mg directly here.
-      supabase.rpc; // placeholder to keep TS happy
       const target = items.find((i) => i.id === itemId);
       if (target) {
         const newRemaining = Math.max(0, (target.remainingMg ?? target.vialSizeMg) - amountMg);
