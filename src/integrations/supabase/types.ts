@@ -473,6 +473,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pk_user_overrides: {
+        Row: {
+          absorption_rate: number | null
+          bioavailability: number | null
+          created_at: string
+          half_life_hours: number | null
+          id: string
+          peptide_id: string
+          route: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          absorption_rate?: number | null
+          bioavailability?: number | null
+          created_at?: string
+          half_life_hours?: number | null
+          id?: string
+          peptide_id: string
+          route?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          absorption_rate?: number | null
+          bioavailability?: number | null
+          created_at?: string
+          half_life_hours?: number | null
+          id?: string
+          peptide_id?: string
+          route?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           activity_level: string | null
@@ -668,6 +704,102 @@ export type Database = {
           password_hash_encrypted?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      safety_checks: {
+        Row: {
+          contraindications: Json
+          created_at: string
+          expires_at: string
+          id: string
+          peptide_id: string
+          profile_hash: string
+          reasoning: string | null
+          severity: string
+          status: string
+          user_id: string
+          warnings: Json
+        }
+        Insert: {
+          contraindications?: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          peptide_id: string
+          profile_hash: string
+          reasoning?: string | null
+          severity: string
+          status: string
+          user_id: string
+          warnings?: Json
+        }
+        Update: {
+          contraindications?: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          peptide_id?: string
+          profile_hash?: string
+          reasoning?: string | null
+          severity?: string
+          status?: string
+          user_id?: string
+          warnings?: Json
+        }
+        Relationships: []
+      }
+      safety_profiles: {
+        Row: {
+          age: number | null
+          allergies: string[]
+          conditions: string[]
+          created_at: string
+          id: string
+          is_pregnant: boolean
+          kidney_status: string | null
+          liver_status: string | null
+          medications: string[]
+          notes: string | null
+          oncology_history: boolean
+          sex: string | null
+          updated_at: string
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          age?: number | null
+          allergies?: string[]
+          conditions?: string[]
+          created_at?: string
+          id?: string
+          is_pregnant?: boolean
+          kidney_status?: string | null
+          liver_status?: string | null
+          medications?: string[]
+          notes?: string | null
+          oncology_history?: boolean
+          sex?: string | null
+          updated_at?: string
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          age?: number | null
+          allergies?: string[]
+          conditions?: string[]
+          created_at?: string
+          id?: string
+          is_pregnant?: boolean
+          kidney_status?: string | null
+          liver_status?: string | null
+          medications?: string[]
+          notes?: string | null
+          oncology_history?: boolean
+          sex?: string | null
+          updated_at?: string
+          user_id?: string
+          weight_kg?: number | null
         }
         Relationships: []
       }
