@@ -291,6 +291,15 @@ export default function BloodworkPage() {
             />
           ) : (
             <main className="max-w-5xl mx-auto px-4 py-8 pb-24">
+              {stackActivated && (
+                <div className="mb-4 rounded-xl border border-primary/40 bg-primary/10 p-3 flex items-center gap-3">
+                  <Sparkles size={18} className="text-primary shrink-0" />
+                  <p className="text-xs text-foreground">
+                    <span className="font-bold uppercase tracking-wider">Stack activated · </span>
+                    Your reminders will be scheduled when you add this protocol to your dose tracker.
+                  </p>
+                </div>
+              )}
               <div className="mb-6">
                 <button
                   type="button"
