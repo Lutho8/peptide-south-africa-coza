@@ -235,13 +235,18 @@ export default function SafetyPage() {
             <div className="p-3 rounded-xl bg-primary/10">
               <Shield className="h-8 w-8 text-primary" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold tracking-tight">Safety Center</h1>
               <p className="text-muted-foreground mt-1">
                 Manage your safety profile and check peptide interactions
               </p>
             </div>
-          </motion.div>
+            {lastAIReview && (
+              <Badge variant="secondary" className="gap-1.5 text-xs whitespace-nowrap">
+                <Sparkles className="h-3 w-3" />
+                Last AI review: {formatRelativeTime(lastAIReview)}
+              </Badge>
+            )}
         </div>
       </div>
 
