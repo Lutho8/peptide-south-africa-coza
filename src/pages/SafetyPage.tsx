@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Shield, AlertTriangle, CheckCircle, XCircle, Pill, Heart, Baby, Clock, Activity } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Shield, AlertTriangle, CheckCircle, XCircle, Pill, Heart, Baby, Clock, Activity, Sparkles, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { useSafetyProfile, useSafetyCheck } from "@/hooks/useSafety";
+import { useSafetyCheck } from "@/hooks/useSafety";
+import { useSafetyProfileCloud } from "@/hooks/useSafetyProfileCloud";
+import { useAISafetyCheck, AISafetyResult } from "@/hooks/useAISafetyCheck";
+import { useAuth } from "@/contexts/AuthContext";
 import { UserSafetyProfile } from "@/types";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
