@@ -59,7 +59,8 @@ Deno.serve(async (req) => {
     status = res.status;
     html = await res.text();
   } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: String(e) }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    console.error("gsc-verify-live fetch error:", e);
+    return new Response(JSON.stringify({ ok: false, error: "Upstream fetch failed" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   const findAll = (re: RegExp) => [...html.matchAll(re)];

@@ -287,7 +287,6 @@ Deno.serve(async (req) => {
       JSON.stringify({
         ok: true,
         skipped: 'crm-error',
-        error: err instanceof Error ? err.message : 'Unknown error',
       }),
       {
         status: 200,

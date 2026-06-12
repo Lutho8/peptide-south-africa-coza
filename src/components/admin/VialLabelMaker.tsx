@@ -252,6 +252,16 @@ export default function VialLabelMaker() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    // HTML-escape all user-controlled fields before interpolating into the print document
+    // to prevent XSS via fields like batchNumber and notes.
+    const esc = (s: string | number | undefined | null): string =>
+      String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
     const qrPx = size.qrSize;
     const labelsHtml = labels.map(label => {
       const qrData = encodeURIComponent(buildQrData(label));
@@ -269,13 +279,13 @@ export default function VialLabelMaker() {
         <div style="padding: 10px 12px;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
             <div style="flex: 1; min-width: 0;">
-              <div style="font-size: ${layout === 'large' ? '20px' : layout === 'compact' ? '15px' : '18px'}; font-weight: 800; color: ${theme.printBorder}; margin-bottom: 6px; letter-spacing: -0.3px;">${label.peptideName}</div>
-              ${label.purity && label.showPurity ? `<div style="display: inline-block; background: ${theme.printAccentBg}; color: ${theme.printAccent}; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; margin-bottom: 6px; border: 1px solid ${theme.printAccent}22;">${label.purity} PURITY</div>` : ''}
+              <div style="font-size: ${layout === 'large' ? '20px' : layout === 'compact' ? '15px' : '18px'}; font-weight: 800; color: ${theme.printBorder}; margin-bottom: 6px; letter-spacing: -0.3px;">${esc(label.peptideName)}</div>
+              ${label.purity && label.showPurity ? `<div style="display: inline-block; background: ${theme.printAccentBg}; color: ${theme.printAccent}; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; margin-bottom: 6px; border: 1px solid ${theme.printAccent}22;">${esc(label.purity)} PURITY</div>` : ''}
               <table style="width: 100%; font-size: ${size.printFontBase}; border-collapse: collapse;">
-                <tr><td style="color: #888; padding: 1px 0; width: 70px;">COA Mass</td><td style="font-weight: 600;">${label.coaAmount} mg</td></tr>
-                <tr><td style="color: #888; padding: 1px 0;">BAC Water</td><td style="font-weight: 600;">${label.bacWater} mL</td></tr>
-                <tr><td style="color: #888; padding: 1px 0;">Conc.</td><td style="font-weight: 600;">${label.concentration} mg/mL</td></tr>
-                <tr style="border-top: 1px dashed #ddd;"><td style="color: #888; padding: 3px 0 1px;">Dose</td><td style="font-weight: 700; color: ${theme.printAccent};">${label.dosePerInjection} ${label.doseUnit} → ${label.units}u (${label.cc}cc)</td></tr>
+                <tr><td style="color: #888; padding: 1px 0; width: 70px;">COA Mass</td><td style="font-weight: 600;">${esc(label.coaAmount)} mg</td></tr>
+                <tr><td style="color: #888; padding: 1px 0;">BAC Water</td><td style="font-weight: 600;">${esc(label.bacWater)} mL</td></tr>
+                <tr><td style="color: #888; padding: 1px 0;">Conc.</td><td style="font-weight: 600;">${esc(label.concentration)} mg/mL</td></tr>
+                <tr style="border-top: 1px dashed #ddd;"><td style="color: #888; padding: 3px 0 1px;">Dose</td><td style="font-weight: 700; color: ${theme.printAccent};">${esc(label.dosePerInjection)} ${esc(label.doseUnit)} → ${esc(label.units)}u (${esc(label.cc)}cc)</td></tr>
               </table>
             </div>
             <div style="margin-left: 4px; flex-shrink: 0; text-align: center;">
@@ -283,13 +293,13 @@ export default function VialLabelMaker() {
               <div style="font-size: 7px; color: #aaa; margin-top: 2px;">SCAN</div>
             </div>
           </div>
-          ${label.notes ? `<div style="margin-top: 6px; padding: 4px 8px; background: #f8f8f8; border-radius: 4px; font-size: 9px; color: #666; border-left: 2px solid ${theme.printAccent};">${label.notes}</div>` : ''}
+          ${label.notes ? `<div style="margin-top: 6px; padding: 4px 8px; background: #f8f8f8; border-radius: 4px; font-size: 9px; color: #666; border-left: 2px solid ${theme.printAccent};">${esc(label.notes)}</div>` : ''}
         </div>
         <!-- Footer -->
         <div style="display: flex; justify-content: space-between; padding: 6px 12px; background: ${theme.printHeader}; border-top: 1px solid #e5e5e5; font-size: 9px; color: #888;">
-          <span>Recon: <strong>${label.reconDate}</strong></span>
-          <span>Exp: <strong style="color: #c00;">${label.expiryDate}</strong></span>
-          ${label.batchNumber ? `<span>Batch: <strong>${label.batchNumber}</strong></span>` : ''}
+          <span>Recon: <strong>${esc(label.reconDate)}</strong></span>
+          <span>Exp: <strong style="color: #c00;">${esc(label.expiryDate)}</strong></span>
+          ${label.batchNumber ? `<span>Batch: <strong>${esc(label.batchNumber)}</strong></span>` : ''}
         </div>
       </div>
     `;
