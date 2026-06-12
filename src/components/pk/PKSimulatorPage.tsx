@@ -172,6 +172,28 @@ export function PKSimulatorPage() {
     setDoses([]);
   }, []);
 
+  const handleExport = useCallback(async () => {
+    if (!exportRef.current || !params) return;
+    setExporting(true);
+    const filename = `pk-${selectedPeptideId}-${route}.png`;
+    const blob = await exportNodeToPng(exportRef.current, filename);
+    setExporting(false);
+    if (blob) toast.success("Chart downloaded");
+    else toast.error("Could not export chart");
+  }, [params, selectedPeptideId, route]);
+
+  const handleShare = useCallback(async () => {
+    if (!exportRef.current || !params) return;
+    setExporting(true);
+    const filename = `pk-${selectedPeptideId}-${route}.png`;
+    const blob = await exportNodeToPng(exportRef.current, filename);
+    if (blob) {
+      const shared = await sharePngBlob(blob, filename, `${params.peptideName} PK Curve`);
+      if (!shared) toast.message("Saved to downloads (share not supported)");
+    }
+    setExporting(false);
+  }, [params, selectedPeptideId, route]);
+
   const handlePeptideChange = useCallback(
     (id: string) => {
       setSelectedPeptideId(id);
