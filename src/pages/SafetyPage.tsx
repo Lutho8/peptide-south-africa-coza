@@ -427,7 +427,7 @@ export default function SafetyPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * index }}
                     >
-                      <SafetyCheckCard peptideId={peptide.id} peptideName={peptide.name} />
+                      <SafetyCheckCard peptideId={peptide.id} peptideName={peptide.name} profile={profile} canRunAI={!!user} />
                     </motion.div>
                   ))}
                 </div>
