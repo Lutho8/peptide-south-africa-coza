@@ -51,9 +51,24 @@ export default function BloodworkPage() {
   const [result, setResult] = useState<BloodworkScanResult | null>(null);
   const [labReportId, setLabReportId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stackActivated, setStackActivated] = useState(false);
   const lastTierRef = useRef<'baseline' | 'deep' | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const progress = useScanProgress();
+
+  // Post-purchase return handler — fires when user comes back from the shop.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('stack_activated') === '1') {
+      setStackActivated(true);
+      trackBwEvent('bw_protocol_activated', { source: 'shop_return' });
+      toast.success('Stack purchased — activate your protocol below.');
+      // Clean URL so refresh doesn't retrigger
+      const url = new URL(window.location.href);
+      url.searchParams.delete('stack_activated');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
 
   const fileToBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
