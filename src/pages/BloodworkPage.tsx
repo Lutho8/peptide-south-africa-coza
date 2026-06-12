@@ -91,7 +91,10 @@ export default function BloodworkPage() {
       try {
         const filePath = `${user.id}/${Date.now()}-${form.file.name}`;
         const { error: uploadError } = await supabase.storage.from('lab-reports').upload(filePath, form.file);
-        if (uploadError) throw new Error(`upload: ${uploadError.message}`);
+        if (uploadError) {
+          console.error('[bloodwork] upload failed:', uploadError);
+          throw new Error(`upload: ${uploadError.message}`);
+        }
 
         const { data: report, error: insertError } = await supabase
           .from('lab_reports')
@@ -103,7 +106,10 @@ export default function BloodworkPage() {
           })
           .select()
           .single();
-        if (insertError) throw new Error(`upload: ${insertError.message}`);
+        if (insertError) {
+          console.error('[bloodwork] insert failed:', insertError);
+          throw new Error(`upload: ${insertError.message}`);
+        }
 
         setLabReportId(report.id);
         progress.advance('extract');
@@ -131,9 +137,21 @@ export default function BloodworkPage() {
           return;
         }
 
-        if (fnError) throw new Error(fnError.message || 'AI analysis failed');
+        if (fnError) {
+          console.error('[bloodwork] edge function error:', fnError, data);
+          const serverMsg =
+            (data as any)?.error ||
+            (data as any)?.message ||
+            fnError.message;
+          throw new Error(serverMsg || 'AI analysis failed');
+        }
+        if ((data as any)?.error) {
+          console.error('[bloodwork] server returned error:', data);
+          throw new Error((data as any).error);
+        }
         const payload = (data as any)?.data;
-        if (!payload) throw new Error('Empty AI response');
+        if (!payload) throw new Error('Empty AI response — please retry.');
+
 
         progress.advance('finalize');
 
@@ -158,20 +176,17 @@ export default function BloodworkPage() {
           document.getElementById('bloodwork-results-root')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
       } catch (e) {
-        const mapped = mapScanError(e);
+        console.error('[bloodwork] scan failed:', e);
+        const mapped = mapScanError(e) || 'Scan failed unexpectedly. Please retry.';
         progress.fail();
-        if (mapped) {
-          setError(mapped);
-          void captureLead({
-            email: user.email,
-            source: 'bloodwork_scan_failed',
-            planInterest: 'premium',
-            activityType: 'calculator_use',
-            activityData: { tier, reason: e instanceof Error ? e.message : String(e) },
-          });
-        } else {
-          progress.reset();
-        }
+        setError(mapped);
+        void captureLead({
+          email: user.email,
+          source: 'bloodwork_scan_failed',
+          planInterest: 'premium',
+          activityType: 'calculator_use',
+          activityData: { tier, reason: e instanceof Error ? e.message : String(e) },
+        });
       } finally {
         setRunning(null);
         abortRef.current = null;
