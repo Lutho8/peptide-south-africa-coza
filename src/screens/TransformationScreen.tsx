@@ -44,23 +44,23 @@ export function TransformationScreen() {
       </motion.div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabId)}>
-        <TabsList className="grid w-full grid-cols-6 h-auto">
-          <TabsTrigger value="calendar" className="text-[10px] gap-0.5 py-2 flex-col sm:flex-row sm:text-xs sm:gap-1">
+        <TabsList className="grid w-full grid-cols-6 h-auto gap-0.5 p-1">
+          <TabsTrigger value="calendar" className="min-h-11 text-[10px] gap-0.5 px-1 flex-col sm:flex-row sm:text-xs sm:gap-1">
             <CalendarDays className="w-3.5 h-3.5" />Calendar
           </TabsTrigger>
-          <TabsTrigger value="measure" className="text-[10px] gap-0.5 py-2 flex-col sm:flex-row sm:text-xs sm:gap-1">
+          <TabsTrigger value="measure" className="min-h-11 text-[10px] gap-0.5 px-1 flex-col sm:flex-row sm:text-xs sm:gap-1">
             <Ruler className="w-3.5 h-3.5" />Measure
           </TabsTrigger>
-          <TabsTrigger value="bloodwork" className="text-[10px] gap-0.5 py-2 flex-col sm:flex-row sm:text-xs sm:gap-1">
+          <TabsTrigger value="bloodwork" className="min-h-11 text-[10px] gap-0.5 px-1 flex-col sm:flex-row sm:text-xs sm:gap-1">
             <FlaskConical className="w-3.5 h-3.5" />Blood
           </TabsTrigger>
-          <TabsTrigger value="water" className="text-[10px] gap-0.5 py-2 flex-col sm:flex-row sm:text-xs sm:gap-1">
+          <TabsTrigger value="water" className="min-h-11 text-[10px] gap-0.5 px-1 flex-col sm:flex-row sm:text-xs sm:gap-1">
             <Droplets className="w-3.5 h-3.5" />Water
           </TabsTrigger>
-          <TabsTrigger value="food" className="text-[10px] gap-0.5 py-2 flex-col sm:flex-row sm:text-xs sm:gap-1">
+          <TabsTrigger value="food" className="min-h-11 text-[10px] gap-0.5 px-1 flex-col sm:flex-row sm:text-xs sm:gap-1">
             <UtensilsCrossed className="w-3.5 h-3.5" />Food
           </TabsTrigger>
-          <TabsTrigger value="photos" className="text-[10px] gap-0.5 py-2 flex-col sm:flex-row sm:text-xs sm:gap-1">
+          <TabsTrigger value="photos" className="min-h-11 text-[10px] gap-0.5 px-1 flex-col sm:flex-row sm:text-xs sm:gap-1">
             <Camera className="w-3.5 h-3.5" />Photos
           </TabsTrigger>
         </TabsList>

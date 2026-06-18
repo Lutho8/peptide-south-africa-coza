@@ -244,7 +244,7 @@ export default function BloodworkPage() {
   }, [result]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <SEOHead
         title="AI Bloodwork Decoding & Peptide Protocols | Peptide South Africa"
         description="Upload a lab report and get an AI-decoded biomarker breakdown with a personalised peptide stack, supplement plan, and retest schedule. Free baseline scan."

@@ -1,36 +1,68 @@
-# Auto cache-bust for installed users
+# Bloodwork tab polish + mobile polish
 
-The app already ships a custom service worker (`public/sw.js`) that powers offline caching and background dose reminders. Installed users are stuck on the old `peptide-tracker-v5` cache, which still holds the old HTML, old `manifest.json`, and old icon files — so even after we bumped icons to `?v=3` and the cache to `v6`, returning users keep seeing the old "Ride The Tide" name and logo until they manually reinstall.
+Two-part scope. The Bloodwork sub-tab already renders (`BloodworkTab.tsx`) with report cards, per-biomarker trend charts, and basic delta percentages. This plan tightens the bloodwork visuals against the spec and applies the mobile-polish fixes that are still missing.
 
-This plan adds an automatic update path so the next time an installed user opens the app, the new service worker takes over, old caches are wiped, and the page reloads once with the fresh icon and name.
+## Part 1 — Bloodwork tab UI upgrades
 
-## What changes
+Edit `src/components/bloodwork/BloodworkTab.tsx` only. No schema changes.
 
-1. **`public/sw.js` — make it update-friendly**
-   - Bump `CACHE_NAME` to `peptide-tracker-v7` so the new SW evicts every previous cache during `activate` (the existing activate handler already deletes any cache whose name doesn't match).
-   - Add a `message` listener that calls `self.skipWaiting()` when the page sends `{ type: 'SKIP_WAITING' }`, so the new worker can take control immediately instead of waiting for every tab to close.
-   - Change the fetch strategy for icon/manifest assets (`/favicon.png`, `/icon-192.png`, `/icon-512.png`, `/manifest.json`, `/logo-animated.png`, any `apple-touch-icon*`) to **network-first with cache fallback**. Today they hit the cache-first branch, which is why the old icon survives even after the cache name bumps. All other images keep cache-first behavior for performance.
-   - Leave the dose-reminder IndexedDB code, push handling, and navigation network-first behavior untouched.
+1. **Optimal-range coloring (green / yellow / red)**
+   - Build a small lookup that resolves each biomarker to the entry in `src/data/bloodwork.ts` (match on `shortName` or `name`, case-insensitive, with a few aliases for common labels like "Testosterone, Total" → `testosterone`).
+   - For each biomarker value, compute a tone:
+     - **green** when the value sits inside `optimalRange` (fall back to `normalRange` for the user's sex).
+     - **yellow** when it's inside `normalRange` but outside `optimalRange`, or within ±10% of either bound.
+     - **red** when it's outside `normalRange`, hits a `warningThreshold`, or the backend `status` is `high`/`low`/`critical`.
+   - Apply the tone to the value pill on each biomarker row and to the corresponding trend-chart card border + last-point dot. Continue to honor the existing backend `status` field as the highest-priority signal.
+   - Pull the user's `sex` (and DOB → age) from `profiles` via the existing `useAuth` user id so the male/female range is correct; default to the male range if sex is missing.
 
-2. **`src/services/pushScheduler.ts` — auto-apply the new worker**
-   - After `navigator.serviceWorker.register('/sw.js', …)`, call `registration.update()` to force an update check on every app load (the registration already uses `updateViaCache: 'none'`, so the browser will revalidate the SW file).
-   - Attach an `updatefound` listener: when a new worker reaches the `installed` state **and** `navigator.serviceWorker.controller` exists (meaning this isn't a first install), post `{ type: 'SKIP_WAITING' }` to the waiting worker.
-   - Add a one-shot `controllerchange` listener that reloads the page exactly once (guarded by a module-level flag so it can't loop).
-   - First-time installs are unaffected — no controller exists yet, so no reload fires.
+2. **Richer delta badges**
+   - Replace the bare `↑ 12%` chip with `↑ 12% from 18 Mar 2026` (or `↓ 8% — optimal` when the new value is inside the optimal band).
+   - When there is no prior reading, show `Baseline` instead of a delta.
+   - Keep the existing emerald/amber/muted color logic but flip semantics for biomarkers where "down is good" (LDL, ApoB, HbA1c, fasting glucose, ALT, AST, GGT, triglycerides) so a drop renders green.
 
-## Why this is safe
+3. **Protocol correlation banner**
+   - Fetch `user_stacks` (peptide_id, created_at) once on mount.
+   - When the active report has a previous report on file, pick the biomarker with the largest absolute delta whose change direction is favorable, and the stack peptide whose `created_at` falls between the two report dates.
+   - Render a single banner above the biomarkers list: `Your <Biomarker> <improved/changed> <X>% during your <Peptide Name> cycle.` Hide the banner when no qualifying peptide is found.
+   - Use the existing peptide name lookup from `src/data/peptides.ts` / `peptidesExpanded.ts`.
 
-- The kill-switch / unregister path from the PWA skill is not appropriate here because the SW is load-bearing for background dose reminders (per project memory). We keep the worker and only change how it updates.
-- Network-first for icons and the manifest only affects a handful of small files; if the network fails, the cached copy still serves, so offline behavior is preserved.
-- The reload guard prevents update loops: `controllerchange` reloads at most once per page load.
-- Lovable preview is unaffected — the existing registration path already only runs in the deployed app context via `pushScheduler`.
+4. **Card metadata polish**
+   - Add the lab name to each report card when present (`extracted_biomarkers` may have a lab hint; otherwise fall back to the file name's first token). Show as a small uppercase label under the date.
+   - Move the "View Report" affordance into each report card as an explicit `View report →` link routing to `/bloodwork?report=<id>` (the existing wizard can ignore the param for now; the link satisfies the spec).
 
-## User-visible result
+## Part 2 — Mobile polish
 
-Next time an already-installed user opens the app:
-1. The browser fetches the new `sw.js` (no HTTP cache thanks to `updateViaCache: 'none'`).
-2. The new worker installs, the client tells it to skip waiting, and it activates — wiping the old `peptide-tracker-v6` cache.
-3. The page reloads once automatically.
-4. The fresh `manifest.json` and icon files load from the network, so the home-screen icon and splash refresh on the next OS-level refresh (iOS/Android still cache the home-screen icon at install time, so the in-app icon and name update immediately, while the home-screen tile may still need an OS refresh on some devices — this is an OS limitation we cannot bypass from the web).
+Targeted, low-risk fixes only. No global rewrites.
 
-No code changes outside `public/sw.js` and `src/services/pushScheduler.ts`.
+1. **Results sub-tab tap targets**
+   - In `src/screens/TransformationScreen.tsx`, bump `TabsTrigger` to `min-h-11` and adjust padding/typography so each tab still fits 6-across on a 360px viewport (icon-above-label is already used at base width).
+
+2. **Swipe navigation across Results sub-tabs**
+   - Reuse the existing `useSwipeNav` hook. Wrap the `Tabs` content in a swipe handler that advances/retreats the active tab among `['calendar','measure','bloodwork','water','food','photos']`. Wraparound disabled.
+
+3. **Dynamic viewport (`dvh`)**
+   - Replace `h-screen` / `min-h-screen` with `h-dvh` / `min-h-dvh` in the main app shells where the on-screen keyboard causes layout shift: `src/screens/TransformationScreen.tsx`, `src/screens/HomeScreen.tsx`, `src/pages/BloodworkPage.tsx`, `src/components/bloodwork/ManualBloodworkEntry.tsx`. Leave landing/marketing pages on `min-h-screen` (no keyboard interaction).
+
+4. **Floating overlay clearance above the bottom nav**
+   - The bottom nav already uses `env(safe-area-inset-bottom)`. The pieces that can overlap it on mobile are `StackCartBar` (`fixed bottom-4`), `LiveQnAPopup` (`fixed bottom-6 right-6`), and `InstallBanner` (`fixed bottom-20`).
+   - Change each to `bottom: calc(env(safe-area-inset-bottom) + 88px)` on mobile (`md:bottom-*` keeps the desktop position). This gives a clean 8px clearance above the 80px nav.
+   - Confirm no permanent floating WhatsApp button exists — the WhatsApp link is inside `SupportSheet` triggered from the top header, so the spec's "move it" concern doesn't apply here.
+
+5. **Universal `:active` press feedback**
+   - Extend `src/components/ui/button.tsx` base classes with `active:scale-[0.97] transition-transform` so every shadcn button gets the press feedback. (Plain `<button>` elements throughout the app already use ad-hoc `active:scale-[0.97]`.)
+
+## Out of scope (this turn)
+
+Quarterly reminder UI badges/banners, push/email delivery, food/water/photos/wearables, protocol library, symptom journal, file-upload progress bar, edge-function retry/decompression work, analytics events, favicon suite — all deferred to subsequent turns per the user's scope answer.
+
+## Files touched
+
+- `src/components/bloodwork/BloodworkTab.tsx`
+- `src/screens/TransformationScreen.tsx`
+- `src/screens/HomeScreen.tsx`
+- `src/pages/BloodworkPage.tsx`
+- `src/components/bloodwork/ManualBloodworkEntry.tsx`
+- `src/components/bloodwork/StackCartBar.tsx`
+- `src/components/landing/LiveQnAPopup.tsx`
+- `src/components/pwa/InstallBanner.tsx`
+- `src/components/ui/button.tsx`

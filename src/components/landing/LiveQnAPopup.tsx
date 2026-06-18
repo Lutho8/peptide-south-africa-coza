@@ -62,7 +62,8 @@ export function LiveQnAPopup() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 80, scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="fixed bottom-6 right-6 z-50 max-w-sm w-full"
+          className="fixed right-4 md:right-6 z-50 max-w-sm w-[calc(100%-2rem)] md:w-full"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)' }}
         >
           <div className="relative rounded-xl border border-accent/40 bg-card/95 backdrop-blur-md shadow-2xl p-5">
             <button
