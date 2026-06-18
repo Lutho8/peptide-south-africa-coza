@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      bloodwork_reminders: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string
+          due_at: string
+          id: string
+          kind: string
+          lab_report_id: string
+          notified_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string
+          due_at: string
+          id?: string
+          kind: string
+          lab_report_id: string
+          notified_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string
+          due_at?: string
+          id?: string
+          kind?: string
+          lab_report_id?: string
+          notified_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bloodwork_reminders_lab_report_id_fkey"
+            columns: ["lab_report_id"]
+            isOneToOne: false
+            referencedRelation: "lab_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       body_composition: {
         Row: {
           bmi: number | null
