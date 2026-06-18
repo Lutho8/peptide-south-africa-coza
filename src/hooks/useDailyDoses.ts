@@ -216,12 +216,13 @@ export function useDailyDoses() {
   const deleteDose = useCallback(async (doseId: string) => {
     try {
       if (user) {
-        const { error } = await supabase
-          .from('daily_doses')
-          .delete()
-          .eq('id', doseId);
-
-        if (error) throw error;
+        try {
+          const { error } = await supabase.from('daily_doses').delete().eq('id', doseId);
+          if (error) throw error;
+        } catch (netErr) {
+          console.warn('deleteDose offline — enqueuing', netErr);
+          await enqueueOffline('daily_doses', 'delete', {}, doseId);
+        }
       }
 
       const updatedDoses = doses.filter(d => d.id !== doseId);
