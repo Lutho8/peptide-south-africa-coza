@@ -121,7 +121,7 @@ export default function PrivacyPolicy() {
             <p className="text-muted-foreground">
               If you have questions about this Privacy Policy or our data practices, please contact us at{' '}
               <a href="mailto:privacy@peptide-south-africa.com" className="text-primary hover:underline">
-                privacy@peptide-south-africa.co.za
+                privacy@peptide-south-africa.com
               </a>
             </p>
           </section>

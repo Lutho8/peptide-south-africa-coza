@@ -152,7 +152,7 @@ export default function TermsOfService() {
             <p className="text-muted-foreground">
               If you have questions about these Terms of Service, please contact us at{' '}
               <a href="mailto:contact@peptide-south-africa.com" className="text-primary hover:underline">
-                contact@peptide-south-africa.co.za
+                contact@peptide-south-africa.com
               </a>
             </p>
           </section>
