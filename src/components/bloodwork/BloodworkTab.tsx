@@ -285,7 +285,7 @@ export function BloodworkTab() {
           const date = r.report_date ?? r.uploaded_at?.slice(0, 10) ?? '';
           const count = r.extracted_biomarkers?.length ?? 0;
           const isActive = activeReport?.id === r.id;
-          const lab = r.lab_name?.trim() || (r.file_name?.split(/[-_ .]/).find((p) => p.length > 2) ?? null);
+          const lab = r.file_name?.split(/[-_ .]/).find((p) => p.length > 2) ?? null;
           return (
             <div
               key={r.id}
