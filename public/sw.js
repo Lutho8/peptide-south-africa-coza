@@ -68,6 +68,25 @@ self.addEventListener('fetch', (event) => {
   // Skip Supabase/API calls
   if (url.hostname.includes('supabase') || url.pathname.startsWith('/rest/')) return;
 
+  // Network-first for branding/manifest so installed users always get fresh icons & name
+  const isBrandingAsset =
+    NETWORK_FIRST_PATHS.includes(url.pathname) ||
+    url.pathname.startsWith('/apple-touch-icon');
+  if (url.origin === self.location.origin && isBrandingAsset) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((r) => r || new Response('', { status: 408 })))
+    );
+    return;
+  }
+
   // For navigation requests - network first, fall back to cache
   if (event.request.mode === 'navigate') {
     event.respondWith(
