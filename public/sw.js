@@ -57,6 +57,13 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Allow page to trigger immediate activation of an updated SW
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // ─── Fetch Strategy: Network-first for API, Cache-first for static ───
 
 self.addEventListener('fetch', (event) => {
