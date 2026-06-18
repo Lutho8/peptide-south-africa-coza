@@ -4,6 +4,7 @@ import { resolve } from "path";
 
 const BASE_URL = "https://peptide-south-africa.co.za";
 
+
 type Entry = { path: string; changefreq?: string; priority?: string; lastmod?: string };
 
 const staticEntries: Entry[] = [

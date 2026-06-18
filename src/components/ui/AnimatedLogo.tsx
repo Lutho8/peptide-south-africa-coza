@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
-import logoAnimated from '/logo-animated.png';
+import markAsset from '@/assets/peptide-sa-mark.jpg.asset.json';
 import { cn } from '@/lib/utils';
 
 interface AnimatedLogoProps {
@@ -11,14 +11,14 @@ interface AnimatedLogoProps {
 }
 
 const sizeMap = {
-  sm: 'w-6 h-6',
+  sm: 'w-7 h-7',
   md: 'w-10 h-10',
-  lg: 'w-14 h-14',
+  lg: 'w-16 h-16',
 };
 
 const textSizeMap = {
   sm: 'text-sm',
-  md: 'text-xl',
+  md: 'text-lg',
   lg: 'text-2xl',
 };
 
@@ -30,35 +30,22 @@ export function AnimatedLogo({ size = 'md', showText = true, onClick, className 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
-    
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-    
+    const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Continuous slow rotation
   useEffect(() => {
     if (prefersReducedMotion || isSpinning) return;
-    
     controls.start({
       rotate: 360,
-      transition: {
-        duration: 8,
-        repeat: Infinity,
-        ease: 'linear',
-      },
+      transition: { duration: 8, repeat: Infinity, ease: 'linear' },
     });
   }, [controls, prefersReducedMotion, isSpinning]);
 
   const handleClick = async () => {
     if (isSpinning) return;
-    
     setIsSpinning(true);
-    
-    // Fast spin with glow effect
     await controls.start({
       rotate: [null, 360],
       scale: [1, 1.15, 1],
@@ -67,12 +54,8 @@ export function AnimatedLogo({ size = 'md', showText = true, onClick, className 
         scale: { duration: 0.3, times: [0, 0.5, 1] },
       },
     });
-    
-    // Reset to continuous rotation
     setIsSpinning(false);
     controls.set({ rotate: 0 });
-    
-    // Trigger navigation after animation
     onClick?.();
   };
 
@@ -80,45 +63,38 @@ export function AnimatedLogo({ size = 'md', showText = true, onClick, className 
     <button
       onClick={handleClick}
       className={cn(
-        'flex items-center gap-3 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        'hover:opacity-90 group',
+        'flex items-center gap-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg',
+        'hover:opacity-90 group min-h-11',
         className
       )}
-      aria-label="Go to Home"
+      aria-label="Peptide South Africa — Home"
     >
       <motion.div
         animate={controls}
         className={cn(
-          'relative rounded-xl overflow-hidden logo-container',
+          'relative rounded-full overflow-hidden bg-white shrink-0',
           sizeMap[size],
           isSpinning && 'logo-glow'
         )}
         style={{ willChange: 'transform' }}
-        whileHover={{ 
-          boxShadow: '0 0 20px hsl(var(--primary) / 0.3)',
-        }}
       >
         <img
-          src={logoAnimated}
-          alt="Peptide South Africa"
-          className="w-full h-full object-cover"
-        />
-        {/* Glow overlay on hover/click */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-tr from-primary/0 to-primary/20 opacity-0"
-          whileHover={{ opacity: 1 }}
-          transition={{ duration: 0.2 }}
+          src={markAsset.url}
+          alt="Peptide South Africa logo"
+          className="w-full h-full object-contain"
+          loading="eager"
         />
       </motion.div>
-      
+
       {showText && (
         <span className={cn(
-          'font-bold text-foreground transition-all duration-300',
-          'group-hover:bg-gradient-to-r group-hover:from-primary group-hover:via-accent group-hover:to-primary',
-          'group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-[length:200%_auto] group-hover:animate-gradient-flow',
+          'font-bold tracking-tight leading-none flex flex-col items-start',
           textSizeMap[size]
         )}>
-          Peptide South Africa
+          <span className="text-foreground">PEPTIDE</span>
+          <span className="text-[0.55em] tracking-[0.18em] text-muted-foreground font-semibold">
+            SOUTH AFRICA
+          </span>
         </span>
       )}
     </button>

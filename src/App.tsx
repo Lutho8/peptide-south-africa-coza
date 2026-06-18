@@ -38,7 +38,7 @@ const InjectionSites = lazy(() => import("./pages/InjectionSitesPage"));
 const Analytics = lazy(() => import("./pages/AnalyticsPage"));
 const Inventory = lazy(() => import("./pages/InventoryPage"));
 
-import { WhatsAppFab } from "@/components/global/WhatsAppFab";
+
 
 // Initialize i18n
 import '@/i18n';
@@ -120,7 +120,7 @@ const App = () => {
               </Routes>
             </Suspense>
           </HashRouter>
-          <WhatsAppFab />
+          
           <VercelAnalytics />
         </TooltipProvider>
       </AuthProvider>
