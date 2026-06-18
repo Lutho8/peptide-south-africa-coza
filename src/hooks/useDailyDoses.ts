@@ -152,7 +152,7 @@ export function useDailyDoses() {
 
     try {
       if (user) {
-        const { error } = await supabase.from('daily_doses').insert({
+        const row = {
           id: newDose.id,
           user_id: user.id,
           date: newDose.date,
@@ -162,9 +162,14 @@ export function useDailyDoses() {
           unit: newDose.unit,
           time: newDose.time,
           notes: newDose.notes || null,
-        });
-
-        if (error) throw error;
+        };
+        try {
+          const { error } = await supabase.from('daily_doses').insert(row);
+          if (error) throw error;
+        } catch (netErr) {
+          console.warn('addDose offline — enqueuing', netErr);
+          await enqueueOffline('daily_doses', 'insert', row);
+        }
       }
 
       // Update local state and localStorage
@@ -182,17 +187,19 @@ export function useDailyDoses() {
   const updateDose = useCallback(async (doseId: string, updates: Partial<Pick<DailyDoseEntry, 'time' | 'notes' | 'dose' | 'unit'>>) => {
     try {
       if (user) {
-        const { error } = await supabase
-          .from('daily_doses')
-          .update({
-            ...(updates.time !== undefined && { time: updates.time }),
-            ...(updates.notes !== undefined && { notes: updates.notes || null }),
-            ...(updates.dose !== undefined && { dose: updates.dose }),
-            ...(updates.unit !== undefined && { unit: updates.unit }),
-          })
-          .eq('id', doseId);
-
-        if (error) throw error;
+        const patch = {
+          ...(updates.time !== undefined && { time: updates.time }),
+          ...(updates.notes !== undefined && { notes: updates.notes || null }),
+          ...(updates.dose !== undefined && { dose: updates.dose }),
+          ...(updates.unit !== undefined && { unit: updates.unit }),
+        };
+        try {
+          const { error } = await supabase.from('daily_doses').update(patch).eq('id', doseId);
+          if (error) throw error;
+        } catch (netErr) {
+          console.warn('updateDose offline — enqueuing', netErr);
+          await enqueueOffline('daily_doses', 'update', patch, doseId);
+        }
       }
 
       const updatedDoses = doses.map(d =>
