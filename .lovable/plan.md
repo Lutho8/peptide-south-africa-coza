@@ -1,49 +1,52 @@
-# Activate peptide-south-africa.co.za Email Sending
+# Activate peptide-south-africa.com Email Sending
 
-Now that DNS is verified, switch the project's sending infrastructure to the new domain and stand up the three mailboxes.
+User chose the already-verified `www.peptide-south-africa.com` domain (shared across the Shop + App ecosystem). No DNS wait required.
 
-## 1. Confirm domain status
-- Call domain status check on `notify.peptide-south-africa.co.za` to confirm `active` before flipping any defaults. Abort if not active.
+## 1. Switch project sender domain
+- Move the project from `www.ridethetide.info` → `www.peptide-south-africa.com` (verified, ready).
+- Confirm `active` before flipping defaults.
 
-## 2. Provision shared email infrastructure (if not already present)
-- Ensure pgmq queues, RPC wrappers, `process-email-queue`, send log, suppression list, unsubscribe tokens, and pg_cron job exist for the new domain. Re-run infra setup; it is idempotent.
+## 2. Provision shared email infrastructure (idempotent)
+- Ensure pgmq queues, RPC wrappers, `process-email-queue`, send log, suppression list, unsubscribe tokens, and pg_cron job exist.
 
 ## 3. Scaffold app (transactional) email function
-- Scaffold the transactional email Edge Function + unsubscribe + suppression handlers if not already present.
-- `SENDER_DOMAIN` = `notify.peptide-south-africa.co.za`
-- `FROM_DOMAIN` (display) = `peptide-south-africa.co.za`
-- Default From: `Peptide South Africa <contact@peptide-south-africa.co.za>`
+- Scaffold `send-transactional-email`, `handle-email-unsubscribe`, `handle-email-suppression` if not present.
+- `SENDER_DOMAIN` = `notify.peptide-south-africa.com` (or whatever the scaffold returns for the verified subdomain)
+- `FROM_DOMAIN` (display) = `peptide-south-africa.com`
+- Default From: `Peptide South Africa <contact@peptide-south-africa.com>`
 
-## 4. Branded templates
-- Read brand tokens from `src/index.css` and existing templates, then create three minimal React Email templates under `supabase/functions/_shared/transactional-email-templates/`:
-  - `contact-form-confirmation` — replies from `contact@`
-  - `support-request-confirmation` — replies from `support@`
-  - `privacy-request-confirmation` — replies from `privacy@`
-- Register all three in `registry.ts`.
-- Body background `#ffffff`; brand accent `#3B82F6`; Cape Town footer line.
+## 4. Update all UI mailto: links from `.co.za` → `.com`
+Sweep these files and replace:
+- `contact@peptide-south-africa.co.za` → `contact@peptide-south-africa.com`
+- `privacy@peptide-south-africa.co.za` → `privacy@peptide-south-africa.com`
+- `support@peptide-south-africa.co.za` → `support@peptide-south-africa.com`
 
-## 5. Branded unsubscribe page
-- Add a React route at the unsubscribe path returned by the scaffold tool, wired to `handle-email-unsubscribe` (GET validate / POST confirm) using the existing UI shadcn primitives.
+Affected files: `src/pages/PrivacyPolicy.tsx`, `src/pages/TermsOfService.tsx`, `src/pages/Disclaimer.tsx`, `src/components/landing/LandingFooter.tsx`, `src/components/support/SupportSheet.tsx`, plus any other matches found via ripgrep.
 
-## 6. Deploy
-- Deploy `process-email-queue`, `send-transactional-email`, `handle-email-unsubscribe`, `handle-email-suppression`, and (if present) `auth-email-hook`.
+## 5. Branded templates
+Create three React Email templates under `supabase/functions/_shared/transactional-email-templates/`, registered in `registry.ts`:
+- `contact-form-confirmation` — reply-to `contact@peptide-south-africa.com`
+- `support-request-confirmation` — reply-to `support@peptide-south-africa.com`
+- `privacy-request-confirmation` — reply-to `privacy@peptide-south-africa.com`
+
+Body `#ffffff`, accent `#3B82F6`, footer line "Built in Cape Town 🇿🇦".
+
+## 6. Branded unsubscribe page
+- React route at the unsubscribe path returned by the scaffold tool, wired to `handle-email-unsubscribe`.
 
 ## 7. Verification
-- Send one test app email to each mailbox (contact/support/privacy) via `send-transactional-email` and confirm `email_send_log.status = 'sent'`.
-- Walk through every UI mailto: link (Privacy, Terms, Disclaimer, Footer, SupportSheet) to confirm all already point at the new domain.
+- Send one test app email per mailbox via `send-transactional-email`, check `email_send_log.status = 'sent'`.
 
 ## What you still need to do manually
-Mailbox forwarding is **not** managed by Lovable. In Cloud → Emails → Manage Domains for `peptide-south-africa.co.za`, set up forwarding rules:
-- `contact@peptide-south-africa.co.za` → your primary inbox
-- `support@peptide-south-africa.co.za` → your primary inbox
-- `privacy@peptide-south-africa.co.za` → your primary inbox
+In Cloud → Emails → Manage Domains for `peptide-south-africa.com`, add forwarding:
+- `contact@` → your inbox
+- `support@` → your inbox
+- `privacy@` → your inbox
 
 ## Out of scope
-- Decommissioning the old `notify.www.ridethetide.info` sender (leave parallel for now).
+- Decommissioning the old `notify.www.ridethetide.info` sender — leave parallel.
+- Adding `peptide-south-africa.co.za` as a sender (skipped per user choice).
 - Marketing/newsletter templates (not supported).
-- Android native rebuild / store re-publish.
 
-## Technical details
-- Tools used: `email_domain--check_email_domain_status`, `email_domain--setup_email_infra`, `email_domain--scaffold_transactional_email`, `supabase--deploy_edge_functions`.
-- Sender FQDN must be the delegated subdomain; root domain is display-only.
-- Idempotency keys for verification sends prefixed `verify-<mailbox>-<timestamp>`.
+## Memory update
+Update `mem://design/branding-peptide-south-africa` to record that mailboxes use `@peptide-south-africa.com` (shop+app shared ecosystem), not `.co.za`.
