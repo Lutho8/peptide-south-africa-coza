@@ -95,6 +95,12 @@ export default function BloodworkPage() {
         setRunning(null);
         return;
       }
+      if (form.file.type && form.file.type !== 'application/pdf' && !form.file.type.startsWith('image/')) {
+        progress.fail();
+        setError('Please upload a PDF or image of your lab report.');
+        setRunning(null);
+        return;
+      }
 
       void captureLead({
         email: user.email,
@@ -129,50 +135,54 @@ export default function BloodworkPage() {
 
         setLabReportId(report.id);
         progress.advance('extract');
-
-        const base64 = await fileToBase64(form.file);
         progress.advance('generate');
 
-        const { data, error: fnError } = await supabase.functions.invoke('analyze-lab-report', {
-          body: {
-            reportId: report.id,
-            imageBase64: base64,
-            fileName: form.file.name,
-            mimeType: form.file.type,
-            scanType: tier,
-            age: form.age ? Number(form.age) : undefined,
-            sex: form.sex,
-            goals: form.goals,
-            peptideHistoryUsed: form.peptideHistoryUsed ?? undefined,
-            peptideHistoryNotes: form.peptideHistoryNotes || undefined,
-          },
-        });
+        // 3-attempt exponential backoff (2s, 4s, 8s) on retryable errors.
+        const BACKOFFS = [0, 2000, 4000];
+        let payload: any = null;
+        let lastEnvelope: any = null;
+        for (let attempt = 0; attempt < BACKOFFS.length; attempt++) {
+          if (abortRef.current?.signal.aborted) { progress.reset(); return; }
+          if (BACKOFFS[attempt] > 0) {
+            await new Promise((r) => setTimeout(r, BACKOFFS[attempt]));
+          }
 
-        if (abortRef.current?.signal.aborted) {
-          progress.reset();
-          return;
+          const { data, error: fnError } = await supabase.functions.invoke('analyze-lab-report', {
+            body: {
+              reportId: report.id,
+              fileName: form.file.name,
+              mimeType: form.file.type,
+              scanType: tier,
+              age: form.age ? Number(form.age) : undefined,
+              sex: form.sex,
+              goals: form.goals,
+              peptideHistoryUsed: form.peptideHistoryUsed ?? undefined,
+              peptideHistoryNotes: form.peptideHistoryNotes || undefined,
+            },
+          });
+
+          if (abortRef.current?.signal.aborted) { progress.reset(); return; }
+
+          if (fnError) {
+            // Transport-level failure — treat as retryable
+            console.error('[bloodwork] edge fn transport error', { attempt, fnError });
+            lastEnvelope = { ok: false, code: 'TRANSPORT', retryable: true, message: fnError.message };
+            continue;
+          }
+          if ((data as any)?.ok === false) {
+            lastEnvelope = data;
+            console.warn('[bloodwork] envelope error', { attempt, data });
+            if ((data as any).retryable && attempt < BACKOFFS.length - 1) continue;
+            throw new Error((data as any).message || (data as any).code || 'Scan failed');
+          }
+          payload = (data as any)?.data;
+          if (payload) break;
+          lastEnvelope = { ok: false, code: 'EMPTY_RESPONSE', retryable: true, message: 'Empty AI response — please retry.' };
         }
 
-        if (fnError) {
-          console.error('[bloodwork] edge function error:', fnError, data);
-          const serverMsg =
-            (data as any)?.message ||
-            (data as any)?.error ||
-            fnError.message;
-          throw new Error(serverMsg || 'AI analysis failed');
+        if (!payload) {
+          throw new Error(lastEnvelope?.message || 'Scan failed after 3 attempts. You can try again or enter values manually.');
         }
-        // New structured error envelope: { ok:false, code, message, retryable }
-        if ((data as any)?.ok === false) {
-          console.error('[bloodwork] server error envelope:', data);
-          throw new Error((data as any).message || (data as any).code || 'Scan failed');
-        }
-        if ((data as any)?.error) {
-          console.error('[bloodwork] server returned error:', data);
-          throw new Error((data as any).error);
-        }
-        const payload = (data as any)?.data;
-        if (!payload) throw new Error('Empty AI response — please retry.');
-
 
         progress.advance('finalize');
 
@@ -189,7 +199,6 @@ export default function BloodworkPage() {
           goals: form.goals,
         };
         progress.complete();
-        // Brief delay so users see the 100% state
         await new Promise((r) => setTimeout(r, 350));
         setResult(scanResult);
         toast.success(`${tier === 'deep' ? 'Deep Decode' : 'Baseline'} scan complete`);
@@ -198,7 +207,7 @@ export default function BloodworkPage() {
         }, 100);
       } catch (e) {
         console.error('[bloodwork] scan failed:', e);
-        const mapped = mapScanError(e) || 'Scan failed unexpectedly. Please retry.';
+        const mapped = mapScanError(e) || 'Scan failed unexpectedly. Please retry or enter manually.';
         progress.fail();
         setError(mapped);
         void captureLead({
@@ -215,6 +224,7 @@ export default function BloodworkPage() {
     },
     [user, form, progress]
   );
+
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort();
