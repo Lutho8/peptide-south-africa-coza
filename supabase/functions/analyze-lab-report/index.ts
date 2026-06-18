@@ -199,7 +199,7 @@ If the file is unreadable, return:
 {"summary":"Unable to read lab report","report_date":null,"detected_language":"en","health_score":null,"biomarkers":[],"insights":["The uploaded file could not be recognised as a lab report."],"protocol":{"stack":[],"supplements":[],"nutrition":[],"exercise":[],"stress":[],"environment":[],"retest":[]},"recommended_stack_peptides":[]}`;
 
     const userText = [
-      `Analyze this lab report (${fileName}).`,
+      `Analyze this lab report (${effectiveFileName}).`,
       `Scan type: ${isDeep ? "Deep Decode" : "Baseline"}.`,
       age ? `Patient age: ${age}.` : "",
       sex && sex !== "na" ? `Patient sex: ${sex}.` : "",
