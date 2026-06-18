@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { FlaskConical, FileText, TrendingUp, TrendingDown, Minus, Loader2, Plus, Sparkles, ArrowRight } from 'lucide-react';
+import { FlaskConical, FileText, TrendingUp, TrendingDown, Minus, Plus, Sparkles, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow, format, parseISO } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
