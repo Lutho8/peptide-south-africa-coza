@@ -136,8 +136,31 @@ export function BloodworkWizard({
 function StepUpload({ state, onChange }: { state: ScanFormState; onChange: (s: ScanFormState) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
-  const setFile = (file: File | null) => onChange({ ...state, file });
+  const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+  const ALLOWED = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+
+  const setFile = (file: File | null) => {
+    if (!file) {
+      setFileError(null);
+      onChange({ ...state, file: null });
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      setFileError('File is over 10 MB. Please compress or export a smaller PDF.');
+      return;
+    }
+    const okType =
+      ALLOWED.includes(file.type) ||
+      /\.(pdf|jpe?g|png|webp|heic|heif)$/i.test(file.name);
+    if (!okType) {
+      setFileError('Unsupported file type. Use PDF, JPG, PNG, WEBP or HEIC.');
+      return;
+    }
+    setFileError(null);
+    onChange({ ...state, file });
+  };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -238,6 +261,12 @@ function StepUpload({ state, onChange }: { state: ScanFormState; onChange: (s: S
           Your file is encrypted in transit and at rest. Used only to generate your protocol — never shared.
         </p>
       </div>
+
+      {fileError && (
+        <div className="mt-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+          {fileError} If your report is a scanned image, try a clearer photo (JPG/PNG) or a text-based PDF export.
+        </div>
+      )}
     </div>
   );
 }

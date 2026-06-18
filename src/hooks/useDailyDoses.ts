@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { getStoredData, setStoredData, STORAGE_KEYS } from '@/services/storage';
+import { enqueue as enqueueOffline } from '@/services/offlineQueue';
 
 export interface DailyDoseEntry {
   id: string;
