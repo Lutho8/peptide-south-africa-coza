@@ -81,7 +81,13 @@ export function BloodworkWizard({
               className="space-y-4"
             >
               {error ? (
-                <ScanError message={error} onRetry={onRetry} onReset={() => { onResetUpload(); setStep(1); }} />
+                <ScanError
+                  message={error}
+                  onRetry={onRetry}
+                  onReset={() => { onResetUpload(); setStep(1); }}
+                  labReportId={labReportId}
+                  onManualSaved={onManualSaved}
+                />
               ) : (
                 <ScanProgress {...progress} onCancel={onCancel} />
               )}
