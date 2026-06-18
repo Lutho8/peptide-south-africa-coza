@@ -156,10 +156,15 @@ export default function BloodworkPage() {
         if (fnError) {
           console.error('[bloodwork] edge function error:', fnError, data);
           const serverMsg =
-            (data as any)?.error ||
             (data as any)?.message ||
+            (data as any)?.error ||
             fnError.message;
           throw new Error(serverMsg || 'AI analysis failed');
+        }
+        // New structured error envelope: { ok:false, code, message, retryable }
+        if ((data as any)?.ok === false) {
+          console.error('[bloodwork] server error envelope:', data);
+          throw new Error((data as any).message || (data as any).code || 'Scan failed');
         }
         if ((data as any)?.error) {
           console.error('[bloodwork] server returned error:', data);

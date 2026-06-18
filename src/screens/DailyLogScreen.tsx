@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, addDays, subDays } from 'date-fns';
 import { peptides } from '@/data/peptides';
 import { findPeptideOrBlend, getAllSelectablePeptides } from '@/data/blendAdapters';
 import { GradientCard } from '@/components/ui/GradientCard';
@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronRight, Plus, Syringe, Trash2, Calendar, Cloud, Clou
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
+import { useSwipeNav } from '@/hooks/useSwipeNav';
 import { DoseSummary } from '@/components/doses/DoseSummary';
 import { QuickAddReminderButton } from '@/components/doses/QuickAddReminderButton';
 import { InsulinNeedleGuide } from '@/components/doses/InsulinNeedleGuide';
@@ -263,6 +264,12 @@ export function DailyLogScreen() {
         <>
           {/* Month Navigation */}
           <GradientCard className="p-3">
+            <div
+              {...useSwipeNav({
+                onSwipeLeft: () => setSelectedDate((d) => addDays(d, 1)),
+                onSwipeRight: () => setSelectedDate((d) => subDays(d, 1)),
+              })}
+            >
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={handlePrevMonth}
@@ -331,6 +338,7 @@ export function DailyLogScreen() {
                   </button>
                 );
               })}
+            </div>
             </div>
           </GradientCard>
 

@@ -40,7 +40,7 @@ const footerLinks: Record<string, FooterLink[]> = {
     { label: 'Privacy Policy', href: '/privacy', isRoute: true },
     { label: 'Terms of Service', href: '/terms', isRoute: true },
     { label: 'Disclaimer', href: '/disclaimer', isRoute: true },
-    { label: 'Contact', href: 'mailto:contact@ridethetide.app' },
+    { label: 'Contact', href: 'mailto:contact@peptide-south-africa.co.za' },
   ],
   Network: [
     { label: 'RTD Research Peptides', href: 'https://peptide-south-africa.com' },
@@ -78,7 +78,7 @@ export function LandingFooter() {
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                 <Linkedin size={20} />
               </a>
-              <a href="mailto:contact@ridethetide.app" className="text-muted-foreground hover:text-primary transition-colors">
+              <a href="mailto:contact@peptide-south-africa.co.za" className="text-muted-foreground hover:text-primary transition-colors">
                 <Mail size={20} />
               </a>
             </div>

@@ -160,38 +160,57 @@ If the file is unreadable, return:
       "Personalise the protocol to these inputs and return the structured JSON.",
     ].filter(Boolean).join(" ");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: userText },
-              { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${imageBase64}` } },
-            ],
-          },
-        ],
-      }),
-    });
+    const aiStart = Date.now();
+    let response: Response;
+    try {
+      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-pro",
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: [
+                { type: "text", text: userText },
+                { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${imageBase64}` } },
+              ],
+            },
+          ],
+        }),
+        signal: AbortSignal.timeout(45_000),
+      });
+    } catch (e) {
+      const isTimeout = (e as Error)?.name === "TimeoutError" || /timeout|abort/i.test(String(e));
+      console.error("[analyze-lab-report] AI call failed", { durationMs: Date.now() - aiStart, error: String(e) });
+      await supabase.from("lab_reports").update({ status: "failed", ai_summary: isTimeout ? "AI scan timed out." : "AI scan failed." }).eq("id", reportId);
+      return new Response(JSON.stringify({
+        ok: false,
+        code: isTimeout ? "TIMEOUT" : "AI_NETWORK_ERROR",
+        retryable: true,
+        message: isTimeout
+          ? "Scan timed out after 45 seconds. Large or complex reports sometimes need a retry."
+          : "Couldn't reach the AI service. Check your connection and retry.",
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    console.log("[analyze-lab-report] AI ok", { status: response.status, durationMs: Date.now() - aiStart });
 
     if (!response.ok) {
       const errText = await response.text();
+      console.error("[analyze-lab-report] AI non-2xx", { status: response.status, body: errText.slice(0, 500) });
       if (response.status === 429) {
         await supabase.from("lab_reports").update({ status: "failed", ai_summary: "Rate limited. Please try again in a moment." }).eq("id", reportId);
-        return new Response(JSON.stringify({ error: "Rate limited, try again later" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ ok: false, code: "RATE_LIMITED", retryable: true, message: "Too many scans right now. Wait 30 seconds and retry." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       if (response.status === 402) {
         await supabase.from("lab_reports").update({ status: "failed", ai_summary: "AI credits exhausted." }).eq("id", reportId);
-        return new Response(JSON.stringify({ error: "AI credits exhausted" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ ok: false, code: "CREDITS_EXHAUSTED", retryable: false, message: "Scan credits exhausted. Try again later or use manual entry." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      throw new Error(`AI gateway error [${response.status}]: ${errText}`);
+      return new Response(JSON.stringify({ ok: false, code: "AI_GATEWAY_ERROR", retryable: true, message: `AI gateway error (${response.status}). Retry in a moment.` }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const aiData = await response.json();
@@ -246,9 +265,14 @@ If the file is unreadable, return:
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
-    console.error("analyze-lab-report error:", e);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
-      status: 500,
+    console.error("[analyze-lab-report] unhandled error:", e);
+    return new Response(JSON.stringify({
+      ok: false,
+      code: "INTERNAL_ERROR",
+      retryable: true,
+      message: (e as Error)?.message?.slice(0, 200) || "Unexpected error. Please retry.",
+    }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
