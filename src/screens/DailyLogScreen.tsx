@@ -339,6 +339,7 @@ export function DailyLogScreen() {
                 );
               })}
             </div>
+            </div>
           </GradientCard>
 
           {/* Selected Date Details */}
