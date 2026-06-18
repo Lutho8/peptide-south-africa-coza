@@ -272,7 +272,14 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     });
     
     swRegistration = registration;
-    
+
+    // Auto-update flow: when a new SW takes over (only on already-installed clients),
+    // reload once so users see the new icon/name without manual reinstall.
+    setupAutoUpdate(registration);
+
+    // Force an update check on every app load
+    registration.update().catch(() => {});
+
     // Wait for the service worker to be ready
     await navigator.serviceWorker.ready;
     
