@@ -1,6 +1,16 @@
 // Peptide Tracker Service Worker - PWA + Background Notifications
 
-const CACHE_NAME = 'peptide-tracker-v6';
+const CACHE_NAME = 'peptide-tracker-v7';
+
+// Always-fresh assets: branding/manifest files that must update for installed users
+const NETWORK_FIRST_PATHS = [
+  '/manifest.json',
+  '/favicon.png',
+  '/favicon.ico',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/logo-animated.png',
+];
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -47,6 +57,13 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Allow page to trigger immediate activation of an updated SW
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // ─── Fetch Strategy: Network-first for API, Cache-first for static ───
 
 self.addEventListener('fetch', (event) => {
@@ -57,6 +74,25 @@ self.addEventListener('fetch', (event) => {
 
   // Skip Supabase/API calls
   if (url.hostname.includes('supabase') || url.pathname.startsWith('/rest/')) return;
+
+  // Network-first for branding/manifest so installed users always get fresh icons & name
+  const isBrandingAsset =
+    NETWORK_FIRST_PATHS.includes(url.pathname) ||
+    url.pathname.startsWith('/apple-touch-icon');
+  if (url.origin === self.location.origin && isBrandingAsset) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((r) => r || new Response('', { status: 408 })))
+    );
+    return;
+  }
 
   // For navigation requests - network first, fall back to cache
   if (event.request.mode === 'navigate') {

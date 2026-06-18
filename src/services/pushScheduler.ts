@@ -258,6 +258,45 @@ function notifyServiceWorker(type: string, data?: unknown): void {
   }
 }
 
+// One-shot guard so controllerchange can't trigger an update loop
+let reloadOnControllerChange = false;
+let controllerChangeBound = false;
+
+function setupAutoUpdate(registration: ServiceWorkerRegistration): void {
+  // Only auto-reload when there's already a controlling SW (i.e. returning user).
+  // Fresh installs have no controller, so we skip the reload to avoid flicker.
+  if (!controllerChangeBound) {
+    controllerChangeBound = true;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!reloadOnControllerChange) return;
+      reloadOnControllerChange = false;
+      window.location.reload();
+    });
+  }
+
+  const promote = (worker: ServiceWorker | null) => {
+    if (!worker) return;
+    if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+      reloadOnControllerChange = true;
+      worker.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+          reloadOnControllerChange = true;
+          worker.postMessage({ type: 'SKIP_WAITING' });
+        }
+      });
+    }
+  };
+
+  // A SW may already be waiting when the page loads
+  promote(registration.waiting);
+
+  registration.addEventListener('updatefound', () => {
+    promote(registration.installing);
+  });
+}
+
 // Register service worker and set up periodic checks
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) {
@@ -272,7 +311,14 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     });
     
     swRegistration = registration;
-    
+
+    // Auto-update flow: when a new SW takes over (only on already-installed clients),
+    // reload once so users see the new icon/name without manual reinstall.
+    setupAutoUpdate(registration);
+
+    // Force an update check on every app load
+    registration.update().catch(() => {});
+
     // Wait for the service worker to be ready
     await navigator.serviceWorker.ready;
     
