@@ -16,7 +16,8 @@ export function InstallBanner() {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-20 left-4 right-4 z-40 max-w-lg mx-auto"
+        className="fixed left-4 right-4 z-40 max-w-lg mx-auto"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)' }}
       >
         <div className="glass-card rounded-2xl p-4 flex items-center gap-3 shadow-xl border border-primary/20">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
