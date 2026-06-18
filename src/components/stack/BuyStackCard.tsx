@@ -12,7 +12,7 @@ interface BuyStackCardProps {
 }
 
 /**
- * In-dashboard "Buy this stack" CTA. Opens the Ride The Tide store cart
+ * In-dashboard "Buy this stack" CTA. Opens the Peptide South Africa store cart
  * with every peptide in the user's active stack pre-loaded. One tap.
  */
 export function BuyStackCard({ items, medium = 'my_stack', subtitle }: BuyStackCardProps) {
@@ -60,7 +60,7 @@ export function BuyStackCard({ items, medium = 'my_stack', subtitle }: BuyStackC
             Buy this stack
           </h3>
           <p className="text-xs text-muted-foreground">
-            {subtitle ?? `${count} peptide${count === 1 ? '' : 's'} · ships from www.ridethetide.site`}
+            {subtitle ?? `${count} peptide${count === 1 ? '' : 's'} · ships from peptide-south-africa.com`}
           </p>
         </div>
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition group-hover:scale-110">

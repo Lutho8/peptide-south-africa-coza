@@ -66,7 +66,7 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
             <SparkleButton asChild size="lg" className="w-full sm:w-auto">
-              <a href="https://www.ridethetide.site?utm_source=tracker&utm_medium=cta_section&utm_campaign=buy_peptides" target="_blank" rel="noopener noreferrer">
+              <a href="https://peptide-south-africa.com?utm_source=tracker&utm_medium=cta_section&utm_campaign=buy_peptides" target="_blank" rel="noopener noreferrer">
                 Buy Peptides →
               </a>
             </SparkleButton>

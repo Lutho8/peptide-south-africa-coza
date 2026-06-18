@@ -184,21 +184,21 @@ export default function LiveQnA() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Live Peptide Q&A — Monthly Expert Sessions | Ride The Tide"
+        title="Live Peptide Q&A — Monthly Expert Sessions | Peptide South Africa"
         description="Free monthly live peptide research Q&A. Ask experts about dosing, stacks, cycles, and bloodwork. First Saturday of every month."
-        canonical="https://ridethetide.info/live-qna"
+        canonical="https://peptide-south-africa.co.za/live-qna"
       />
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'Event',
-        name: 'Ride The Tide Live Peptide Q&A',
+        name: 'Peptide South Africa Live Peptide Q&A',
         description: 'Free monthly live Q&A on peptide research, dosing, stacks, cycles, and bloodwork interpretation.',
         eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
         eventStatus: 'https://schema.org/EventScheduled',
-        url: 'https://ridethetide.info/live-qna',
-        organizer: { '@type': 'Organization', name: 'Ride The Tide', url: 'https://ridethetide.info' },
-        location: { '@type': 'VirtualLocation', url: 'https://ridethetide.info/live-qna' },
-        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', availability: 'https://schema.org/InStock', url: 'https://ridethetide.info/live-qna' },
+        url: 'https://peptide-south-africa.co.za/live-qna',
+        organizer: { '@type': 'Organization', name: 'Peptide South Africa', url: 'https://peptide-south-africa.co.za' },
+        location: { '@type': 'VirtualLocation', url: 'https://peptide-south-africa.co.za/live-qna' },
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', availability: 'https://schema.org/InStock', url: 'https://peptide-south-africa.co.za/live-qna' },
       }} />
       {/* Header */}
       <div className="border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-0 z-50">
@@ -352,7 +352,7 @@ export default function LiveQnA() {
                     <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                       <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       <p className="text-xs text-muted-foreground">
-                        We'll also send research peptide updates from ridethetide.site separately.
+                        We'll also send research peptide updates from peptide-south-africa.com separately.
                       </p>
                     </div>
                   )}
@@ -371,13 +371,13 @@ export default function LiveQnA() {
                         const ics = [
                           'BEGIN:VCALENDAR',
                           'VERSION:2.0',
-                          'PRODID:-//Ride The Tide//Live Q&A//EN',
+                          'PRODID:-//Peptide South Africa//Live Q&A//EN',
                           'BEGIN:VEVENT',
                           `UID:rtd-qna-${start.getTime()}@ridethetide`,
                           `DTSTAMP:${dt(new Date())}`,
                           `DTSTART:${dt(start)}`,
                           `DTEND:${dt(end)}`,
-                          `SUMMARY:Ride The Tide — ${sessionMonth} Live Peptide Q&A`,
+                          `SUMMARY:Peptide South Africa — ${sessionMonth} Live Peptide Q&A`,
                           'DESCRIPTION:Zoom link will be emailed 24 hours before the session.',
                           'LOCATION:Zoom (link sent by email)',
                           'END:VEVENT',
@@ -398,7 +398,7 @@ export default function LiveQnA() {
                       Add to calendar
                     </Button>
                     <a
-                      href="https://www.ridethetide.site?utm_source=tracker&utm_medium=live_qna&utm_campaign=buy_peptides"
+                      href="https://peptide-south-africa.com?utm_source=tracker&utm_medium=live_qna&utm_campaign=buy_peptides"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1"
@@ -474,7 +474,7 @@ export default function LiveQnA() {
                           className="mt-0.5"
                         />
                         <span className="text-sm text-muted-foreground leading-relaxed">
-                          I consent to receiving communications from Ride The Tide regarding the Q&A session I registered for, as well as additional updates via email and WhatsApp. I understand that my personal data will be processed and shared with Zoom to facilitate the webinar. I may withdraw my consent at any time with future effect by using the unsubscribe link in the communications. <span className="text-destructive">*</span>
+                          I consent to receiving communications from Peptide South Africa regarding the Q&A session I registered for, as well as additional updates via email and WhatsApp. I understand that my personal data will be processed and shared with Zoom to facilitate the webinar. I may withdraw my consent at any time with future effect by using the unsubscribe link in the communications. <span className="text-destructive">*</span>
                         </span>
                       </label>
                       <Link to="/privacy" className="text-xs text-primary hover:underline mt-2 block">
@@ -492,7 +492,7 @@ export default function LiveQnA() {
                         />
                         <span className="text-sm text-foreground leading-relaxed flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-accent shrink-0" />
-                          I'd like updates on research peptides from ridethetide.site.
+                          I'd like updates on research peptides from peptide-south-africa.com.
                         </span>
                       </label>
                     </div>

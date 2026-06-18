@@ -64,7 +64,7 @@ Use this checklist after switching from Lovable hosting to Vercel (or Cloudflare
    - `https://<your-new-domain>`
    - `https://<your-new-domain>/auth/callback`
 
-> Replace `<your-new-domain>` with your actual Vercel/Cloudflare domain (e.g. `peptide-mastery.vercel.app` or `www.ridethetide.info`).
+> Replace `<your-new-domain>` with your actual Vercel/Cloudflare domain (e.g. `peptide-mastery.vercel.app` or `peptide-south-africa.co.za`).
 
 ---
 

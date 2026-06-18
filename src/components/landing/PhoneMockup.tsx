@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Activity, Droplet, Pill, TrendingUp } from 'lucide-react';
 
 /**
- * iPhone-style device frame with a stylized Ride The Tide dashboard inside.
+ * iPhone-style device frame with a stylized Peptide South Africa dashboard inside.
  * Pure SVG/HTML — no external image, no network cost.
  */
 export function PhoneMockup() {

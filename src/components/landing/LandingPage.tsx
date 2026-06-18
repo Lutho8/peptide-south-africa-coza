@@ -64,7 +64,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Ride The Tide – Peptide Research & Protocol Tracking Platform"
+        title="Peptide South Africa – Peptide Research & Protocol Tracking Platform"
         description="Research-backed peptide database with protocol tracking, reconstitution calculators, AI-powered biomarker analysis, and 50+ peptide profiles. Free tools for dosing, stacking, and bloodwork monitoring."
         canonical="https://peptide-mastery.lovable.app"
       />

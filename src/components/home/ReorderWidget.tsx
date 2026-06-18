@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 
 const SHOP_URL =
-  'https://www.ridethetide.site/products?utm_source=tracker&utm_medium=dashboard&utm_campaign=reorder';
+  'https://peptide-south-africa.com/products?utm_source=tracker&utm_medium=dashboard&utm_campaign=reorder';
 
 export function ReorderWidget() {
   return (

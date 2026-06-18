@@ -39,7 +39,7 @@ const CHECK_LABELS: Record<string, string> = {
 };
 
 export default function SEOVerifyPage() {
-  const [url, setUrl] = useState("https://ridethetide.info/");
+  const [url, setUrl] = useState("https://peptide-south-africa.co.za/");
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [result, setResult] = useState<CheckResult | null>(null);
@@ -76,7 +76,7 @@ export default function SEOVerifyPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex gap-2">
-              <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://ridethetide.info/" />
+              <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://peptide-south-africa.co.za/" />
               <Button onClick={runCheck} disabled={loading}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run check"}
               </Button>

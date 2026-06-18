@@ -26,8 +26,8 @@ function cleanContent(md, post) {
   }
   // Strip "PeptIQ Team" / "PeptIQ" attribution blocks
   out = out.replace(/PeptIQ Team[\s\S]{0,80}?Peptide Research & Education/gi, '');
-  out = out.replace(/\b(PeptIQ Team|PeptIQ)\b/g, 'Ride The Tide Research');
-  out = out.replace(/peptiq\.io/gi, 'ridethetide.info');
+  out = out.replace(/\b(PeptIQ Team|PeptIQ)\b/g, 'Peptide South Africa Research');
+  out = out.replace(/peptiq\.io/gi, 'peptide-south-africa.co.za');
   // Strip trailing "Related articles" / "Share this article" / "Subscribe" blocks
   out = out.split(/\n(?:#+\s*)?(?:Related articles?|Share this article|Subscribe to our newsletter|Continue reading)\b/i)[0];
   // Strip "Back to Blog" trailing link

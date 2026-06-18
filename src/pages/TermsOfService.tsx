@@ -8,9 +8,9 @@ export default function TermsOfService() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Terms of Service | Ride The Tide"
-        description="Terms governing use of the Ride The Tide peptide research and protocol tracking platform. Educational use only — not medical advice."
-        canonical="https://ridethetide.info/terms"
+        title="Terms of Service | Peptide South Africa"
+        description="Terms governing use of the Peptide South Africa peptide research and protocol tracking platform. Educational use only — not medical advice."
+        canonical="https://peptide-south-africa.co.za/terms"
       />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Link to="/">
@@ -24,7 +24,7 @@ export default function TermsOfService() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Important Notice</AlertTitle>
           <AlertDescription>
-            By using Ride The Tide, you acknowledge that all information provided is for educational and research purposes only. 
+            By using Peptide South Africa, you acknowledge that all information provided is for educational and research purposes only. 
             This website does not provide medical advice, diagnosis, or treatment recommendations.
           </AlertDescription>
         </Alert>
@@ -36,7 +36,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">1. Acceptance of Terms</h2>
             <p className="text-muted-foreground">
-              By accessing and using Ride The Tide, you accept and agree to be bound by these Terms of Service. 
+              By accessing and using Peptide South Africa, you accept and agree to be bound by these Terms of Service. 
               If you do not agree to these terms, please do not use this website or application.
             </p>
           </section>
@@ -44,7 +44,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">2. Educational Purpose Only</h2>
             <p className="text-muted-foreground mb-4">
-              All content on Ride The Tide is provided for educational and informational purposes only. The information presented:
+              All content on Peptide South Africa is provided for educational and informational purposes only. The information presented:
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li>Is NOT medical advice and should not be treated as such</li>
@@ -71,7 +71,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">4. No Endorsement</h2>
             <p className="text-muted-foreground">
-              Ride The Tide does not sell peptides or any substances. We do not endorse, recommend, or promote any vendors, sources, or suppliers. 
+              Peptide South Africa does not sell peptides or any substances. We do not endorse, recommend, or promote any vendors, sources, or suppliers. 
               The inclusion of any compound in our database does not constitute an endorsement of its use.
             </p>
           </section>
@@ -93,7 +93,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">6. Account</h2>
             <p className="text-muted-foreground mb-4">
-              Ride The Tide is provided free of charge. When you create an account:
+              Peptide South Africa is provided free of charge. When you create an account:
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li>You must provide accurate and complete information</li>
@@ -105,7 +105,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">7. Intellectual Property</h2>
             <p className="text-muted-foreground">
-              All content on Ride The Tide, including text, graphics, logos, and software, is the property of Ride The Tide or its content providers 
+              All content on Peptide South Africa, including text, graphics, logos, and software, is the property of Peptide South Africa or its content providers 
               and is protected by intellectual property laws. You may not reproduce, distribute, or create derivative works without explicit permission.
             </p>
           </section>
@@ -113,7 +113,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">8. Limitation of Liability</h2>
             <p className="text-muted-foreground mb-4">
-              To the fullest extent permitted by law, Ride The Tide and its operators:
+              To the fullest extent permitted by law, Peptide South Africa and its operators:
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li>Are not liable for any damages arising from use of this website</li>
@@ -126,7 +126,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">9. Indemnification</h2>
             <p className="text-muted-foreground">
-              You agree to indemnify and hold harmless Ride The Tide, its operators, and affiliates from any claims, damages, or expenses 
+              You agree to indemnify and hold harmless Peptide South Africa, its operators, and affiliates from any claims, damages, or expenses 
               arising from your use of this website or violation of these terms.
             </p>
           </section>

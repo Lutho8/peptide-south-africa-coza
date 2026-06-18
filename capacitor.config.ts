@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'info.ridethetide.app',
-  appName: 'Ride The Tide',
+  appName: 'Peptide South Africa',
   webDir: 'dist',
   plugins: {
     LocalNotifications: {

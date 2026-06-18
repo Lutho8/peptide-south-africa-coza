@@ -16,7 +16,7 @@ export function SEOHead({
   description,
   canonical,
   ogType = 'website',
-  ogImage = 'https://ridethetide.info/logo-animated.png',
+  ogImage = 'https://peptide-south-africa.co.za/logo-animated.png',
   keywords,
   lang = 'en',
   jsonLd,

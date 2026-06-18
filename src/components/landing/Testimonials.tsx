@@ -5,7 +5,7 @@ const testimonials = [
   {
     role: 'Online Coach',
     quote:
-      'I use Ride The Tide with clients new to peptides. Being able to show them clean, research-backed protocols makes all the difference.',
+      'I use Peptide South Africa with clients new to peptides. Being able to show them clean, research-backed protocols makes all the difference.',
     initials: 'OC',
   },
   {
@@ -35,7 +35,7 @@ const testimonials = [
   {
     role: 'Wellness Practitioner',
     quote:
-      'I recommend Ride The Tide to anyone who wants to understand peptides beyond the hype. The research database is exceptional.',
+      'I recommend Peptide South Africa to anyone who wants to understand peptides beyond the hype. The research database is exceptional.',
     initials: 'WP',
   },
 ];

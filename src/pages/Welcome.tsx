@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 import { useAuth } from "@/contexts/AuthContext";
 
-const SHOP_URL = "https://www.ridethetide.site";
+const SHOP_URL = "https://peptide-south-africa.com";
 
 export default function Welcome() {
   const navigate = useNavigate();

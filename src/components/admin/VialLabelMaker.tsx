@@ -305,7 +305,7 @@ export default function VialLabelMaker() {
     `;
     }).join('');
 
-    printWindow.document.write(`<!DOCTYPE html><html><head><title>Vial Labels — Ride The Tide</title>
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Vial Labels — Peptide South Africa</title>
       <style>@media print { body { margin: 0; } .label { break-inside: avoid; } }</style>
     </head><body style="display: flex; flex-wrap: wrap; padding: 16px; gap: 10px; background: #fff;">${labelsHtml}<script>window.onload=()=>window.print();</script></body></html>`);
     printWindow.document.close();

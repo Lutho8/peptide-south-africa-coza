@@ -23,7 +23,7 @@ export function StackPeptideCard({ peptide, index }: Props) {
   const { has, toggle } = useStackCart();
   const slug = peptide.slug || slugify(peptide.name);
   const inCart = has(slug);
-  const shopUrl = `https://www.ridethetide.site/shop?q=${encodeURIComponent(slug)}&utm_source=app&utm_medium=bloodwork&utm_campaign=peptide`;
+  const shopUrl = `https://peptide-south-africa.com/shop?q=${encodeURIComponent(slug)}&utm_source=app&utm_medium=bloodwork&utm_campaign=peptide`;
 
   const handleClick = () => {
     void captureLead({

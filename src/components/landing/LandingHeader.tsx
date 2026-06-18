@@ -13,7 +13,7 @@ interface LandingHeaderProps {
   onBlendsClick?: () => void;
 }
 
-const SHOP_URL = 'https://www.ridethetide.site';
+const SHOP_URL = 'https://peptide-south-africa.com';
 
 type NavItem = {
   label: string;

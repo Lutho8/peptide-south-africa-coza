@@ -608,7 +608,7 @@ export function PKSimulatorPage() {
               <span>
                 Route: {ROUTE_LABELS[route]} • F {(params.bioavailability * 100).toFixed(0)}% • tmax {formatDuration(params.timeToPeakHours)}
               </span>
-              <span className="font-medium">Ride The Tide • ridethetide.info</span>
+              <span className="font-medium">Peptide South Africa • peptide-south-africa.co.za</span>
             </div>
           </div>
 

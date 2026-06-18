@@ -176,7 +176,7 @@ export default function CycleManagementScreen() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead title="Cycle Management | Ride The Tide" description="Manage your peptide cycles — track active runs, view planned end dates, pause, end, or restart cycles." />
+      <SEOHead title="Cycle Management | Peptide South Africa" description="Manage your peptide cycles — track active runs, view planned end dates, pause, end, or restart cycles." />
 
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">

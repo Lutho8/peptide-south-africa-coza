@@ -23,7 +23,7 @@ export function InstallBanner() {
             <Smartphone size={20} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Install Ride The Tide</p>
+            <p className="text-sm font-semibold text-foreground">Install Peptide South Africa</p>
             <p className="text-xs text-muted-foreground">Add to home screen for the best experience</p>
           </div>
           <Button

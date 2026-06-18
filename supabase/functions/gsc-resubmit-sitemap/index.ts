@@ -7,8 +7,8 @@ const corsHeaders = {
 };
 
 const GATEWAY = "https://connector-gateway.lovable.dev/google_search_console";
-const SITE_URL = "https://ridethetide.info/";
-const SITEMAP_URL = "https://ridethetide.info/sitemap.xml";
+const SITE_URL = "https://peptide-south-africa.co.za/";
+const SITEMAP_URL = "https://peptide-south-africa.co.za/sitemap.xml";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

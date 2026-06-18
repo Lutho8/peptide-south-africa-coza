@@ -100,7 +100,7 @@ export function AnimatedLogo({ size = 'md', showText = true, onClick, className 
       >
         <img
           src={logoAnimated}
-          alt="Ride The Tide"
+          alt="Peptide South Africa"
           className="w-full h-full object-cover"
         />
         {/* Glow overlay on hover/click */}
@@ -118,7 +118,7 @@ export function AnimatedLogo({ size = 'md', showText = true, onClick, className 
           'group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-[length:200%_auto] group-hover:animate-gradient-flow',
           textSizeMap[size]
         )}>
-          Ride The Tide
+          Peptide South Africa
         </span>
       )}
     </button>
