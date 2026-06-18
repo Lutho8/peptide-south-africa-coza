@@ -9,7 +9,7 @@ Two-tier access: Free + Premium (R4.99/mo or R49/yr, ZAR via Tagadapay).
 Payment provider is Tagadapay only — never Stripe, Paddle, or Paystack.
 1:1 consultation = Premium-gated entitlement (mailto webinars@fintiba.com).
 No vendor surfaces (no vendor lists, ratings, or finnrick.com references).
-Brand: Ride The Tide. Primary #3B82F6. Glassmorphism, luxury Framer Motion.
+Brand: Peptide South Africa (canonical https://peptide-south-africa.co.za). Shop: https://peptide-south-africa.com. Club: https://capetownpeptideclub.co.za. WhatsApp +491624747159. Primary #3B82F6 + SA-flag accents. Glassmorphism, luxury Framer Motion. Legacy "Ride The Tide" / ridethetide.info → fully retired; do not re-introduce.
 Peptides for research only; require safety disclaimers (not FDA approved).
 Dosing strictly in mg, IU, or units (U-40). NEVER use mcg.
 Biometrics in KG only. No AI body fat estimation (visual only).
@@ -32,7 +32,7 @@ Compare tool is forbidden; use Blends & Stacks instead.
 - [AI peptide agent](mem://features/ai-peptide-agent-system) — Multi-modal agent using Gemini 1.5 Flash
 - [Luxury animations](mem://design/luxury-animations) — Premium Framer Motion transitions, shimmer sweeps, 3D flip-reveals
 - [DB security hardening](mem://constraints/database-security-hardening) — pgcrypto encryption, search_path on SECURITY DEFINER functions
-- [Branding](mem://design/branding-ride-the-tide) — Ride The Tide visual identity, #3B82F6, logo usage
+- [Branding](mem://design/branding-peptide-south-africa) — Peptide South Africa identity, SA-flag accents, mark + lockup usage
 - [OAuth authentication](mem://features/oauth-authentication) — Google and Apple Sign-In
 - [Technical data schema](mem://features/peptide-technical-data-schema) — Amino acid sequences, half-lives, Janoshik COA structure
 - [Animated logo](mem://design/animated-logo-behavior) — 8-second spin, 0.5-second fast spin on click
