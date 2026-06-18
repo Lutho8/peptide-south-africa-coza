@@ -43,7 +43,7 @@ const footerLinks: Record<string, FooterLink[]> = {
     { label: 'Contact', href: 'mailto:contact@ridethetide.app' },
   ],
   Network: [
-    { label: 'RTD Research Peptides', href: 'https://www.ridethetide.site' },
+    { label: 'RTD Research Peptides', href: 'https://peptide-south-africa.com' },
     { label: 'Cape Town Peptide Club', href: 'https://capetownpeptideclub.co.za' },
     { label: 'WhatsApp Us', href: 'https://wa.me/491624747159?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20RTD' },
   ],
@@ -65,8 +65,8 @@ export function LandingFooter() {
               className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
               aria-label="Back to top"
             >
-              <img src={logoIcon} alt="Ride The Tide" className="w-8 h-8 rounded-lg" />
-              <span className="text-lg font-bold">Ride The Tide</span>
+              <img src={logoIcon} alt="Peptide South Africa" className="w-8 h-8 rounded-lg" />
+              <span className="text-lg font-bold">Peptide South Africa</span>
             </button>
             <p className="text-sm text-muted-foreground mb-4">
               Your research-grade peptide database with comprehensive scientific data and tracking tools.
@@ -125,7 +125,7 @@ export function LandingFooter() {
             </p>
           </div>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <p>© {new Date().getFullYear()} Ride The Tide. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Peptide South Africa. All rights reserved.</p>
             <div className="flex gap-4">
               <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
               <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>

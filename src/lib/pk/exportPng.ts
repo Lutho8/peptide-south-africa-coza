@@ -32,7 +32,7 @@ export async function exportNodeToPng(
 export async function sharePngBlob(
   blob: Blob,
   filename: string = "pk-chart.png",
-  title: string = "Ride The Tide PK Chart"
+  title: string = "Peptide South Africa PK Chart"
 ): Promise<boolean> {
   try {
     const file = new File([blob], filename, { type: "image/png" });

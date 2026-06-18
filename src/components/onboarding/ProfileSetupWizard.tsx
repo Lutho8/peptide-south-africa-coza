@@ -252,7 +252,7 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
                     {initials}
                   </motion.div>
                   <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-foreground">Welcome to Ride The Tide</h3>
+                    <h3 className="text-xl font-semibold text-foreground">Welcome to Peptide South Africa</h3>
                     <p className="text-sm text-muted-foreground px-4">
                       Spend 60 seconds setting up your profile so your stack, dosing tools, and AI insights are tuned to <span className="text-foreground font-medium">you</span>.
                     </p>

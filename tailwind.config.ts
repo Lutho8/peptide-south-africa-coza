@@ -70,6 +70,11 @@ export default {
         gh: "hsl(var(--gh-secretagogue))",
         // Luxury accents
         gold: "hsl(var(--gold))",
+        // Peptide South Africa flag accents
+        "sa-green": "hsl(var(--sa-green))",
+        "sa-yellow": "hsl(var(--sa-yellow))",
+        "sa-red": "hsl(var(--sa-red))",
+        "sa-navy": "hsl(var(--sa-navy))",
       },
       borderRadius: {
         lg: "var(--radius)",

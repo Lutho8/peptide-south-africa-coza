@@ -1,4 +1,4 @@
-// Builds a deep-link to the Ride The Tide shop with consistent UTM tagging.
+// Builds a deep-link to the Peptide South Africa shop with consistent UTM tagging.
 // Per project rules, always use the www subdomain — the apex is broken.
 
 export interface StackLinkItem {
@@ -12,7 +12,7 @@ export interface StackLinkOptions {
   patternIds?: string[];
 }
 
-const SHOP_BASE = 'https://www.ridethetide.site/shop';
+const SHOP_BASE = 'https://peptide-south-africa.com/shop';
 
 export function buildStackLink(items: StackLinkItem[], opts: StackLinkOptions = {}): string {
   const campaign = opts.campaign ?? 'stack_v2';

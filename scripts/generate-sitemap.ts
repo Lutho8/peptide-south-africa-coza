@@ -2,7 +2,8 @@
 import { writeFileSync, readFileSync } from "fs";
 import { resolve } from "path";
 
-const BASE_URL = "https://ridethetide.info";
+const BASE_URL = "https://peptide-south-africa.co.za";
+
 
 type Entry = { path: string; changefreq?: string; priority?: string; lastmod?: string };
 

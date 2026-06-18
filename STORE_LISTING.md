@@ -1,4 +1,4 @@
-# Google Play Store Listing — Ride The Tide
+# Google Play Store Listing — Peptide South Africa
 
 Copy/paste these directly into Play Console → Main store listing.
 
@@ -8,7 +8,7 @@ Copy/paste these directly into Play Console → Main store listing.
 
 **App name** (max 30 chars):
 ```
-Ride The Tide: Peptide Tracker
+Peptide South Africa: Peptide Tracker
 ```
 
 **Short description** (max 80 chars):
@@ -18,7 +18,7 @@ Track peptide protocols, doses, cycles & bloodwork. Research-grade tools.
 
 **Full description** (max 4000 chars):
 ```
-Ride The Tide is the most complete peptide research and protocol tracking platform — built for researchers, biohackers, and health-optimization enthusiasts who demand precision.
+Peptide South Africa is the most complete peptide research and protocol tracking platform — built for researchers, biohackers, and health-optimization enthusiasts who demand precision.
 
 ⚠️ FOR EDUCATIONAL & RESEARCH PURPOSES ONLY
 Peptides referenced in this application are research compounds NOT approved by the FDA for human consumption. This app does not provide medical advice. Always consult a qualified healthcare professional.
@@ -106,7 +106,7 @@ SAFETY DISCLAIMER
 ━━━━━━━━━━━━━━━━━━━━━━
 Peptides discussed are research chemicals not approved for human consumption. Information provided is not medical advice. Consult qualified healthcare professionals before any research compound use. Start with the lowest effective dose. Monitor bloodwork regularly. Discontinue if adverse effects occur.
 
-Visit https://ridethetide.info for more.
+Visit https://peptide-south-africa.co.za for more.
 ```
 
 ---
@@ -121,7 +121,7 @@ Visit https://ridethetide.info for more.
 ## Contact details
 
 - **Email**: privacy@ridethetide.app
-- **Website**: https://ridethetide.info
+- **Website**: https://peptide-south-africa.co.za
 - **Phone**: (optional)
 
 ---
@@ -129,7 +129,7 @@ Visit https://ridethetide.info for more.
 ## Privacy policy
 
 ```
-https://ridethetide.info/privacy
+https://peptide-south-africa.co.za/privacy
 ```
 
 ---
@@ -146,8 +146,8 @@ https://ridethetide.info/privacy
 
 ### Feature graphic design brief
 - Background: deep navy gradient (`#0F172A` → `#1e293b`)
-- Foreground: Ride The Tide animated logo (left side)
-- Headline (right side): **"Ride The Tide"** in bold white, subtitle **"Peptide Protocol Tracker"** in `#3B82F6`
+- Foreground: Peptide South Africa animated logo (left side)
+- Headline (right side): **"Peptide South Africa"** in bold white, subtitle **"Peptide Protocol Tracker"** in `#3B82F6`
 - Optional: subtle wave/tide motif
 
 ### Recommended screenshot scenes

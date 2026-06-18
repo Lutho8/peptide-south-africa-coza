@@ -143,7 +143,7 @@ export function HeroSection({ onCategoryClick, onSignInClick }: HeroSectionProps
               </Button>
               <SparkleButton asChild size="lg" className="h-12 gap-2 px-6">
                 <a
-                  href="https://www.ridethetide.site?utm_source=tracker&utm_medium=hero&utm_campaign=buy_peptides"
+                  href="https://peptide-south-africa.com?utm_source=tracker&utm_medium=hero&utm_campaign=buy_peptides"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

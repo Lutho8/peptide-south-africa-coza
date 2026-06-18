@@ -20,7 +20,7 @@ export function exportBloodworkProtocolPDF(result: BloodworkScanResult, filename
   // Title
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(20);
-  pdf.text('Ride The Tide — Bloodwork Protocol', MARGIN, y);
+  pdf.text('Peptide South Africa — Bloodwork Protocol', MARGIN, y);
   y += 8;
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(10);
@@ -86,7 +86,7 @@ export function exportBloodworkProtocolPDF(result: BloodworkScanResult, filename
     });
     wrap(
       pdf,
-      'Buy this stack: https://www.ridethetide.site/shop',
+      'Buy this stack: https://peptide-south-africa.com/shop',
       () => y,
       (n) => (y = n)
     );

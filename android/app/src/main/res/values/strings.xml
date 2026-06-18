@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Ride The Tide</string>
-    <string name="title_activity_main">Ride The Tide</string>
+    <string name="app_name">Peptide South Africa</string>
+    <string name="title_activity_main">Peptide South Africa</string>
     <string name="package_name">info.ridethetide.app</string>
     <string name="custom_url_scheme">info.ridethetide.app</string>
 </resources>

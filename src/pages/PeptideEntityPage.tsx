@@ -40,7 +40,7 @@ export default function PeptideEntityPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={`${peptide.name} – Dosing, Mechanism, Research | Ride The Tide`}
+        title={`${peptide.name} – Dosing, Mechanism, Research | Peptide South Africa`}
         description={`${peptide.name}: ${peptide.mechanism.slice(0, 140)}. Dosing protocols, benefits, risks, and research references.`}
         canonical={`${BASE_URL}/peptides/${slug}`}
       />

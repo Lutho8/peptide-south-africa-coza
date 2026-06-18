@@ -1,4 +1,4 @@
-# Ride The Tide — Android Build Checklist
+# Peptide South Africa — Android Build Checklist
 
 Print this or keep it open. Tick each box as you go. Total time: ~1 hour the first time.
 
@@ -106,7 +106,7 @@ Your file: `android\app\release\app-release.aab` ✅
 ### ☐ 9. Create the app in Play Console
 - Go to https://play.google.com/console
 - **Create app** → fill in:
-  - Name: **Ride The Tide**
+  - Name: **Peptide South Africa**
   - Default language: **English (United States)**
   - App: **App** (not Game)
   - Free
@@ -120,7 +120,7 @@ Use the copy in `STORE_LISTING.md` and the answers in `RELEASE_GUIDE.md` (Parts 
 - ☐ Target audience (18+)
 - ☐ Data safety form
 - ☐ Store listing (title, descriptions, screenshots, feature graphic)
-- ☐ Privacy policy URL: `https://ridethetide.info/privacy`
+- ☐ Privacy policy URL: `https://peptide-south-africa.co.za/privacy`
 
 ### ☐ 11. Upload your AAB
 - Left sidebar → **Production** → **Create new release**.

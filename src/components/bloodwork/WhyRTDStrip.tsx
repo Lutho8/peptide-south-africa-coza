@@ -10,9 +10,9 @@ const POINTS = [
 
 export function WhyRTDStrip() {
   return (
-    <section aria-label="Why Ride The Tide" className="mt-10">
+    <section aria-label="Why Peptide South Africa" className="mt-10">
       <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur p-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary mb-3">Why Ride The Tide</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary mb-3">Why Peptide South Africa</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {POINTS.map((p, i) => {
             const Icon = p.icon;

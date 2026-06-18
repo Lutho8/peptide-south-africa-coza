@@ -1,12 +1,12 @@
 // Deep-link helper: turn the user's active stack into a one-click cart URL
-// on the Ride The Tide store. Always use www subdomain (apex is broken).
+// on the Peptide South Africa store. Always use www subdomain (apex is broken).
 //
 // The store accepts a comma-separated list of slugs via ?items=... and
 // we tag UTMs so downstream analytics can attribute the source.
 
 import { topPeptidesSlugs } from '@/data/entitySlugs';
 
-const STORE_BASE = 'https://www.ridethetide.site';
+const STORE_BASE = 'https://peptide-south-africa.com';
 
 // Reverse map: peptide id → store slug
 const idToSlug: Record<string, string> = Object.entries(topPeptidesSlugs).reduce(
@@ -28,7 +28,7 @@ export interface BuildCartLinkOptions {
 }
 
 /**
- * Build a deep-link to the Ride The Tide store cart preloaded with the
+ * Build a deep-link to the Peptide South Africa store cart preloaded with the
  * user's current stack. Items without a known store slug fall back to the
  * peptide id as a search hint.
  */

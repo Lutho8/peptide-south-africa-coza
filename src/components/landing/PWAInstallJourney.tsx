@@ -72,7 +72,7 @@ export function PWAInstallJourney() {
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText('https://ridethetide.info');
+      await navigator.clipboard.writeText('https://peptide-south-africa.co.za');
       track('install_link_copied', { platform });
     } catch {}
   };
@@ -107,7 +107,7 @@ export function PWAInstallJourney() {
             </div>
 
             <h2 className="mt-6 text-4xl md:text-6xl font-bold tracking-tight text-foreground">
-              Get Ride The Tide on{' '}
+              Get Peptide South Africa on{' '}
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Your Phone</span>
             </h2>
             <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -257,7 +257,7 @@ export function PWAInstallJourney() {
               <QrCode className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <div className="text-sm">
                 <p className="text-foreground font-medium">Open this page on your phone to install.</p>
-                <p className="text-muted-foreground mt-0.5">Visit <span className="text-primary">ridethetide.info</span> from Safari (iOS) or Chrome (Android).</p>
+                <p className="text-muted-foreground mt-0.5">Visit <span className="text-primary">peptide-south-africa.co.za</span> from Safari (iOS) or Chrome (Android).</p>
               </div>
             </div>
           )}
@@ -379,7 +379,7 @@ function IosSteps({ onStepView }: { onStepView: (n: number) => void }) {
   return (
     <motion.ol initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="mt-6 space-y-4">
       <StepRow index={1} onView={onStepView}>
-        Open <span className="text-primary font-medium">ridethetide.info</span> in <span className="font-medium">Safari</span> (not Chrome or any in-app browser).
+        Open <span className="text-primary font-medium">peptide-south-africa.co.za</span> in <span className="font-medium">Safari</span> (not Chrome or any in-app browser).
       </StepRow>
       <StepRow index={2} onView={onStepView}>
         Tap the <span className="font-medium">Share</span> button <Share2 className="inline w-4 h-4 -mt-0.5" /> (square with up arrow) in the bottom bar — top-right on iPad.
@@ -398,7 +398,7 @@ function AndroidSteps({ onStepView }: { onStepView: (n: number) => void }) {
   return (
     <motion.ol initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="mt-6 space-y-4">
       <StepRow index={1} onView={onStepView}>
-        Open <span className="text-primary font-medium">ridethetide.info</span> in <span className="font-medium">Chrome</span>.
+        Open <span className="text-primary font-medium">peptide-south-africa.co.za</span> in <span className="font-medium">Chrome</span>.
       </StepRow>
       <StepRow index={2} onView={onStepView}>
         Tap the <MoreVertical className="inline w-4 h-4 -mt-0.5" /> <span className="font-medium">menu</span> (top-right).

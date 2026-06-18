@@ -238,17 +238,17 @@ export default function BloodworkPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="AI Bloodwork Decoding & Peptide Protocols | Ride The Tide"
+        title="AI Bloodwork Decoding & Peptide Protocols | Peptide South Africa"
         description="Upload a lab report and get an AI-decoded biomarker breakdown with a personalised peptide stack, supplement plan, and retest schedule. Free baseline scan."
-        canonical="https://ridethetide.info/bloodwork"
+        canonical="https://peptide-south-africa.co.za/bloodwork"
       />
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'Service',
         name: 'AI Bloodwork Decoding',
-        provider: { '@type': 'Organization', name: 'Ride The Tide', url: 'https://ridethetide.info' },
+        provider: { '@type': 'Organization', name: 'Peptide South Africa', url: 'https://peptide-south-africa.co.za' },
         serviceType: 'Biomarker analysis and peptide protocol generation',
-        url: 'https://ridethetide.info/bloodwork',
+        url: 'https://peptide-south-africa.co.za/bloodwork',
         description: 'AI-powered lab report analysis that decodes 20+ biomarkers and generates a personalised peptide protocol, supplement plan, and retest schedule.',
         areaServed: 'Worldwide',
       }} />

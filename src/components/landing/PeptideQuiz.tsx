@@ -255,7 +255,7 @@ export function PeptideQuiz({ open, onClose }: PeptideQuizProps) {
 
               <div className="flex justify-center gap-4">
                 <Button variant="outline" onClick={handleReset}>Retake Quiz</Button>
-                <Button onClick={onClose}>Back to Ride The Tide</Button>
+                <Button onClick={onClose}>Back to Peptide South Africa</Button>
               </div>
             </motion.div>
           )}

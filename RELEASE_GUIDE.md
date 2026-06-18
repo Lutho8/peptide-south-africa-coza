@@ -1,4 +1,4 @@
-# Ride The Tide — Google Play Release Guide
+# Peptide South Africa — Google Play Release Guide
 
 **App ID:** `info.ridethetide.app` (PERMANENT — never change)
 **Track:** Production
@@ -48,7 +48,7 @@ keytool -genkey -v \
 When prompted:
 - Keystore password: **(strong password — save it!)**
 - Key password: **(can be same as keystore password)**
-- Name / Org: Ride The Tide
+- Name / Org: Peptide South Africa
 - City / Country: your details
 
 Move the file somewhere safe (NOT inside the git repo):
@@ -132,7 +132,7 @@ Output: `android/app/release/app-release.aab` ← this is what you upload to Pla
 
 1. Go to https://play.google.com/console (sign in with developer account `8427019085313968947`)
 2. **Create app**:
-   - App name: **Ride The Tide**
+   - App name: **Peptide South Africa**
    - Default language: **English (United States)**
    - App or game: **App**
    - Free or paid: **Free**
@@ -159,7 +159,7 @@ Output: `android/app/release/app-release.aab` ← this is what you upload to Pla
 
 Category: **Reference, News, or Educational**
 
-Answer the questionnaire honestly. Key answers for Ride The Tide:
+Answer the questionnaire honestly. Key answers for Peptide South Africa:
 - **References to illegal drugs**: No (peptides are research compounds, not illegal drugs — but mentioned for educational purposes)
 - **Drugs / alcohol / tobacco**: **Yes — references to controlled substances/medication for educational purposes**
 - **Violence**: No
@@ -198,7 +198,7 @@ Expected rating: **Mature 17+ / PEGI 16-18**
 4. **Release name**: `1.0.0` (auto-filled)
 5. **Release notes** (English):
    ```
-   Initial release of Ride The Tide — research-grade peptide protocol tracker.
+   Initial release of Peptide South Africa — research-grade peptide protocol tracker.
 
    Features:
    • Track peptide doses, cycles, and protocols

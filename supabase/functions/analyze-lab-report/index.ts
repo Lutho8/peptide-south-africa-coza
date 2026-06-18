@@ -69,7 +69,7 @@ serve(async (req) => {
 
     const isDeep = scanType === "deep";
 
-    const systemPrompt = `You are a friendly medical lab report analyzer for the "Ride The Tide" peptide research community.
+    const systemPrompt = `You are a friendly medical lab report analyzer for the "Peptide South Africa" peptide research community.
 
 The user is requesting a ${isDeep ? "DEEP DECODE" : "BASELINE"} scan.
 ${isDeep ? "Expand each protocol section to include up to 32 biomarkers across 8 panels and add 4 follow-up retest milestones over 12 months." : "Provide a concise but complete protocol (under 60 seconds of reading)."}

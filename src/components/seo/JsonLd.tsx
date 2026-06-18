@@ -32,9 +32,9 @@ export function buildOrganizationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Ride The Tide',
-    url: 'https://ridethetide.info',
-    logo: 'https://ridethetide.info/logo-animated.png',
+    name: 'Peptide South Africa',
+    url: 'https://peptide-south-africa.co.za',
+    logo: 'https://peptide-south-africa.co.za/logo-animated.png',
     description: 'Peptide research platform providing protocol tracking, dosage guidance, and biomarker analysis.',
     sameAs: [],
     knowsAbout: [
@@ -49,12 +49,12 @@ export function buildWebSiteSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Ride The Tide – Peptide Research & Protocol Platform',
-    url: 'https://ridethetide.info',
+    name: 'Peptide South Africa – Peptide Research & Protocol Platform',
+    url: 'https://peptide-south-africa.co.za',
     description: 'Research-backed peptide database with protocol tracking, reconstitution calculators, and AI-powered biomarker analysis.',
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://ridethetide.info/peptides?q={search_term_string}',
+      target: 'https://peptide-south-africa.co.za/peptides?q={search_term_string}',
       'query-input': 'required name=search_term_string'
     }
   };
@@ -116,7 +116,7 @@ export function buildPeptideSchema(peptide: {
     '@context': 'https://schema.org',
     '@type': 'MedicalEntity',
     name: peptide.name,
-    url: `https://ridethetide.info/peptides/${peptide.slug}`,
+    url: `https://peptide-south-africa.co.za/peptides/${peptide.slug}`,
     description: peptide.description,
     medicineSystem: 'WesternConventional',
     relevantSpecialty: ['Endocrinology', 'Sports Medicine', 'Anti-Aging Medicine'],

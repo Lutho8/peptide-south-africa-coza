@@ -47,13 +47,13 @@ export default function BlogIndexPage() {
   const blogSchema = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'Ride The Tide Blog',
-    url: 'https://ridethetide.info/blog',
+    name: 'Peptide South Africa Blog',
+    url: 'https://peptide-south-africa.co.za/blog',
     description: 'Peptide research, protocols, safety guidance, and clinical evidence.',
     blogPost: blogPosts.slice(0, 20).map(p => ({
       '@type': 'BlogPosting',
       headline: p.title,
-      url: `https://ridethetide.info/blog/${p.slug}`,
+      url: `https://peptide-south-africa.co.za/blog/${p.slug}`,
       datePublished: p.date,
       image: p.image,
     })),
@@ -62,16 +62,16 @@ export default function BlogIndexPage() {
   return (
     <>
       <SEOHead
-        title={`Peptide Research Blog — ${blogPosts.length}+ articles | Ride The Tide`}
+        title={`Peptide Research Blog — ${blogPosts.length}+ articles | Peptide South Africa`}
         description="Evidence-based peptide research, protocols, safety, and clinical guidance. Browse 150+ articles on BPC-157, retatrutide, tirzepatide, ipamorelin, and more."
-        canonical="https://ridethetide.info/blog"
+        canonical="https://peptide-south-africa.co.za/blog"
         ogType="website"
         keywords="peptide research, peptide protocols, BPC-157, retatrutide, tirzepatide, peptide safety, peptide blog"
         jsonLd={[
           blogSchema,
           buildBreadcrumbSchema([
-            { name: 'Home', url: 'https://ridethetide.info/' },
-            { name: 'Blog', url: 'https://ridethetide.info/blog' },
+            { name: 'Home', url: 'https://peptide-south-africa.co.za/' },
+            { name: 'Blog', url: 'https://peptide-south-africa.co.za/blog' },
           ]),
         ]}
       />

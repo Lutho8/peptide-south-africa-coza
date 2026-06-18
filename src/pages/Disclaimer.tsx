@@ -8,9 +8,9 @@ export default function Disclaimer() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Research Disclaimer | Ride The Tide"
-        description="Peptides referenced on Ride The Tide are research compounds not approved by the FDA. The platform is for educational and research use only."
-        canonical="https://ridethetide.info/disclaimer"
+        title="Research Disclaimer | Peptide South Africa"
+        description="Peptides referenced on Peptide South Africa are research compounds not approved by the FDA. The platform is for educational and research use only."
+        canonical="https://peptide-south-africa.co.za/disclaimer"
       />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Link to="/">
@@ -36,7 +36,7 @@ export default function Disclaimer() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4 text-destructive">This Is Not Medical Advice</h2>
             <p className="text-muted-foreground">
-              The information provided on Ride The Tide is for <strong>educational and informational purposes only</strong>. 
+              The information provided on Peptide South Africa is for <strong>educational and informational purposes only</strong>. 
               It is not intended as a substitute for professional medical advice, diagnosis, or treatment. 
               Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition or treatment.
             </p>
@@ -45,7 +45,7 @@ export default function Disclaimer() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">1. Educational Purpose</h2>
             <p className="text-muted-foreground mb-4">
-              Ride The Tide is a research-focused database and tracking tool designed to provide educational information about peptides. Our content is:
+              Peptide South Africa is a research-focused database and tracking tool designed to provide educational information about peptides. Our content is:
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li>Compiled from publicly available scientific literature and research studies</li>
@@ -84,7 +84,7 @@ export default function Disclaimer() {
 
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">4. No Liability</h2>
-            <p className="text-muted-foreground mb-4">Ride The Tide and its operators:</p>
+            <p className="text-muted-foreground mb-4">Peptide South Africa and its operators:</p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li>Make no warranties or representations about the accuracy, completeness, or reliability of any information on this website</li>
               <li>Are not responsible for any decisions made based on information found on this website</li>

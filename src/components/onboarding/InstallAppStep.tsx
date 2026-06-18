@@ -93,7 +93,7 @@ export function InstallAppStep({ open, onClose }: Props) {
               <OfflineReadyBadge compact />
             </div>
 
-            <h3 className="mt-3 text-2xl md:text-3xl font-bold text-foreground">Install Ride The Tide on your phone</h3>
+            <h3 className="mt-3 text-2xl md:text-3xl font-bold text-foreground">Install Peptide South Africa on your phone</h3>
             <p className="mt-2 text-sm text-muted-foreground">
               We're not in the App Store — by design. Pin the app to your Home Screen for offline access and a full-screen experience.
             </p>
@@ -110,7 +110,7 @@ export function InstallAppStep({ open, onClose }: Props) {
                 <div>
                   <p className="text-foreground">Add to Home Screen only works in Safari on iOS.</p>
                   <Button size="sm" variant="outline" className="mt-2 gap-1.5" onClick={async () => {
-                    try { await navigator.clipboard.writeText('https://ridethetide.info'); track('install_link_copied', { surface: 'modal' }); } catch {}
+                    try { await navigator.clipboard.writeText('https://peptide-south-africa.co.za'); track('install_link_copied', { surface: 'modal' }); } catch {}
                   }}>
                     <Copy className="w-3.5 h-3.5" /> Copy link
                   </Button>

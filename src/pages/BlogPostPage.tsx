@@ -30,15 +30,15 @@ function buildArticleSchema(post: BlogPost) {
     dateModified: post.date,
     articleSection: post.category,
     keywords: post.category,
-    author: { '@type': 'Organization', name: 'Ride The Tide Research' },
+    author: { '@type': 'Organization', name: 'Peptide South Africa Research' },
     publisher: {
       '@type': 'Organization',
-      name: 'Ride The Tide',
-      logo: { '@type': 'ImageObject', url: 'https://ridethetide.info/logo-animated.png' },
+      name: 'Peptide South Africa',
+      logo: { '@type': 'ImageObject', url: 'https://peptide-south-africa.co.za/logo-animated.png' },
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://ridethetide.info/blog/${post.slug}`,
+      '@id': `https://peptide-south-africa.co.za/blog/${post.slug}`,
     },
   };
 }
@@ -55,7 +55,7 @@ export default function BlogPostPage() {
 
   if (!post) return <Navigate to="/blog" replace />;
 
-  const canonical = `https://ridethetide.info/blog/${post.slug}`;
+  const canonical = `https://peptide-south-africa.co.za/blog/${post.slug}`;
 
   const handleShare = async () => {
     try {
@@ -70,7 +70,7 @@ export default function BlogPostPage() {
   return (
     <>
       <SEOHead
-        title={`${post.title} | Ride The Tide`}
+        title={`${post.title} | Peptide South Africa`}
         description={post.excerpt}
         canonical={canonical}
         ogType="article"
@@ -79,8 +79,8 @@ export default function BlogPostPage() {
         jsonLd={[
           buildArticleSchema(post),
           buildBreadcrumbSchema([
-            { name: 'Home', url: 'https://ridethetide.info/' },
-            { name: 'Blog', url: 'https://ridethetide.info/blog' },
+            { name: 'Home', url: 'https://peptide-south-africa.co.za/' },
+            { name: 'Blog', url: 'https://peptide-south-africa.co.za/blog' },
             { name: post.title, url: canonical },
           ]),
         ]}

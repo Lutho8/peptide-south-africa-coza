@@ -45,7 +45,7 @@ export function getInstallCtaState(opts: {
   return { kind: 'manual', platform: opts.platform };
 }
 
-export function chromeIntentUrl(href: string = 'https://ridethetide.info'): string {
+export function chromeIntentUrl(href: string = 'https://peptide-south-africa.co.za'): string {
   const stripped = href.replace(/^https?:\/\//, '');
   return `intent://${stripped}#Intent;scheme=https;package=com.android.chrome;end`;
 }

@@ -1,6 +1,6 @@
 {
-  "name": "Ride The Tide - Peptide Protocol Tracker",
-  "short_name": "Ride The Tide",
+  "name": "Peptide South Africa - Peptide Protocol Tracker",
+  "short_name": "Peptide South Africa",
   "description": "Track peptide protocols, doses, and body composition for optimized health",
   "start_url": "/?utm_source=pwa",
   "display": "standalone",

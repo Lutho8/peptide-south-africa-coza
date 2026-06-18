@@ -6,8 +6,8 @@ const corsHeaders = {
 };
 
 const ALLOWED_HOSTS = new Set([
-  "ridethetide.info",
-  "www.ridethetide.info",
+  "peptide-south-africa.co.za",
+  "peptide-south-africa.co.za",
 ]);
 
 Deno.serve(async (req) => {
@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  let url = "https://ridethetide.info/";
+  let url = "https://peptide-south-africa.co.za/";
   try { const body = await req.json(); if (body?.url) url = String(body.url); } catch {}
   if (!/^https?:\/\//.test(url)) url = "https://" + url;
 

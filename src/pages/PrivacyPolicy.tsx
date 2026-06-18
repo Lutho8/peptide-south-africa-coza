@@ -7,9 +7,9 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Privacy Policy | Ride The Tide"
-        description="How Ride The Tide collects, stores, and protects your peptide tracking data. Row-level security, no data sales, in-app deletion."
-        canonical="https://ridethetide.info/privacy"
+        title="Privacy Policy | Peptide South Africa"
+        description="How Peptide South Africa collects, stores, and protects your peptide tracking data. Row-level security, no data sales, in-app deletion."
+        canonical="https://peptide-south-africa.co.za/privacy"
       />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Link to="/">
@@ -26,7 +26,7 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">1. Introduction</h2>
             <p className="text-muted-foreground">
-              Ride The Tide ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our peptide research and tracking application.
+              Peptide South Africa ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our peptide research and tracking application.
             </p>
           </section>
 

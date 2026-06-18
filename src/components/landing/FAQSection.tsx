@@ -37,11 +37,11 @@ export const faqCategories = [
     faqs: [
       {
         q: 'How do I know the right starting dose?',
-        a: 'Start at the lowest researched dose for the specific peptide and titrate up only if needed. Each peptide profile in Ride The Tide lists a conservative starting range based on published literature. Body weight, goals, and prior experience all matter — when in doubt, start lower than you think and consult a qualified healthcare professional.',
+        a: 'Start at the lowest researched dose for the specific peptide and titrate up only if needed. Each peptide profile in Peptide South Africa lists a conservative starting range based on published literature. Body weight, goals, and prior experience all matter — when in doubt, start lower than you think and consult a qualified healthcare professional.',
       },
       {
         q: 'mg, IU, and U-40 units — what is the difference?',
-        a: 'mg (milligrams) measures mass. IU (international units) is a standardized activity unit used for some peptides like HCG and HGH. U-40/U-100 refers to insulin syringe markings — U-100 means 100 units = 1 mL. The Reconstitution Calculator converts your vial size and bacteriostatic water volume into the exact insulin-syringe units to draw. Ride The Tide never uses mcg.',
+        a: 'mg (milligrams) measures mass. IU (international units) is a standardized activity unit used for some peptides like HCG and HGH. U-40/U-100 refers to insulin syringe markings — U-100 means 100 units = 1 mL. The Reconstitution Calculator converts your vial size and bacteriostatic water volume into the exact insulin-syringe units to draw. Peptide South Africa never uses mcg.',
       },
       {
         q: 'What if I miss a dose?',
@@ -53,11 +53,11 @@ export const faqCategories = [
       },
       {
         q: 'Can I stack peptides safely?',
-        a: 'Some peptides are synergistic (CJC-1295 + Ipamorelin), some are compatible (BPC-157 + TB-500), and some require caution or should be avoided together. Use the Stacking Matrix in Ride The Tide before combining compounds, and never introduce more than one new peptide at a time so you can attribute any effects.',
+        a: 'Some peptides are synergistic (CJC-1295 + Ipamorelin), some are compatible (BPC-157 + TB-500), and some require caution or should be avoided together. Use the Stacking Matrix in Peptide South Africa before combining compounds, and never introduce more than one new peptide at a time so you can attribute any effects.',
       },
       {
         q: 'When should I cycle off?',
-        a: 'Most growth-hormone secretagogues are cycled 8–12 weeks on, 4 weeks off, to preserve receptor sensitivity. Healing peptides like BPC-157 are typically used until the issue resolves. Cycle length depends on the compound, your goal, and bloodwork — Ride The Tide cycle templates default to research-backed durations and warn you when a cycle is overdue.',
+        a: 'Most growth-hormone secretagogues are cycled 8–12 weeks on, 4 weeks off, to preserve receptor sensitivity. Healing peptides like BPC-157 are typically used until the issue resolves. Cycle length depends on the compound, your goal, and bloodwork — Peptide South Africa cycle templates default to research-backed durations and warn you when a cycle is overdue.',
       },
     ],
   },
@@ -92,7 +92,7 @@ export const faqCategories = [
       },
       {
         q: 'What bloodwork should I run before and during a cycle?',
-        a: 'Baseline at minimum: full blood count, comprehensive metabolic panel, lipid panel, HbA1c, fasting glucose & insulin, IGF-1 (for GH peptides), TSH, free T3/T4, total & free testosterone, estradiol, and inflammatory markers (hs-CRP). Retest 8–12 weeks into a cycle and again 4 weeks after stopping. The Bloodwork tracker in Ride The Tide flags out-of-range markers automatically.',
+        a: 'Baseline at minimum: full blood count, comprehensive metabolic panel, lipid panel, HbA1c, fasting glucose & insulin, IGF-1 (for GH peptides), TSH, free T3/T4, total & free testosterone, estradiol, and inflammatory markers (hs-CRP). Retest 8–12 weeks into a cycle and again 4 weeks after stopping. The Bloodwork tracker in Peptide South Africa flags out-of-range markers automatically.',
       },
       {
         q: 'Red-flag symptoms — when do I stop immediately?',
@@ -148,8 +148,8 @@ export const faqCategories = [
     icon: HelpCircle,
     faqs: [
       {
-        q: 'What does it cost to use Ride The Tide?',
-        a: 'Nothing. Ride The Tide is 100% free for registered researchers. You get full access to the peptide database, dose and reconstitution calculators, blends and stacks tools, COA verification, protocol tracking, bloodwork integration, and the monthly group Q&A. No paywalls, no premium tier, no credit card required.',
+        q: 'What does it cost to use Peptide South Africa?',
+        a: 'Nothing. Peptide South Africa is 100% free for registered researchers. You get full access to the peptide database, dose and reconstitution calculators, blends and stacks tools, COA verification, protocol tracking, bloodwork integration, and the monthly group Q&A. No paywalls, no premium tier, no credit card required.',
       },
       {
         q: 'How do I join the monthly Live Q&A?',
@@ -180,26 +180,26 @@ export const faqCategories = [
       },
       {
         q: 'Is there a paid tier I am missing?',
-        a: 'No. We removed all paywalls. Every feature in the app is free for registered researchers. If you want to support the project, the best way is to shop research peptides at ridethetide.site — that is what funds the tracker.',
+        a: 'No. We removed all paywalls. Every feature in the app is free for registered researchers. If you want to support the project, the best way is to shop research peptides at peptide-south-africa.com — that is what funds the tracker.',
       },
       {
         q: 'Where do I buy research peptides?',
-        a: 'Our sister site Ride The Tide Research Peptides at ridethetide.site stocks COA-verified peptides and ships from South Africa. The tracker and the shop are separate properties but built by the same team.',
+        a: 'Our sister site Peptide South Africa Research Peptides at peptide-south-africa.com stocks COA-verified peptides and ships from South Africa. The tracker and the shop are separate properties but built by the same team.',
       },
       {
-        q: 'Is Ride The Tide South African?',
-        a: "Yes 🇿🇦 — Ride The Tide is built and operated from Cape Town, with local WhatsApp + email support. We serve a global research community but we're proudly local.",
+        q: 'Is Peptide South Africa South African?',
+        a: "Yes 🇿🇦 — Peptide South Africa is built and operated from Cape Town, with local WhatsApp + email support. We serve a global research community but we're proudly local.",
       },
     ],
   },
   {
     id: 'about',
-    title: 'About Ride The Tide',
+    title: 'About Peptide South Africa',
     icon: Info,
     faqs: [
       {
-        q: 'What is Ride The Tide?',
-        a: 'Ride The Tide is a comprehensive peptide research database featuring 98+ peptides with detailed profiles, mechanisms of action, clinical research citations, dosage calculators, and stacking tools. It serves as an educational resource for researchers and enthusiasts.',
+        q: 'What is Peptide South Africa?',
+        a: 'Peptide South Africa is a comprehensive peptide research database featuring 98+ peptides with detailed profiles, mechanisms of action, clinical research citations, dosage calculators, and stacking tools. It serves as an educational resource for researchers and enthusiasts.',
       },
       {
         q: 'How is the information sourced?',
@@ -210,8 +210,8 @@ export const faqCategories = [
         a: 'We regularly update our database as new research is published and clinical trials conclude. Peptide profiles, safety data, and research references are reviewed and updated on an ongoing basis to ensure accuracy.',
       },
       {
-        q: 'Is Ride The Tide medical advice?',
-        a: 'No. Ride The Tide is strictly an educational and research resource. The information provided is not intended to diagnose, treat, cure, or prevent any disease. Always consult a qualified healthcare professional before making any decisions related to peptide use.',
+        q: 'Is Peptide South Africa medical advice?',
+        a: 'No. Peptide South Africa is strictly an educational and research resource. The information provided is not intended to diagnose, treat, cure, or prevent any disease. Always consult a qualified healthcare professional before making any decisions related to peptide use.',
       },
     ],
   },
@@ -301,7 +301,7 @@ export function FAQSection() {
             </span>
           </h2>
           <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
-            Everything you need to know about peptides, safety, and Ride The Tide.
+            Everything you need to know about peptides, safety, and Peptide South Africa.
           </p>
         </motion.div>
 

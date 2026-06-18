@@ -1,144 +1,98 @@
 
-# Phase 1 — UX, Revenue Wiring & Clinical Feature Audit
+# Peptide South Africa — Unified Rebrand & Mobile-First Pass
 
-This phase ships fast, visible wins. Heavy clinical features land in Phase 2 once the audit confirms what's missing.
+Full rebrand of the tracker app from **Ride The Tide → Peptide South Africa**, repointing the canonical domain to **peptide-south-africa.co.za**, the shop CTA to **peptide-south-africa.com**, and fixing the mobile chrome (WhatsApp FAB blocking Results, safe-area, tap targets).
 
----
-
-## 1. Mobile-first UX polish
-
-**Sign-in button (Welcome / AuthModal)**
-- Center horizontally on mobile (`mx-auto`, full-width with `max-w-xs` cap), bump contrast (primary bg, primary-foreground text, shadow), ensure 48px touch target, safe-area aware.
-- Same fix applied to Google + Apple OAuth buttons so they line up vertically and are clearly tappable.
-
-**Onboarding tour (DashboardTour)**
-- Tooltip card centered on mobile (`inset-x-4` instead of fixed pixel offsets), with arrow hidden under `sm:` breakpoint.
-- "Next/Skip" buttons full-width stacked on mobile; auto-scrolls the target into view before showing.
-
-**App-wide mobile-app feel**
-- Global tweaks (no behavior change to business logic):
-  - Lock max content width to `max-w-lg` on phone screens, 16px gutters.
-  - Headers and section titles sized down a step on `sm:`.
-  - Bottom nav: ensure 56px height, larger icons, active-tab haptic tap (already partly there).
-  - Inputs: 16px font size (prevents iOS zoom), rounded-xl, 48px height.
-  - Cards: tighter padding on mobile, full-width.
-- Restrict scope to layout/typography classes — no logic refactor.
+This plan is Phase 1: identity + mobile chrome + SEO repoint. Backend tables, edge functions, and email-queue infra stay untouched (their *content* is rebranded; their *names* are not).
 
 ---
 
-## 2. In-dashboard "Buy your stack" (deep-link cart builder)
+## 1. Brand identity swap
 
-**Where it appears**
-- Home → keep `ReorderWidget` but rewrite copy to "Reorder your stack".
-- My Stack screen → new `BuyStackCard` placed directly under the Cycle Progress block.
-- Stack Cart bar reused on stack pages (already exists in `StackCartBar`).
+**Logos & icons**
+- Upload the two attached logos as Lovable Assets:
+  - `src/assets/peptide-sa-mark.png.asset.json` (circular icon, mobile)
+  - `src/assets/peptide-sa-lockup.png.asset.json` (horizontal lockup)
+- Replace `public/favicon.png`, `public/icon-192.png`, `public/icon-512.png` with the circular mark.
+- Update `src/components/ui/AnimatedLogo.tsx` to render the new mark + "PEPTIDE / SOUTH AFRICA" wordmark. Keep the 8s slow-spin / 0.5s click-spin behavior.
 
-**How it works**
-- Build URL via existing `buildStackLink(items, opts)` (already in `src/lib/bloodwork/stackLink.ts`) — extend or reuse to take items from `getActiveStack()` and map peptide IDs → store slugs via `entitySlugs.ts`.
-- URL pattern: `https://www.ridethetide.site/cart/add?items=slug1,slug2&utm_source=tracker&utm_medium=stack&utm_campaign=buy_stack`.
-- Open in new tab (`_blank, noopener`) — on Capacitor native, falls back to in-app browser via `@capacitor/browser` (already a dep).
-- CTA: "Buy this stack →" with item count + estimated savings line ("3 peptides · 1-tap reorder").
-- Tracks `bw_stack_built` + `bw_checkout_clicked` already wired in `trackBwEvent`.
+**Color tokens (`src/index.css`)**
+- Keep primary `#3B82F6` (matches blue stripe) as core brand blue.
+- Add semantic SA-flag accent tokens: `--sa-green #2E7D32`, `--sa-yellow #FBC02D`, `--sa-red #E53935`, `--sa-navy #0F1B3D` (typography). Wire into `tailwind.config.ts`.
+- Headings shift to deep navy (`--sa-navy`) for the "credible / data-rich" Cronometer-ish feel.
 
----
+**Copy / naming**
+- All user-visible "Ride The Tide" / "RTD" → "Peptide South Africa" / "PSA".
+- Tagline: "South Africa's free peptide protocol tracker."
+- Capacitor: `appId: za.co.peptidesa.app`, `appName: Peptide South Africa` (`capacitor.config.ts`, `android/app/src/main/res/values/strings.xml`, `MainActivity` package path note: leave Java package as-is to avoid Android rebuild churn; only the user-visible `appName` + `appId` strings change).
+- PWA `public/manifest.json`: name, short_name, description, theme_color stays `#3B82F6`.
+- `index.html`: `<title>`, meta description, OG tags, canonical → `https://peptide-south-africa.co.za`.
+- README, STORE_LISTING, RELEASE_GUIDE: rebrand text only (no behavior change).
 
-## 3. My Stack section — 3 CTAs only
-
-Remove from `MyStackScreen`:
-- "Quick optimizations" panel
-- Duplicate AI recommendation cards
-- Anything else not in the 3-CTA list
-
-Keep exactly three CTAs, in order:
-1. **View peptides to stack in your Cycle** — unified AI + matrix recommendations. Single button opens a sheet powered by one merged engine: combines `useSafety` synergy data + existing `stackingMatrix` + `usePeptideAI` suggestions into one ranked list ("Add Ipamorelin: synergy with CJC-1295, supported by your cycle goal").
-2. **Buy this stack** — deep-link cart (above).
-3. **Book a consultation** — opens `BookCallSection` modal (existing component, points to `webinars@fintiba.com`).
-
-All other recommendation widgets removed or merged into CTA #1.
+**Memory updates** (rules — applied to every future turn)
+- Rewrite `mem://index.md` Core block: brand = Peptide South Africa, canonical = `https://peptide-south-africa.co.za`, shop = `https://peptide-south-africa.com`, club = `https://capetownpeptideclub.co.za` (kept), WhatsApp `+491624747159` (kept).
+- Rewrite `mem://design/branding-ride-the-tide` → `mem://design/branding-peptide-south-africa`.
+- Update `mem://features/cross-property-network` with new domain triplet + UTM conventions (`utm_source=psa_app`).
 
 ---
 
-## 4. Transform → "Results" outcomes dashboard
+## 2. Domain & SEO repoint
 
-Rename `TransformationScreen` → `ResultsScreen`, update bottom-nav label/icon to "Results" (Trophy/Target icon).
-
-**New structure (top → bottom):**
-1. **Goal banner** — user's primary goal (from `goalMap`) + headline outcome metric (e.g. "−3.2 kg in 6 weeks").
-2. **Outcome cards (grid of 4)** — Body comp delta, Bloodwork trend (top improved marker), Adherence %, Energy/mood avg (from feedback).
-3. **Correlation strip** — sparkline overlay of doses vs primary biometric (reuses `CorrelationView`).
-4. **Existing tabs collapsed into 'Inputs' drawer** — Calendar, Measure, Water, Food, Photos still accessible but secondary.
-5. **Weekly summary card** — auto-generated narrative ("This week your IGF-1 trended up 12% while sleep improved by 0.8h"). Uses existing `WeeklySummary` component.
-
-No new tables; pulls from `measurements`, `lab_reports`, `protocol_adherence`, `feedback`, `body_composition`.
+- `index.html`: canonical, og:url, twitter:url → `https://peptide-south-africa.co.za`.
+- `scripts/generate-sitemap.ts`: `BASE_URL = "https://peptide-south-africa.co.za"`.
+- `public/robots.txt`: update `Sitemap:` directive.
+- `src/lib/shop/buildStackCartLink.ts` + `src/lib/bloodwork/stackLink.ts`: `STORE_BASE = "https://peptide-south-africa.com"`, UTM source `psa_app`.
+- Every hardcoded `ridethetide.info` / `ridethetide.site` string across `src/`, `public/llms.txt`, `public/sitemap.xml`, JSON-LD blocks → repointed.
+- Add a brief 301 note to README for the old `ridethetide.info` host (DNS-level redirect is outside the app; user handles at registrar).
+- After the rebrand lands, trigger an SEO rescan so Google Search Console gets a fresh signal on the new canonical (user clicks Rescan in the SEO tab).
 
 ---
 
-## 5. Q&A "Registration Confirmed" email
+## 3. Mobile-first chrome fixes
 
-- Setup steps (run in same turn):
-  1. Check email domain status → if missing, prompt setup dialog on `ridethetide.info` subdomain `notify.ridethetide.info`.
-  2. `setup_email_infra` if not present.
-  3. `scaffold_transactional_email` if not present.
-  4. New template `qna-registration-confirmation.tsx` in `_shared/transactional-email-templates/` — branded (Primary #3B82F6, Ride The Tide wordmark), shows event date (1st Saturday of next month), Zoom link placeholder, calendar `.ics` link, "Submit a question in advance" CTA.
-  5. Register in `registry.ts`.
-  6. Trigger: in the existing `qna_registrations` insert path (find the call site in `LiveQnA.tsx` or hook), invoke `send-transactional-email` with idempotency key `qna-confirm-<registration_id>`.
-  7. Deploy edge functions.
+**WhatsApp FAB → Support menu (Option B)**
+- Delete `src/components/global/WhatsAppFab.tsx` from the global render tree (remove from `App.tsx`).
+- Add a `Support` entry inside `SettingsScreen.tsx` and a compact "Help" icon button in `AppHeader.tsx` (top-right) that opens a `SupportSheet` with:
+  - WhatsApp chat → `wa.me/491624747159`
+  - Book consultation → existing booking flow
+  - Email support → `mailto:`
+- Result: bottom-right is fully clear, the Results tab is tappable.
 
----
+**Safe-area + viewport**
+- `BottomNav.tsx` already has `env(safe-area-inset-bottom)`; audit `Welcome.tsx` and modals to swap `h-screen` → `h-dvh` where a keyboard could open (bloodwork entry, dose log).
+- Confirm `<meta name="viewport" content="... viewport-fit=cover">` in `index.html`.
 
-## 6. Clinical feature audit (no code yet — informs Phase 2)
+**Tap targets**
+- Sweep `BottomNav`, `AppHeader`, icon-only Buttons (audit `size="icon"` variants) → enforce `min-h-11 min-w-11`. Add `aria-label` where missing.
 
-Quick map of the 17 requested vs what's already in the repo:
+**Touch feedback**
+- Global utility class `active:scale-[0.97] active:brightness-95 transition` applied to primary buttons/cards via shadcn Button variant tweak.
 
-| # | Requested | Status |
-|---|---|---|
-| 1 | Automated Safety Engine (interactions, contraindications, cancer/death triggers) | **Exists** — `useAISafetyCheck`, `safety-check` edge fn, `SafetyPanel`. Gap: explicit "death/oncology trigger" rules surfaced as red banner. |
-| 2 | 18-point anatomical site mapper, 6 zones, rotation | **Mostly exists** — `INJECTION_SITES` has 16 sites across 5 zones. Gap: add 2 sites (love-handle L/R), expose 6th zone, finalize `BodyMap` SVG. |
-| 3 | Visual dosing calculator (syringe, pen, refill pen) | **Partial** — `DosageScreen` + `InsulinNeedleGuide`. Gap: pen + refillable-pen modes with calibration. |
-| 4 | Predictive supply hub (vials, vendors, reorder alerts) | **Exists** — `inventory_items` + `ReorderAlert`. Gap: vendor ratings panel + predictive "runs out in X days" badge. |
-| 5 | Bio-feedback (mood/sleep/energy/sides/biomarkers) | **Exists** — `FeedbackLogger`. Gap: surface in Results dashboard. |
-| 6 | Stack sandbox drag-drop with real-time simulation | **Gap** — no drag-drop builder. New `StackSandbox` component needed. |
-| 7 | PK simulator (Bateman) | **Exists** — `PKSimulatorPage`, `PKCurve`, route-aware. ✅ |
-| 8 | Bloodwork tracking, ranges, trends | **Exists** — `BloodworkPage`. ✅ |
-| 9 | Command Center — correlation charts, evidence overlays | **Partial** — `CorrelationView` exists. Gap: unified "Command Center" page. |
-| 10 | Scientific sources portal (PubMed) | **Exists** — `researchReferences.ts`, `ResearchLibraryScreen`. ✅ |
-| 11 | Advanced scheduling (pulsing, 5-on/2-off) | **Exists** — cycle protocols + `frequencyParser`. ✅ |
-| 12 | Synergy detection & conflict scoring | **Exists** — `stackingMatrix` + `useSafety` synergy. Will be merged into the "View peptides to stack" CTA. |
-| 13 | Unlimited history (own your data) | **Exists** — Supabase persistent + export panel. ✅ |
-| 14 | Wearable ingestor (Oura/Whoop/Garmin CSV) | **Gap** — no CSV importer. New `WearableImporter` needed. |
-| 15 | Receptor sensitivity & washout | **Exists** — `washout.ts`. Gap: pathway-health visualization. |
-| 16 | Parallel correlation engine | **Exists** — `correlation.ts` + `CorrelationView`. Gap: multi-overlay UI. |
-| 17 | "Bloodwork tracking" (duplicate of #8) | ✅ |
+**Swipe gestures** (lightweight, no new deps)
+- `DailyLogScreen` and `TransformationScreen`: wire `onTouchStart/Move/End` to swipe-left/right between dates/tabs. ~30 LoC each, no library.
 
-**Phase 1 ships items 1, 2, 4 polish (badges, 6th zone, oncology banner) opportunistically. Items 3, 6, 9, 14, 15-vis are scoped for Phase 2.**
+**Offline-first** — already covered by the existing service worker + IndexedDB dose/bloodwork queue. Audit only; no rework.
+
+**Top-right "Shop" button**
+- Add a small `Shop` button in `AppHeader.tsx` next to the new Help button → opens `https://peptide-south-africa.com/?utm_source=psa_app&utm_medium=header&utm_campaign=shop_nav`.
 
 ---
 
-## Build order (Phase 1)
+## 4. Out of scope (call out, defer)
 
-1. Mobile UX polish (Welcome sign-in, AuthModal, DashboardTour, global mobile classes).
-2. Buy Stack deep-link card on My Stack + dashboard.
-3. My Stack 3-CTA cleanup + unified recommendation sheet.
-4. Transform → Results dashboard rebuild.
-5. Q&A confirmation email (infra check → scaffold → template → trigger → deploy).
-6. Quick clinical polish: oncology red banner in `SafetyPanel`, add 2 love-handle sites, "runs out in X days" badge in `VialCard`.
+- Renaming the Android Java package (`info.ridethetide.app` → `za.co.peptidesa.app`) requires a full native rebuild + Play Store re-publish. **Leave the Java package as-is**; only user-facing strings + Capacitor `appId` change. Document in `RELEASE_GUIDE.md`.
+- Email domain stays `notify.www.ridethetide.info` for this turn — switching it requires new DNS delegation on `peptide-south-africa.co.za` and 24–72h propagation. Will be a follow-up turn once DNS is ready.
+- Supabase project ref, table names, edge function slugs — unchanged.
+- "Critical Bug Fixes (P0)" section in your message was cut off — please paste the list and I'll fold it in as Phase 1.5.
 
 ---
-
-## Out of scope for Phase 1 (Phase 2 backlog)
-
-- Stack Sandbox drag-drop builder.
-- Wearable CSV importer (Oura/Whoop/Garmin).
-- Pen / refillable-pen calibration UI in dosing calculator.
-- Dedicated Command Center page.
-- Receptor-pathway visualization.
-- Vendor ratings dataset & panel.
-- Native push for Q&A reminder.
 
 ## Technical notes
 
-- No new tables this phase; one new edge-function template only.
-- New dep: none (Capacitor Browser, html-to-image, framer-motion already present).
-- Memory updates: add `mem://features/buy-stack-deeplink`, `mem://features/results-dashboard`, rename Transform refs.
-- All changes respect existing access model (no paywalls), mg/IU/U-40 dosing, English-only.
+- **Files created**: `src/components/support/SupportSheet.tsx`, two `.asset.json` pointers.
+- **Files deleted from render**: `WhatsAppFab` import removed from `App.tsx` (file itself can stay for reference, or be deleted).
+- **Files edited** (high-level): `index.html`, `public/manifest.json`, `public/robots.txt`, `public/llms.txt`, `public/sitemap.xml`, `scripts/generate-sitemap.ts`, `capacitor.config.ts`, `android/.../strings.xml`, `src/index.css`, `tailwind.config.ts`, `src/components/ui/AnimatedLogo.tsx`, `src/components/layout/AppHeader.tsx`, `src/components/layout/BottomNav.tsx`, `src/App.tsx`, `src/pages/Welcome.tsx`, `src/screens/SettingsScreen.tsx`, `src/screens/DailyLogScreen.tsx`, `src/screens/TransformationScreen.tsx`, `src/lib/shop/buildStackCartLink.ts`, `src/lib/bloodwork/stackLink.ts`, plus a sweep of remaining `ridethetide.info|site` string references.
+- **Memory**: rewrites to `mem://index.md`, `mem://design/branding-*`, `mem://features/cross-property-network`.
+- **No DB migrations** in this phase.
 
+Approve to ship Phase 1, and please paste the truncated **P0 bug list** so I can sequence it next.
