@@ -1,6 +1,6 @@
 import HeroSection from "../components/home/HeroSection";
 import TrustedMarquee from "../components/home/TrustedMarquee";
-import ProductsSection from "../components/home/ProductsSection";
+import DesignedForYouSection from "../components/home/DesignedForYouSection";
 import LegitimateSection from "../components/home/LegitimateSection";
 import CTABanner from "../components/home/CTABanner";
 import HowItWorksSection from "../components/home/HowItWorksSection";
@@ -16,7 +16,7 @@ export default function Home() {
     <div className="pt-0">
       <HeroSection />
       <TrustedMarquee />
-      <ProductsSection />
+      <DesignedForYouSection />
       <LegitimateSection />
       <CTABanner />
       <HowItWorksSection />

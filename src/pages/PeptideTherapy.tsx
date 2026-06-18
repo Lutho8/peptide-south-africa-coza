@@ -8,24 +8,23 @@ import {
   Brain,
   Shield,
   Sun,
-  PackageOpen,
   FlaskConical,
   ChevronRight,
   Phone,
   Zap,
   Atom,
-  Microscope,
   CheckCircle2,
 } from 'lucide-react'
 import { AnimatedSection, StaggerContainer, StaggerItem } from '../components/pages/AnimatedSection'
+import { productImages, videoUrls } from '../lib/assets'
 
 const conditions = [
-  { icon: Scale, title: 'Weight Loss', description: 'GLP-1 agonists that suppress appetite and accelerate fat loss.', color: 'from-purple-100 to-violet-100', iconColor: 'text-purple-600', link: '/weight-loss' },
-  { icon: Infinity, title: 'Longevity', description: 'NAD+, Sermorelin, and glutathione for cellular optimization.', color: 'from-emerald-100 to-green-100', iconColor: 'text-emerald-600', link: '/longevity' },
-  { icon: HeartPulse, title: 'Recovery', description: 'Peptides that accelerate healing, reduce inflammation, and restore energy.', color: 'from-red-100 to-orange-100', iconColor: 'text-red-600', link: '/recovery' },
-  { icon: Brain, title: 'Cognitive Enhancement', description: 'Neuroprotective peptides that support memory, focus, and clarity.', color: 'from-blue-100 to-indigo-100', iconColor: 'text-blue-600', link: '/products/nad' },
-  { icon: Shield, title: 'Immune Support', description: 'Strengthen your body\'s natural defenses at the cellular level.', color: 'from-amber-100 to-yellow-100', iconColor: 'text-amber-600', link: '/products/glutathione' },
-  { icon: Sun, title: 'Skin Health', description: 'Boost collagen, improve elasticity, and brighten complexion from within.', color: 'from-rose-100 to-pink-100', iconColor: 'text-rose-600', link: '/products/glutathione' },
+  { icon: Scale, title: 'Weight Loss', description: 'GLP-1 agonists that suppress appetite and accelerate fat loss.', color: 'from-purple-100 to-violet-100', iconColor: 'text-purple-600', link: '/weight-loss', image: productImages.tirzepatideBottle },
+  { icon: Infinity, title: 'Longevity', description: 'NAD+, Sermorelin, and glutathione for cellular optimization.', color: 'from-emerald-100 to-green-100', iconColor: 'text-emerald-600', link: '/longevity', image: productImages.nadSpray },
+  { icon: HeartPulse, title: 'Recovery', description: 'Peptides that accelerate healing, reduce inflammation, and restore energy.', color: 'from-red-100 to-orange-100', iconColor: 'text-red-600', link: '/recovery', image: productImages.sermorelinVial },
+  { icon: Brain, title: 'Cognitive Enhancement', description: 'Neuroprotective peptides that support memory, focus, and clarity.', color: 'from-blue-100 to-indigo-100', iconColor: 'text-blue-600', link: '/products/nad', image: productImages.glutathioneVial },
+  { icon: Shield, title: 'Immune Support', description: 'Strengthen your body\'s natural defenses at the cellular level.', color: 'from-amber-100 to-yellow-100', iconColor: 'text-amber-600', link: '/products/glutathione', image: productImages.semaglutideBottle },
+  { icon: Sun, title: 'Skin Health', description: 'Boost collagen, improve elasticity, and brighten complexion from within.', color: 'from-rose-100 to-pink-100', iconColor: 'text-rose-600', link: '/products/glutathione', image: productImages.tirzepatideBottle },
 ]
 
 const peptides = [
@@ -33,7 +32,7 @@ const peptides = [
     name: 'Tirzepatide',
     tagline: 'Dual GLP-1/GIP Agonist',
     description: 'The most advanced weight-loss peptide. Targets two hunger-regulating pathways for superior results.',
-    image: 'from-purple-100 to-violet-100',
+    image: productImages.tirzepatideBottle,
     link: '/products/compounded-tirzepatide',
     badge: 'Weight Loss',
     badgeColor: 'bg-purple-100 text-purple-700',
@@ -42,7 +41,7 @@ const peptides = [
     name: 'Semaglutide',
     tagline: 'GLP-1 Receptor Agonist',
     description: 'Clinically proven to reduce appetite and promote sustained weight loss with extensive safety data.',
-    image: 'from-blue-100 to-indigo-100',
+    image: productImages.semaglutideBottle,
     link: '/products/compounded-semaglutide',
     badge: 'Weight Loss',
     badgeColor: 'bg-blue-100 text-blue-700',
@@ -51,7 +50,7 @@ const peptides = [
     name: 'NAD+',
     tagline: 'Cellular Energy & Repair',
     description: 'The coenzyme that powers mitochondria, repairs DNA, and activates longevity genes.',
-    image: 'from-emerald-100 to-green-100',
+    image: productImages.nadSpray,
     link: '/products/nad',
     badge: 'Longevity',
     badgeColor: 'bg-emerald-100 text-emerald-700',
@@ -60,7 +59,7 @@ const peptides = [
     name: 'Sermorelin',
     tagline: 'Growth Hormone Secretagogue',
     description: 'Stimulates natural growth hormone release for muscle preservation, fat metabolism, and sleep quality.',
-    image: 'from-amber-100 to-yellow-100',
+    image: productImages.sermorelinVial,
     link: '/products/sermorelin',
     badge: 'Longevity',
     badgeColor: 'bg-amber-100 text-amber-700',
@@ -69,7 +68,7 @@ const peptides = [
     name: 'Glutathione',
     tagline: 'Master Antioxidant',
     description: 'Neutralizes free radicals, supports detoxification, and promotes brighter, healthier skin.',
-    image: 'from-rose-100 to-pink-100',
+    image: productImages.glutathioneVial,
     link: '/products/glutathione',
     badge: 'Recovery',
     badgeColor: 'bg-rose-100 text-rose-700',
@@ -81,6 +80,11 @@ export default function PeptideTherapy() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden bg-dark-900">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+          <source src={videoUrls.base.mp4} type="video/mp4" />
+          <source src={videoUrls.base.webm} type="video/webm" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-br from-dark-900/90 via-dark-900/80 to-dark-900/70" />
         <div className="absolute inset-0 bg-gradient-to-br from-dark-900 via-primary-950/30 to-dark-900" />
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary-500/10 to-transparent" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
@@ -117,10 +121,13 @@ export default function PeptideTherapy() {
         <div className="container-main">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <AnimatedSection direction="left">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-primary-100 via-accent-100 to-primary-100 flex items-center justify-center">
-                <div className="w-32 h-32 bg-white/60 rounded-2xl shadow-sm flex items-center justify-center">
-                  <Dna className="w-14 h-14 text-primary-500" />
-                </div>
+              <div className="h-80 lg:h-96 rounded-2xl overflow-hidden">
+                <img
+                  src={productImages.tirzepatideBottle}
+                  alt="Peptide therapy"
+                  className="w-full h-full object-contain rounded-2xl"
+                  loading="lazy"
+                />
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right">
@@ -159,8 +166,8 @@ export default function PeptideTherapy() {
             {conditions.map((c) => (
               <StaggerItem key={c.title}>
                 <Link to={c.link} className="block card-hover p-6 h-full hover:no-underline">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${c.color} flex items-center justify-center mb-4`}>
-                    <c.icon className={`w-6 h-6 ${c.iconColor}`} />
+                  <div className="h-24 rounded-xl bg-white border border-dark-100 overflow-hidden mb-4">
+                    <img src={c.image} alt={c.title} className="w-full h-full object-contain" loading="lazy" />
                   </div>
                   <h3 className="text-lg font-bold text-dark-900 mb-2">{c.title}</h3>
                   <p className="text-dark-500 text-sm leading-relaxed">{c.description}</p>
@@ -187,10 +194,13 @@ export default function PeptideTherapy() {
             {peptides.map((p) => (
               <StaggerItem key={p.name}>
                 <div className="card-hover overflow-hidden h-full flex flex-col">
-                  <div className={`h-48 bg-gradient-to-br ${p.image} flex items-center justify-center relative`}>
-                    <div className="w-20 h-28 bg-white/60 rounded-lg shadow-sm flex items-center justify-center">
-                      <PackageOpen className="w-8 h-8 text-dark-400" />
-                    </div>
+                  <div className="h-48 relative overflow-hidden">
+                    <img 
+                      src={p.image} 
+                      alt={p.name} 
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
                     <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold ${p.badgeColor}`}>
                       {p.badge}
                     </span>
@@ -254,10 +264,13 @@ export default function PeptideTherapy() {
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-dark-800 via-primary-900/20 to-dark-800 border border-dark-700 flex items-center justify-center">
-                <div className="w-40 h-40 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-full flex items-center justify-center">
-                  <Microscope className="w-16 h-16 text-primary-400" />
-                </div>
+              <div className="h-80 lg:h-96 rounded-2xl overflow-hidden">
+                <img
+                  src={productImages.nadPills}
+                  alt="NAD+ science"
+                  className="w-full h-full object-contain rounded-2xl border border-dark-700"
+                  loading="lazy"
+                />
               </div>
             </AnimatedSection>
           </div>
@@ -269,10 +282,13 @@ export default function PeptideTherapy() {
         <div className="container-main">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <AnimatedSection direction="left">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-                <div className="w-32 h-32 bg-white/60 rounded-2xl shadow-sm flex items-center justify-center">
-                  <Shield className="w-14 h-14 text-emerald-500" />
-                </div>
+              <div className="h-80 lg:h-96 rounded-2xl overflow-hidden">
+                <img
+                  src={productImages.glutathioneVial}
+                  alt="Glutathione vial"
+                  className="w-full h-full object-contain rounded-2xl"
+                  loading="lazy"
+                />
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right">
@@ -282,7 +298,7 @@ export default function PeptideTherapy() {
                 Yes — when prescribed and monitored by a licensed physician. Peptide therapy has an excellent safety profile because peptides are naturally occurring compounds that your body already produces and recognizes.
               </p>
               <p className="text-dark-500 leading-relaxed mb-6">
-                At Ride The Tide, safety is our highest priority. Every patient undergoes a thorough medical review. Every protocol is individualized. Every medication is compounded by a SAHPRA-compliant pharmacy. And every patient has ongoing access to their physician.
+                At Peptide South Africa, safety is our highest priority. Every patient undergoes a thorough medical review. Every protocol is individualized. Every medication is compounded by a SAHPRA-compliant pharmacy. And every patient has ongoing access to their physician.
               </p>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">

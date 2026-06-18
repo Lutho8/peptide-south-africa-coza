@@ -1,4 +1,5 @@
 import ProductPageTemplate from '../components/products/ProductPageTemplate'
+import { productImages } from '../lib/assets'
 import {
   Shield,
   FlaskConical,
@@ -16,6 +17,8 @@ export default function ProductGlutathione() {
       description="The body's master antioxidant. Supports detoxification, immune function, skin health, and recovery."
       price="From R1,450/month"
       priceSubtext="or R145 per dose"
+      heroImage={productImages.glutathioneVial}
+      scienceImage={productImages.glutathioneVial}
       benefits={[
         {
           icon: Shield,

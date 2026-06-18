@@ -1,4 +1,5 @@
 import ProductPageTemplate from '../components/products/ProductPageTemplate'
+import { productImages } from '../lib/assets'
 import {
   Zap,
   Dumbbell,
@@ -16,6 +17,8 @@ export default function ProductSermorelin() {
       description="A growth hormone-releasing peptide that stimulates natural HGH production for muscle growth, fat loss, and recovery."
       price="From R1,750/month"
       priceSubtext="or R175 per dose"
+      heroImage={productImages.sermorelinVial}
+      scienceImage={productImages.sermorelinVial}
       benefits={[
         {
           icon: Zap,

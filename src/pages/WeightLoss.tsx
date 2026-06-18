@@ -11,12 +11,12 @@ import {
   HeartPulse,
   Star,
   Quote,
-  PackageOpen,
   Phone,
   Sparkles,
   FlaskConical,
 } from 'lucide-react'
 import { AnimatedSection, StaggerContainer, StaggerItem } from '../components/pages/AnimatedSection'
+import { productImages, videoUrls } from '../lib/assets'
 
 const stats = [
   { value: '15-22%', label: 'Average Weight Loss', icon: TrendingDown },
@@ -29,7 +29,7 @@ const products = [
     name: 'Compounded Tirzepatide',
     tagline: 'Dual-Action GLP-1/GIP Agonist',
     description: 'The most advanced weight-loss peptide available. Tirzepatide works on two hunger-regulating pathways to deliver superior results for patients struggling with obesity and metabolic syndrome.',
-    image: 'from-purple-100 to-violet-100',
+    image: productImages.tirzepatideBottle,
     link: '/products/compounded-tirzepatide',
     badge: 'Most Popular',
     badgeColor: 'bg-purple-100 text-purple-700',
@@ -38,7 +38,7 @@ const products = [
     name: 'Compounded Semaglutide',
     tagline: 'GLP-1 Receptor Agonist',
     description: 'A proven, clinically validated GLP-1 agonist that reduces appetite, slows gastric emptying, and helps you achieve sustainable weight loss under physician supervision.',
-    image: 'from-blue-100 to-indigo-100',
+    image: productImages.semaglutideBottle,
     link: '/products/compounded-semaglutide',
     badge: 'Clinically Proven',
     badgeColor: 'bg-blue-100 text-blue-700',
@@ -76,7 +76,7 @@ const testimonials = [
   {
     name: 'Mark D.',
     location: 'Cape Town',
-    quote: 'After years of yo-yo dieting, Semaglutide finally gave me the control I needed. The team at Ride The Tide is incredibly knowledgeable and responsive.',
+    quote: 'After years of yo-yo dieting, Semaglutide finally gave me the control I needed. The team at Peptide South Africa is incredibly knowledgeable and responsive.',
     result: '-12kg in 3 months',
   },
   {
@@ -141,35 +141,50 @@ export default function WeightLoss() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden bg-dark-900">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+          <source src={videoUrls.weightLoss.mp4} type="video/mp4" />
+          <source src={videoUrls.weightLoss.webm} type="video/webm" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-br from-dark-900/90 via-dark-900/80 to-dark-900/70" />
         <div className="absolute inset-0 bg-gradient-to-br from-dark-900 via-dark-800 to-primary-950 opacity-90" />
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary-500/10 to-transparent" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
         <div className="container-main relative z-10">
-          <AnimatedSection className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-500/15 border border-primary-500/20 text-primary-300 text-sm font-medium mb-6">
-              <Sparkles className="w-4 h-4" />
-              Physician-Supervised Protocols
-            </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Science-Backed<br />
-              <span className="bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">
-                Weight Loss Protocols
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-dark-300 leading-relaxed mb-8 max-w-2xl">
-              Physician-supervised GLP-1 peptide therapy designed for the South African body. 
-              Personalized, safe, and proven to deliver 15-22% average weight loss.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/how-it-works" className="btn-primary">
-                Start Your Journey
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link to="/pricing" className="btn-ghost">
-                View Pricing
-              </Link>
-            </div>
-          </AnimatedSection>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <AnimatedSection className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-500/15 border border-primary-500/20 text-primary-300 text-sm font-medium mb-6">
+                <Sparkles className="w-4 h-4" />
+                Physician-Supervised Protocols
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+                Science-Backed<br />
+                <span className="bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">
+                  Weight Loss Protocols
+                </span>
+              </h1>
+              <p className="text-lg md:text-xl text-dark-300 leading-relaxed mb-8 max-w-2xl">
+                Physician-supervised GLP-1 peptide therapy designed for the South African body. 
+                Personalized, safe, and proven to deliver 15-22% average weight loss.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/how-it-works" className="btn-primary">
+                  Start Your Journey
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link to="/pricing" className="btn-ghost">
+                  View Pricing
+                </Link>
+              </div>
+            </AnimatedSection>
+            <AnimatedSection className="hidden lg:block">
+              <img 
+                src={productImages.tirzepatideBottle} 
+                alt="Compounded Tirzepatide" 
+                className="w-full max-w-sm mx-auto object-contain rounded-2xl"
+                loading="lazy"
+              />
+            </AnimatedSection>
+          </div>
         </div>
       </section>
 
@@ -211,10 +226,13 @@ export default function WeightLoss() {
             {products.map((product) => (
               <StaggerItem key={product.name}>
                 <div className="card-hover overflow-hidden h-full flex flex-col">
-                  <div className={`h-56 bg-gradient-to-br ${product.image} flex items-center justify-center relative`}>
-                    <div className="w-24 h-32 bg-white/60 rounded-lg shadow-sm flex items-center justify-center">
-                      <PackageOpen className="w-10 h-10 text-dark-400" />
-                    </div>
+                  <div className="h-56 relative overflow-hidden">
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
                     <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold ${product.badgeColor}`}>
                       {product.badge}
                     </span>
@@ -272,7 +290,7 @@ export default function WeightLoss() {
           <AnimatedSection className="text-center mb-12">
             <span className="text-sm font-semibold text-primary-400 uppercase tracking-wider">Success Stories</span>
             <h2 className="text-3xl md:text-4xl font-bold text-white mt-2 mb-4">Real Results, Real People</h2>
-            <p className="text-dark-400 max-w-2xl mx-auto">South Africans who transformed their health with Ride The Tide.</p>
+            <p className="text-dark-400 max-w-2xl mx-auto">South Africans who transformed their health with Peptide South Africa.</p>
           </AnimatedSection>
 
           <StaggerContainer className="grid md:grid-cols-3 gap-6" staggerDelay={0.15}>

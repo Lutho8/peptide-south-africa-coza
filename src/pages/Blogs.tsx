@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, ChevronDown } from 'lucide-react';
+import { blogImages } from '../lib/assets';
 
 const categories = ['All', 'Weight Loss', 'Longevity', 'Recovery', 'Science'];
 
@@ -13,6 +14,7 @@ const blogPosts = [
     category: 'Weight Loss',
     date: 'Mar 15, 2024',
     readTime: '6 min read',
+    image: blogImages.peptidesWeightLossWomen,
   },
   {
     slug: 'microdosing-semaglutide-smarter-approach',
@@ -21,6 +23,7 @@ const blogPosts = [
     category: 'Weight Loss',
     date: 'Mar 10, 2024',
     readTime: '5 min read',
+    image: blogImages.microdosingSemaglutide,
   },
   {
     slug: 'sermorelin-dosage-for-muscle-growth',
@@ -29,6 +32,7 @@ const blogPosts = [
     category: 'Longevity',
     date: 'Feb 28, 2024',
     readTime: '7 min read',
+    image: blogImages.sermorelinDosage,
   },
   {
     slug: 'nad-injections-vs-oral-pills',
@@ -37,6 +41,7 @@ const blogPosts = [
     category: 'Science',
     date: 'Feb 20, 2024',
     readTime: '8 min read',
+    image: blogImages.nadInjectionsVsPills,
   },
   {
     slug: 'what-are-glutathione-injections',
@@ -45,6 +50,7 @@ const blogPosts = [
     category: 'Recovery',
     date: 'Feb 14, 2024',
     readTime: '5 min read',
+    image: blogImages.glutathioneInjections,
   },
   {
     slug: 'compounded-tirzepatide-explained',
@@ -53,6 +59,7 @@ const blogPosts = [
     category: 'Weight Loss',
     date: 'Feb 8, 2024',
     readTime: '6 min read',
+    image: blogImages.compoundedTirzepatide,
   },
   {
     slug: 'compounded-semaglutide-guide',
@@ -61,6 +68,7 @@ const blogPosts = [
     category: 'Weight Loss',
     date: 'Jan 30, 2024',
     readTime: '7 min read',
+    image: blogImages.compoundedSemaglutide,
   },
   {
     slug: 'sermorelin-prescription-what-to-know',
@@ -69,6 +77,7 @@ const blogPosts = [
     category: 'Longevity',
     date: 'Jan 22, 2024',
     readTime: '5 min read',
+    image: blogImages.sermorelinPrescription,
   },
   {
     slug: 'nad-injection-benefits',
@@ -77,6 +86,7 @@ const blogPosts = [
     category: 'Longevity',
     date: 'Jan 15, 2024',
     readTime: '6 min read',
+    image: blogImages.nadInjectionBenefits,
   },
   {
     slug: 'best-time-to-take-glutathione',
@@ -85,6 +95,7 @@ const blogPosts = [
     category: 'Recovery',
     date: 'Jan 8, 2024',
     readTime: '4 min read',
+    image: blogImages.glutathioneTiming,
   },
   {
     slug: 'microdosing-tirzepatide',
@@ -93,6 +104,7 @@ const blogPosts = [
     category: 'Weight Loss',
     date: 'Dec 28, 2023',
     readTime: '5 min read',
+    image: blogImages.microdosingTirzepatide,
   },
 ];
 
@@ -167,8 +179,14 @@ export default function Blogs() {
                 transition={{ duration: 0.4, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
               >
                 <Link to={`/blogs/${post.slug}`} className="group block bg-white rounded-2xl border border-dark-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                  {/* Image placeholder */}
-                  <div className="aspect-video w-full bg-gradient-to-br from-primary-100 to-accent-100 relative overflow-hidden">
+                  {/* Image */}
+                  <div className="aspect-video w-full relative overflow-hidden">
+                    <img 
+                      src={post.image} 
+                      alt={post.title} 
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary-500/10 to-transparent" />
                     <div className="absolute bottom-4 left-4">
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${categoryColors[post.category] || 'bg-dark-100 text-dark-700'}`}>

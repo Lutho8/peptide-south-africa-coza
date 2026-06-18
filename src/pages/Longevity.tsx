@@ -8,8 +8,6 @@ import {
   Shield,
   Clock,
   Dna,
-  FlaskConical,
-  PackageOpen,
   Phone,
   Microscope,
   Infinity,
@@ -17,13 +15,14 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { AnimatedSection, StaggerContainer, StaggerItem } from '../components/pages/AnimatedSection'
+import { productImages, videoUrls } from '../lib/assets'
 
 const products = [
   {
     name: 'NAD+',
     tagline: 'Cellular Energy & DNA Repair',
     description: 'NAD+ (Nicotinamide Adenine Dinucleotide) is the coenzyme that fuels cellular metabolism, repairs DNA, and activates sirtuins — the proteins that regulate aging.',
-    image: 'from-emerald-100 to-green-100',
+    image: productImages.nadSpray,
     link: '/products/nad',
     badge: 'Anti-Aging',
     badgeColor: 'bg-emerald-100 text-emerald-700',
@@ -32,7 +31,7 @@ const products = [
     name: 'Sermorelin',
     tagline: 'Growth Hormone Secretagogue',
     description: 'Sermorelin stimulates your pituitary gland to naturally produce growth hormone, supporting muscle preservation, fat metabolism, and deep sleep quality.',
-    image: 'from-amber-100 to-yellow-100',
+    image: productImages.sermorelinVial,
     link: '/products/sermorelin',
     badge: 'Vitality',
     badgeColor: 'bg-amber-100 text-amber-700',
@@ -41,7 +40,7 @@ const products = [
     name: 'Glutathione',
     tagline: 'Master Antioxidant',
     description: 'The body\'s most powerful antioxidant, glutathione neutralizes free radicals, supports detoxification, and brightens skin from the inside out.',
-    image: 'from-rose-100 to-pink-100',
+    image: productImages.glutathioneVial,
     link: '/products/glutathione',
     badge: 'Recovery',
     badgeColor: 'bg-rose-100 text-rose-700',
@@ -62,6 +61,11 @@ export default function Longevity() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden bg-dark-900">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+          <source src={videoUrls.stocksy.mp4} type="video/mp4" />
+          <source src={videoUrls.stocksy.webm} type="video/webm" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-br from-dark-900/90 via-dark-900/80 to-dark-900/70" />
         <div className="absolute inset-0 bg-gradient-to-br from-dark-900 via-emerald-950/30 to-dark-900" />
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-500/10 to-transparent" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
@@ -98,10 +102,13 @@ export default function Longevity() {
         <div className="container-main">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <AnimatedSection direction="left">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-emerald-100 via-teal-100 to-green-100 flex items-center justify-center">
-                <div className="w-32 h-32 bg-white/60 rounded-2xl shadow-sm flex items-center justify-center">
-                  <Dna className="w-14 h-14 text-emerald-500" />
-                </div>
+              <div className="h-80 lg:h-96 rounded-2xl overflow-hidden">
+                <img
+                  src={productImages.nadPills}
+                  alt="NAD+ Pills"
+                  className="w-full h-full object-contain rounded-2xl"
+                  loading="lazy"
+                />
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right">
@@ -111,7 +118,7 @@ export default function Longevity() {
                 Modern science has revealed that aging is not simply a matter of time — it is a biological process driven by cellular decline, DNA damage, and metabolic dysfunction. Peptide therapy addresses these root causes directly.
               </p>
               <p className="text-dark-500 leading-relaxed mb-6">
-                At Ride The Tide, we combine cutting-edge longevity research with personalized physician oversight to help you optimize your healthspan, not just your lifespan. Our protocols are tailored to your biomarkers, goals, and lifestyle.
+                At Peptide South Africa, we combine cutting-edge longevity research with personalized physician oversight to help you optimize your healthspan, not just your lifespan. Our protocols are tailored to your biomarkers, goals, and lifestyle.
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
@@ -137,10 +144,13 @@ export default function Longevity() {
             {products.map((product) => (
               <StaggerItem key={product.name}>
                 <div className="card-hover overflow-hidden h-full flex flex-col">
-                  <div className={`h-48 bg-gradient-to-br ${product.image} flex items-center justify-center relative`}>
-                    <div className="w-20 h-28 bg-white/60 rounded-lg shadow-sm flex items-center justify-center">
-                      <PackageOpen className="w-8 h-8 text-dark-400" />
-                    </div>
+                  <div className="h-48 relative overflow-hidden">
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
                     <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold ${product.badgeColor}`}>
                       {product.badge}
                     </span>
@@ -235,11 +245,12 @@ export default function Longevity() {
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-dark-800 via-emerald-900/20 to-dark-800 border border-dark-700 flex items-center justify-center">
-                <div className="w-40 h-40 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center">
-                  <FlaskConical className="w-16 h-16 text-emerald-400" />
-                </div>
-              </div>
+              <img 
+                src={productImages.nadPills} 
+                alt="NAD+ Pills" 
+                className="w-full h-80 lg:h-96 object-contain rounded-2xl border border-dark-700"
+                loading="lazy"
+              />
             </AnimatedSection>
           </div>
         </div>

@@ -5,6 +5,7 @@ import {
   Mail, Phone, MapPin, Clock, Send, Facebook, Instagram, Twitter, Linkedin,
   ChevronRight, Handshake, Users
 } from 'lucide-react';
+import { backgroundImages, partnerImages } from '../lib/assets';
 
 export default function Contact() {
   const [formState, setFormState] = useState({
@@ -31,8 +32,12 @@ export default function Contact() {
   return (
     <div className="pt-16">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white">
-        <div className="container-main py-16 md:py-20 lg:py-24">
+      <section className="relative text-white overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={backgroundImages.newsletterBg} alt="Contact background" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-600/90 to-primary-800/90" />
+        </div>
+        <div className="relative z-10 container-main py-16 md:py-20 lg:py-24">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -169,7 +174,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-dark-700">Email</p>
-                      <a href="mailto:hello@ridethetide.info" className="text-sm text-dark-500 hover:text-primary-600 transition-colors">hello@ridethetide.info</a>
+                      <a href="mailto:hello@app.peptide-south-africa.com" className="text-sm text-dark-500 hover:text-primary-600 transition-colors">hello@app.peptide-south-africa.com</a>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -222,12 +227,13 @@ export default function Contact() {
 
               {/* Map Placeholder */}
               <div className="bg-white rounded-2xl border border-dark-100 shadow-sm overflow-hidden">
-                <div className="h-56 w-full bg-gradient-to-br from-primary-100 via-accent-100 to-primary-200 flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="w-8 h-8 text-primary-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-primary-800">Map</p>
-                    <p className="text-xs text-primary-600">Cape Town, South Africa</p>
-                  </div>
+                <div className="h-56 w-full rounded-2xl overflow-hidden">
+                  <img
+                    src={partnerImages.hillsideMorning}
+                    alt="Cape Town, South Africa"
+                    className="w-full h-full object-cover rounded-2xl"
+                    loading="lazy"
+                  />
                 </div>
               </div>
             </motion.div>
@@ -251,9 +257,9 @@ export default function Contact() {
               </div>
               <h3 className="text-xl font-bold text-dark-900 mb-2">Become a Partner</h3>
               <p className="text-dark-500 text-sm leading-relaxed mb-4">
-                Are you a healthcare professional, wellness clinic, or fitness center? Partner with Ride The Tide to offer physician-guided peptide therapy to your clients. We provide training, marketing support, and competitive commissions.
+                Are you a healthcare professional, wellness clinic, or fitness center? Partner with Peptide South Africa to offer physician-guided peptide therapy to your clients. We provide training, marketing support, and competitive commissions.
               </p>
-              <a href="mailto:partners@ridethetide.info" className="btn-secondary inline-flex items-center gap-2">
+              <a href="mailto:partners@app.peptide-south-africa.com" className="btn-secondary inline-flex items-center gap-2">
                 <Mail className="w-4 h-4" />
                 Contact Partnerships
               </a>
@@ -271,9 +277,9 @@ export default function Contact() {
               </div>
               <h3 className="text-xl font-bold text-dark-900 mb-2">Affiliate Program</h3>
               <p className="text-dark-500 text-sm leading-relaxed mb-4">
-                Join our affiliate program and earn commissions by sharing Ride The Tide with your audience. Whether you are a content creator, influencer, or health coach, we offer generous payouts and dedicated support.
+                Join our affiliate program and earn commissions by sharing Peptide South Africa with your audience. Whether you are a content creator, influencer, or health coach, we offer generous payouts and dedicated support.
               </p>
-              <a href="mailto:affiliates@ridethetide.info" className="btn-secondary inline-flex items-center gap-2">
+              <a href="mailto:affiliates@app.peptide-south-africa.com" className="btn-secondary inline-flex items-center gap-2">
                 <Mail className="w-4 h-4" />
                 Apply as Affiliate
               </a>

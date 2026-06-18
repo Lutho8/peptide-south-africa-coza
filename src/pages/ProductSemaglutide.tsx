@@ -1,4 +1,5 @@
 import ProductPageTemplate from '../components/products/ProductPageTemplate'
+import { productImages } from '../lib/assets'
 import {
   CheckCircle,
   Heart,
@@ -15,6 +16,8 @@ export default function ProductSemaglutide() {
       description="A GLP-1 receptor agonist for effective weight management. The gold standard in peptide-based weight loss."
       price="From R2,450/month"
       priceSubtext="or R245 per dose"
+      heroImage={productImages.semaglutideBottle}
+      scienceImage={productImages.whooshBottle}
       benefits={[
         {
           icon: CheckCircle,

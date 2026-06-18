@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     question: 'How do I know which peptide is right for me?',
-    answer: 'The best peptide for you depends on your health goals, medical history, and current biomarkers. During your consultation with a Ride The Tide physician, we review your objectives—whether weight loss, longevity, recovery, or performance—and recommend a protocol tailored to your needs.',
+    answer: 'The best peptide for you depends on your health goals, medical history, and current biomarkers. During your consultation with a Peptide South Africa physician, we review your objectives—whether weight loss, longevity, recovery, or performance—and recommend a protocol tailored to your needs.',
     category: 'General',
   },
   {
@@ -98,8 +98,8 @@ const faqs = [
     category: 'Access & Membership',
   },
   {
-    question: 'What is Ride The Tide?',
-    answer: 'Ride The Tide is South Africa\'s leading physician-guided peptide therapy platform. We combine cutting-edge peptide science with personalized medical oversight to help patients achieve their health, weight-loss, longevity, and recovery goals safely and effectively.',
+    question: 'What is Peptide South Africa?',
+    answer: 'Peptide South Africa is South Africa\'s leading physician-guided peptide therapy platform. We combine cutting-edge peptide science with personalized medical oversight to help patients achieve their health, weight-loss, longevity, and recovery goals safely and effectively.',
     category: 'About',
   },
   {

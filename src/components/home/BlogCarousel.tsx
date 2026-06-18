@@ -6,19 +6,20 @@ import { Link } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import { blogImages } from "../../lib/assets";
 
 const blogs = [
-  { title: "Sermorelin Dosage for Muscle Growth and Body Composition", category: "Growth", readTime: "5 min", gradient: "from-amber-400 to-amber-700" },
-  { title: "Microdosing Semaglutide: A Smarter, Lower-Dose Approach to Weight Loss", category: "Weight Loss", readTime: "7 min", gradient: "from-primary-400 to-primary-700" },
-  { title: "NAD Injections vs Oral Pills", category: "Longevity", readTime: "4 min", gradient: "from-emerald-400 to-emerald-700" },
-  { title: "What Are Glutathione Injections? Benefits, Risks, and a Smarter Alternative", category: "Immune", readTime: "6 min", gradient: "from-cyan-400 to-cyan-700" },
-  { title: "Compounded Tirzepatide", category: "Weight Loss", readTime: "5 min", gradient: "from-purple-400 to-purple-700" },
-  { title: "Compounded Semaglutide", category: "Weight Loss", readTime: "5 min", gradient: "from-primary-400 to-primary-700" },
-  { title: "Sermorelin Prescription", category: "Growth", readTime: "4 min", gradient: "from-amber-400 to-amber-700" },
-  { title: "NAD Injection Benefits", category: "Longevity", readTime: "6 min", gradient: "from-emerald-400 to-emerald-700" },
-  { title: "When is the Best Time to Take Glutathione", category: "Immune", readTime: "4 min", gradient: "from-cyan-400 to-cyan-700" },
-  { title: "Microdosing Tirzepatide", category: "Weight Loss", readTime: "6 min", gradient: "from-purple-400 to-purple-700" },
-  { title: "Peptides for Weight Loss in Women", category: "Weight Loss", readTime: "7 min", gradient: "from-pink-400 to-pink-700" },
+  { title: "Sermorelin Dosage for Muscle Growth and Body Composition", category: "Growth", readTime: "5 min", image: blogImages.sermorelinDosage, alt: "Sermorelin dosage guide" },
+  { title: "Microdosing Semaglutide: A Smarter, Lower-Dose Approach to Weight Loss", category: "Weight Loss", readTime: "7 min", image: blogImages.microdosingSemaglutide, alt: "Microdosing Semaglutide" },
+  { title: "NAD Injections vs Oral Pills", category: "Longevity", readTime: "4 min", image: blogImages.nadInjectionsVsPills, alt: "NAD injections vs pills" },
+  { title: "What Are Glutathione Injections? Benefits, Risks, and a Smarter Alternative", category: "Immune", readTime: "6 min", image: blogImages.glutathioneInjections, alt: "Glutathione injections" },
+  { title: "Compounded Tirzepatide", category: "Weight Loss", readTime: "5 min", image: blogImages.compoundedTirzepatide, alt: "Compounded Tirzepatide" },
+  { title: "Compounded Semaglutide", category: "Weight Loss", readTime: "5 min", image: blogImages.compoundedSemaglutide, alt: "Compounded Semaglutide" },
+  { title: "Sermorelin Prescription", category: "Growth", readTime: "4 min", image: blogImages.sermorelinPrescription, alt: "Sermorelin prescription" },
+  { title: "NAD Injection Benefits", category: "Longevity", readTime: "6 min", image: blogImages.nadInjectionBenefits, alt: "NAD injection benefits" },
+  { title: "When is the Best Time to Take Glutathione", category: "Immune", readTime: "4 min", image: blogImages.glutathioneTiming, alt: "Best time to take Glutathione" },
+  { title: "Microdosing Tirzepatide", category: "Weight Loss", readTime: "6 min", image: blogImages.microdosingTirzepatide, alt: "Microdosing Tirzepatide" },
+  { title: "Peptides for Weight Loss in Women", category: "Weight Loss", readTime: "7 min", image: blogImages.peptidesWeightLossWomen, alt: "Peptides for weight loss in women" },
 ];
 
 export default function BlogCarousel() {
@@ -64,8 +65,13 @@ export default function BlogCarousel() {
               <SwiperSlide key={blog.title}>
                 <Link to="/blogs" className="block group">
                   <div className="card-hover overflow-hidden">
-                    <div className={`aspect-video bg-gradient-to-br ${blog.gradient} flex items-center justify-center group-hover:scale-105 transition-transform duration-500`}>
-                      <span className="text-white/70 text-sm font-medium">Blog Image</span>
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={blog.image}
+                        alt={blog.alt}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
                     </div>
                     <div className="p-5">
                       <div className="flex items-center gap-2 mb-3">

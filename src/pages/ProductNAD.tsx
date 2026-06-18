@@ -1,4 +1,5 @@
 import ProductPageTemplate from '../components/products/ProductPageTemplate'
+import { productImages } from '../lib/assets'
 import {
   Zap,
   Shield,
@@ -15,6 +16,8 @@ export default function ProductNAD() {
       description="The molecule your body makes less of every year. NAD+ supports cellular energy, DNA repair, and healthy aging."
       price="From R1,950/month"
       priceSubtext="Available as Injection, Nasal Spray, or Oral Capsules"
+      heroImage={productImages.nadSpray}
+      scienceImage={productImages.nadPills}
       benefits={[
         {
           icon: Zap,

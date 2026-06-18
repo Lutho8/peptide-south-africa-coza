@@ -15,7 +15,7 @@ export default function ClosingStatement() {
           className="text-center max-w-3xl mx-auto"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
-            Ride The Tide exists for people who are intentional about their health.
+            Peptide South Africa exists for people who are intentional about their health.
           </h2>
           <p className="mt-6 text-lg md:text-xl text-dark-400 leading-relaxed">
             We believe in the power of personalized medicine, guided by science and delivered with care.

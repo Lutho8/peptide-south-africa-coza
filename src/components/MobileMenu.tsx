@@ -4,37 +4,24 @@ import { useEffect } from 'react'
 
 const mobileNavLinks = [
   {
-    label: 'Weight Loss',
-    href: '/weight-loss',
+    label: 'Programs',
+    href: '/programs',
     children: [
-      { label: 'Compounded Tirzepatide', href: '/products/compounded-tirzepatide' },
-      { label: 'Compounded Semaglutide', href: '/products/compounded-semaglutide' },
+      { label: 'Weight Loss', href: '/programs/weight-loss' },
+      { label: 'Longevity', href: '/programs/longevity' },
+      { label: 'Metabolic Reset', href: '/programs/metabolic-reset' },
+      { label: 'Muscle Recovery', href: '/programs/muscle-recovery' },
+      { label: 'Sports Performance', href: '/programs/sports-performance' },
     ],
   },
-  {
-    label: 'Wellness & Longevity',
-    href: '/longevity',
-    children: [
-      { label: 'NAD+', href: '/products/nad' },
-      { label: 'Sermorelin', href: '/products/sermorelin' },
-      { label: 'Glutathione', href: '/products/glutathione' },
-    ],
-  },
-  {
-    label: 'Recovery',
-    href: '/recovery',
-    children: [
-      { label: 'NAD+', href: '/products/nad' },
-      { label: 'Glutathione', href: '/products/glutathione' },
-    ],
-  },
-  { label: 'About Us', href: '/about-us' },
+  { label: 'Peptide Database', href: '/peptide-database' },
+  { label: 'Blog', href: '/blogs' },
+  { label: 'FAQ', href: '/faq' },
+  { label: 'About', href: '/about-us' },
   { label: 'How It Works', href: '/how-it-works' },
   { label: 'Peptide Therapy', href: '/peptide-therapy' },
   { label: 'Pharmacy Standards', href: '/pharmacy-standards' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Blog', href: '/blogs' },
-  { label: 'FAQs', href: '/faqs' },
   { label: 'Contact', href: '/contact-us' },
 ]
 
@@ -117,8 +104,8 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             <ShoppingCart className="w-4 h-4" />
             Cart
           </Link>
-          <Link to="/how-it-works" onClick={onClose} className="btn-primary w-full justify-center">
-            Start Today
+          <Link to="/assessment" onClick={onClose} className="btn-primary w-full justify-center">
+            Take Assessment
           </Link>
         </div>
       </div>

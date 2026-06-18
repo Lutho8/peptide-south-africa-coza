@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, Calendar, ArrowLeft, Twitter, Facebook, Linkedin, Mail } from 'lucide-react';
+import { blogImages } from '../lib/assets';
 
 const blogDatabase: Record<string, {
   title: string;
@@ -9,6 +10,7 @@ const blogDatabase: Record<string, {
   readTime: string;
   author: string;
   template: 'weight-loss' | 'longevity' | 'recovery' | 'science';
+  image: string;
 }> = {
   'peptides-for-weight-loss-in-women': {
     title: 'Peptides for Weight Loss in Women',
@@ -17,6 +19,7 @@ const blogDatabase: Record<string, {
     readTime: '6 min read',
     author: 'Dr. Sarah Nkosi',
     template: 'weight-loss',
+    image: blogImages.peptidesWeightLossWomen,
   },
   'microdosing-semaglutide-smarter-approach': {
     title: 'Microdosing Semaglutide: A Smarter Approach',
@@ -25,6 +28,7 @@ const blogDatabase: Record<string, {
     readTime: '5 min read',
     author: 'Dr. James Molefe',
     template: 'weight-loss',
+    image: blogImages.microdosingSemaglutide,
   },
   'sermorelin-dosage-for-muscle-growth': {
     title: 'Sermorelin Dosage for Muscle Growth',
@@ -33,6 +37,7 @@ const blogDatabase: Record<string, {
     readTime: '7 min read',
     author: 'Dr. Sarah Nkosi',
     template: 'longevity',
+    image: blogImages.sermorelinDosage,
   },
   'nad-injections-vs-oral-pills': {
     title: 'NAD Injections vs Oral Pills',
@@ -41,6 +46,7 @@ const blogDatabase: Record<string, {
     readTime: '8 min read',
     author: 'Dr. James Molefe',
     template: 'science',
+    image: blogImages.nadInjectionsVsPills,
   },
   'what-are-glutathione-injections': {
     title: 'What Are Glutathione Injections?',
@@ -49,6 +55,7 @@ const blogDatabase: Record<string, {
     readTime: '5 min read',
     author: 'Dr. Sarah Nkosi',
     template: 'recovery',
+    image: blogImages.glutathioneInjections,
   },
   'compounded-tirzepatide-explained': {
     title: 'Compounded Tirzepatide Explained',
@@ -57,6 +64,7 @@ const blogDatabase: Record<string, {
     readTime: '6 min read',
     author: 'Dr. James Molefe',
     template: 'weight-loss',
+    image: blogImages.compoundedTirzepatide,
   },
   'compounded-semaglutide-guide': {
     title: 'Compounded Semaglutide Guide',
@@ -65,6 +73,7 @@ const blogDatabase: Record<string, {
     readTime: '7 min read',
     author: 'Dr. Sarah Nkosi',
     template: 'weight-loss',
+    image: blogImages.compoundedSemaglutide,
   },
   'sermorelin-prescription-what-to-know': {
     title: 'Sermorelin Prescription: What to Know',
@@ -73,6 +82,7 @@ const blogDatabase: Record<string, {
     readTime: '5 min read',
     author: 'Dr. James Molefe',
     template: 'longevity',
+    image: blogImages.sermorelinPrescription,
   },
   'nad-injection-benefits': {
     title: 'NAD Injection Benefits',
@@ -81,6 +91,7 @@ const blogDatabase: Record<string, {
     readTime: '6 min read',
     author: 'Dr. Sarah Nkosi',
     template: 'longevity',
+    image: blogImages.nadInjectionBenefits,
   },
   'best-time-to-take-glutathione': {
     title: 'Best Time to Take Glutathione',
@@ -89,6 +100,7 @@ const blogDatabase: Record<string, {
     readTime: '4 min read',
     author: 'Dr. James Molefe',
     template: 'recovery',
+    image: blogImages.glutathioneTiming,
   },
   'microdosing-tirzepatide': {
     title: 'Microdosing Tirzepatide',
@@ -97,6 +109,7 @@ const blogDatabase: Record<string, {
     readTime: '5 min read',
     author: 'Dr. Sarah Nkosi',
     template: 'weight-loss',
+    image: blogImages.microdosingTirzepatide,
   },
 };
 
@@ -107,7 +120,7 @@ const categoryColors: Record<string, string> = {
   'Science': 'bg-blue-100 text-blue-700',
 };
 
-function WeightLossTemplate() {
+function WeightLossTemplate({ image }: { image: string }) {
   return (
     <>
       <h2>Understanding the Science</h2>
@@ -118,7 +131,7 @@ function WeightLossTemplate() {
         For women, the benefits extend beyond the scale. Many peptide protocols help preserve lean muscle mass during caloric restriction, support hormonal balance, and reduce visceral fat that is linked to cardiovascular and metabolic disease.
       </p>
 
-      <div className="my-8 aspect-video rounded-xl bg-gradient-to-br from-purple-100 to-primary-100" />
+      <img src={image} alt="Weight Loss" className="my-8 aspect-video rounded-xl object-cover w-full" loading="lazy" />
 
       <h2>Why Women Respond Differently</h2>
       <p>
@@ -137,13 +150,13 @@ function WeightLossTemplate() {
 
       <h2>Getting Started Safely</h2>
       <p>
-        Every patient at Ride The Tide begins with a comprehensive physician consultation. We review your medical history, current medications, and goals to design a protocol that is both safe and effective. All peptide therapies are prescribed and supervised by licensed South African physicians, with ongoing monitoring to ensure optimal outcomes.
+        Every patient at Peptide South Africa begins with a comprehensive physician consultation. We review your medical history, current medications, and goals to design a protocol that is both safe and effective. All peptide therapies are prescribed and supervised by licensed South African physicians, with ongoing monitoring to ensure optimal outcomes.
       </p>
     </>
   );
 }
 
-function LongevityTemplate() {
+function LongevityTemplate({ image }: { image: string }) {
   return (
     <>
       <h2>The Biology of Aging</h2>
@@ -154,7 +167,7 @@ function LongevityTemplate() {
         Growth hormone secretagogues like sermorelin work by stimulating your pituitary gland to release its own growth hormone naturally. This avoids the risks of exogenous hormone replacement while supporting tissue repair, muscle maintenance, cognitive clarity, and metabolic health.
       </p>
 
-      <div className="my-8 aspect-video rounded-xl bg-gradient-to-br from-emerald-100 to-primary-100" />
+      <img src={image} alt="Longevity" className="my-8 aspect-video rounded-xl object-cover w-full" loading="lazy" />
 
       <h2>Clinical Benefits</h2>
       <ul>
@@ -171,13 +184,13 @@ function LongevityTemplate() {
 
       <h2>Your Personalized Protocol</h2>
       <p>
-        At Ride The Tide, longevity protocols are tailored to your biomarkers, lifestyle, and goals. We combine peptide therapy with nutritional guidance, exercise recommendations, and regular follow-ups to track progress and adjust dosing as needed.
+        At Peptide South Africa, longevity protocols are tailored to your biomarkers, lifestyle, and goals. We combine peptide therapy with nutritional guidance, exercise recommendations, and regular follow-ups to track progress and adjust dosing as needed.
       </p>
     </>
   );
 }
 
-function RecoveryTemplate() {
+function RecoveryTemplate({ image }: { image: string }) {
   return (
     <>
       <h2>The Role of Glutathione in Recovery</h2>
@@ -188,7 +201,7 @@ function RecoveryTemplate() {
         Unlike oral supplements, which are broken down by digestive enzymes, injectable glutathione delivers the compound directly into your bloodstream for maximum bioavailability and rapid cellular uptake.
       </p>
 
-      <div className="my-8 aspect-video rounded-xl bg-gradient-to-br from-red-100 to-primary-100" />
+      <img src={image} alt="Recovery" className="my-8 aspect-video rounded-xl object-cover w-full" loading="lazy" />
 
       <h2>Who Benefits Most?</h2>
       <ul>
@@ -211,7 +224,7 @@ function RecoveryTemplate() {
   );
 }
 
-function ScienceTemplate() {
+function ScienceTemplate({ image }: { image: string }) {
   return (
     <>
       <h2>Bioavailability: The Key Difference</h2>
@@ -222,7 +235,7 @@ function ScienceTemplate() {
         Studies have shown that intravenous and subcutaneous NAD+ administration achieves serum concentrations orders of magnitude higher than oral equivalents, leading to more pronounced effects on cellular energy, DNA repair, and sirtuin activation.
       </p>
 
-      <div className="my-8 aspect-video rounded-xl bg-gradient-to-br from-blue-100 to-primary-100" />
+      <img src={image} alt="Science" className="my-8 aspect-video rounded-xl object-cover w-full" loading="lazy" />
 
       <h2>What the Research Says</h2>
       <ul>
@@ -234,7 +247,7 @@ function ScienceTemplate() {
 
       <h2>Practical Considerations</h2>
       <p>
-        While injections are more effective, they are not for everyone. Some patients prefer oral supplements for convenience or cost reasons. At Ride The Tide, our physicians help you weigh the evidence against your lifestyle, goals, and budget to make an informed choice.
+        While injections are more effective, they are not for everyone. Some patients prefer oral supplements for convenience or cost reasons. At Peptide South Africa, our physicians help you weigh the evidence against your lifestyle, goals, and budget to make an informed choice.
       </p>
 
       <blockquote>
@@ -244,13 +257,13 @@ function ScienceTemplate() {
   );
 }
 
-function ArticleContent({ template }: { template: string }) {
+function ArticleContent({ template, image }: { template: string; image: string }) {
   switch (template) {
-    case 'weight-loss': return <WeightLossTemplate />;
-    case 'longevity': return <LongevityTemplate />;
-    case 'recovery': return <RecoveryTemplate />;
-    case 'science': return <ScienceTemplate />;
-    default: return <WeightLossTemplate />;
+    case 'weight-loss': return <WeightLossTemplate image={image} />;
+    case 'longevity': return <LongevityTemplate image={image} />;
+    case 'recovery': return <RecoveryTemplate image={image} />;
+    case 'science': return <ScienceTemplate image={image} />;
+    default: return <WeightLossTemplate image={image} />;
   }
 }
 
@@ -285,7 +298,12 @@ export default function BlogPost() {
     <div className="pt-16">
       {/* Hero */}
       <section className="relative">
-        <div className="h-64 md:h-80 lg:h-96 w-full bg-gradient-to-br from-primary-100 via-accent-100 to-primary-200" />
+        <img 
+          src={post.image} 
+          alt={post.title} 
+          className="h-64 md:h-80 lg:h-96 w-full object-cover"
+          loading="lazy"
+        />
         <div className="container-main -mt-16 md:-mt-20 lg:-mt-24 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -322,7 +340,7 @@ export default function BlogPost() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-dark-900 prose-p:text-dark-500 prose-p:leading-relaxed prose-li:text-dark-500 prose-ul:my-4 prose-h2:text-xl md:prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:bg-primary-50 prose-blockquote:py-3 prose-blockquote:px-5 prose-blockquote:rounded-r-lg prose-blockquote:not-italic prose-blockquote:text-dark-700 prose-blockquote:font-medium"
             >
-              <ArticleContent template={post.template} />
+              <ArticleContent template={post.template} image={post.image} />
             </motion.div>
 
             {/* Social Share */}
@@ -381,7 +399,9 @@ export default function BlogPost() {
                 transition={{ duration: 0.4, delay: idx * 0.1 }}
               >
                 <Link to={`/blogs/${r.slug}`} className="group block bg-white rounded-2xl border border-dark-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                  <div className="aspect-video w-full bg-gradient-to-br from-primary-100 to-accent-100" />
+                  <div className="aspect-video w-full relative overflow-hidden">
+                    <img src={r.image} alt={r.title} className="w-full h-full object-cover" loading="lazy" />
+                  </div>
                   <div className="p-5">
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mb-3 ${categoryColors[r.category] || 'bg-dark-100 text-dark-700'}`}>
                       {r.category}

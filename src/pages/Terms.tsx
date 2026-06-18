@@ -26,7 +26,7 @@ export default function Terms() {
       <section id="agreement" className="mb-10">
         <h2 className="text-xl font-bold text-dark-900 mb-3">1. Agreement to Terms</h2>
         <p className="text-dark-500 text-sm leading-relaxed mb-3">
-          These Terms and Conditions ("Terms") govern your access to and use of the Ride The Tide website, mobile applications, and peptide therapy services (collectively, the "Services"). By creating an account, placing an order, or otherwise using our Services, you agree to be bound by these Terms.
+          These Terms and Conditions ("Terms") govern your access to and use of the Peptide South Africa website, mobile applications, and peptide therapy services (collectively, the "Services"). By creating an account, placing an order, or otherwise using our Services, you agree to be bound by these Terms.
         </p>
         <p className="text-dark-500 text-sm leading-relaxed">
           If you do not agree to these Terms, you must not use our Services. We reserve the right to modify these Terms at any time. Your continued use of the Services after changes constitutes acceptance of the updated Terms.
@@ -66,7 +66,7 @@ export default function Terms() {
       <section id="products" className="mb-10">
         <h2 className="text-xl font-bold text-dark-900 mb-3">5. Products and Services</h2>
         <p className="text-dark-500 text-sm leading-relaxed mb-3">
-          Ride The Tide provides physician-supervised peptide therapy protocols, compounded medications, and related wellness products. All products are sourced from licensed compounding pharmacies that meet South African regulatory standards.
+          Peptide South Africa provides physician-supervised peptide therapy protocols, compounded medications, and related wellness products. All products are sourced from licensed compounding pharmacies that meet South African regulatory standards.
         </p>
         <p className="text-dark-500 text-sm leading-relaxed">
           Product descriptions, images, and pricing are subject to change without notice. We make reasonable efforts to ensure accuracy but do not guarantee that all product information is error-free.
@@ -119,7 +119,7 @@ export default function Terms() {
       <section id="intellectual" className="mb-10">
         <h2 className="text-xl font-bold text-dark-900 mb-3">10. Intellectual Property</h2>
         <p className="text-dark-500 text-sm leading-relaxed mb-3">
-          All content on our website, including text, graphics, logos, images, videos, and software, is the property of Ride The Tide or its licensors and is protected by South African and international copyright, trademark, and other intellectual property laws.
+          All content on our website, including text, graphics, logos, images, videos, and software, is the property of Peptide South Africa or its licensors and is protected by South African and international copyright, trademark, and other intellectual property laws.
         </p>
         <p className="text-dark-500 text-sm leading-relaxed">
           You may not reproduce, distribute, modify, create derivative works from, publicly display, or commercially exploit any of our content without our prior written consent.
@@ -129,7 +129,7 @@ export default function Terms() {
       <section id="liability" className="mb-10">
         <h2 className="text-xl font-bold text-dark-900 mb-3">11. Limitation of Liability</h2>
         <p className="text-dark-500 text-sm leading-relaxed mb-3">
-          To the maximum extent permitted by law, Ride The Tide and its directors, employees, partners, and affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or relating to your use of our Services.
+          To the maximum extent permitted by law, Peptide South Africa and its directors, employees, partners, and affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or relating to your use of our Services.
         </p>
         <p className="text-dark-500 text-sm leading-relaxed">
           Our total liability for any claim arising from these Terms or your use of the Services shall not exceed the amount you paid to us in the 12 months preceding the event giving rise to the liability.
@@ -166,7 +166,7 @@ export default function Terms() {
           If you have any questions about these Terms, please contact us:
         </p>
         <div className="text-dark-500 text-sm leading-relaxed">
-          <p><strong>Email:</strong> <a href="mailto:legal@ridethetide.info" className="text-primary-600 hover:underline">legal@ridethetide.info</a></p>
+          <p><strong>Email:</strong> <a href="mailto:legal@app.peptide-south-africa.com" className="text-primary-600 hover:underline">legal@app.peptide-south-africa.com</a></p>
           <p><strong>Address:</strong> Cape Town, South Africa</p>
           <p><strong>Phone:</strong> +27 12 345 6789</p>
         </div>

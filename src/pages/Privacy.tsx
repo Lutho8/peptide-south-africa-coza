@@ -22,7 +22,7 @@ export default function Privacy() {
       <section id="introduction" className="mb-10">
         <h2 className="text-xl font-bold text-dark-900 mb-3">1. Introduction</h2>
         <p className="text-dark-500 text-sm leading-relaxed mb-3">
-          Ride The Tide ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, store, and share your personal information when you use our website, services, and peptide therapy platform.
+          Peptide South Africa ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, store, and share your personal information when you use our website, services, and peptide therapy platform.
         </p>
         <p className="text-dark-500 text-sm leading-relaxed">
           By accessing or using our services, you consent to the practices described in this policy. If you do not agree, please do not use our platform. This policy is designed to comply with the Protection of Personal Information Act 4 of 2013 (POPIA) of South Africa.
@@ -89,7 +89,7 @@ export default function Privacy() {
           <li><strong>Right to withdraw consent</strong> — withdraw consent for processing where consent is the legal basis</li>
         </ul>
         <p className="text-dark-500 text-sm leading-relaxed">
-          To exercise any of these rights, contact us at <a href="mailto:privacy@ridethetide.info" className="text-primary-600 hover:underline">privacy@ridethetide.info</a>. We will respond within 30 days.
+          To exercise any of these rights, contact us at <a href="mailto:privacy@app.peptide-south-africa.com" className="text-primary-600 hover:underline">privacy@app.peptide-south-africa.com</a>. We will respond within 30 days.
         </p>
       </section>
 
@@ -146,7 +146,7 @@ export default function Privacy() {
           If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
         </p>
         <div className="text-dark-500 text-sm leading-relaxed">
-          <p><strong>Email:</strong> <a href="mailto:privacy@ridethetide.info" className="text-primary-600 hover:underline">privacy@ridethetide.info</a></p>
+          <p><strong>Email:</strong> <a href="mailto:privacy@app.peptide-south-africa.com" className="text-primary-600 hover:underline">privacy@app.peptide-south-africa.com</a></p>
           <p><strong>Address:</strong> Cape Town, South Africa</p>
           <p><strong>Phone:</strong> +27 12 345 6789</p>
         </div>

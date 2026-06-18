@@ -4,25 +4,29 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import { howItWorksImages } from "../../lib/assets";
 
 const steps = [
   {
     number: "01",
     title: "A SIMPLE QUESTIONNAIRE",
     description: "Tell us about your goals, lifestyle, and health history.",
-    gradient: "from-primary-400 to-accent-500",
+    image: howItWorksImages.questionnaire,
+    alt: "Simple questionnaire",
   },
   {
     number: "02",
     title: "PHYSICIAN REVIEW",
     description: "A licensed physician reviews your profile and creates a personalized protocol.",
-    gradient: "from-accent-500 to-primary-600",
+    image: howItWorksImages.physicianReview,
+    alt: "Physician review",
   },
   {
     number: "03",
     title: "PROTOCOL DELIVERED",
     description: "Your compounded peptides arrive at your door, ready to start.",
-    gradient: "from-primary-600 to-primary-800",
+    image: howItWorksImages.protocolDelivered,
+    alt: "Protocol delivered",
   },
 ];
 
@@ -57,8 +61,13 @@ export default function HowItWorksSection() {
               transition={{ duration: 0.5, delay: 0.15 + i * 0.15, ease: [0.16, 1, 0.3, 1] }}
               className="card-hover overflow-hidden"
             >
-              <div className={`w-full h-[220px] bg-gradient-to-br ${step.gradient} flex items-center justify-center`}>
-                <span className="text-white/70 font-medium">Step {step.number}</span>
+              <div className="w-full h-[220px] flex items-center justify-center overflow-hidden">
+                <img
+                  src={step.image}
+                  alt={step.alt}
+                  className="w-full h-full object-cover rounded-t-2xl"
+                  loading="lazy"
+                />
               </div>
               <div className="p-6">
                 <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center mb-4">
@@ -82,8 +91,13 @@ export default function HowItWorksSection() {
             {steps.map((step) => (
               <SwiperSlide key={step.number}>
                 <div className="card-hover overflow-hidden mx-1">
-                  <div className={`w-full h-[220px] bg-gradient-to-br ${step.gradient} flex items-center justify-center`}>
-                    <span className="text-white/70 font-medium">Step {step.number}</span>
+                  <div className="w-full h-[220px] flex items-center justify-center overflow-hidden">
+                    <img
+                      src={step.image}
+                      alt={step.alt}
+                      className="w-full h-full object-cover rounded-t-2xl"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="p-6">
                     <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center mb-4">

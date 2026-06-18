@@ -83,7 +83,7 @@ export default function Returns() {
               </div>
               <ol className="list-decimal list-inside text-dark-500 text-sm leading-relaxed flex flex-col gap-3">
                 <li>
-                  <strong>Contact us</strong> via email at <a href="mailto:returns@ridethetide.info" className="text-primary-600 hover:underline">returns@ridethetide.info</a> or through your patient portal with your order number and reason for return.
+                  <strong>Contact us</strong> via email at <a href="mailto:returns@app.peptide-south-africa.com" className="text-primary-600 hover:underline">returns@app.peptide-south-africa.com</a> or through your patient portal with your order number and reason for return.
                 </li>
                 <li>
                   <strong>Receive authorization</strong> — our support team will review your request and issue a Return Merchandise Authorization (RMA) number if eligible.
@@ -159,7 +159,7 @@ export default function Returns() {
                 Our support team is ready to assist with your return. Reach out to us and we will guide you through the process step by step.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <a href="mailto:returns@ridethetide.info" className="btn-primary inline-flex items-center justify-center gap-2">
+                <a href="mailto:returns@app.peptide-south-africa.com" className="btn-primary inline-flex items-center justify-center gap-2">
                   <Mail className="w-4 h-4" />
                   Email Returns Team
                 </a>

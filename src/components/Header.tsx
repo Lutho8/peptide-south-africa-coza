@@ -5,31 +5,29 @@ import MobileMenu from './MobileMenu'
 
 const navLinks = [
   {
-    label: 'Weight Loss',
-    href: '/weight-loss',
+    label: 'Programs',
+    href: '/programs',
     dropdown: [
-      { label: 'Compounded Tirzepatide', href: '/products/compounded-tirzepatide' },
-      { label: 'Compounded Semaglutide', href: '/products/compounded-semaglutide' },
+      { label: 'Weight Loss', href: '/programs/weight-loss' },
+      { label: 'Longevity', href: '/programs/longevity' },
+      { label: 'Metabolic Reset', href: '/programs/metabolic-reset' },
+      { label: 'Muscle Recovery', href: '/programs/muscle-recovery' },
+      { label: 'Sports Performance', href: '/programs/sports-performance' },
     ],
   },
   {
-    label: 'Wellness & Longevity',
-    href: '/longevity',
-    dropdown: [
-      { label: 'NAD+', href: '/products/nad' },
-      { label: 'Sermorelin', href: '/products/sermorelin' },
-      { label: 'Glutathione', href: '/products/glutathione' },
-    ],
+    label: 'Peptide Database',
+    href: '/peptide-database',
   },
   {
-    label: 'Recovery',
-    href: '/recovery',
-    dropdown: [
-      { label: 'NAD+', href: '/products/nad' },
-      { label: 'Glutathione', href: '/products/glutathione' },
-    ],
+    label: 'Blog',
+    href: '/blogs',
   },
-  { label: 'About Us', href: '/about-us' },
+  {
+    label: 'FAQ',
+    href: '/faq',
+  },
+  { label: 'About', href: '/about-us' },
   {
     label: 'Explore',
     href: '#',
@@ -38,8 +36,6 @@ const navLinks = [
       { label: 'Peptide Therapy', href: '/peptide-therapy' },
       { label: 'Pharmacy Standards', href: '/pharmacy-standards' },
       { label: 'Pricing', href: '/pricing' },
-      { label: 'Blog', href: '/blogs' },
-      { label: 'FAQs', href: '/faqs' },
       { label: 'Contact', href: '/contact-us' },
     ],
   },
@@ -76,10 +72,10 @@ export default function Header() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
               <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-tr from-primary-500 to-accent-500 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">RT</span>
+                <span className="text-white font-bold text-lg">PSA</span>
               </div>
               <span className="font-bold text-dark-900 text-lg hidden sm:block group-hover:bg-gradient-to-r group-hover:from-primary-500 group-hover:to-accent-500 group-hover:bg-clip-text group-hover:text-transparent transition-all">
-                Ride The Tide
+                Peptide South Africa
               </span>
             </Link>
 
@@ -140,8 +136,8 @@ export default function Header() {
                 <User className="w-4 h-4" />
                 Log In
               </Link>
-              <Link to="/how-it-works" className="btn-primary text-sm px-4 py-2">
-                Start Today
+              <Link to="/assessment" className="btn-primary text-sm px-4 py-2">
+                Take Assessment
               </Link>
               <button
                 className="lg:hidden p-2 rounded-lg hover:bg-dark-100 transition-colors"

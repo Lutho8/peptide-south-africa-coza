@@ -9,6 +9,7 @@ import {
   Microscope,
 } from 'lucide-react'
 import { AnimatedSection, StaggerContainer, StaggerItem } from '../components/pages/AnimatedSection'
+import { partnerImages, peopleImages } from '../lib/assets'
 
 const values = [
   {
@@ -40,6 +41,7 @@ const team = [
     title: 'Medical Director',
     gradient: 'from-primary-400 to-accent-500',
     description: 'Board-certified physician with 15+ years in metabolic medicine and peptide therapy research.',
+    image: peopleImages.noah,
   },
   {
     initials: 'JV',
@@ -47,23 +49,25 @@ const team = [
     title: 'Lead Physician',
     gradient: 'from-emerald-400 to-teal-500',
     description: 'Specialist in longevity medicine and endocrinology. Passionate about accessible, personalized healthcare.',
+    image: peopleImages.noah,
   },
   {
     initials: 'LK',
     name: 'Lutho Kote',
     title: 'Founder & CEO',
     gradient: 'from-amber-400 to-orange-500',
-    description: 'Biohacker and entrepreneur who built Ride The Tide to bring world-class peptide therapy to South Africa.',
+    description: 'Biohacker and entrepreneur who built Peptide South Africa to bring world-class peptide therapy to South Africa.',
+    image: peopleImages.noah,
   },
 ]
 
 const partners = [
-  { name: 'SAHPRA', color: 'from-blue-400 to-indigo-500' },
-  { name: 'Compounding SA', color: 'from-emerald-400 to-teal-500' },
-  { name: 'BioHealth Labs', color: 'from-purple-400 to-pink-500' },
-  { name: 'MediTrust', color: 'from-amber-400 to-orange-500' },
-  { name: 'CapeBio', color: 'from-cyan-400 to-blue-500' },
-  { name: 'SAGSSA', color: 'from-rose-400 to-red-500' },
+  { name: 'Wasef Health', image: partnerImages.wasefHealth },
+  { name: 'San Antonio Marathon', image: partnerImages.sanAntonioMarathon },
+  { name: 'PepGuide', image: partnerImages.pepguide },
+  { name: 'Rawdawg Run Club', image: partnerImages.rawdawgRunClub },
+  { name: 'ERX', image: partnerImages.erx },
+  { name: 'Integrated Care', image: partnerImages.integratedCare },
 ]
 
 export default function About() {
@@ -78,7 +82,7 @@ export default function About() {
           <AnimatedSection className="max-w-4xl">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-500/15 border border-primary-500/20 text-primary-300 text-sm font-medium mb-6">
               <Users className="w-4 h-4" />
-              About Ride The Tide
+              About Peptide South Africa
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
               We exist for people who are<br />
@@ -87,7 +91,7 @@ export default function About() {
               </span>
             </h1>
             <p className="text-lg md:text-xl text-dark-300 leading-relaxed mb-8 max-w-2xl">
-              Ride The Tide is South Africa's leading physician-guided peptide protocol platform. We connect patients with licensed doctors and SAHPRA-compliant pharmacies to deliver personalized, safe, and effective peptide therapy.
+              Peptide South Africa is South Africa's leading physician-guided peptide protocol platform. We connect patients with licensed doctors and SAHPRA-compliant pharmacies to deliver personalized, safe, and effective peptide therapy.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link to="/how-it-works" className="btn-primary">
@@ -158,9 +162,12 @@ export default function About() {
             {team.map((member) => (
               <StaggerItem key={member.name}>
                 <div className="text-center">
-                  <div className={`w-28 h-28 rounded-2xl bg-gradient-to-br ${member.gradient} flex items-center justify-center mx-auto mb-5 shadow-lg`}>
-                    <span className="text-white font-bold text-2xl">{member.initials}</span>
-                  </div>
+                  <img 
+                    src={member.image} 
+                    alt={member.name} 
+                    className="w-28 h-28 rounded-2xl object-cover mx-auto mb-5 shadow-lg"
+                    loading="lazy"
+                  />
                   <h3 className="text-xl font-bold text-dark-900 mb-1">{member.name}</h3>
                   <p className="text-sm text-primary-600 font-medium mb-3">{member.title}</p>
                   <p className="text-dark-500 text-sm leading-relaxed max-w-xs mx-auto">{member.description}</p>
@@ -183,8 +190,13 @@ export default function About() {
           <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6" staggerDelay={0.08}>
             {partners.map((p) => (
               <StaggerItem key={p.name}>
-                <div className={`h-24 rounded-xl bg-gradient-to-br ${p.color} flex items-center justify-center shadow-sm`}>
-                  <span className="text-white font-bold text-sm px-2 text-center">{p.name}</span>
+                <div className="h-24 rounded-xl bg-white flex items-center justify-center shadow-sm border border-dark-100 p-2">
+                  <img 
+                    src={p.image} 
+                    alt={p.name} 
+                    className="max-h-full max-w-full object-contain"
+                    loading="lazy"
+                  />
                 </div>
               </StaggerItem>
             ))}
@@ -197,7 +209,7 @@ export default function About() {
         <div className="container-main">
           <AnimatedSection className="text-center max-w-3xl mx-auto">
             <Users className="w-12 h-12 text-white/80 mx-auto mb-6" />
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Join the Ride The Tide Community</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Join the Peptide South Africa Community</h2>
             <p className="text-primary-100 text-lg mb-8 leading-relaxed">
               Be part of a movement that is redefining healthcare in South Africa. Whether you are starting your weight-loss journey, optimizing your longevity, or recovering from injury — we are here to ride the tide with you.
             </p>

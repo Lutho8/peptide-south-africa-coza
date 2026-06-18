@@ -7,7 +7,6 @@ import {
   Truck,
   ArrowRight,
   Stethoscope,
-  FlaskConical,
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '../../lib/utils'
@@ -49,6 +48,8 @@ interface ProductPageTemplateProps {
   description: string
   price: string
   priceSubtext: string
+  heroImage: string
+  scienceImage: string
   benefits: Benefit[]
   scienceParagraphs: string[]
   scienceBullets: string[]
@@ -96,6 +97,7 @@ function ProductHero({
   description,
   price,
   priceSubtext,
+  heroImage,
 }: {
   name: string
   category: string
@@ -103,6 +105,7 @@ function ProductHero({
   description: string
   price: string
   priceSubtext: string
+  heroImage: string
 }) {
   return (
     <section className="bg-gradient-to-b from-primary-50/50 to-white">
@@ -116,14 +119,12 @@ function ProductHero({
             className="order-2 lg:order-1"
           >
             <div className="relative mx-auto lg:mx-0 max-w-[400px]">
-              <div className="aspect-[4/5] w-full bg-gradient-to-br from-primary-100 to-accent-100 rounded-2xl shadow-xl flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/60 flex items-center justify-center">
-                    <FlaskConical className="w-10 h-10 text-primary-500" />
-                  </div>
-                  <p className="text-dark-400 text-sm font-medium">{name}</p>
-                </div>
-              </div>
+              <img 
+                src={heroImage} 
+                alt={name} 
+                className="w-full aspect-[4/5] object-contain rounded-2xl shadow-xl bg-gradient-to-br from-primary-50 to-accent-50"
+                loading="lazy"
+              />
               {/* Decorative blob */}
               <div className="absolute -z-10 -top-6 -right-6 w-32 h-32 bg-primary-200/50 rounded-full blur-2xl" />
               <div className="absolute -z-10 -bottom-6 -left-6 w-40 h-40 bg-accent-200/40 rounded-full blur-2xl" />
@@ -330,10 +331,12 @@ function ProductScience({
   name,
   paragraphs,
   bullets,
+  scienceImage,
 }: {
   name: string
   paragraphs: string[]
   bullets: string[]
+  scienceImage: string
 }) {
   return (
     <section className="bg-white section-padding">
@@ -378,14 +381,12 @@ function ProductScience({
             variants={scaleIn}
             className="relative"
           >
-            <div className="aspect-[4/3] w-full bg-gradient-to-br from-primary-100 to-accent-100 rounded-2xl shadow-lg flex items-center justify-center">
-              <div className="text-center p-8">
-                <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-white/60 flex items-center justify-center">
-                  <FlaskConical className="w-12 h-12 text-primary-500" />
-                </div>
-                <p className="text-dark-400 font-medium">Clinical Research</p>
-              </div>
-            </div>
+            <img 
+              src={scienceImage} 
+              alt={`${name} clinical research`} 
+              className="w-full aspect-[4/3] object-cover rounded-2xl shadow-lg"
+              loading="lazy"
+            />
             <div className="absolute -z-10 -top-8 -right-8 w-40 h-40 bg-primary-200/40 rounded-full blur-3xl" />
             <div className="absolute -z-10 -bottom-8 -left-8 w-48 h-48 bg-accent-200/30 rounded-full blur-3xl" />
           </motion.div>
@@ -637,6 +638,8 @@ export default function ProductPageTemplate({
   description,
   price,
   priceSubtext,
+  heroImage,
+  scienceImage,
   benefits,
   scienceParagraphs,
   scienceBullets,
@@ -653,6 +656,7 @@ export default function ProductPageTemplate({
         description={description}
         price={price}
         priceSubtext={priceSubtext}
+        heroImage={heroImage}
       />
       <ProductBenefits name={name} benefits={benefits} />
       <HowItWorks name={name} />
@@ -660,6 +664,7 @@ export default function ProductPageTemplate({
         name={name}
         paragraphs={scienceParagraphs}
         bullets={scienceBullets}
+        scienceImage={scienceImage}
       />
       <ProductPricing plans={pricingPlans} />
       <ProductFAQ items={faqItems} />

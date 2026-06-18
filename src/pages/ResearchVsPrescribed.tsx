@@ -10,6 +10,7 @@ import {
   BadgeCheck,
 } from 'lucide-react'
 import { AnimatedSection } from '../components/pages/AnimatedSection'
+import { productImages } from '../lib/assets'
 
 const comparisonRows = [
   {
@@ -83,7 +84,7 @@ export default function ResearchVsPrescribed() {
               Safety & Quality
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Why Ride The Tide?<br />
+              Why Peptide South Africa?<br />
               <span className="bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">
                 Research vs. Prescribed
               </span>
@@ -164,10 +165,13 @@ export default function ResearchVsPrescribed() {
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center">
-                <div className="w-32 h-32 bg-white/60 rounded-2xl shadow-sm flex items-center justify-center">
-                  <AlertTriangle className="w-14 h-14 text-red-500" />
-                </div>
+              <div className="h-80 lg:h-96 rounded-2xl overflow-hidden">
+                <img
+                  src={productImages.whooshBottle}
+                  alt="Research chemicals warning"
+                  className="w-full h-full object-contain rounded-2xl"
+                  loading="lazy"
+                />
               </div>
             </AnimatedSection>
           </div>
@@ -179,11 +183,12 @@ export default function ResearchVsPrescribed() {
         <div className="container-main">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <AnimatedSection direction="left">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-                <div className="w-32 h-32 bg-white/60 rounded-2xl shadow-sm flex items-center justify-center">
-                  <Shield className="w-14 h-14 text-emerald-500" />
-                </div>
-              </div>
+              <img 
+                src={productImages.tirzepatideBottle} 
+                alt="Compounded Tirzepatide" 
+                className="w-full h-80 lg:h-96 object-contain rounded-2xl"
+                loading="lazy"
+              />
             </AnimatedSection>
             <AnimatedSection direction="right">
               <div className="flex items-center gap-3 mb-6">
@@ -191,7 +196,7 @@ export default function ResearchVsPrescribed() {
                 <h2 className="text-3xl md:text-4xl font-bold text-emerald-900">Benefits of Prescribed Therapy</h2>
               </div>
               <p className="text-emerald-800 leading-relaxed mb-6">
-                When you choose Ride The Tide, you are not just buying a peptide — you are entering a physician-guided healthcare relationship designed to keep you safe and deliver results.
+                When you choose Peptide South Africa, you are not just buying a peptide — you are entering a physician-guided healthcare relationship designed to keep you safe and deliver results.
               </p>
               <div className="space-y-4">
                 {benefits.map((benefit, i) => (
@@ -212,7 +217,7 @@ export default function ResearchVsPrescribed() {
           <AnimatedSection className="text-center">
             <Quote className="w-10 h-10 text-primary-400 mx-auto mb-6" />
             <blockquote className="text-2xl md:text-3xl font-bold text-dark-900 leading-relaxed mb-6">
-              &ldquo;I tried research chemicals first. The side effects were terrifying, and I had no one to call. Switching to Ride The Tide was the best decision — I finally felt safe, and the results were actually better.&rdquo;
+              &ldquo;I tried research chemicals first. The side effects were terrifying, and I had no one to call. Switching to Peptide South Africa was the best decision — I finally felt safe, and the results were actually better.&rdquo;
             </blockquote>
             <div className="flex items-center justify-center gap-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center">

@@ -18,14 +18,14 @@ export default function Hipaa() {
     <LegalSidebar title="HIPAA Privacy Policy" lastUpdated={today} items={tocItems}>
       <div className="mb-6 p-4 bg-amber-50 border border-amber-100 rounded-xl">
         <p className="text-sm text-amber-800 leading-relaxed">
-          <strong>Note for South African patients:</strong> While "HIPAA" is a United States regulation, Ride The Tide applies equivalent privacy and security standards to your health information in compliance with South Africa's <strong>Protection of Personal Information Act (POPIA)</strong> and <strong>Health Professions Council of South Africa (HPCSA)</strong> ethical guidelines. This policy describes our commitment to protecting your health data with the same rigor as HIPAA-compliant U.S. providers.
+          <strong>Note for South African patients:</strong> While "HIPAA" is a United States regulation, Peptide South Africa applies equivalent privacy and security standards to your health information in compliance with South Africa's <strong>Protection of Personal Information Act (POPIA)</strong> and <strong>Health Professions Council of South Africa (HPCSA)</strong> ethical guidelines. This policy describes our commitment to protecting your health data with the same rigor as HIPAA-compliant U.S. providers.
         </p>
       </div>
 
       <section id="notice" className="mb-10">
         <h2 className="text-xl font-bold text-dark-900 mb-3">1. Notice of Privacy Practices</h2>
         <p className="text-dark-500 text-sm leading-relaxed mb-3">
-          This Notice of Privacy Practices describes how Ride The Tide collects, uses, discloses, and safeguards your personal health information (PHI). We are required by law to maintain the privacy of your health information and to provide you with this notice of our legal duties and privacy practices.
+          This Notice of Privacy Practices describes how Peptide South Africa collects, uses, discloses, and safeguards your personal health information (PHI). We are required by law to maintain the privacy of your health information and to provide you with this notice of our legal duties and privacy practices.
         </p>
         <p className="text-dark-500 text-sm leading-relaxed">
           We reserve the right to change our privacy practices and the terms of this notice. Any changes will apply to all health information we maintain, including information created or received before the change date. We will post the updated notice on our website and notify you of material changes.
@@ -46,14 +46,14 @@ export default function Hipaa() {
           <li><strong>Right to complain</strong> — lodge a complaint with us or the Information Regulator of South Africa if you believe your privacy rights have been violated</li>
         </ul>
         <p className="text-dark-500 text-sm leading-relaxed">
-          To exercise any of these rights, contact our Privacy Officer at <a href="mailto:privacy@ridethetide.info" className="text-primary-600 hover:underline">privacy@ridethetide.info</a>.
+          To exercise any of these rights, contact our Privacy Officer at <a href="mailto:privacy@app.peptide-south-africa.com" className="text-primary-600 hover:underline">privacy@app.peptide-south-africa.com</a>.
         </p>
       </section>
 
       <section id="responsibilities" className="mb-10">
         <h2 className="text-xl font-bold text-dark-900 mb-3">3. Our Responsibilities</h2>
         <p className="text-dark-500 text-sm leading-relaxed mb-3">
-          Ride The Tide is committed to:
+          Peptide South Africa is committed to:
         </p>
         <ul className="list-disc list-inside text-dark-500 text-sm leading-relaxed flex flex-col gap-2">
           <li>Maintaining the privacy and security of your health information at all times</li>
@@ -123,7 +123,7 @@ export default function Hipaa() {
           If you believe your privacy rights have been violated, you have the right to file a complaint with us or with the Information Regulator of South Africa. We will not retaliate against you for filing a complaint.
         </p>
         <p className="text-dark-500 text-sm leading-relaxed">
-          To file a complaint with us, contact our Privacy Officer at <a href="mailto:privacy@ridethetide.info" className="text-primary-600 hover:underline">privacy@ridethetide.info</a>. To file a complaint with the Information Regulator, visit <a href="https://www.inforegulator.org.za" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">www.inforegulator.org.za</a>.
+          To file a complaint with us, contact our Privacy Officer at <a href="mailto:privacy@app.peptide-south-africa.com" className="text-primary-600 hover:underline">privacy@app.peptide-south-africa.com</a>. To file a complaint with the Information Regulator, visit <a href="https://www.inforegulator.org.za" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">www.inforegulator.org.za</a>.
         </p>
       </section>
 
@@ -134,9 +134,9 @@ export default function Hipaa() {
         </p>
         <div className="text-dark-500 text-sm leading-relaxed">
           <p><strong>Privacy Officer</strong></p>
-          <p>Ride The Tide</p>
+          <p>Peptide South Africa</p>
           <p>Cape Town, South Africa</p>
-          <p><strong>Email:</strong> <a href="mailto:privacy@ridethetide.info" className="text-primary-600 hover:underline">privacy@ridethetide.info</a></p>
+          <p><strong>Email:</strong> <a href="mailto:privacy@app.peptide-south-africa.com" className="text-primary-600 hover:underline">privacy@app.peptide-south-africa.com</a></p>
           <p><strong>Phone:</strong> +27 12 345 6789</p>
         </div>
       </section>

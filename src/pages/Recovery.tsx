@@ -10,17 +10,17 @@ import {
   Flame,
   Brain,
   TrendingUp,
-  PackageOpen,
   Phone,
 } from 'lucide-react'
 import { AnimatedSection, StaggerContainer, StaggerItem } from '../components/pages/AnimatedSection'
+import { productImages, howItWorksImages, videoUrls } from '../lib/assets'
 
 const products = [
   {
     name: 'NAD+',
     tagline: 'Cellular Recovery & Energy',
     description: 'Accelerate post-workout recovery, reduce muscle fatigue, and restore cellular energy after intense physical exertion. NAD+ is the fuel your mitochondria need to repair and rebuild.',
-    image: 'from-red-100 to-orange-100',
+    image: productImages.nadSpray,
     link: '/products/nad',
     badge: 'Athletic Recovery',
     badgeColor: 'bg-red-100 text-red-700',
@@ -29,7 +29,7 @@ const products = [
     name: 'Glutathione',
     tagline: 'Inflammation & Healing',
     description: 'Reduce exercise-induced inflammation, speed up injury healing, and support your immune system during demanding training blocks. The master antioxidant for active bodies.',
-    image: 'from-cyan-100 to-blue-100',
+    image: productImages.glutathioneVial,
     link: '/products/glutathione',
     badge: 'Healing',
     badgeColor: 'bg-cyan-100 text-cyan-700',
@@ -73,6 +73,11 @@ export default function Recovery() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden bg-dark-900">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+          <source src={videoUrls.recovery.mp4} type="video/mp4" />
+          <source src={videoUrls.recovery.webm} type="video/webm" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-br from-dark-900/90 via-dark-900/80 to-dark-900/70" />
         <div className="absolute inset-0 bg-gradient-to-br from-dark-900 via-red-950/20 to-dark-900" />
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-red-500/10 to-transparent" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
@@ -117,10 +122,13 @@ export default function Recovery() {
             {products.map((product) => (
               <StaggerItem key={product.name}>
                 <div className="card-hover overflow-hidden h-full flex flex-col">
-                  <div className={`h-56 bg-gradient-to-br ${product.image} flex items-center justify-center relative`}>
-                    <div className="w-24 h-32 bg-white/60 rounded-lg shadow-sm flex items-center justify-center">
-                      <PackageOpen className="w-10 h-10 text-dark-400" />
-                    </div>
+                  <div className="h-56 relative overflow-hidden">
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
                     <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold ${product.badgeColor}`}>
                       {product.badge}
                     </span>
@@ -240,11 +248,12 @@ export default function Recovery() {
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-red-100 via-orange-100 to-amber-100 flex items-center justify-center">
-                <div className="w-32 h-32 bg-white/60 rounded-2xl shadow-sm flex items-center justify-center">
-                  <HeartPulse className="w-14 h-14 text-red-500" />
-                </div>
-              </div>
+              <img 
+                src={howItWorksImages.physicianReview} 
+                alt="Physician Review" 
+                className="w-full h-80 lg:h-96 object-contain rounded-2xl"
+                loading="lazy"
+              />
             </AnimatedSection>
           </div>
         </div>

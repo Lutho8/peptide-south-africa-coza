@@ -10,12 +10,11 @@ import {
   FileCheck,
   Thermometer,
   Beaker,
-  Building2,
   MapPin,
   BadgeCheck,
-  Award,
 } from 'lucide-react'
 import { AnimatedSection, StaggerContainer, StaggerItem } from '../components/pages/AnimatedSection'
+import { partnerImages, videoUrls } from '../lib/assets'
 
 const trustIndicators = [
   { icon: Shield, title: 'SAHPRA Compliant', description: 'All protocols and pharmacies meet South African Health Products Regulatory Authority standards.' },
@@ -61,21 +60,21 @@ const pharmacies = [
     location: 'Cape Town, Western Cape',
     description: 'Specialist compounding pharmacy with ISO-certified cleanrooms and full SAHPRA licensing.',
     certifications: ['SAHPRA Licensed', 'ISO 9001', 'USP <797>'],
-    color: 'from-blue-100 to-indigo-100',
+    image: partnerImages.wasefHealth,
   },
   {
     name: 'BioHealth Compounding',
     location: 'Johannesburg, Gauteng',
     description: 'Leading compounding facility serving the Highveld with state-of-the-art analytical testing labs.',
     certifications: ['SAHPRA Licensed', '3rd Party Tested', 'Cold Chain Certified'],
-    color: 'from-emerald-100 to-teal-100',
+    image: partnerImages.bask,
   },
   {
     name: 'KZN Pharma Solutions',
     location: 'Durban, KwaZulu-Natal',
     description: 'Coastal compounding specialist with expertise in temperature-sensitive peptide formulations.',
     certifications: ['SAHPRA Licensed', 'USP <795>', 'GMP Certified'],
-    color: 'from-amber-100 to-orange-100',
+    image: partnerImages.hillsideMorning,
   },
 ]
 
@@ -84,6 +83,11 @@ export default function PharmacyStandards() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden bg-dark-900">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+          <source src={videoUrls.stocksy.mp4} type="video/mp4" />
+          <source src={videoUrls.stocksy.webm} type="video/webm" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-br from-dark-900/90 via-dark-900/80 to-dark-900/70" />
         <div className="absolute inset-0 bg-gradient-to-br from-dark-900 via-primary-950/30 to-dark-900" />
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary-500/10 to-transparent" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
@@ -182,10 +186,13 @@ export default function PharmacyStandards() {
             {pharmacies.map((p) => (
               <StaggerItem key={p.name}>
                 <div className="card-hover overflow-hidden h-full flex flex-col">
-                  <div className={`h-32 bg-gradient-to-br ${p.color} flex items-center justify-center`}>
-                    <div className="w-16 h-16 bg-white/60 rounded-xl shadow-sm flex items-center justify-center">
-                      <Building2 className="w-8 h-8 text-dark-400" />
-                    </div>
+                  <div className="h-32 bg-white flex items-center justify-center border-b border-dark-100">
+                    <img 
+                      src={p.image} 
+                      alt={p.name} 
+                      className="max-h-24 max-w-[90%] object-contain"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="p-6 flex-1 flex flex-col">
                     <h3 className="text-lg font-bold text-dark-900 mb-1">{p.name}</h3>
@@ -260,10 +267,13 @@ export default function PharmacyStandards() {
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-dark-800 via-primary-900/20 to-dark-800 border border-dark-700 flex items-center justify-center">
-                <div className="w-40 h-40 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-full flex items-center justify-center">
-                  <Award className="w-16 h-16 text-primary-400" />
-                </div>
+              <div className="h-80 lg:h-96 rounded-2xl overflow-hidden">
+                <img
+                  src={partnerImages.hillsideMorning}
+                  alt="SAHPRA compliant pharmacy"
+                  className="w-full h-full object-cover rounded-2xl"
+                  loading="lazy"
+                />
               </div>
             </AnimatedSection>
           </div>

@@ -10,7 +10,7 @@ import "swiper/css/navigation";
 const testimonials = [
   {
     name: "Nic K",
-    text: "I've been peptide-curious for a long time but was always scared of sketchy gray market sites and dosing myself. Ride The Tide gave me a personalized protocol with the security of medical supervision instead of self science.",
+    text: "I've been peptide-curious for a long time but was always scared of sketchy gray market sites and dosing myself. Peptide South Africa gave me a personalized protocol with the security of medical supervision instead of self science.",
   },
   {
     name: "Rhys S",
@@ -18,11 +18,11 @@ const testimonials = [
   },
   {
     name: "Morgan J",
-    text: "I had tried many diets, supplements and weight loss plans in the past. Finally, I decided to have a physician-tailored protocol drawn up for me by the Ride The Tide Care Team and I was able to achieve my weight loss goals.",
+    text: "I had tried many diets, supplements and weight loss plans in the past. Finally, I decided to have a physician-tailored protocol drawn up for me by the Peptide South Africa Care Team and I was able to achieve my weight loss goals.",
   },
   {
     name: "Chase H",
-    text: "My doctor struggled to accurately diagnose my fatigue, but my Ride The Tide protocol helped me feel like my old self again.",
+    text: "My doctor struggled to accurately diagnose my fatigue, but my Peptide South Africa protocol helped me feel like my old self again.",
   },
   {
     name: "Aubrey H",
@@ -30,11 +30,11 @@ const testimonials = [
   },
   {
     name: "Cody M",
-    text: "Ride The Tide and my dedicated health coach have completely changed the way I approach my health, leading me to newfound progress and balance.",
+    text: "Peptide South Africa and my dedicated health coach have completely changed the way I approach my health, leading me to newfound progress and balance.",
   },
   {
     name: "Michael M",
-    text: "My Ride The Tide protocol has helped support my health journey. After years of working out, this support has finally led to noticeable results.",
+    text: "My Peptide South Africa protocol has helped support my health journey. After years of working out, this support has finally led to noticeable results.",
   },
 ];
 
@@ -44,6 +44,18 @@ function StarRating() {
       {[...Array(5)].map((_, i) => (
         <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
       ))}
+    </div>
+  );
+}
+
+function Avatar({ name }: { name: string }) {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("");
+  return (
+    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
+      {initials}
     </div>
   );
 }
@@ -62,8 +74,11 @@ export default function ReviewsSection() {
           className="text-center max-w-2xl mx-auto mb-14"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-dark-900 tracking-tight">
-            What our patients say
+            Verified 5-Star Reviews for Peptide South Africa
           </h2>
+          <p className="mt-4 text-lg text-dark-500 leading-relaxed">
+            The support people keep coming back to.
+          </p>
         </motion.div>
 
         <motion.div
@@ -89,7 +104,10 @@ export default function ReviewsSection() {
                 <div className="card-hover p-6 h-full flex flex-col">
                   <StarRating />
                   <p className="mt-4 text-dark-600 leading-relaxed text-sm flex-1">"{t.text}"</p>
-                  <p className="mt-6 font-bold text-dark-900 text-sm">— {t.name}</p>
+                  <div className="mt-6 flex items-center gap-3">
+                    <Avatar name={t.name} />
+                    <p className="font-bold text-dark-900 text-sm">— {t.name}</p>
+                  </div>
                 </div>
               </SwiperSlide>
             ))}

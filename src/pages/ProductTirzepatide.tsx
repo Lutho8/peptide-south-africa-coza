@@ -1,4 +1,5 @@
 import ProductPageTemplate from '../components/products/ProductPageTemplate'
+import { productImages } from '../lib/assets'
 import {
   Zap,
   Shield,
@@ -15,6 +16,8 @@ export default function ProductTirzepatide() {
       description="A dual-action GLP-1 + GIP receptor agonist for advanced weight management. The most effective peptide for sustainable fat loss."
       price="From R2,950/month"
       priceSubtext="or R295 per dose"
+      heroImage={productImages.tirzepatideBottle}
+      scienceImage={productImages.tirzepatideVial}
       benefits={[
         {
           icon: Zap,

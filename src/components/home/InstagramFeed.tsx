@@ -1,13 +1,14 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import { instagramImages } from "../../lib/assets";
 
-const gradients = [
-  "from-primary-400 to-primary-700",
-  "from-accent-400 to-accent-700",
-  "from-emerald-400 to-emerald-700",
-  "from-purple-400 to-purple-700",
-  "from-cyan-400 to-cyan-700",
-  "from-amber-400 to-amber-700",
+const posts = [
+  instagramImages.post1,
+  instagramImages.post2,
+  instagramImages.post1,
+  instagramImages.post2,
+  instagramImages.post1,
+  instagramImages.post2,
 ];
 
 export default function InstagramFeed() {
@@ -34,12 +35,17 @@ export default function InstagramFeed() {
           transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto"
         >
-          {gradients.map((grad, i) => (
+          {posts.map((src, i) => (
             <div
               key={i}
-              className={`aspect-square bg-gradient-to-br ${grad} rounded-xl flex items-center justify-center hover:scale-[1.02] transition-transform duration-300`}
+              className="aspect-square rounded-xl overflow-hidden hover:scale-[1.02] transition-transform duration-300"
             >
-              <span className="text-white/60 text-xs font-medium">Instagram</span>
+              <img
+                src={src}
+                alt={`Instagram post ${i + 1}`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
             </div>
           ))}
         </motion.div>

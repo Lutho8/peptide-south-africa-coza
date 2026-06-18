@@ -15,6 +15,7 @@ import {
   Calendar,
 } from 'lucide-react'
 import { AnimatedSection, StaggerContainer, StaggerItem } from '../components/pages/AnimatedSection'
+import { howItWorksImages, videoUrls } from '../lib/assets'
 
 const steps = [
   {
@@ -24,6 +25,7 @@ const steps = [
     icon: ClipboardList,
     color: 'from-primary-500 to-primary-700',
     lightColor: 'bg-primary-100',
+    image: howItWorksImages.questionnaire,
     iconColor: 'text-primary-600',
     features: ['Takes 10-15 minutes', 'Mobile-friendly', 'Secure & encrypted', 'No obligation'],
   },
@@ -34,6 +36,7 @@ const steps = [
     icon: Stethoscope,
     color: 'from-accent-500 to-primary-600',
     lightColor: 'bg-accent-100',
+    image: howItWorksImages.physicianReview,
     iconColor: 'text-accent-600',
     features: ['24-48 hour review', 'Personalized protocol', 'Telehealth if needed', 'Contraindication check'],
   },
@@ -44,6 +47,7 @@ const steps = [
     icon: PackageOpen,
     color: 'from-emerald-500 to-teal-600',
     lightColor: 'bg-emerald-100',
+    image: howItWorksImages.protocolDelivered,
     iconColor: 'text-emerald-600',
     features: ['Cold-chain delivery', '2-3 day shipping', 'Detailed instructions', 'Ongoing support'],
   },
@@ -72,6 +76,11 @@ export default function HowItWorks() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden bg-dark-900">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+          <source src={videoUrls.base.mp4} type="video/mp4" />
+          <source src={videoUrls.base.webm} type="video/webm" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-br from-dark-900/90 via-dark-900/80 to-dark-900/70" />
         <div className="absolute inset-0 bg-gradient-to-br from-dark-900 via-primary-950/30 to-dark-900" />
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary-500/10 to-transparent" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
@@ -117,10 +126,13 @@ export default function HowItWorks() {
               <AnimatedSection key={step.number} direction={index % 2 === 0 ? 'left' : 'right'}>
                 <div className={`grid lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
                   <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
-                    <div className={`h-64 lg:h-80 rounded-2xl bg-gradient-to-br ${step.lightColor} flex items-center justify-center relative`}>
-                      <div className="w-24 h-24 bg-white/70 rounded-2xl shadow-sm flex items-center justify-center">
-                        <step.icon className={`w-12 h-12 ${step.iconColor}`} />
-                      </div>
+                    <div className="h-64 lg:h-80 rounded-2xl relative overflow-hidden">
+                      <img 
+                        src={step.image} 
+                        alt={step.title} 
+                        className="w-full h-full object-contain"
+                        loading="lazy"
+                      />
                       <div className={`absolute -top-4 -left-4 w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center shadow-lg`}>
                         <span className="text-white font-bold text-xl">{step.number}</span>
                       </div>

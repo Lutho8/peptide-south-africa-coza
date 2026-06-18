@@ -3,16 +3,18 @@ import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, ArrowRight 
 
 const footerLinks = {
   products: [
-    { label: 'Tirzepatide', href: '/products/compounded-tirzepatide' },
-    { label: 'Semaglutide', href: '/products/compounded-semaglutide' },
-    { label: 'NAD+', href: '/products/nad' },
-    { label: 'Sermorelin', href: '/products/sermorelin' },
-    { label: 'Glutathione', href: '/products/glutathione' },
+    { label: 'Semaglutide', href: '/peptides/semaglutide' },
+    { label: 'Tirzepatide', href: '/peptides/tirzepatide' },
+    { label: 'BPC-157', href: '/peptides/bpc-157' },
+    { label: 'CJC-1295 + Ipamorelin', href: '/peptides/cjc-1295-ipamorelin' },
+    { label: 'View All', href: '/peptide-database' },
   ],
   resources: [
+    { label: 'Programs', href: '/programs' },
+    { label: 'Peptide Database', href: '/peptide-database' },
     { label: 'Blog', href: '/blogs' },
-    { label: 'FAQs', href: '/faqs' },
-    { label: 'Contact Us', href: '/contact-us' },
+    { label: 'FAQ', href: '/faq' },
+    { label: 'Contact', href: '/contact-us' },
     { label: 'Pricing', href: '/pricing' },
   ],
   company: [
@@ -25,7 +27,7 @@ const footerLinks = {
     { label: 'Privacy Policy', href: '/privacy-policy' },
     { label: 'Terms & Conditions', href: '/terms-conditions' },
     { label: 'Return Policy', href: '/return-policy' },
-    { label: 'HIPAA Privacy Policy', href: '/hippa-privacy-policy' },
+    { label: 'Medical Disclaimer', href: '/compliance' },
   ],
 }
 
@@ -71,9 +73,9 @@ export default function Footer() {
           <div className="sm:col-span-2 lg:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-500 to-accent-500 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">RT</span>
+                <span className="text-white font-bold text-lg">PSA</span>
               </div>
-              <span className="font-bold text-white text-lg">Ride The Tide</span>
+              <span className="font-bold text-white text-lg">Peptide South Africa</span>
             </Link>
             <p className="text-sm text-dark-400 mb-4">
               Personalized peptide protocols for weight loss, longevity & recovery. Physician-supervised, compounded at licensed SA pharmacies.
@@ -148,9 +150,9 @@ export default function Footer() {
               </button>
             </form>
             <div className="space-y-2.5">
-              <a href="mailto:hello@ridethetide.info" className="flex items-center gap-2 text-sm text-dark-400 hover:text-white transition-colors">
+              <a href="mailto:hello@peptide-south-africa.com" className="flex items-center gap-2 text-sm text-dark-400 hover:text-white transition-colors">
                 <Mail className="w-4 h-4" />
-                hello@ridethetide.info
+                hello@peptide-south-africa.com
               </a>
               <a href="tel:+27123456789" className="flex items-center gap-2 text-sm text-dark-400 hover:text-white transition-colors">
                 <Phone className="w-4 h-4" />
@@ -170,7 +172,7 @@ export default function Footer() {
         <div className="container-main py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs text-dark-500">
-              © {new Date().getFullYear()} Ride The Tide. All rights reserved.
+              © {new Date().getFullYear()} Peptide South Africa. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               {footerLinks.legal.map((link) => (

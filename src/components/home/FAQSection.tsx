@@ -4,8 +4,8 @@ import { ChevronDown } from "lucide-react";
 
 const faqs = [
   {
-    question: "What is Ride The Tide?",
-    answer: "Ride The Tide is a licensed telehealth platform for personalized peptide therapy. We connect you with licensed physicians who design custom protocols compounded at SAHPRA-compliant pharmacies.",
+    question: "What is Peptide South Africa?",
+    answer: "Peptide South Africa is a licensed telehealth platform for personalized peptide therapy. We connect you with licensed physicians who design custom protocols compounded at SAHPRA-compliant pharmacies.",
   },
   {
     question: "Are your peptides legal in South Africa?",

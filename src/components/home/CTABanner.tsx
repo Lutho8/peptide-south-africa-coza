@@ -1,14 +1,22 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { backgroundImages } from "../../lib/assets";
 
 export default function CTABanner() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section ref={ref} className="bg-gradient-primary">
-      <div className="container-main section-padding">
+    <section ref={ref} className="relative overflow-hidden">
+      <img
+        src={backgroundImages.newsletterBg}
+        alt="Newsletter background"
+        className="absolute inset-0 w-full h-full object-cover"
+        loading="lazy"
+      />
+      <div className="absolute inset-0 bg-primary-700/80" />
+      <div className="container-main section-padding relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}

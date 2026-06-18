@@ -17,6 +17,15 @@ import {
   BadgeCheck,
 } from 'lucide-react'
 import { AnimatedSection, StaggerContainer, StaggerItem } from '../components/pages/AnimatedSection'
+import { productImages } from '../lib/assets'
+
+const productImageMap: Record<string, string> = {
+  'Tirzepatide': productImages.tirzepatideBottle,
+  'Semaglutide': productImages.semaglutideBottle,
+  'NAD+': productImages.nadSpray,
+  'Sermorelin': productImages.sermorelinVial,
+  'Glutathione': productImages.glutathioneVial,
+}
 
 const pricingData = [
   {
@@ -184,6 +193,12 @@ export default function Pricing() {
                     <tr key={row.product} className={`border-b border-dark-100 ${row.popular ? 'bg-primary-50/50' : ''}`}>
                       <td className="py-5 px-4">
                         <div className="flex items-center gap-3">
+                          <img 
+                            src={productImageMap[row.product]} 
+                            alt={row.product} 
+                            className="w-10 h-10 object-contain rounded-lg"
+                            loading="lazy"
+                          />
                           <span className="font-semibold text-dark-900">{row.product}</span>
                           {row.popular && (
                             <span className="px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 text-xs font-bold">POPULAR</span>
@@ -260,10 +275,13 @@ export default function Pricing() {
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right">
-              <div className="h-80 lg:h-96 rounded-2xl bg-gradient-to-br from-primary-100 via-accent-100 to-primary-100 flex items-center justify-center">
-                <div className="w-32 h-32 bg-white/60 rounded-2xl shadow-sm flex items-center justify-center">
-                  <Shield className="w-14 h-14 text-primary-500" />
-                </div>
+              <div className="h-80 lg:h-96 rounded-2xl overflow-hidden">
+                <img
+                  src={productImages.whooshBottle}
+                  alt="Pricing plans"
+                  className="w-full h-full object-contain rounded-2xl"
+                  loading="lazy"
+                />
               </div>
             </AnimatedSection>
           </div>

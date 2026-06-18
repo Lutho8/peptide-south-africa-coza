@@ -1,37 +1,43 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { productImages } from "../../lib/assets";
 
 const products = [
   {
     name: "Compounded Tirzepatide",
     description: "Dual GIP/GLP-1 receptor agonist for powerful weight loss and metabolic support.",
     link: "/products/compounded-tirzepatide",
-    gradient: "from-purple-400 to-purple-700",
+    image: productImages.tirzepatideBottle,
+    alt: "Compounded Tirzepatide bottle",
   },
   {
     name: "Compounded Semaglutide",
     description: "GLP-1 receptor agonist proven to reduce appetite and support sustained weight loss.",
     link: "/products/compounded-semaglutide",
-    gradient: "from-primary-400 to-primary-700",
+    image: productImages.semaglutideBottle,
+    alt: "Compounded Semaglutide bottle",
   },
   {
     name: "NAD+",
     description: "Boost cellular energy, repair DNA, and support longevity at the mitochondrial level.",
     link: "/products/nad",
-    gradient: "from-emerald-400 to-emerald-700",
+    image: productImages.nadSpray,
+    alt: "NAD+ spray bottle",
   },
   {
     name: "Sermorelin",
     description: "Growth hormone secretagogue that supports muscle growth, recovery, and body composition.",
     link: "/products/sermorelin",
-    gradient: "from-amber-400 to-amber-700",
+    image: productImages.sermorelinVial,
+    alt: "Sermorelin vial",
   },
   {
     name: "Glutathione",
     description: "Master antioxidant for immune support, detoxification, and cellular protection.",
     link: "/products/glutathione",
-    gradient: "from-cyan-400 to-cyan-700",
+    image: productImages.glutathioneVial,
+    alt: "Glutathione vial",
   },
 ];
 
@@ -50,10 +56,10 @@ export default function ProductsSection() {
           className="text-center max-w-2xl mx-auto mb-14"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-dark-900 tracking-tight">
-            Designed for you.
+            Our Products
           </h2>
           <p className="mt-4 text-lg text-dark-500 leading-relaxed">
-            The Ride The Tide journey starts with a tailored protocol, designed for your goals.
+            The Peptide South Africa journey starts with a tailored protocol, designed for your goals.
           </p>
         </motion.div>
 
@@ -66,8 +72,13 @@ export default function ProductsSection() {
               transition={{ duration: 0.5, delay: 0.1 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="card-hover overflow-hidden h-full flex flex-col">
-                <div className={`w-full h-[300px] bg-gradient-to-br ${product.gradient} flex items-center justify-center`}>
-                  <span className="text-white/70 text-sm font-medium">{product.name}</span>
+                <div className="w-full h-[300px] flex items-center justify-center bg-white rounded-t-2xl overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.alt}
+                    className="w-full h-full object-contain"
+                    loading="lazy"
+                  />
                 </div>
                 <div className="p-5 flex flex-col flex-1">
                   <h3 className="text-lg font-bold text-dark-900">{product.name}</h3>

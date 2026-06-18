@@ -1,14 +1,23 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { productImages, videoUrls } from "../../lib/assets";
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-dark-900 to-dark-800 min-h-[700px] md:min-h-[800px] flex items-center">
-      {/* Background subtle pattern */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary-500/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent-500/20 rounded-full blur-3xl" />
-      </div>
+    <section className="relative overflow-hidden min-h-[700px] md:min-h-[800px] flex items-center">
+      {/* Background Video - exact same as Whoosh Wellness */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      >
+        <source src={videoUrls.hero.mp4} type="video/mp4" />
+        <source src={videoUrls.hero.webm} type="video/webm" />
+      </video>
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-gradient-to-br from-dark-900/90 via-dark-900/80 to-dark-900/70" />
 
       <div className="container-main relative z-10 py-20 md:py-28">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -45,9 +54,14 @@ export default function HeroSection() {
               <motion.div
                 animate={{ y: [0, -20, 0] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                className="w-[320px] h-[420px] md:w-[400px] md:h-[500px] lg:w-[500px] lg:h-[600px] rounded-3xl bg-gradient-to-br from-primary-400 via-accent-500 to-primary-700 shadow-2xl shadow-primary-500/20 flex items-center justify-center"
+                className="w-[320px] h-[420px] md:w-[400px] md:h-[500px] lg:w-[500px] lg:h-[600px] rounded-3xl shadow-2xl shadow-primary-500/20 flex items-center justify-center overflow-hidden"
               >
-                <span className="text-white/60 text-lg font-medium">Product Image</span>
+                <img
+                  src={productImages.tirzepatideBottle}
+                  alt="Compounded Tirzepatide bottle"
+                  className="w-full h-full object-contain rounded-3xl"
+                  loading="eager"
+                />
               </motion.div>
               {/* Floating accent card */}
               <motion.div
