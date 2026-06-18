@@ -1,6 +1,6 @@
 // Peptide Tracker Service Worker - PWA + Background Notifications
 
-const CACHE_NAME = 'peptide-tracker-v4';
+const CACHE_NAME = 'peptide-tracker-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
