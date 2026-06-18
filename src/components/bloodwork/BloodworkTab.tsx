@@ -25,11 +25,11 @@ interface Report {
   report_date: string | null;
   uploaded_at: string;
   file_name: string | null;
-  lab_name?: string | null;
   health_score: number | null;
   status: string;
   extracted_biomarkers: Biomarker[] | null;
   scan_type: string | null;
+  patient_sex?: string | null;
 }
 
 interface StackEntry {
