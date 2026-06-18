@@ -120,8 +120,8 @@ export default function PrivacyPolicy() {
             <h2 className="text-xl font-semibold mb-4">10. Contact Us</h2>
             <p className="text-muted-foreground">
               If you have questions about this Privacy Policy or our data practices, please contact us at{' '}
-              <a href="mailto:privacy@ridethetide.app" className="text-primary hover:underline">
-                privacy@ridethetide.app
+              <a href="mailto:privacy@peptide-south-africa.co.za" className="text-primary hover:underline">
+                privacy@peptide-south-africa.co.za
               </a>
             </p>
           </section>
