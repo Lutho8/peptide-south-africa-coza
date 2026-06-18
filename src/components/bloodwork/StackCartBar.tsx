@@ -38,7 +38,8 @@ export function StackCartBar({ patternIds = [] }: Props) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[min(720px,calc(100vw-2rem))]"
+          className="fixed left-1/2 -translate-x-1/2 z-40 w-[min(720px,calc(100vw-2rem))]"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)' }}
           id="bloodwork-stack-cart"
         >
           <div className="rounded-2xl border border-primary/40 bg-background/95 backdrop-blur-xl shadow-2xl shadow-primary/10 p-3">
