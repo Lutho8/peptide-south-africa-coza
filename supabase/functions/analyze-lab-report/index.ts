@@ -28,7 +28,7 @@ serve(async (req) => {
     const body = await req.json();
     const {
       reportId,
-      imageBase64,
+      imageBase64: incomingBase64, // legacy clients still send inline
       fileName,
       mimeType,
       languageHint,
@@ -40,10 +40,64 @@ serve(async (req) => {
       peptideHistoryNotes,
     } = body || {};
 
-    if (!reportId || !imageBase64) throw new Error("Missing reportId or imageBase64");
+    if (!reportId) {
+      return new Response(JSON.stringify({
+        ok: false, code: "BAD_REQUEST", retryable: false,
+        message: "Missing report id.",
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Fetch report row to locate the stored file
+    const { data: reportRow, error: reportErr } = await supabase
+      .from("lab_reports")
+      .select("file_url, file_name")
+      .eq("id", reportId)
+      .eq("user_id", user.id)
+      .single();
+    if (reportErr || !reportRow) {
+      return new Response(JSON.stringify({
+        ok: false, code: "REPORT_NOT_FOUND", retryable: false,
+        message: "Couldn't find the uploaded report.",
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Prefer server-side storage download (no 6MB invoke body limit).
+    // Fallback to legacy inline base64 if a client still sends it.
+    let base64: string;
+    const effectiveFileName = fileName || reportRow.file_name || "report.pdf";
+    if (incomingBase64) {
+      base64 = incomingBase64;
+    } else {
+      const downloadStart = Date.now();
+      const { data: blob, error: dlErr } = await supabase
+        .storage.from("lab-reports").download(reportRow.file_url);
+      if (dlErr || !blob) {
+        console.error("[analyze-lab-report] storage download failed", { dlErr });
+        return new Response(JSON.stringify({
+          ok: false, code: "STORAGE_DOWNLOAD_FAILED", retryable: true,
+          message: "Couldn't load your uploaded file. Please retry.",
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const buf = new Uint8Array(await blob.arrayBuffer());
+      // Reject scanned/encrypted PDFs early
+      const head = new TextDecoder().decode(buf.slice(0, Math.min(buf.length, 4096)));
+      if (head.includes("/Encrypt")) {
+        return new Response(JSON.stringify({
+          ok: false, code: "ENCRYPTED_PDF", retryable: false,
+          message: "This PDF is password-protected. Please re-export it without encryption.",
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      // base64 encode
+      let bin = "";
+      for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+      base64 = btoa(bin);
+      console.log("[analyze-lab-report] downloaded from storage", {
+        bytes: buf.length, durationMs: Date.now() - downloadStart,
+      });
+    }
 
     // Resolve MIME
-    const lowerName = (fileName || "").toLowerCase();
+    const lowerName = effectiveFileName.toLowerCase();
     let resolvedMime = mimeType as string | undefined;
     if (!resolvedMime) {
       if (lowerName.endsWith(".pdf")) resolvedMime = "application/pdf";
@@ -51,6 +105,7 @@ serve(async (req) => {
       else if (lowerName.endsWith(".webp")) resolvedMime = "image/webp";
       else resolvedMime = "image/jpeg";
     }
+
 
     // Update status & save patient context
     await supabase
@@ -144,7 +199,7 @@ If the file is unreadable, return:
 {"summary":"Unable to read lab report","report_date":null,"detected_language":"en","health_score":null,"biomarkers":[],"insights":["The uploaded file could not be recognised as a lab report."],"protocol":{"stack":[],"supplements":[],"nutrition":[],"exercise":[],"stress":[],"environment":[],"retest":[]},"recommended_stack_peptides":[]}`;
 
     const userText = [
-      `Analyze this lab report (${fileName}).`,
+      `Analyze this lab report (${effectiveFileName}).`,
       `Scan type: ${isDeep ? "Deep Decode" : "Baseline"}.`,
       age ? `Patient age: ${age}.` : "",
       sex && sex !== "na" ? `Patient sex: ${sex}.` : "",

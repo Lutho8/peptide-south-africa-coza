@@ -35,10 +35,13 @@ interface Props {
   onCancel: () => void;
   onRetry: () => void;
   onResetUpload: () => void;
+  labReportId?: string | null;
+  onManualSaved?: () => void;
 }
 
 export function BloodworkWizard({
   state, onChange, running, error, progress, onRun, onCancel, onRetry, onResetUpload,
+  labReportId, onManualSaved,
 }: Props) {
   const [step, setStep] = useState(1);
   const [maxReached, setMaxReached] = useState(1);
@@ -78,7 +81,13 @@ export function BloodworkWizard({
               className="space-y-4"
             >
               {error ? (
-                <ScanError message={error} onRetry={onRetry} onReset={() => { onResetUpload(); setStep(1); }} />
+                <ScanError
+                  message={error}
+                  onRetry={onRetry}
+                  onReset={() => { onResetUpload(); setStep(1); }}
+                  labReportId={labReportId}
+                  onManualSaved={onManualSaved}
+                />
               ) : (
                 <ScanProgress {...progress} onCancel={onCancel} />
               )}
