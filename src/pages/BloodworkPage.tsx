@@ -296,6 +296,11 @@ export default function BloodworkPage() {
               onCancel={handleCancel}
               onRetry={handleRetry}
               onResetUpload={handleResetUpload}
+              labReportId={labReportId}
+              onManualSaved={() => {
+                setError(null);
+                toast.success('Biomarkers saved — view them in Results › Bloodwork.');
+              }}
             />
           ) : (
             <main className="max-w-5xl mx-auto px-4 py-8 pb-24">
