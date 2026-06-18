@@ -160,7 +160,7 @@ export function BloodworkTab() {
       const [{ data: rData, error: rErr }, { data: sData }, { data: stData }] = await Promise.all([
         supabase
           .from('lab_reports')
-          .select('id, report_date, uploaded_at, file_name, lab_name, health_score, status, extracted_biomarkers, scan_type')
+          .select('id, report_date, uploaded_at, file_name, patient_sex, health_score, status, extracted_biomarkers, scan_type')
           .eq('user_id', user.id)
           .eq('status', 'completed')
           .order('uploaded_at', { ascending: false }),
