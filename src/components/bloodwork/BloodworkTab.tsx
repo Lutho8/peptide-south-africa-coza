@@ -63,7 +63,7 @@ export function BloodworkTab() {
       if (error) {
         console.error('[bloodwork-tab] load failed', error);
       } else {
-        setReports((data ?? []) as Report[]);
+        setReports((data ?? []) as unknown as Report[]);
       }
       setLoading(false);
     })();
