@@ -127,7 +127,7 @@ export default function Disclaimer() {
             <h2 className="text-xl font-semibold mb-4">8. Contact Us</h2>
             <p className="text-muted-foreground">
               If you have questions about this disclaimer or our content policies, please contact us at{' '}
-              <a href="mailto:contact@peptide-south-africa.co.za" className="text-primary hover:underline">
+              <a href="mailto:contact@peptide-south-africa.com" className="text-primary hover:underline">
                 contact@peptide-south-africa.co.za
               </a>
             </p>

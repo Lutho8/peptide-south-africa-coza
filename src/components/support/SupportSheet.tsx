@@ -14,7 +14,7 @@ interface SupportSheetProps {
 
 const WA_HREF = 'https://wa.me/491624747159?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20Peptide%20South%20Africa';
 const BOOK_HREF = 'mailto:webinars@fintiba.com?subject=Consultation%20Request%20%E2%80%94%20Peptide%20South%20Africa';
-const EMAIL_HREF = 'mailto:support@peptide-south-africa.co.za?subject=Support%20%E2%80%94%20Peptide%20South%20Africa';
+const EMAIL_HREF = 'mailto:support@peptide-south-africa.com?subject=Support%20%E2%80%94%20Peptide%20South%20Africa';
 const SHOP_HREF = 'https://peptide-south-africa.com/?utm_source=psa_app&utm_medium=support&utm_campaign=shop';
 const CLUB_HREF = 'https://capetownpeptideclub.co.za';
 
