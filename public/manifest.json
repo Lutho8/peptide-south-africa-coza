@@ -1,6 +1,6 @@
 {
   "name": "Peptide South Africa - Peptide Protocol Tracker",
-  "short_name": "Peptide South Africa",
+  "short_name": "Peptide SA",
   "description": "Track peptide protocols, doses, and body composition for optimized health",
   "start_url": "/?utm_source=pwa",
   "display": "standalone",
@@ -11,21 +11,33 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/favicon.png?v=2",
       "sizes": "32x32",
       "type": "image/png"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/icon-192.png?v=2",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon-192.png?v=2",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png?v=2",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png?v=2",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [],
@@ -35,7 +47,7 @@
       "short_name": "Log",
       "description": "Quickly log a dose",
       "url": "/?action=log",
-      "icons": [{ "src": "/favicon.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/favicon.png?v=2", "sizes": "96x96" }]
     }
   ]
 }

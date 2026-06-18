@@ -1,64 +1,39 @@
-# Bloodwork P0 Hardening + Results Visibility + Quarterly Reminders
+# Fix Mobile App Name & Logo (PWA Install Branding)
 
-Scope: the four CRITICAL items at the top of your list (Bloodwork upload, Baseline/Deep Decode, Results visibility, Quarterly reminders) plus the foundational mobile-a11y fixes. Everything labeled High/Medium/Low (wearables, food logger, community, side-effects journal, etc.) is deferred to a follow-up sprint.
+The manifest text and `<title>` already say "Peptide South Africa", but the installed app on phones still shows "Ride The Tide" with the old wave logo. Two root causes:
 
-## Already in place (from prior turns)
-- `analyze-lab-report` wrapped in 45s `AbortSignal` + structured JSON error envelopes (`ok/code/retryable/message`).
-- Client-side validation in `BloodworkWizard.tsx` (≤10MB, PDF-only).
-- `useSwipeNav` hook wired into Daily Log calendar.
-- `offlineQueue.ts` IndexedDB outbox with auto-sync on reconnect; `useDailyDoses` enqueues on failure.
+1. **iOS home-screen label is missing**: `index.html` has no `apple-mobile-web-app-title`, so iOS may fall back to a cached/legacy name.
+2. **Icon PNGs are visually unchanged**: `public/favicon.png`, `public/icon-192.png`, and `public/icon-512.png` still render the old Ride The Tide wave artwork. The manifest references them, so installs pick up the old logo no matter what name we set.
+3. **Service worker + installed PWA cache** the manifest and icons aggressively — even after we ship new files, returning installs need a cache-bust to pick them up.
 
-## 1. Bloodwork Upload — finish the P0
-**Edge function `analyze-lab-report`:**
-- Add encrypted-/compressed-PDF detection at the top of the handler (look for `/Encrypt` marker, attempt `pdf-lib` decompression of stream objects before text extraction). Reject scanned PDFs with `code: SCANNED_PDF` when extracted text < 200 chars.
-- Structured logs at every stage: `pdf_received`, `text_extracted`, `ai_called`, `ai_returned`, `error` with code + duration.
-- Always return HTTP 200 with `{ ok:false, code, retryable, message }` so the client never sees "non-2xx".
+## Changes
 
-**Client (`BloodworkPage.tsx` + `BloodworkWizard.tsx`):**
-- Exponential backoff: attempts 1/2/3 at 2s / 4s / 8s, only when `retryable: true`.
-- Progress UI during retries: skeleton + "Decoding biomarkers… attempt N of 3 · ~Xs remaining" (countdown from 45s per attempt).
-- On final failure: render a new `<ManualBloodworkEntry/>` component pre-populated with the 32 most common biomarkers (testosterone, free T, SHBG, IGF-1, HbA1c, fasting glucose, insulin, total/LDL/HDL/triglycerides, ALT/AST/GGT/ALP, creatinine, eGFR, CRP, homocysteine, vitamin D, B12, ferritin, TSH/fT3/fT4, cortisol, estradiol, DHEA-S, prolactin, RBC/WBC/Hb/platelets). Preserve the uploaded PDF blob + step inputs so the user does not re-upload.
-- "Scan interrupted" recovery banner with Retry / Enter manually buttons.
+### 1. `index.html` — add iOS app name + version-busted icons
+- Add `<meta name="apple-mobile-web-app-title" content="Peptide SA" />`
+- Add `<meta name="application-name" content="Peptide SA" />`
+- Append `?v=2` to all icon `href`s and to the manifest link so iOS/Android refetch.
 
-## 2. Baseline Scan & Deep Decode
-- Both buttons share the fixed `analyze-lab-report` path — once #1 lands they unblock.
-- Add skeleton + progress animation while the scan runs (no blank screen).
-- Baseline returns: key biomarkers + insights + 1 peptide stack rec within 60s.
-- Deep Decode returns: full categorized scorecard (Metabolic / Cardiovascular / Hormonal / Inflammatory / Liver / Renal / Hematology / Thyroid), 32 biomarkers, optimization protocol, 4 follow-up reminders scheduled at 90/180/270/360 days.
+### 2. `public/manifest.json` — bump icon URLs
+- Append `?v=2` to each `icons[].src` and the shortcut icon so Android/Chrome regenerate the WebAPK with the new artwork.
 
-## 3. Results tab — Bloodwork sub-tab (currently invisible)
-- Add `Bloodwork` sub-tab next to Calendar / Measure / Water / Food / Photos in `ResultsScreen` (or wherever those tabs live — confirm during build).
-- `BloodworkCard`: date, lab name, biomarker count, overall health score badge (if Deep Decode ran), "View Report" CTA.
-- `BiomarkerTrendChart`: Recharts line chart per biomarker across all `lab_reports` rows, with 7/30/90/all toggles.
-- Delta badges: "↑ 12% from Mar 2026" / "↓ 8% — within optimal range".
-- Optimal-range coloring: green / yellow / red against age-sex reference ranges from `src/data/bloodwork.ts`.
-- Protocol-correlation banner: cross-reference active cycles in `daily_doses` with the biomarker delta window — "Your IGF-1 increased 18% during your CJC-1295 + Ipamorelin cycle".
-- Enable `useSwipeNav` on the sub-tab strip.
+### 3. Regenerate the three icon PNGs with the Peptide South Africa mark
+Replace the existing files (same paths so no other code changes needed):
+- `public/favicon.png` (32×32)
+- `public/icon-192.png` (192×192, maskable-safe — subject inside center 80% safe zone)
+- `public/icon-512.png` (512×512, maskable-safe)
 
-## 4. Quarterly bloodwork reminders
-- New `bloodwork_reminders` table: `user_id`, `lab_report_id`, `due_at`, `kind` (`pre|due|overdue`), `notified_at`, `status`. RLS scoped to `auth.uid()`.
-- After a successful Baseline/Deep Decode insert, schedule three rows at +75d, +90d, +105d.
-- New edge function `bloodwork-reminder-dispatch` run nightly by pg_cron: finds rows where `due_at <= now()` and `notified_at IS NULL`, sends both a `send-transactional-email` (template `bloodwork-quarterly-reminder`) and a Capacitor LocalNotification, then stamps `notified_at`.
-- Home screen: `<BloodworkDueBanner/>` when any row with `kind='due'|'overdue'` is unacknowledged.
-- Results tab badge: red dot when a reminder is open.
-- Deep link `/bloodwork?flow=quick-upload` that skips the onboarding quiz for returning users.
-- "Book Bloodwork" CTA → external links to Synlab / Lancet / PathCare ZA.
+Artwork direction: Peptide South Africa monogram on the established brand background (`#3B82F6` primary, deep navy `#0F172A` backdrop) — a clean stylized "P" / molecular dot motif, centered, with generous padding so Android's maskable circle/squircle crop doesn't clip it. No wave, no "RTT", no "Ride The Tide" wordmark.
 
-## 5. Mobile-a11y foundation (Critical Foundation)
-- `BottomNav`: `padding-bottom: env(safe-area-inset-bottom)`.
-- Move WhatsApp FAB out of bottom-right (already moved into Support sheet in prior turn — verify nothing remains).
-- Audit `size="icon"` buttons to `min-h-11 min-w-11`.
-- Switch full-screen wrappers from `h-screen` → `min-h-dvh` to fix keyboard-shift in bloodwork forms.
-- Global `:active { transform: scale(0.97); }` on `Button` variants via Tailwind `active:scale-[0.97]`.
-- Wire `useSwipeNav` into the Results sub-tab strip.
-- Extend offline queue to cover `lab_reports` manual entries (reuse `enqueueOffline`).
+### 4. Service worker cache bump
+- In `public/sw.js`, bump the cache version constant (e.g. `peptide-sa-v2`) so the old cached manifest/icons are evicted on next visit. Existing kill-switch / activate logic stays as-is.
 
-## Deferred (separate sprint)
-Trend charts beyond bloodwork (weight/adherence), Protocol library/templates, Side-effects journal, Food/supplement expansion, Photo progress slider, Wearable integrations, Export PDF, Community/Research feed expansion, Reconstitution presets/video.
+## What the user will see
+- Fresh installs immediately show "Peptide SA" with the new icon.
+- Users who already installed the old PWA: on next launch the SW updates, then iOS/Android refresh the home-screen icon within a launch or two (iOS sometimes requires remove + re-add — we'll note this).
 
-## Technical details
-- New table: `bloodwork_reminders` (created via migration tool with GRANTs + RLS).
-- New edge function: `bloodwork-reminder-dispatch` (`verify_jwt = true`, service-role caller via pg_cron).
-- New template: `supabase/functions/_shared/transactional-email-templates/bloodwork-quarterly-reminder.tsx` registered in `registry.ts`.
-- New components: `ManualBloodworkEntry.tsx`, `BloodworkCard.tsx`, `BiomarkerTrendChart.tsx`, `BloodworkDueBanner.tsx`.
-- Reuse: `lab_reports` table (already 21 cols), `useDailyDoses`, `useSwipeNav`, `offlineQueue.ts`, Recharts.
+## Out of scope
+- No changes to in-app UI, routing, or the `ridethetide.info` custom domain.
+- Native Capacitor icons/splash (separate asset pipeline) — only touch if you want me to follow up.
+
+## Confirm before I build
+- OK to generate a new icon based on the description above (blue/navy monogram, no wave)? Or do you want to upload your own square logo PNG to use instead?
