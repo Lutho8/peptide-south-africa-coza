@@ -1,98 +1,107 @@
+# Phase 2: P0 Bugs, Offline-First, Email Migration, Gestures
 
-# Peptide South Africa — Unified Rebrand & Mobile-First Pass
-
-Full rebrand of the tracker app from **Ride The Tide → Peptide South Africa**, repointing the canonical domain to **peptide-south-africa.co.za**, the shop CTA to **peptide-south-africa.com**, and fixing the mobile chrome (WhatsApp FAB blocking Results, safe-area, tap targets).
-
-This plan is Phase 1: identity + mobile chrome + SEO repoint. Backend tables, edge functions, and email-queue infra stay untouched (their *content* is rebranded; their *names* are not).
+Sequenced so each piece is independently shippable. End-to-end verification on iOS/Android happens after build.
 
 ---
 
-## 1. Brand identity swap
+## 1. Bloodwork P0 Bug Fixes (highest priority — blocker)
 
-**Logos & icons**
-- Upload the two attached logos as Lovable Assets:
-  - `src/assets/peptide-sa-mark.png.asset.json` (circular icon, mobile)
-  - `src/assets/peptide-sa-lockup.png.asset.json` (horizontal lockup)
-- Replace `public/favicon.png`, `public/icon-192.png`, `public/icon-512.png` with the circular mark.
-- Update `src/components/ui/AnimatedLogo.tsx` to render the new mark + "PEPTIDE / SOUTH AFRICA" wordmark. Keep the 8s slow-spin / 0.5s click-spin behavior.
+### 1a. Client-side pre-upload validation (`src/pages/BloodworkPage.tsx`, upload step)
+- Reject files > 10 MB, non-PDF MIME, or PDFs whose extracted text length < 200 chars (heuristic for scanned/image-only PDFs).
+- Inline error: "Please upload a text-based PDF under 10 MB. Scanned reports cannot be decoded — try the manual entry option below."
+- Detect compressed/encrypted PDFs (pdf-lib `isEncrypted`) and block with same message.
 
-**Color tokens (`src/index.css`)**
-- Keep primary `#3B82F6` (matches blue stripe) as core brand blue.
-- Add semantic SA-flag accent tokens: `--sa-green #2E7D32`, `--sa-yellow #FBC02D`, `--sa-red #E53935`, `--sa-navy #0F1B3D` (typography). Wire into `tailwind.config.ts`.
-- Headings shift to deep navy (`--sa-navy`) for the "credible / data-rich" Cronometer-ish feel.
+### 1b. Edge function `analyze-lab-report` hardening
+- Wrap the whole handler in try/catch and return JSON `{ ok:false, code, message, retryable }` instead of throwing.
+- Add structured `console.log({stage, durationMs, sizeKb})` at: download, decompress, text-extract, AI-call, parse.
+- Bump to streaming text extraction; if extracted text < 200 chars → return `code: 'SCAN_NOT_DECODABLE'`.
+- Wrap AI call with `AbortSignal.timeout(45_000)`; on timeout return `code: 'TIMEOUT'`.
+- Return 200 with the error envelope (so client gets actionable body, not opaque "non-2xx").
 
-**Copy / naming**
-- All user-visible "Ride The Tide" / "RTD" → "Peptide South Africa" / "PSA".
-- Tagline: "South Africa's free peptide protocol tracker."
-- Capacitor: `appId: za.co.peptidesa.app`, `appName: Peptide South Africa` (`capacitor.config.ts`, `android/app/src/main/res/values/strings.xml`, `MainActivity` package path note: leave Java package as-is to avoid Android rebuild churn; only the user-visible `appName` + `appId` strings change).
-- PWA `public/manifest.json`: name, short_name, description, theme_color stays `#3B82F6`.
-- `index.html`: `<title>`, meta description, OG tags, canonical → `https://peptide-south-africa.co.za`.
-- README, STORE_LISTING, RELEASE_GUIDE: rebrand text only (no behavior change).
+### 1c. Client retry + fallback (`useBloodworkScan` hook, new)
+- Exponential backoff: 2 s, 4 s, 8 s — only on `retryable: true` codes.
+- Show progress UI: "Decoding biomarkers… attempt N of 3".
+- After final failure → render `<ManualBloodworkEntry/>` pre-filled with the 32 baseline biomarkers (sourced from `src/data/bloodwork.ts`). Uploaded file kept in state so user can also re-try.
 
-**Memory updates** (rules — applied to every future turn)
-- Rewrite `mem://index.md` Core block: brand = Peptide South Africa, canonical = `https://peptide-south-africa.co.za`, shop = `https://peptide-south-africa.com`, club = `https://capetownpeptideclub.co.za` (kept), WhatsApp `+491624747159` (kept).
-- Rewrite `mem://design/branding-ride-the-tide` → `mem://design/branding-peptide-south-africa`.
-- Update `mem://features/cross-property-network` with new domain triplet + UTM conventions (`utm_source=psa_app`).
+### 1d. Baseline Scan & Deep Decode buttons (`src/components/bloodwork/...`)
+- Skeleton + progress animation while running (no blank screen).
+- On failure, preserve uploaded PDF + inputs in component state, show "Scan interrupted. Try again or enter manually."
 
----
-
-## 2. Domain & SEO repoint
-
-- `index.html`: canonical, og:url, twitter:url → `https://peptide-south-africa.co.za`.
-- `scripts/generate-sitemap.ts`: `BASE_URL = "https://peptide-south-africa.co.za"`.
-- `public/robots.txt`: update `Sitemap:` directive.
-- `src/lib/shop/buildStackCartLink.ts` + `src/lib/bloodwork/stackLink.ts`: `STORE_BASE = "https://peptide-south-africa.com"`, UTM source `psa_app`.
-- Every hardcoded `ridethetide.info` / `ridethetide.site` string across `src/`, `public/llms.txt`, `public/sitemap.xml`, JSON-LD blocks → repointed.
-- Add a brief 301 note to README for the old `ridethetide.info` host (DNS-level redirect is outside the app; user handles at registrar).
-- After the rebrand lands, trigger an SEO rescan so Google Search Console gets a fresh signal on the new canonical (user clicks Rescan in the SEO tab).
+### 1e. Results visibility (`src/pages/BloodworkPage.tsx` Results tab)
+- After successful `analyze-lab-report`, write decoded biomarkers to `lab_reports` (already exists). Results tab queries `lab_reports` ordered desc and renders biomarker cards. Confirm RLS allows the owner to read.
 
 ---
 
-## 3. Mobile-first chrome fixes
+## 2. Swipe Gestures (Daily Log + Results)
 
-**WhatsApp FAB → Support menu (Option B)**
-- Delete `src/components/global/WhatsAppFab.tsx` from the global render tree (remove from `App.tsx`).
-- Add a `Support` entry inside `SettingsScreen.tsx` and a compact "Help" icon button in `AppHeader.tsx` (top-right) that opens a `SupportSheet` with:
-  - WhatsApp chat → `wa.me/491624747159`
-  - Book consultation → existing booking flow
-  - Email support → `mailto:`
-- Result: bottom-right is fully clear, the Results tab is tappable.
-
-**Safe-area + viewport**
-- `BottomNav.tsx` already has `env(safe-area-inset-bottom)`; audit `Welcome.tsx` and modals to swap `h-screen` → `h-dvh` where a keyboard could open (bloodwork entry, dose log).
-- Confirm `<meta name="viewport" content="... viewport-fit=cover">` in `index.html`.
-
-**Tap targets**
-- Sweep `BottomNav`, `AppHeader`, icon-only Buttons (audit `size="icon"` variants) → enforce `min-h-11 min-w-11`. Add `aria-label` where missing.
-
-**Touch feedback**
-- Global utility class `active:scale-[0.97] active:brightness-95 transition` applied to primary buttons/cards via shadcn Button variant tweak.
-
-**Swipe gestures** (lightweight, no new deps)
-- `DailyLogScreen` and `TransformationScreen`: wire `onTouchStart/Move/End` to swipe-left/right between dates/tabs. ~30 LoC each, no library.
-
-**Offline-first** — already covered by the existing service worker + IndexedDB dose/bloodwork queue. Audit only; no rework.
-
-**Top-right "Shop" button**
-- Add a small `Shop` button in `AppHeader.tsx` next to the new Help button → opens `https://peptide-south-africa.com/?utm_source=psa_app&utm_medium=header&utm_campaign=shop_nav`.
+- Add lightweight `useSwipeNav` hook in `src/hooks/useSwipeNav.ts` (raw `touchstart/move/end`, 60 px threshold, 30° angle tolerance, ignores when target is inside `input/textarea/[contenteditable]/.no-swipe`).
+- Wire into:
+  - `src/screens/DailyLogScreen.tsx` calendar header → swipe left = next day, right = prev day.
+  - `src/pages/BloodworkPage.tsx` Tabs container → swipe cycles tabs in DOM order.
 
 ---
 
-## 4. Out of scope (call out, defer)
+## 3. Offline-First Dose Logging + Bloodwork Manual Entry (IndexedDB queue)
 
-- Renaming the Android Java package (`info.ridethetide.app` → `za.co.peptidesa.app`) requires a full native rebuild + Play Store re-publish. **Leave the Java package as-is**; only user-facing strings + Capacitor `appId` change. Document in `RELEASE_GUIDE.md`.
-- Email domain stays `notify.www.ridethetide.info` for this turn — switching it requires new DNS delegation on `peptide-south-africa.co.za` and 24–72h propagation. Will be a follow-up turn once DNS is ready.
-- Supabase project ref, table names, edge function slugs — unchanged.
-- "Critical Bug Fixes (P0)" section in your message was cut off — please paste the list and I'll fold it in as Phase 1.5.
+### 3a. Queue layer (`src/services/offlineQueue.ts`, new)
+- Uses `idb` (already a transitive dep; install if missing) — single object store `outbox` with `{id, table, op, payload, createdAt, attempts}`.
+- API: `enqueue(table, op, payload)`, `drain()`, `subscribe(cb)`.
+- Drain runs on: app load, `window.online`, every 30 s while online.
+- Last-write-wins via `updated_at`.
+
+### 3b. Hook integration
+- `useDailyDoses` `addDose/updateDose/deleteDose`: write to local state + Supabase if online, else enqueue. Wrap Supabase calls in `try/catch` — on network failure also enqueue.
+- New `useBloodworkManualEntry` hook does the same against `lab_reports` (manual entries get `source: 'manual'`).
+
+### 3c. UX surface
+- Small badge in `AppHeader` when `navigator.onLine === false` or queue length > 0 ("Offline — X pending"). Reuses existing `StackSyncBadge` styling.
 
 ---
 
-## Technical notes
+## 4. New Mailboxes + Sending Domain Migration
 
-- **Files created**: `src/components/support/SupportSheet.tsx`, two `.asset.json` pointers.
-- **Files deleted from render**: `WhatsAppFab` import removed from `App.tsx` (file itself can stay for reference, or be deleted).
-- **Files edited** (high-level): `index.html`, `public/manifest.json`, `public/robots.txt`, `public/llms.txt`, `public/sitemap.xml`, `scripts/generate-sitemap.ts`, `capacitor.config.ts`, `android/.../strings.xml`, `src/index.css`, `tailwind.config.ts`, `src/components/ui/AnimatedLogo.tsx`, `src/components/layout/AppHeader.tsx`, `src/components/layout/BottomNav.tsx`, `src/App.tsx`, `src/pages/Welcome.tsx`, `src/screens/SettingsScreen.tsx`, `src/screens/DailyLogScreen.tsx`, `src/screens/TransformationScreen.tsx`, `src/lib/shop/buildStackCartLink.ts`, `src/lib/bloodwork/stackLink.ts`, plus a sweep of remaining `ridethetide.info|site` string references.
-- **Memory**: rewrites to `mem://index.md`, `mem://design/branding-*`, `mem://features/cross-property-network`.
-- **No DB migrations** in this phase.
+### 4a. Lovable email domain on `peptide-south-africa.co.za`
+- Call email-domain setup for delegated subdomain `notify.peptide-south-africa.co.za`. User adds NS records at registrar (24–72 h propagation). Old `notify.www.ridethetide.info` stays live in parallel until verified.
 
-Approve to ship Phase 1, and please paste the truncated **P0 bug list** so I can sequence it next.
+### 4b. Mailbox routing
+- Provision `contact@`, `privacy@`, `support@` on the new domain (forwarding rules set up post-DNS-verification — flagged as a follow-up the user does in Cloud → Emails).
+
+### 4c. Code sweep — replace all `@ridethetide.app` mailto: links
+- `src/pages/PrivacyPolicy.tsx`: `privacy@ridethetide.app` → `privacy@peptide-south-africa.co.za`.
+- `src/pages/TermsOfService.tsx`, `src/pages/Disclaimer.tsx`: → `contact@peptide-south-africa.co.za`.
+- `src/components/landing/LandingFooter.tsx`: footer `contact@` + Mail icon → `contact@peptide-south-africa.co.za`.
+- Grep sweep for any other `@ridethetide.app` references → `contact@…co.za`.
+
+### 4d. Transactional send `from:` address
+- Update `supabase/functions/process-email-queue` and any `send-transactional-email` default `from` → `Peptide South Africa <notify@peptide-south-africa.co.za>`. Guarded so it only switches once domain status === `active`; otherwise falls back to current sender.
+
+---
+
+## 5. End-to-End iOS/Android Verification
+
+Run the preview browser at iPhone 14 (390×844) and Pixel 7 (412×915) viewports. Walk:
+1. Login → Home → BottomNav reachable above safe-area.
+2. Daily Log → swipe left/right changes day.
+3. Add dose (online) → appears immediately; toggle DevTools offline → add another → appears with "pending" badge → toggle online → badge clears.
+4. Bloodwork → upload bad PDF → friendly error. Upload good PDF → progress → results visible in Results tab. Force failure (corrupt file) → manual entry fallback appears with prefilled biomarkers.
+5. Support sheet from header opens; WhatsApp link present; no floating FAB blocks Results tab.
+6. Footer / Privacy / Terms / Disclaimer mailto links → new domain.
+
+Report findings, fix any regressions, then summarize.
+
+---
+
+## Technical Notes
+
+- No schema changes required — `lab_reports` and `daily_doses` already cover the offline writes.
+- `useSwipeNav` is pure DOM, no extra deps.
+- `idb` adds ~3 KB gzipped; if not already installed, install via `bun add idb`.
+- Edge function changes require `deploy_edge_functions(['analyze-lab-report','process-email-queue'])` after edit.
+- Email domain step needs user action (NS records at registrar) — flagged clearly; nothing else blocks on it.
+- No DB migrations in this phase.
+
+## Out of Scope (deferred)
+
+- Forwarding rule UI for the 3 mailboxes (user configures in Cloud → Emails once DNS verifies).
+- Android native rebuild + Play Store re-publish for the package-name change.
+- Cookie/consent banner refresh for the new domain.
