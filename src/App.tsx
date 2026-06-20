@@ -120,7 +120,7 @@ const App = () => {
                     {/* Goal-based SEO landing pages */}
                     <Route path="/weight-loss-peptides-south-africa" element={<WeightLossPeptidesSA />} />
                     <Route path="/healing-peptides-south-africa" element={<HealingPeptidesSA />} />
-                    <Route path="/longevity-peptides-south-africa" element={<LongevityPeptidesSA />} />
+                    <Route path="/anti-aging-peptides-south-africa" element={<AntiAgingPeptidesSA />} />
                     {/* NEW: Premium feature routes */}
                     <Route path="/safety" element={<SafetyCenter />} />
                     <Route path="/injection-sites" element={<InjectionSites />} />
