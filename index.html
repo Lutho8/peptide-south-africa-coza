@@ -55,6 +55,41 @@
     <noscript>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </noscript>
+
+    <!-- Sitewide Organization schema -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Peptide South Africa",
+        "alternateName": "Peptide SA",
+        "url": "https://peptide-south-africa.co.za",
+        "logo": "https://peptide-south-africa.co.za/icon-512.png",
+        "description": "South Africa's peptide research tracker — dosing guides, reconstitution protocols, and bloodwork markers for 15+ research peptides.",
+        "foundingDate": "2024",
+        "areaServed": { "@type": "Country", "name": "South Africa" },
+        "sameAs": [
+          "https://peptide-south-africa.co.za",
+          "https://peptide-south-africa.com"
+        ]
+      }
+    </script>
+
+    <!-- Sitewide WebSite schema -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Peptide South Africa Research Tracker",
+        "url": "https://peptide-south-africa.co.za",
+        "description": "Free peptide research tracker and protocol guide for South African researchers.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://peptide-south-africa.co.za/blog?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
   </head>
 
   <body>
