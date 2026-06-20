@@ -1,131 +1,98 @@
-import { useEffect, lazy, Suspense, useState } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { startCycleNotificationChecker, stopCycleNotificationChecker } from "@/services/cycleNotifications";
-import { Loader2 } from "lucide-react";
-import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
+import { Routes, Route } from 'react-router-dom'
+import Layout from './components/Layout'
+import Home from './pages/Home'
+import About from './pages/About'
+import HowItWorks from './pages/HowItWorks'
+import PeptideTherapy from './pages/PeptideTherapy'
+import PharmacyStandards from './pages/PharmacyStandards'
+import Pricing from './pages/Pricing'
+import ResearchVsPrescribed from './pages/ResearchVsPrescribed'
+import WeightLoss from './pages/WeightLoss'
+import Longevity from './pages/Longevity'
+import Recovery from './pages/Recovery'
+import ProductTirzepatide from './pages/ProductTirzepatide'
+import ProductSemaglutide from './pages/ProductSemaglutide'
+import ProductNAD from './pages/ProductNAD'
+import ProductSermorelin from './pages/ProductSermorelin'
+import ProductGlutathione from './pages/ProductGlutathione'
+import Blogs from './pages/Blogs'
+import BlogPost from './pages/BlogPost'
+import FAQs from './pages/FAQs'
+import FAQPage from './pages/FAQPage'
+import Contact from './pages/Contact'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
+import Returns from './pages/Returns'
+import Hipaa from './pages/Hipaa'
+import NotFound from './pages/NotFound'
+import PeptideDatabase from './pages/PeptideDatabase'
+import Assessment from './pages/Assessment'
 
-// Lazy load all route pages for better code splitting
-const Index = lazy(() => import("./pages/Index"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const Disclaimer = lazy(() => import("./pages/Disclaimer"));
-const TermsOfService = lazy(() => import("./pages/TermsOfService"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const FreeCourse = lazy(() => import("./pages/FreeCourse"));
-const COAVerification = lazy(() => import("./pages/COAVerification"));
-const LiveQnA = lazy(() => import("./pages/LiveQnA"));
-const PeptideEntityPage = lazy(() => import("./pages/PeptideEntityPage"));
-const CategoryHubPage = lazy(() => import("./pages/CategoryHubPage"));
-const GuidePage = lazy(() => import("./pages/GuidePage"));
-const BloodworkPage = lazy(() => import("./pages/BloodworkPage"));
-const TodayRemindersScreen = lazy(() => import("./screens/TodayRemindersScreen"));
-const CycleManagementScreen = lazy(() => import("./screens/CycleManagementScreen"));
-const SEODashboard = lazy(() => import("./pages/admin/SEODashboard"));
-const SEOVerifyPage = lazy(() => import("./pages/admin/SEOVerifyPage"));
-const Welcome = lazy(() => import("./pages/Welcome"));
-const BlogIndexPage = lazy(() => import("./pages/BlogIndexPage"));
-const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+// Program pages
+import WeightLossProgram from './pages/programs/WeightLoss'
+import LongevityProgram from './pages/programs/Longevity'
+import MetabolicResetProgram from './pages/programs/MetabolicReset'
+import MuscleRecoveryProgram from './pages/programs/MuscleRecovery'
+import SportsPerformanceProgram from './pages/programs/SportsPerformance'
 
-// NEW: Premium feature pages
-const SafetyCenter = lazy(() => import("./pages/SafetyPage"));
-const InjectionSites = lazy(() => import("./pages/InjectionSitesPage"));
-const Analytics = lazy(() => import("./pages/AnalyticsPage"));
-const Inventory = lazy(() => import("./pages/InventoryPage"));
+// Compound pages
+import SemaglutidePage from './pages/peptides/Semaglutide'
+import TirzepatidePage from './pages/peptides/Tirzepatide'
+import BPC157Page from './pages/peptides/BPC157'
+import TB500Page from './pages/peptides/TB500'
+import CJC1295IpamorelinPage from './pages/peptides/CJC1295Ipamorelin'
 
-
-
-// Initialize i18n
-import '@/i18n';
-
-const queryClient = new QueryClient();
-
-/**
- * Detect if the current URL is an OAuth callback.
- * OAuth providers redirect to /auth/callback?code=xxx
- * With HashRouter, we need to detect this BEFORE the router renders
- * because HashRouter only handles hash-based routes.
- */
-function isOAuthCallback(): boolean {
-  const pathname = window.location.pathname;
-  const search = window.location.search;
+function App() {
   return (
-    pathname === '/auth/callback' ||
-    pathname === '/auth/callback/' ||
-    (search.includes('code=') && search.includes('type='))
-  );
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Home />} />
+        <Route path="about-us" element={<About />} />
+        <Route path="how-it-works" element={<HowItWorks />} />
+        <Route path="peptide-therapy" element={<PeptideTherapy />} />
+        <Route path="pharmacy-standards" element={<PharmacyStandards />} />
+        <Route path="pricing" element={<Pricing />} />
+        <Route path="research-vs-prescribed" element={<ResearchVsPrescribed />} />
+        <Route path="weight-loss" element={<WeightLoss />} />
+        <Route path="longevity" element={<Longevity />} />
+        <Route path="recovery" element={<Recovery />} />
+        <Route path="products/compounded-tirzepatide" element={<ProductTirzepatide />} />
+        <Route path="products/compounded-semaglutide" element={<ProductSemaglutide />} />
+        <Route path="products/nad" element={<ProductNAD />} />
+        <Route path="products/sermorelin" element={<ProductSermorelin />} />
+        <Route path="products/glutathione" element={<ProductGlutathione />} />
+        <Route path="blogs" element={<Blogs />} />
+        <Route path="blogs/:slug" element={<BlogPost />} />
+        <Route path="faqs" element={<FAQs />} />
+        <Route path="faq" element={<FAQPage />} />
+        <Route path="contact-us" element={<Contact />} />
+        <Route path="privacy-policy" element={<Privacy />} />
+        <Route path="terms-conditions" element={<Terms />} />
+        <Route path="return-policy" element={<Returns />} />
+        <Route path="hippa-privacy-policy" element={<Hipaa />} />
+        
+        {/* New Program Pages */}
+        <Route path="programs/weight-loss" element={<WeightLossProgram />} />
+        <Route path="programs/longevity" element={<LongevityProgram />} />
+        <Route path="programs/metabolic-reset" element={<MetabolicResetProgram />} />
+        <Route path="programs/muscle-recovery" element={<MuscleRecoveryProgram />} />
+        <Route path="programs/sports-performance" element={<SportsPerformanceProgram />} />
+        
+        {/* New Compound Pages */}
+        <Route path="peptides/semaglutide" element={<SemaglutidePage />} />
+        <Route path="peptides/tirzepatide" element={<TirzepatidePage />} />
+        <Route path="peptides/bpc-157" element={<BPC157Page />} />
+        <Route path="peptides/tb-500" element={<TB500Page />} />
+        <Route path="peptides/cjc-1295-ipamorelin" element={<CJC1295IpamorelinPage />} />
+        
+        {/* New Hub Pages */}
+        <Route path="peptide-database" element={<PeptideDatabase />} />
+        <Route path="assessment" element={<Assessment />} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
+  )
 }
 
-const App = () => {
-  const [isCallback, setIsCallback] = useState(() => isOAuthCallback());
-
-  useEffect(() => {
-    startCycleNotificationChecker();
-    return () => stopCycleNotificationChecker();
-  }, []);
-
-  // If this is an OAuth callback, render the callback handler directly
-  // bypassing HashRouter so the code exchange can happen immediately.
-  if (isCallback) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-          <AuthCallback />
-        </Suspense>
-      </QueryClientProvider>
-    );
-  }
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <HashRouter>
-            <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-              <Routes>
-                <Route path="/welcome" element={<Welcome />} />
-                <Route path="/" element={<Index />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/disclaimer" element={<Disclaimer />} />
-                <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/free-course" element={<FreeCourse />} />
-                <Route path="/coa-verification" element={<COAVerification />} />
-                <Route path="/live-qna" element={<LiveQnA />} />
-                <Route path="/peptides/:slug" element={<PeptideEntityPage />} />
-                <Route path="/categories/:slug" element={<CategoryHubPage />} />
-                <Route path="/guides/:slug" element={<GuidePage />} />
-                <Route path="/bloodwork" element={<BloodworkPage />} />
-                <Route path="/reminders/today" element={<TodayRemindersScreen />} />
-                <Route path="/cycles" element={<CycleManagementScreen />} />
-                <Route path="/blog" element={<BlogIndexPage />} />
-                <Route path="/blog/:slug" element={<BlogPostPage />} />
-                {/* NEW: Premium feature routes */}
-                <Route path="/safety" element={<SafetyCenter />} />
-                <Route path="/injection-sites" element={<InjectionSites />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/inventory" element={<Inventory />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="/admin/seo" element={<SEODashboard />} />
-                <Route path="/admin/seo/verify" element={<SEOVerifyPage />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </HashRouter>
-          
-          <VercelAnalytics />
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
-};
-
-export default App;
+export default App

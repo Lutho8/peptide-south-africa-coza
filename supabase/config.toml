@@ -1,18 +1,1 @@
 project_id = "lwrvuszozhhpteyrxenl"
-
-[functions.peptide-ai-agent]
-verify_jwt = false
-
-[functions.nocobase-sync]
-verify_jwt = false
-
-[functions.analyze-lab-report]
-verify_jwt = false
-
-[functions.gsc-resubmit-sitemap]
-verify_jwt = false
-
-[functions.gsc-verify-live]
-verify_jwt = false
-[functions.process-email-queue]
-verify_jwt = true
