@@ -28,6 +28,7 @@ import {
   Cloud, CloudOff, RefreshCw, LogOut, LogIn, Loader2, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ErrorLogPanel } from '@/components/debug/ErrorLogPanel';
 
 interface SettingsScreenProps {
   onBack?: () => void;
