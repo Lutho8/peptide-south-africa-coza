@@ -73,15 +73,7 @@ export default function BloodworkPage() {
 
   const runScan = useCallback(
     async (tier: 'baseline' | 'deep') => {
-      if (!user) {
-        setAuthOpen(true);
-        toast.error('Please sign in to run a scan.');
-        return;
-      }
-      if (!form.file) {
-        toast.error('Please upload a lab report first.');
-        return;
-      }
+      if (!user || !form.file) return;
 
       setRunning(tier);
       setResult(null);
@@ -286,7 +278,7 @@ export default function BloodworkPage() {
 
       {membershipLoading ? (
         <div className="max-w-5xl mx-auto px-4 py-20 text-center text-sm text-muted-foreground">Loading…</div>
-      ) : !user || !hasPremium ? (
+      ) : !hasPremium ? (
         <>
           <PremiumGate onSignIn={() => setAuthOpen(true)} />
           <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
