@@ -1,0 +1,73 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const GATEWAY = "https://connector-gateway.lovable.dev/google_search_console";
+const SITE_URL = "https://peptide-south-africa.co.za/";
+const SITEMAP_URL = "https://peptide-south-africa.co.za/sitemap.xml";
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+  const GSC_KEY = Deno.env.get("GOOGLE_SEARCH_CONSOLE_API_KEY")!;
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  // Verify caller is admin
+  const authHeader = req.headers.get("Authorization") || "";
+  const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  const { data: isAdmin } = await userClient.rpc("has_role", { _user_id: user.id, _role: "admin" });
+  if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+  const encSite = encodeURIComponent(SITE_URL);
+  const encSitemap = encodeURIComponent(SITEMAP_URL);
+
+  const gscHeaders = {
+    "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+    "X-Connection-Api-Key": GSC_KEY,
+  };
+
+  const [sitemapRes, saRes] = await Promise.all([
+    fetch(`${GATEWAY}/webmasters/v3/sites/${encSite}/sitemaps/${encSitemap}`, { headers: gscHeaders }),
+    (async () => {
+      const end = new Date();
+      const start = new Date(); start.setDate(end.getDate() - 28);
+      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+      return fetch(`${GATEWAY}/webmasters/v3/sites/${encSite}/searchAnalytics/query`, {
+        method: "POST",
+        headers: { ...gscHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startDate: fmt(start), endDate: fmt(end),
+          dimensions: ["date"], rowLimit: 1000,
+        }),
+      });
+    })(),
+  ]);
+
+  const sitemap = sitemapRes.ok ? await sitemapRes.json().catch(() => null) : null;
+  const searchAnalytics = saRes.ok ? await saRes.json().catch(() => null) : null;
+
+  // Recent submissions + coverage trend from our DB
+  const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+  const [{ data: submissions }, { data: coverage }] = await Promise.all([
+    admin.from("gsc_submissions").select("*").order("submitted_at", { ascending: false }).limit(20),
+    admin.from("gsc_coverage_snapshots").select("*").order("captured_at", { ascending: true }).limit(60),
+  ]);
+
+  return new Response(JSON.stringify({
+    sitemap,
+    searchAnalytics,
+    submissions: submissions ?? [],
+    coverage: coverage ?? [],
+    site_url: SITE_URL,
+    sitemap_url: SITEMAP_URL,
+  }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+});
