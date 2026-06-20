@@ -5,6 +5,50 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+const PLACEHOLDER_PATTERNS = [
+  /^your-?supabase-?url$/i,
+  /^your-?anon-?key$/i,
+  /^your-?publishable-?key$/i,
+  /^https:\/\/your-?project-?id\.supabase\.co$/i,
+  /^https:\/\/example\.supabase\.co$/i,
+  /^https:\/\/localhost(:\d+)?$/i,
+  /^placeholder$/i,
+  /^xxx+$/i,
+  /\bTODO\b/i,
+];
+
+function isPlaceholder(value: string): boolean {
+  return PLACEHOLDER_PATTERNS.some(p => p.test(value));
+}
+
+function warnIfMissingOrPlaceholder(
+  name: string,
+  value: string | undefined
+): void {
+  if (typeof window === 'undefined') return;
+
+  const isDev = import.meta.env.DEV;
+
+  if (!value || value.trim() === '') {
+    const msg = `[Supabase Config] ${name} is missing or empty. OAuth and cloud sync will not work.`;
+    if (isDev) {
+      console.error(msg);
+    } else {
+      console.warn(msg);
+    }
+    return;
+  }
+
+  if (isPlaceholder(value)) {
+    console.warn(
+      `[Supabase Config] ${name} appears to be a placeholder value (${value}). OAuth and cloud sync may fail.`
+    );
+  }
+}
+
+warnIfMissingOrPlaceholder('VITE_SUPABASE_URL', SUPABASE_URL);
+warnIfMissingOrPlaceholder('VITE_SUPABASE_PUBLISHABLE_KEY', SUPABASE_PUBLISHABLE_KEY);
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
