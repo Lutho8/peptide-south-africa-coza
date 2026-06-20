@@ -36,6 +36,9 @@ const FAQPage = lazy(() => import("./pages/FAQPage"));
 const WeightLossPeptidesSA = lazy(() => import("./pages/goals/WeightLossPeptidesSA"));
 const HealingPeptidesSA = lazy(() => import("./pages/goals/HealingPeptidesSA"));
 const AntiAgingPeptidesSA = lazy(() => import("./pages/goals/AntiAgingPeptidesSA"));
+const CognitivePeptidesSA = lazy(() => import("./pages/goals/CognitivePeptidesSA"));
+const GrowthHormonePeptidesSA = lazy(() => import("./pages/goals/GrowthHormonePeptidesSA"));
+const LibidoPeptidesSA = lazy(() => import("./pages/goals/LibidoPeptidesSA"));
 
 // NEW: Premium feature pages
 const SafetyCenter = lazy(() => import("./pages/SafetyPage"));
