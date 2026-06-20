@@ -39,6 +39,7 @@ const AntiAgingPeptidesSA = lazy(() => import("./pages/goals/AntiAgingPeptidesSA
 const CognitivePeptidesSA = lazy(() => import("./pages/goals/CognitivePeptidesSA"));
 const GrowthHormonePeptidesSA = lazy(() => import("./pages/goals/GrowthHormonePeptidesSA"));
 const LibidoPeptidesSA = lazy(() => import("./pages/goals/LibidoPeptidesSA"));
+const Bpc157VsTb500 = lazy(() => import("./pages/comparisons/Bpc157VsTb500"));
 
 // NEW: Premium feature pages
 const SafetyCenter = lazy(() => import("./pages/SafetyPage"));
@@ -127,6 +128,7 @@ const App = () => {
                     <Route path="/cognitive-peptides-south-africa" element={<CognitivePeptidesSA />} />
                     <Route path="/growth-hormone-peptides-south-africa" element={<GrowthHormonePeptidesSA />} />
                     <Route path="/libido-peptides-south-africa" element={<LibidoPeptidesSA />} />
+                    <Route path="/bpc-157-vs-tb-500" element={<Bpc157VsTb500 />} />
                     {/* NEW: Premium feature routes */}
                     <Route path="/safety" element={<SafetyCenter />} />
                     <Route path="/injection-sites" element={<InjectionSites />} />

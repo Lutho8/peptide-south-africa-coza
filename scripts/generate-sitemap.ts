@@ -24,6 +24,7 @@ const staticEntries: Entry[] = [
   { path: "/cognitive-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
   { path: "/growth-hormone-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
   { path: "/libido-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
+  { path: "/bpc-157-vs-tb-500", changefreq: "monthly", priority: "0.8" },
 ];
 
 const peptides = [
