@@ -1,47 +1,20 @@
-## Context
+## Plan
 
-In the previous turn I shipped three goal pages: `weight-loss-peptides-south-africa`, `healing-peptides-south-africa`, and `longevity-peptides-south-africa`. Your new request keeps the first two slugs but changes peptide selections and replaces longevity with **anti-aging**. Plan below adjusts in place — no duplicate files.
+Three new goal pages using the existing `GoalPage` shared component (same pattern as weight-loss / healing / anti-aging). All IDs verified in catalog: `semax`, `selank`, `dsip`, `ipamorelin`, `cjc1295`, `pt141`.
 
-## Changes
+### Files
 
-**1. `/weight-loss-peptides-south-africa`** — edit `src/pages/goals/WeightLossPeptidesSA.tsx`
-- Update card set to exactly: `retatrutide`, `tirzepatide`, `motsc`, `semaglutide`
-- Remove `aod9604`
-- Tighten hero H1 to "Peptides for Weight Loss South Africa"
-- Keep existing 3 research paragraphs (already research-framed, SAHPRA disclaimer)
+**Create**
+- `src/pages/goals/CognitivePeptidesSA.tsx` — slug `cognitive-peptides-south-africa`, H1 "Cognitive Peptides South Africa", cards: `semax`, `selank`, `dsip`. Research paragraphs: BDNF/NGF upregulation (Semax), GABAergic anxiolysis without sedation (Selank), delta-sleep induction & neuroprotection (DSIP).
+- `src/pages/goals/GrowthHormonePeptidesSA.tsx` — slug `growth-hormone-peptides-south-africa`, H1 "Growth Hormone Peptides South Africa", cards: `ipamorelin`, `cjc1295`. Research paragraphs: selective GHRP mechanism without cortisol/prolactin spike (Ipamorelin), GHRH analog half-life extension via DAC (CJC-1295), pulsatile-restoration rationale for stacking the two.
+- `src/pages/goals/LibidoPeptidesSA.tsx` — slug `libido-peptides-south-africa`, H1 "PT-141 South Africa", cards: `pt141`. Research paragraphs: melanocortin MC4R agonism (central, not vascular like PDE5 inhibitors), Phase 3 / Vyleesi context, dose timing and known nausea/flush side-effect profile.
 
-**2. `/healing-peptides-south-africa`** — edit `src/pages/goals/HealingPeptidesSA.tsx`
-- Update card set to exactly: `bpc157`, `tb500`, `ghkcu`
-- Remove `ss31`
-- Tighten hero H1 to "Peptides for Healing South Africa"
-- Trim research paragraphs to drop the SS-31 section, keep BPC-157 + TB-500 + GHK-Cu coverage
+All pages use the existing `GoalPage` component, so they automatically get: SEOHead + CollectionPage JSON-LD, breadcrumbs, badge, card grid with auto-links to `/peptides/:slug` entity pages, SAHPRA disclaimer block, research disclaimer.
 
-**3. NEW `/anti-aging-peptides-south-africa`** — create `src/pages/goals/AntiAgingPeptidesSA.tsx`
-- Hero H1: "Anti-Aging Peptides South Africa"
-- Cards: `epitalon`, `ghkcu`, `ta1` (Thymosin Alpha-1 — confirmed in catalog at `src/data/peptides.ts`)
-- 3 research-framed paragraphs covering: telomere/pineal axis (Epitalon), gene expression + collagen/copper (GHK-Cu), immune senescence + T-cell maturation (Thymosin Alpha-1)
-- SA disclaimer block + standard research disclaimer
+**Edit**
+- `src/App.tsx` — add 3 lazy imports + 3 `<Route>` entries above the catch-all.
+- `scripts/generate-sitemap.ts` — append the 3 paths to `staticEntries` (priority 0.9, monthly). Sitemap regenerates on next `predev`/`prebuild`.
 
-**4. Remove the longevity page** — delete `src/pages/goals/LongevityPeptidesSA.tsx`, remove its route from `src/App.tsx`, remove its sitemap entry. (You didn't ask for it; replaced by anti-aging.)
+### Out of scope (re-flagging)
 
-**5. Wire routes** — `src/App.tsx`
-- Add `AntiAgingPeptidesSA` lazy import
-- Replace longevity `<Route>` with the anti-aging route
-
-**6. Sitemap** — `scripts/generate-sitemap.ts`
-- Replace `/longevity-peptides-south-africa` entry with `/anti-aging-peptides-south-africa`
-- Confirm weight-loss and healing entries remain (priority 0.9, monthly)
-- Sitemap regenerates on next `predev`/`prebuild`
-
-## Files touched
-
-- edit `src/pages/goals/WeightLossPeptidesSA.tsx`
-- edit `src/pages/goals/HealingPeptidesSA.tsx`
-- create `src/pages/goals/AntiAgingPeptidesSA.tsx`
-- delete `src/pages/goals/LongevityPeptidesSA.tsx`
-- edit `src/App.tsx`
-- edit `scripts/generate-sitemap.ts`
-
-## Out of scope (call out only)
-
-The app still uses `HashRouter`, so these URLs resolve as `/#/weight-loss-peptides-south-africa`. Google indexes hash routes poorly. Same caveat as last turn — not addressed in this plan; flag a separate ticket if you want me to migrate to `BrowserRouter`.
+App still uses `HashRouter`, so these resolve as `/#/cognitive-peptides-south-africa` — Google indexes hash routes poorly. Same pre-existing caveat; not addressed here.

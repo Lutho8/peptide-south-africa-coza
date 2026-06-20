@@ -21,6 +21,9 @@ const staticEntries: Entry[] = [
   { path: "/weight-loss-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
   { path: "/healing-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
   { path: "/anti-aging-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
+  { path: "/cognitive-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
+  { path: "/growth-hormone-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
+  { path: "/libido-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
 ];
 
 const peptides = [

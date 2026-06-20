@@ -36,6 +36,9 @@ const FAQPage = lazy(() => import("./pages/FAQPage"));
 const WeightLossPeptidesSA = lazy(() => import("./pages/goals/WeightLossPeptidesSA"));
 const HealingPeptidesSA = lazy(() => import("./pages/goals/HealingPeptidesSA"));
 const AntiAgingPeptidesSA = lazy(() => import("./pages/goals/AntiAgingPeptidesSA"));
+const CognitivePeptidesSA = lazy(() => import("./pages/goals/CognitivePeptidesSA"));
+const GrowthHormonePeptidesSA = lazy(() => import("./pages/goals/GrowthHormonePeptidesSA"));
+const LibidoPeptidesSA = lazy(() => import("./pages/goals/LibidoPeptidesSA"));
 
 // NEW: Premium feature pages
 const SafetyCenter = lazy(() => import("./pages/SafetyPage"));
@@ -121,6 +124,9 @@ const App = () => {
                     <Route path="/weight-loss-peptides-south-africa" element={<WeightLossPeptidesSA />} />
                     <Route path="/healing-peptides-south-africa" element={<HealingPeptidesSA />} />
                     <Route path="/anti-aging-peptides-south-africa" element={<AntiAgingPeptidesSA />} />
+                    <Route path="/cognitive-peptides-south-africa" element={<CognitivePeptidesSA />} />
+                    <Route path="/growth-hormone-peptides-south-africa" element={<GrowthHormonePeptidesSA />} />
+                    <Route path="/libido-peptides-south-africa" element={<LibidoPeptidesSA />} />
                     {/* NEW: Premium feature routes */}
                     <Route path="/safety" element={<SafetyCenter />} />
                     <Route path="/injection-sites" element={<InjectionSites />} />
