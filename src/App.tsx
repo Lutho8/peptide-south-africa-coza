@@ -32,6 +32,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const BlogIndexPage = lazy(() => import("./pages/BlogIndexPage"));
 const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const FAQPage = lazy(() => import("./pages/FAQPage"));
 
 // NEW: Premium feature pages
 const SafetyCenter = lazy(() => import("./pages/SafetyPage"));
@@ -112,6 +113,7 @@ const App = () => {
                     <Route path="/cycles" element={<CycleManagementScreen />} />
                     <Route path="/blog" element={<BlogIndexPage />} />
                     <Route path="/blog/:slug" element={<BlogPostPage />} />
+                    <Route path="/faq" element={<FAQPage />} />
                     {/* NEW: Premium feature routes */}
                     <Route path="/safety" element={<SafetyCenter />} />
                     <Route path="/injection-sites" element={<InjectionSites />} />
