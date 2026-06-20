@@ -1,16 +1,4 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
 
-Sitemap: https://peptide-south-africa.co.za/sitemap.xml
+Sitemap: https://www.peptide-south-africa.com/sitemap.xml

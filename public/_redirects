@@ -1,11 +1,31 @@
-# SPA Fallback - all routes serve index.html
-/safety/*         /index.html   200
-/injection-sites  /index.html   200
-/injection-sites/* /index.html  200
-/analytics        /index.html   200
-/analytics/*      /index.html   200
-/inventory        /index.html   200
-/inventory/*      /index.html   200
+# Apex domain redirects
+# Old domain to new domain (will be configured at DNS level, but this is backup)
+# IMPORTANT: Only deploy this _redirects file to the OLD domain (ridethetide.site).
+# Do NOT deploy it to peptide-south-africa.com — it will create redirect loops.
 
-# Catch-all fallback
-/*                /index.html   200
+# Passthrough: sitemap and robots must be served, not redirected
+/robots.txt /robots.txt 200
+/sitemap-index.xml /sitemap-index.xml 200
+/sitemap-0.xml /sitemap-0.xml 200
+/sitemap.xml /sitemap.xml 200
+
+# Blog redirects
+/blog/* https://peptide-south-africa.com/blog/:splat 301
+
+# Assessment redirects
+/assessment/* https://peptide-south-africa.com/assessment/:splat 301
+
+# Program redirects
+/programs/* https://peptide-south-africa.com/programs/:splat 301
+
+# Peptide redirects
+/peptides/* https://peptide-south-africa.com/peptides/:splat 301
+
+# FAQ redirect
+/faq https://peptide-south-africa.com/faq 301
+
+# Database redirect
+/peptide-database https://peptide-south-africa.com/peptide-database 301
+
+# Catch-all
+/* https://peptide-south-africa.com/:splat 301
