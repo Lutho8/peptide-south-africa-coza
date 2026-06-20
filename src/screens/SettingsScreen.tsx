@@ -28,6 +28,7 @@ import {
   Cloud, CloudOff, RefreshCw, LogOut, LogIn, Loader2, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ErrorLogPanel } from '@/components/debug/ErrorLogPanel';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -403,6 +404,14 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               Always consult healthcare professionals before use. Monitor bloodwork regularly.
             </div>
           </div>
+        </GradientCard>
+      </div>
+
+      {/* Diagnostics */}
+      <div>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Diagnostics</h2>
+        <GradientCard className="p-4">
+          <ErrorLogPanel />
         </GradientCard>
       </div>
 
