@@ -124,6 +124,9 @@ const App = () => {
                     <Route path="/weight-loss-peptides-south-africa" element={<WeightLossPeptidesSA />} />
                     <Route path="/healing-peptides-south-africa" element={<HealingPeptidesSA />} />
                     <Route path="/anti-aging-peptides-south-africa" element={<AntiAgingPeptidesSA />} />
+                    <Route path="/cognitive-peptides-south-africa" element={<CognitivePeptidesSA />} />
+                    <Route path="/growth-hormone-peptides-south-africa" element={<GrowthHormonePeptidesSA />} />
+                    <Route path="/libido-peptides-south-africa" element={<LibidoPeptidesSA />} />
                     {/* NEW: Premium feature routes */}
                     <Route path="/safety" element={<SafetyCenter />} />
                     <Route path="/injection-sites" element={<InjectionSites />} />
