@@ -18,6 +18,9 @@ const staticEntries: Entry[] = [
   { path: "/privacy", changefreq: "yearly", priority: "0.3" },
   { path: "/terms", changefreq: "yearly", priority: "0.3" },
   { path: "/disclaimer", changefreq: "yearly", priority: "0.3" },
+  { path: "/weight-loss-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
+  { path: "/healing-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
+  { path: "/longevity-peptides-south-africa", changefreq: "monthly", priority: "0.9" },
 ];
 
 const peptides = [

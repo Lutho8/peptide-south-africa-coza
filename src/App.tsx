@@ -33,6 +33,9 @@ const BlogIndexPage = lazy(() => import("./pages/BlogIndexPage"));
 const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
+const WeightLossPeptidesSA = lazy(() => import("./pages/goals/WeightLossPeptidesSA"));
+const HealingPeptidesSA = lazy(() => import("./pages/goals/HealingPeptidesSA"));
+const LongevityPeptidesSA = lazy(() => import("./pages/goals/LongevityPeptidesSA"));
 
 // NEW: Premium feature pages
 const SafetyCenter = lazy(() => import("./pages/SafetyPage"));
@@ -114,6 +117,10 @@ const App = () => {
                     <Route path="/blog" element={<BlogIndexPage />} />
                     <Route path="/blog/:slug" element={<BlogPostPage />} />
                     <Route path="/faq" element={<FAQPage />} />
+                    {/* Goal-based SEO landing pages */}
+                    <Route path="/weight-loss-peptides-south-africa" element={<WeightLossPeptidesSA />} />
+                    <Route path="/healing-peptides-south-africa" element={<HealingPeptidesSA />} />
+                    <Route path="/longevity-peptides-south-africa" element={<LongevityPeptidesSA />} />
                     {/* NEW: Premium feature routes */}
                     <Route path="/safety" element={<SafetyCenter />} />
                     <Route path="/injection-sites" element={<InjectionSites />} />
