@@ -406,6 +406,14 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         </GradientCard>
       </div>
 
+      {/* Diagnostics */}
+      <div>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Diagnostics</h2>
+        <GradientCard className="p-4">
+          <ErrorLogPanel />
+        </GradientCard>
+      </div>
+
       {/* Version */}
       <div className="text-center text-xs text-muted-foreground">
         <p>Peptide Protocol Manager v1.0.0</p>
