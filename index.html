@@ -2,34 +2,54 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo-animated.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Peptide SA" />
+    <meta name="application-name" content="Peptide SA" />
     <meta name="theme-color" content="#3B82F6" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)" />
     <meta name="format-detection" content="telephone=no" />
     
-    <title>Peptide South Africa | Physician-Guided Peptide &amp; GLP-1 Protocols</title>
-    <meta name="description" content="Personalized peptide protocols for weight loss, longevity & recovery. 100% online, physician-supervised, compounded at licensed SA pharmacies. Start today." />
+    <title>Peptide South Africa - Peptide Protocol Tracker</title>
+    <meta name="description" content="Track peptide protocols, doses, and body composition for optimized health and performance" />
     <meta name="author" content="Peptide South Africa" />
-    <meta name="keywords" content="peptide, GLP-1, weight loss, longevity, recovery, biohacking, South Africa, physician-supervised" />
+    <meta name="keywords" content="peptide, protocol, tracker, health, fitness, biohacking, dose" />
 
-    <meta property="og:title" content="Peptide South Africa | Physician-Guided Peptide & GLP-1 Protocols" />
-    <meta property="og:description" content="Personalized peptide protocols for weight loss, longevity & recovery. 100% online, physician-supervised." />
+    <link rel="canonical" href="https://peptide-south-africa.co.za/" />
+
+    <meta property="og:title" content="Peptide South Africa - Peptide Protocol Tracker" />
+    <meta property="og:description" content="Track peptide protocols, doses, and body composition for optimized health" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/social-share.jpg" />
+    <meta property="og:url" content="https://peptide-south-africa.co.za/" />
+    <meta property="og:image" content="/icon-512.png" />
+    <meta property="og:site_name" content="Peptide South Africa" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Peptide South Africa | Physician-Guided Peptide & GLP-1 Protocols" />
-    <meta name="twitter:description" content="Personalized peptide protocols for weight loss, longevity & recovery." />
-    <meta name="twitter:image" content="/social-share.jpg" />
+    <meta name="twitter:title" content="Peptide South Africa - Peptide Protocol Tracker" />
+    <meta name="twitter:description" content="Track peptide protocols, doses, and body composition for optimized health" />
+    <meta name="twitter:image" content="/icon-512.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png?v=psa4" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=psa4" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png?v=psa4" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png?v=psa4" />
 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json?v=psa4" />
+
+    <!-- Font: preload critical weight, swap display -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    </noscript>
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
