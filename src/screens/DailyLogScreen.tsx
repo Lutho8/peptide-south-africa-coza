@@ -54,6 +54,11 @@ export function DailyLogScreen() {
 
   const handleDoseAnimationComplete = useCallback(() => setShowDoseLoggedAnimation(false), []);
 
+  const swipeBind = useSwipeNav({
+    onSwipeLeft: () => setSelectedDate((d) => addDays(d, 1)),
+    onSwipeRight: () => setSelectedDate((d) => subDays(d, 1)),
+  });
+
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -264,12 +269,7 @@ export function DailyLogScreen() {
         <>
           {/* Month Navigation */}
           <GradientCard className="p-3">
-            <div
-              {...useSwipeNav({
-                onSwipeLeft: () => setSelectedDate((d) => addDays(d, 1)),
-                onSwipeRight: () => setSelectedDate((d) => subDays(d, 1)),
-              })}
-            >
+            <div {...swipeBind}>
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={handlePrevMonth}
