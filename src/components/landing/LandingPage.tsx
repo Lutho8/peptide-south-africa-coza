@@ -81,10 +81,10 @@ export function LandingPage() {
         <main>
           <HeroSection onCategoryClick={handleCategoryClick} onSignInClick={handleSignInClick} />
 
-          <SafeSection name="PWA Install Journey" enabled={LANDING_SECTIONS.pwaJourney} minH={900} component={PWAInstallJourney} />
-          <SafeSection name="Install Verification" enabled={LANDING_SECTIONS.pwaJourney} minH={500} component={InstallVerification} />
+          <SafeSection name="PWA Install Journey" enabled={LANDING_SECTIONS.pwaJourney} minH={2200} component={PWAInstallJourney} />
+          <SafeSection name="Install Verification" enabled={LANDING_SECTIONS.pwaJourney} minH={800} component={InstallVerification} />
 
-          <SafeSection name="Testimonials" enabled={LANDING_SECTIONS.testimonials} minH={500} component={Testimonials} />
+          <SafeSection name="Testimonials" enabled={LANDING_SECTIONS.testimonials} minH={1600} component={Testimonials} />
 
           <SafeSection name="Why Free Band" enabled={LANDING_SECTIONS.whyFreeBand} minH={300}>
             <Suspense fallback={<SectionPlaceholder minH={300} />}>
@@ -115,7 +115,7 @@ export function LandingPage() {
           </SafeSection>
 
           <SafeSection name="Safety Disclaimer" enabled={LANDING_SECTIONS.safetyDisclaimer} minH={120} component={SafetyDisclaimerBand} />
-          <SafeSection name="FAQ" enabled={LANDING_SECTIONS.faq} minH={600} component={FAQSection} />
+          <SafeSection name="FAQ" enabled={LANDING_SECTIONS.faq} minH={1400} component={FAQSection} />
 
           <SafeSection name="CTA" enabled={LANDING_SECTIONS.cta} minH={300}>
             <Suspense fallback={<SectionPlaceholder minH={300} />}>
@@ -124,7 +124,7 @@ export function LandingPage() {
           </SafeSection>
 
           {/* Blogs sit just above the footer */}
-          <SafeSection name="Blogs" enabled={LANDING_SECTIONS.blog} minH={500} component={BlogSection} />
+          <SafeSection name="Blogs" enabled={LANDING_SECTIONS.blog} minH={2000} component={BlogSection} />
         </main>
       </ErrorBoundary>
 

@@ -82,6 +82,8 @@ export function BlogSection() {
                         src={post.image}
                         alt={post.title}
                         loading="lazy"
+                        width={800}
+                        height={450}
                         className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
                       />
                     </div>
