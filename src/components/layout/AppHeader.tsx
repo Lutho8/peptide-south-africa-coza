@@ -26,6 +26,8 @@ const GOAL_LINKS: Array<{ label: string; to: string }> = [
   { label: 'Cognitive', to: '/cognitive-peptides-south-africa' },
   { label: 'Growth Hormone', to: '/growth-hormone-peptides-south-africa' },
   { label: 'Libido (PT-141)', to: '/libido-peptides-south-africa' },
+  { label: "Women's Health", to: "/peptides-for-women-south-africa" },
+  { label: "Diabetes & Fatty Liver", to: "/peptides-diabetes-fatty-liver" },
 ];
 
 export function AppHeader({ onLogoClick }: AppHeaderProps) {
@@ -69,6 +71,19 @@ export function AppHeader({ onLogoClick }: AppHeaderProps) {
               <DropdownMenuItem asChild>
                 <Link to="/bpc-157-vs-tb-500" className="cursor-pointer">
                   BPC-157 vs TB-500
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Research Guides</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/peptide-storage-reconstitution-guide" className="cursor-pointer">
+                  Storage & Reconstitution
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/bpc-157-dosage-guide-south-africa" className="cursor-pointer">
+                  BPC-157 Dosage Guide
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

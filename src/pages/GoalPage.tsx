@@ -106,6 +106,30 @@ export default function GoalPage({ config }: { config: GoalPageConfig }) {
         </section>
 
         <section className="mb-10">
+          <h2 className="text-xl font-bold text-foreground mb-4">Research Guides</h2>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <Link to="/peptide-storage-reconstitution-guide">
+              <GradientCard className="p-4 hover:ring-1 hover:ring-primary/40 transition-all cursor-pointer h-full">
+                <p className="font-medium text-foreground text-sm">Storage &amp; Reconstitution Guide →</p>
+                <p className="text-xs text-muted-foreground mt-1">How to store lyophilised peptides and reconstitute safely with BAC water.</p>
+              </GradientCard>
+            </Link>
+            <Link to="/bpc-157-dosage-guide-south-africa">
+              <GradientCard className="p-4 hover:ring-1 hover:ring-primary/40 transition-all cursor-pointer h-full">
+                <p className="font-medium text-foreground text-sm">BPC-157 Dosage Guide →</p>
+                <p className="text-xs text-muted-foreground mt-1">Dose tables by goal, half-life, local vs systemic injection and the TB-500 stack.</p>
+              </GradientCard>
+            </Link>
+            <Link to="/bpc-157-vs-tb-500">
+              <GradientCard className="p-4 hover:ring-1 hover:ring-primary/40 transition-all cursor-pointer h-full">
+                <p className="font-medium text-foreground text-sm">BPC-157 vs TB-500 Comparison →</p>
+                <p className="text-xs text-muted-foreground mt-1">Side-by-side mechanism, dosing and use-case comparison.</p>
+              </GradientCard>
+            </Link>
+          </div>
+        </section>
+
+        <section className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-4">South African Researchers</h2>
           <GradientCard className="p-5">
             <p className="text-sm text-muted-foreground leading-relaxed">

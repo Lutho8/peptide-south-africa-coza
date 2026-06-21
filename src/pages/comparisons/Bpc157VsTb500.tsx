@@ -217,6 +217,30 @@ export default function Bpc157VsTb500() {
         </section>
 
         <section className="mb-10">
+          <h2 className="text-xl font-bold text-foreground mb-4">Related Research Guides</h2>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <Link to="/bpc-157-dosage-guide-south-africa">
+              <GradientCard className="p-4 hover:ring-1 hover:ring-primary/40 transition-all cursor-pointer h-full">
+                <p className="font-medium text-foreground text-sm">BPC-157 Dosage Guide →</p>
+                <p className="text-xs text-muted-foreground mt-1">Dose tables by goal, local vs systemic injection and the BPC-157 + TB-500 stack protocol.</p>
+              </GradientCard>
+            </Link>
+            <Link to="/healing-peptides-south-africa">
+              <GradientCard className="p-4 hover:ring-1 hover:ring-primary/40 transition-all cursor-pointer h-full">
+                <p className="font-medium text-foreground text-sm">Healing Peptides South Africa →</p>
+                <p className="text-xs text-muted-foreground mt-1">Category overview of peptides studied for tissue repair and recovery.</p>
+              </GradientCard>
+            </Link>
+            <Link to="/peptide-storage-reconstitution-guide">
+              <GradientCard className="p-4 hover:ring-1 hover:ring-primary/40 transition-all cursor-pointer h-full">
+                <p className="font-medium text-foreground text-sm">Storage &amp; Reconstitution Guide →</p>
+                <p className="text-xs text-muted-foreground mt-1">Correct storage temperatures and step-by-step BAC water reconstitution.</p>
+              </GradientCard>
+            </Link>
+          </div>
+        </section>
+
+        <section className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-4">South African Researchers</h2>
           <GradientCard className="p-5">
             <p className="text-sm text-muted-foreground leading-relaxed">
