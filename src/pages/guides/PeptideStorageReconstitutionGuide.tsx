@@ -35,6 +35,54 @@ const articleSchema = {
   ],
 };
 
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'What water should I use to reconstitute peptides?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Use bacteriostatic water (BAC water) for multi-dose vials. It contains 0.9% benzyl alcohol which prevents microbial contamination. Sterile water is only suitable for single-dose applications. Do not use saline — the ionic environment can accelerate degradation in some peptides.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'How long can you store reconstituted peptides?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Reconstituted peptides stored in the fridge at 2–8°C typically last 14–30 days depending on the peptide. BPC-157 and TB-500 are stable for up to 30 days reconstituted. GHK-Cu, PT-141, and MOTS-c should be used within 14–21 days. Never freeze a reconstituted peptide as freeze-thaw cycles rapidly degrade them.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can I freeze reconstituted peptides?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'No. Once a peptide is reconstituted with bacteriostatic water, do not freeze it. Freeze-thaw cycles cause ice crystal formation that shears peptide bonds and rapidly degrades the compound. Store reconstituted peptides only in the fridge at 2–8°C and use within the specified window (14–30 days).',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'How should I store lyophilised (powder) peptides in South Africa?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: "Most lyophilised peptides can be stored in the fridge at 2–8°C for 12–24 months. For longer storage or heat-sensitive peptides (semaglutide, tirzepatide, GHK-Cu), use a freezer at −20°C. South Africa's summer temperatures frequently exceed 30°C — ensure peptides are not left in cars, postal depots or warehouses during heatwaves, as even short exposure can cause significant degradation.",
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'How do I reconstitute peptides step by step?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '1) Calculate target concentration (e.g. add 1 mL BAC water per 1 mg peptide for 1 mg/mL). 2) Swab both vial septa with 70% isopropyl alcohol. 3) Draw BAC water using an 18–21G needle. 4) Insert needle at 45° angle into peptide vial and let BAC water run slowly down the glass wall — do not jet onto powder. 5) Swirl gently for 10–20 seconds. 6) Label with date and store in fridge at 2–8°C.',
+      },
+    },
+  ],
+};
+
 export default function PeptideStorageReconstitutionGuide() {
   return (
     <div className="min-h-screen bg-background">
@@ -42,7 +90,7 @@ export default function PeptideStorageReconstitutionGuide() {
         title="Peptide Storage & Reconstitution Guide South Africa | Peptide South Africa"
         description="Complete guide to storing lyophilised peptides and reconstituting with BAC water. Includes temperature requirements, South African climate considerations, and quick-reference storage table."
         canonical={URL}
-        jsonLd={articleSchema}
+        jsonLd={[articleSchema, faqSchema]}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-8">

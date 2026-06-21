@@ -4,7 +4,7 @@ import { corePeptides } from '@/data/peptides';
 import { expandedPeptides } from '@/data/peptidesExpanded';
 import { topPeptidesSlugs } from '@/data/entitySlugs';
 import { SEOHead } from '@/components/seo/SEOHead';
-import { JsonLd, buildCollectionSchema } from '@/components/seo/JsonLd';
+import { JsonLd, buildCollectionSchema, buildFAQSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,7 @@ export interface GoalPageConfig {
   peptideIds: string[];
   badge: string;
   badgeClass: string;
+  faqs?: Array<{ q: string; a: string }>;
 }
 
 const allPeptides = [...corePeptides, ...expandedPeptides];
@@ -44,6 +45,9 @@ export default function GoalPage({ config }: { config: GoalPageConfig }) {
         canonical={url}
         jsonLd={buildCollectionSchema(config.title, config.description, url, collectionItems)}
       />
+      {config.faqs && config.faqs.length > 0 && (
+        <JsonLd data={buildFAQSchema(config.faqs)} id="faq-schema" />
+      )}
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Link to="/" className="inline-flex items-center gap-2 text-primary hover:underline mb-4 text-sm">

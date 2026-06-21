@@ -32,6 +32,54 @@ const articleSchema = {
   },
 };
 
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'What is the standard BPC-157 dosage?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Research protocols typically use 250–500 mcg per day. For localised injury (tendon, ligament, joint), 250–500 mcg is injected subcutaneously near the site once or twice daily. For systemic or gut-related research, 250 mcg twice daily subcutaneously in the abdomen is common. Cycle length is typically 6–12 weeks.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'What is the half-life of BPC-157?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'BPC-157 has a short half-life estimated at 4–6 hours for subcutaneous administration, which is why most protocols split the daily dose into morning and evening injections. This helps maintain more stable tissue concentrations throughout the day.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Should I inject BPC-157 near the injury site or in the abdomen?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'For localised tissue injuries (tendon, ligament, muscle), injecting subcutaneously close to the injury site produces stronger local effects through direct angiogenesis and collagen activation at the target area. For systemic or gut-related research, abdominal subcutaneous injection is standard. Both approaches produce systemic BPC-157 exposure, but local injection amplifies the effect at the target site.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can BPC-157 and TB-500 be stacked together?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes — the BPC-157 + TB-500 stack is among the most popular research protocols for musculoskeletal recovery. BPC-157 provides localised angiogenesis and collagen synthesis at the injury site, while TB-500 (Thymosin Beta-4) acts systemically to promote cell migration and systemic anti-inflammatory effects. A common protocol is BPC-157 250–500 mcg/day plus TB-500 2–5 mg twice weekly.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'How long should a BPC-157 cycle last?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Most research protocols run for 6–12 weeks depending on the goal. Acute injury repair (tendon, ligament) typically uses 6–8 weeks. Gut repair and chronic inflammation protocols often extend to 10–12 weeks. After the cycle, a break of 4–8 weeks is typical before reassessing the need for a follow-up cycle based on biomarker response.',
+      },
+    },
+  ],
+};
+
 export default function Bpc157DosageGuideSA() {
   return (
     <div className="min-h-screen bg-background">
@@ -39,7 +87,7 @@ export default function Bpc157DosageGuideSA() {
         title="BPC-157 Dosage Guide South Africa | Peptide South Africa"
         description="Complete BPC-157 dosage guide: dose tables by research goal, half-life explained, local vs systemic injection, cycle lengths and the BPC-157 + TB-500 stack protocol."
         canonical={URL}
-        jsonLd={articleSchema}
+        jsonLd={[articleSchema, faqSchema]}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
