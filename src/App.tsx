@@ -40,6 +40,10 @@ const CognitivePeptidesSA = lazy(() => import("./pages/goals/CognitivePeptidesSA
 const GrowthHormonePeptidesSA = lazy(() => import("./pages/goals/GrowthHormonePeptidesSA"));
 const LibidoPeptidesSA = lazy(() => import("./pages/goals/LibidoPeptidesSA"));
 const Bpc157VsTb500 = lazy(() => import("./pages/comparisons/Bpc157VsTb500"));
+const PeptidesForWomenSA = lazy(() => import("./pages/goals/PeptidesForWomenSA"));
+const PeptidesDiabetesFattyLiver = lazy(() => import("./pages/goals/PeptidesDiabetesFattyLiver"));
+const PeptideStorageReconstitutionGuide = lazy(() => import("./pages/guides/PeptideStorageReconstitutionGuide"));
+const Bpc157DosageGuideSA = lazy(() => import("./pages/guides/Bpc157DosageGuideSA"));
 
 // NEW: Premium feature pages
 const SafetyCenter = lazy(() => import("./pages/SafetyPage"));
@@ -129,6 +133,10 @@ const App = () => {
                     <Route path="/growth-hormone-peptides-south-africa" element={<GrowthHormonePeptidesSA />} />
                     <Route path="/libido-peptides-south-africa" element={<LibidoPeptidesSA />} />
                     <Route path="/bpc-157-vs-tb-500" element={<Bpc157VsTb500 />} />
+                    <Route path="/peptides-for-women-south-africa" element={<PeptidesForWomenSA />} />
+                    <Route path="/peptides-diabetes-fatty-liver" element={<PeptidesDiabetesFattyLiver />} />
+                    <Route path="/peptide-storage-reconstitution-guide" element={<PeptideStorageReconstitutionGuide />} />
+                    <Route path="/bpc-157-dosage-guide-south-africa" element={<Bpc157DosageGuideSA />} />
                     {/* NEW: Premium feature routes */}
                     <Route path="/safety" element={<SafetyCenter />} />
                     <Route path="/injection-sites" element={<InjectionSites />} />
