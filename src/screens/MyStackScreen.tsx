@@ -47,9 +47,10 @@ interface StackItemProps {
   onTogglePauseEdit?: (cycle: Cycle) => void;
   onSavePauseEdit?: (cycle: Cycle) => void;
   onResume?: (cycle: Cycle) => void;
+  onRecalculate?: (cycle: Cycle) => void;
 }
 
-function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume, onRecalculate }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
