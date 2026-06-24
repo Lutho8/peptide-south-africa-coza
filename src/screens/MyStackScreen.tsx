@@ -556,6 +556,17 @@ export function MyStackScreen() {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
   };
 
+  const handleRecalculateCycle = (cycle: Cycle) => {
+    const { cycle: updated, changed, summary } = recalculateCycle(cycle, doses);
+    if (changed) {
+      updateCycle(updated);
+      setCycles(getCycles());
+      toast({ title: '✨ Cycle recalculated', description: summary });
+    } else {
+      toast({ title: 'Already in sync', description: summary });
+    }
+  };
+
   const handleTogglePauseEdit = (cycle: Cycle) => {
     setEditingCycleId(prev => (prev === cycle.id ? null : cycle.id));
   };
