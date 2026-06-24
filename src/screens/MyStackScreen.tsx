@@ -254,6 +254,19 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
                   Restart
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-xs h-7 text-muted-foreground hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRecalculate?.(cycle);
+                }}
+                title="Reconcile week count, planned doses, and logged doses"
+              >
+                <Wand2 size={10} />
+                Recalculate
+              </Button>
             </div>
 
             {/* Inline edit/pause panel */}
