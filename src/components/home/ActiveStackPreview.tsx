@@ -4,14 +4,15 @@ import { Badge } from '@/components/ui/badge';
 import { getActiveStack, getCycles, type ActiveStackItem, type Cycle } from '@/services/storage';
 import { peptides } from '@/data/peptides';
 import { findPeptideOrBlend } from '@/data/blendAdapters';
-import { Layers, ChevronRight, Plus, Pause, AlertCircle } from 'lucide-react';
+import { Layers, ChevronRight, Plus, Pause, AlertCircle, Info, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSyncPhase } from '@/hooks/useCloudSync';
 import { useAuth } from '@/contexts/AuthContext';
 import { StackSyncBadge, type SyncStatus } from '@/components/sync/StackSyncBadge';
 import { StackPreviewSkeleton } from './StackPreviewSkeleton';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
-import { getCycleProgress, cycleStatusLabel } from '@/lib/cycleProgress';
+import { getCycleProgress, cycleStatusLabel, getCyclePhase, getNextDose } from '@/lib/cycleProgress';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ActiveStackPreviewProps {
   onViewStack: () => void;
