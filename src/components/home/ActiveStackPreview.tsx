@@ -126,15 +126,20 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
           if (!peptide) return null;
           const name = peptide.name;
 
-          // Compute week display from calendarDays + plannedDuration
-          let weekText: string | null = null;
+          const phaseInfo = cycle && info ? getCyclePhase(cycle, info) : null;
+          const nextDose = cycle && info && cycle.status === 'active' ? getNextDose(cycle, doses) : null;
+
+          let primaryText: string | null = null;
+          if (cycle && info && phaseInfo) {
+            primaryText = `Week ${phaseInfo.weekNow}/${phaseInfo.weeksTotal} · ${phaseInfo.label}`;
+          }
+
+          let secondaryText: string | null = null;
           if (cycle && info) {
-            const weekNow = Math.min(
-              Math.ceil(cycle.plannedDuration / 7),
-              Math.max(1, Math.floor(info.calendarDays / 7) + 1),
-            );
-            const weekTotal = Math.max(1, Math.ceil(cycle.plannedDuration / 7));
-            weekText = `Week ${weekNow}/${weekTotal} · ${info.dosesLogged}/${info.dosesPlanned} doses`;
+            const parts = [`${info.dosesLogged}/${info.dosesPlanned} doses`];
+            if (nextDose) parts.push(`next ${nextDose.label}`);
+            else if (phaseInfo?.phase === 'complete') parts.push(`pause ${cycle.breakDuration}d`);
+            secondaryText = parts.join(' · ');
           }
 
           const statusLabel = info ? cycleStatusLabel(info, cycle?.status) : 'Not started';
@@ -158,19 +163,28 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
             >
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                <p className="text-[11px] text-muted-foreground truncate">
-                  {cycle?.status === 'break' ? (
+                {cycle?.status === 'break' ? (
+                  <p className="text-[11px] text-amber-400/90 truncate">
                     <span className="inline-flex items-center gap-1">
                       <Pause size={9} /> Paused{cycle.pauseReason === 'out_of_stock' ? ' — out of stock' : cycle.pauseReason === 'missed_doses' ? ' — catching up' : ''}
                     </span>
-                  ) : weekText ? (
-                    weekText
-                  ) : (
+                  </p>
+                ) : primaryText ? (
+                  <>
+                    <p className="text-[11px] text-muted-foreground truncate">{primaryText}</p>
+                    {secondaryText && (
+                      <p className="text-[10px] text-muted-foreground/80 truncate flex items-center gap-1">
+                        <Clock size={9} /> {secondaryText}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground truncate">
                     <span className="inline-flex items-center gap-1">
                       <AlertCircle size={9} /> No cycle yet · tap to start
                     </span>
-                  )}
-                </p>
+                  </p>
+                )}
               </div>
               <Badge variant="outline" className={cn('text-[10px] flex-shrink-0', badgeTone)}>
                 {statusLabel}
@@ -182,6 +196,25 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
           <p className="text-[11px] text-muted-foreground pl-2.5">+{rows.length - 5} more in My Stack</p>
         )}
       </div>
+
+      {/* How this is computed — inline explainer */}
+      <Collapsible>
+        <CollapsibleTrigger
+          onClick={(e) => e.stopPropagation()}
+          className="mt-3 flex items-center gap-1.5 text-[10px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+        >
+          <Info size={10} /> How is this calculated?
+        </CollapsibleTrigger>
+        <CollapsibleContent onClick={(e) => e.stopPropagation()}>
+          <div className="mt-2 rounded-lg bg-muted/20 border border-border/40 p-2.5 text-[10px] text-muted-foreground leading-relaxed space-y-1">
+            <p><strong className="text-foreground">Week N / Total</strong> = calendar days since cycle start ÷ 7, capped at planned duration.</p>
+            <p><strong className="text-foreground">Doses logged / planned</strong> = entries in Daily Log for this peptide vs. (frequency × cycle weeks). Multiple same-day logs count once for daily cadences.</p>
+            <p><strong className="text-foreground">Next dose</strong> = last logged dose + interval from your frequency (e.g. 2× weekly → every 3.5 days).</p>
+            <p><strong className="text-foreground">Paused</strong> appears when you explicitly pause, or when Recalculate Cycle detects 14+ days with no logs.</p>
+            <p className="text-muted-foreground/70 pt-1">Edit start date or run "Recalculate cycle" in My Stack if anything looks off.</p>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </GradientCard>
   );
 }
