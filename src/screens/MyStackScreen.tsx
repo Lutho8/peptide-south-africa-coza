@@ -748,6 +748,7 @@ export function MyStackScreen() {
                 onTogglePauseEdit={handleTogglePauseEdit}
                 onSavePauseEdit={handleSavePauseEdit}
                 onResume={handleResumeCycle}
+                onRecalculate={handleRecalculateCycle}
               />
             );
           })
