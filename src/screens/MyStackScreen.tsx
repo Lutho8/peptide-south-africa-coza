@@ -901,6 +901,25 @@ export function MyStackScreen() {
               week counter, doses-logged total, and "behind schedule" warnings accurate — past
               doses you've already logged will count toward this cycle.
             </p>
+            {pendingCycle && (() => {
+              const v = validateBackdate(
+                pendingCycle.peptideId,
+                pendingCycle.peptideName,
+                pendingStartDate,
+                pendingCycle.frequency,
+                doses,
+              );
+              const tone = v.severity === 'warning'
+                ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                : 'border-border bg-muted/30 text-muted-foreground';
+              const Icon = v.severity === 'warning' ? AlertTriangle : Info;
+              return (
+                <div className={cn('flex items-start gap-2 rounded-lg border p-2.5 text-[11px] leading-relaxed', tone)}>
+                  <Icon size={12} className="mt-0.5 flex-shrink-0" />
+                  <span>{v.message}</span>
+                </div>
+              );
+            })()}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setStartCycleDialogOpen(false)}>Cancel</Button>
