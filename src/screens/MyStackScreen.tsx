@@ -150,6 +150,24 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
                 {cycleStatusLabel(cycleInfo, cycle.status)}
               </Badge>
             </div>
+            {/* Phase + next-dose info */}
+            {(() => {
+              const phaseInfo = getCyclePhase(cycle, cycleInfo);
+              const nextDose = cycle.status === 'active' ? getNextDose(cycle, doses || []) : null;
+              return (
+                <div className="flex items-center justify-between flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+                  <span>
+                    Week {phaseInfo.weekNow}/{phaseInfo.weeksTotal} · <span className="text-primary">{phaseInfo.label}</span>
+                    {phaseInfo.weeksLeft > 0 && cycle.status === 'active' && ` · ${phaseInfo.weeksLeft}w left`}
+                  </span>
+                  {nextDose && (
+                    <span className="inline-flex items-center gap-1">
+                      <Clock size={10} /> Next: {nextDose.label}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
             <div className="w-full h-2 rounded-full bg-muted">
               <div
                 className={cn(
