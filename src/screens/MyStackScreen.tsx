@@ -29,7 +29,7 @@ import { DosingReference } from '@/components/doses/DosingReference';
 import { EditCyclePanel } from '@/components/doses/EditCyclePanel';
 import { AnimatePresence } from 'framer-motion';
 import { useDailyDoses, type DailyDoseEntry } from '@/hooks/useDailyDoses';
-import { getCycleProgress as computeCycleProgress, cycleStatusLabel } from '@/lib/cycleProgress';
+import { getCycleProgress as computeCycleProgress, cycleStatusLabel, validateBackdate, recalculateCycle, getCyclePhase, getNextDose } from '@/lib/cycleProgress';
 import { BuyStackCard } from '@/components/stack/BuyStackCard';
 
 // --- Stack Item Card ---
