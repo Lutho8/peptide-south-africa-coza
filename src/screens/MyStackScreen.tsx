@@ -6,7 +6,7 @@ import { userProfile, stackOptimizations } from '@/data/userData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCloudSync, useSyncPhase } from '@/hooks/useCloudSync';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon, Undo2, Pause, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon, Undo2, Pause, Pencil, Wand2, Clock, Info } from 'lucide-react';
 import { getGoalLabels } from '@/data/goalMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ import { DosingReference } from '@/components/doses/DosingReference';
 import { EditCyclePanel } from '@/components/doses/EditCyclePanel';
 import { AnimatePresence } from 'framer-motion';
 import { useDailyDoses, type DailyDoseEntry } from '@/hooks/useDailyDoses';
-import { getCycleProgress as computeCycleProgress, cycleStatusLabel } from '@/lib/cycleProgress';
+import { getCycleProgress as computeCycleProgress, cycleStatusLabel, validateBackdate, recalculateCycle, getCyclePhase, getNextDose } from '@/lib/cycleProgress';
 import { BuyStackCard } from '@/components/stack/BuyStackCard';
 
 // --- Stack Item Card ---
@@ -47,9 +47,10 @@ interface StackItemProps {
   onTogglePauseEdit?: (cycle: Cycle) => void;
   onSavePauseEdit?: (cycle: Cycle) => void;
   onResume?: (cycle: Cycle) => void;
+  onRecalculate?: (cycle: Cycle) => void;
 }
 
-function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume, onRecalculate }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
@@ -149,6 +150,24 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
                 {cycleStatusLabel(cycleInfo, cycle.status)}
               </Badge>
             </div>
+            {/* Phase + next-dose info */}
+            {(() => {
+              const phaseInfo = getCyclePhase(cycle, cycleInfo);
+              const nextDose = cycle.status === 'active' ? getNextDose(cycle, doses || []) : null;
+              return (
+                <div className="flex items-center justify-between flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+                  <span>
+                    Week {phaseInfo.weekNow}/{phaseInfo.weeksTotal} · <span className="text-primary">{phaseInfo.label}</span>
+                    {phaseInfo.weeksLeft > 0 && cycle.status === 'active' && ` · ${phaseInfo.weeksLeft}w left`}
+                  </span>
+                  {nextDose && (
+                    <span className="inline-flex items-center gap-1">
+                      <Clock size={10} /> Next: {nextDose.label}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
             <div className="w-full h-2 rounded-full bg-muted">
               <div
                 className={cn(
@@ -235,6 +254,19 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
                   Restart
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-xs h-7 text-muted-foreground hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRecalculate?.(cycle);
+                }}
+                title="Reconcile week count, planned doses, and logged doses"
+              >
+                <Wand2 size={10} />
+                Recalculate
+              </Button>
             </div>
 
             {/* Inline edit/pause panel */}
@@ -524,6 +556,17 @@ export function MyStackScreen() {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
   };
 
+  const handleRecalculateCycle = (cycle: Cycle) => {
+    const { cycle: updated, changed, summary } = recalculateCycle(cycle, doses);
+    if (changed) {
+      updateCycle(updated);
+      setCycles(getCycles());
+      toast({ title: '✨ Cycle recalculated', description: summary });
+    } else {
+      toast({ title: 'Already in sync', description: summary });
+    }
+  };
+
   const handleTogglePauseEdit = (cycle: Cycle) => {
     setEditingCycleId(prev => (prev === cycle.id ? null : cycle.id));
   };
@@ -705,6 +748,7 @@ export function MyStackScreen() {
                 onTogglePauseEdit={handleTogglePauseEdit}
                 onSavePauseEdit={handleSavePauseEdit}
                 onResume={handleResumeCycle}
+                onRecalculate={handleRecalculateCycle}
               />
             );
           })
@@ -857,6 +901,25 @@ export function MyStackScreen() {
               week counter, doses-logged total, and "behind schedule" warnings accurate — past
               doses you've already logged will count toward this cycle.
             </p>
+            {pendingCycle && (() => {
+              const v = validateBackdate(
+                pendingCycle.peptideId,
+                pendingCycle.peptideName,
+                pendingStartDate,
+                pendingCycle.frequency,
+                doses,
+              );
+              const tone = v.severity === 'warning'
+                ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                : 'border-border bg-muted/30 text-muted-foreground';
+              const Icon = v.severity === 'warning' ? AlertTriangle : Info;
+              return (
+                <div className={cn('flex items-start gap-2 rounded-lg border p-2.5 text-[11px] leading-relaxed', tone)}>
+                  <Icon size={12} className="mt-0.5 flex-shrink-0" />
+                  <span>{v.message}</span>
+                </div>
+              );
+            })()}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setStartCycleDialogOpen(false)}>Cancel</Button>
