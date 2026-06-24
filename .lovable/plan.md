@@ -1,45 +1,49 @@
+
+## Problem
+
+The dashboard's **Active Stack** card (`src/components/home/ActiveStackPreview.tsx`) only shows colored category tiles and "N peptides" — nothing about cycle week, doses logged, doses left, or pause state. All that intelligence already exists in `src/lib/cycleProgress.ts` (`computeCycleProgress`, `cycleStatusLabel`) and is rendered correctly inside MyStack, but it never reaches the home screen.
+
+A second source of confusion: when a user adds a peptide they're already weeks into, the **Start Cycle** dialog asks for a start date with no explanation of what that date means or that past-dated logs will be counted, so they pick "today" and the week counter is wrong from day one.
+
 ## Plan
 
-### 1. Comparison page `/bpc-157-vs-tb-500`
+### 1. Rebuild `ActiveStackPreview` to show real cycle status
 
-Create `src/pages/comparisons/Bpc157VsTb500.tsx`. Standalone page (not using `GoalPage`) so it can host the comparison table layout.
+For each peptide in the active stack, look up its current `Cycle` (from `getCycles()`) and feed it through `computeCycleProgress(cycle, doses)` using `useDailyDoses()`. Replace the icon-tile row with a compact per-peptide list:
 
-Structure:
-- **SEO head** — title "BPC-157 vs TB-500: Research Comparison | Peptide South Africa", meta description, canonical `https://peptide-south-africa.co.za/bpc-157-vs-tb-500`
-- **JSON-LD** — `Article` schema + `BreadcrumbList`
-- **Hero** — H1 "BPC-157 vs TB-500 Research Comparison", tagline
-- **Side-by-side comparison table** — rows: Mechanism, Half-life, Dosing range, Best research use case, Onset timeline, Administration, Stack synergy. Uses `Table` shadcn component, responsive (stacks on mobile)
-- **Long-form research content** (~450 words across 4 sections: Origin & structure, Mechanistic differences, When researchers reach for which, Why they're studied together)
-- **Two big CTA cards** linking to `/peptides/bpc-157` and `/peptides/tb-500` entity pages
-- SAHPRA disclaimer block + research disclaimer
+```
+BPC-157            Week 3 / 8 · 12/24 doses     [On Track]
+Ipamorelin         Week 1 / 6 · next dose today [Not Started]
+Retatrutide        Paused — out of stock        [Paused]
+Tirzepatide        No cycle started             [Start →]
+```
 
-### 2. "Research by Goal" dropdown in `AppHeader`
+Each row shows: peptide short name, `Week N / total` (from `calendarDays` and `plannedDuration`), `dosesLogged/dosesPlanned`, and the same status badge MyStack uses (`cycleStatusLabel`). Behind/overdue/nearing badges reuse the existing color tokens (amber / destructive / primary).
 
-Add a new dropdown button between the Logo block and the Shop/Support block in `src/components/layout/AppHeader.tsx`. Uses shadcn `DropdownMenu`, matches existing pill-button styling (`rounded-xl bg-card/95 backdrop-blur border border-border shadow-md`). Items link to all 6 goal pages plus the new comparison page as a 7th item:
+Top of the card gets a one-line summary across the whole stack: "*3 cycles active · 1 paused · 2 doses behind today*" so the user can read state at a glance without expanding.
 
-- Weight Loss → `/weight-loss-peptides-south-africa`
-- Healing → `/healing-peptides-south-africa`
-- Anti-Aging → `/anti-aging-peptides-south-africa`
-- Cognitive → `/cognitive-peptides-south-africa`
-- Growth Hormone → `/growth-hormone-peptides-south-africa`
-- Libido (PT-141) → `/libido-peptides-south-africa`
-- — divider —
-- BPC-157 vs TB-500 → `/bpc-157-vs-tb-500`
+Tapping the card still navigates to MyStack (no behavior change). Empty-state and hydration skeleton are kept as-is.
 
-Hidden on the very narrowest mobile (`hidden sm:flex`) to keep room for the logo, since the header already collapses the logo text below `sm`. Mobile users still reach these pages via the BottomNav / SupportSheet — flag this in the closing message.
+### 2. Clarify the Start-Cycle date picker
 
-### 3. Wire up
+In `MyStackScreen`'s start-cycle dialog (the `pendingStartDate` flow around line 384), add a short helper line under the date input:
 
-- `src/App.tsx` — add lazy import + route for the comparison page above the catch-all
-- `scripts/generate-sitemap.ts` — append `/bpc-157-vs-tb-500` (priority 0.8, monthly)
+> "Pick the date you actually started this peptide. If you're already a few weeks in, set the real start date — past doses you've logged will count toward this cycle."
 
-### Files
+Add a quick "I started today" / "I started 1 week ago" / "2 weeks ago" / "4 weeks ago" chip row that prefills the date, so users mid-stream don't have to think about calendar math. This matches how the rest of the app uses pill chips.
 
-- create `src/pages/comparisons/Bpc157VsTb500.tsx`
-- edit `src/components/layout/AppHeader.tsx`
-- edit `src/App.tsx`
-- edit `scripts/generate-sitemap.ts`
+### 3. Tiny consistency fixes
 
-### Out of scope (re-flag)
+- The dashboard preview imports `useDailyDoses` so cycle progress matches MyStack exactly (same source of truth, no drift).
+- Status label, colors, and "behind" arithmetic all flow through `cycleStatusLabel` / `computeCycleProgress` — no duplicate logic. If cycle math ever changes, both screens update together.
 
-`HashRouter` — these URLs still resolve as `/#/bpc-157-vs-tb-500`. Hash routes index poorly. Pre-existing; not addressed.
+## Out of scope
+
+- No changes to `cycleProgress.ts` math, storage schema, or notifications.
+- No change to MyStack itself beyond the start-date dialog copy + chip row.
+- No new backend tables.
+
+## Files touched
+
+- `src/components/home/ActiveStackPreview.tsx` — rebuilt rows with cycle data
+- `src/screens/MyStackScreen.tsx` — start-cycle dialog: helper copy + "started X ago" chips
