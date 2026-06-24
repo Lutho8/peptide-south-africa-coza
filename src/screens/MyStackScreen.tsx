@@ -6,7 +6,7 @@ import { userProfile, stackOptimizations } from '@/data/userData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCloudSync, useSyncPhase } from '@/hooks/useCloudSync';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon, Undo2, Pause, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon, Undo2, Pause, Pencil, Wand2, Clock, Info } from 'lucide-react';
 import { getGoalLabels } from '@/data/goalMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
