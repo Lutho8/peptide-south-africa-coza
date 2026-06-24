@@ -815,8 +815,36 @@ export function MyStackScreen() {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <Label htmlFor="cycle-start-date" className="text-sm">
-              When did you start this cycle?
+              When did you actually start this peptide?
             </Label>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: 'Today', days: 0 },
+                { label: '1 week ago', days: 7 },
+                { label: '2 weeks ago', days: 14 },
+                { label: '4 weeks ago', days: 28 },
+              ].map(({ label, days }) => {
+                const d = new Date();
+                d.setDate(d.getDate() - days);
+                const iso = d.toISOString().split('T')[0];
+                const selected = pendingStartDate === iso;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setPendingStartDate(iso)}
+                    className={cn(
+                      'rounded-full border px-3 py-1 text-xs transition-colors',
+                      selected
+                        ? 'border-primary bg-primary/15 text-primary'
+                        : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50',
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
             <Input
               id="cycle-start-date"
               type="date"
@@ -824,8 +852,10 @@ export function MyStackScreen() {
               max={new Date().toISOString().split('T')[0]}
               onChange={(e) => setPendingStartDate(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              Defaults to today. Pick an earlier date if you already started this peptide.
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Pick the real start date. If you're already a few weeks in, backdating keeps the
+              week counter, doses-logged total, and "behind schedule" warnings accurate — past
+              doses you've already logged will count toward this cycle.
             </p>
           </div>
           <DialogFooter>
