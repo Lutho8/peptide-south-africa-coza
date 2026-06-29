@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, addDays, subDays } from 'date-fns';
 import { peptides } from '@/data/peptides';
 import { findPeptideOrBlend, getAllSelectablePeptides } from '@/data/blendAdapters';
