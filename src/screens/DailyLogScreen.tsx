@@ -414,19 +414,20 @@ export function DailyLogScreen() {
             ) : (
               <div className="space-y-2">
                 {selectedDateDoses.map((dose) => (
-                  <GradientCard
+                  <div
                     key={dose.id}
                     id={`dose-${dose.id}`}
-                    ref={(el: HTMLDivElement | null) => {
+                    ref={(el) => {
                       if (el && highlightedDoseId === dose.id) {
                         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                       }
                     }}
                     className={cn(
-                      'flex items-center gap-3 transition-all',
+                      'rounded-2xl transition-all',
                       highlightedDoseId === dose.id && 'ring-2 ring-amber-400 shadow-lg shadow-amber-500/20 animate-pulse',
                     )}
                   >
+                  <GradientCard className="flex items-center gap-3">
                     <div className={cn("w-2 h-10 rounded-full", getCategoryColor(dose.peptide_id))} />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
