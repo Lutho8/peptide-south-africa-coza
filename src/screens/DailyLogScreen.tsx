@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, addDays, subDays } from 'date-fns';
 import { peptides } from '@/data/peptides';
 import { findPeptideOrBlend, getAllSelectablePeptides } from '@/data/blendAdapters';
@@ -51,6 +51,33 @@ export function DailyLogScreen() {
     notes: '',
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [highlightedDoseId, setHighlightedDoseId] = useState<string | null>(null);
+  const highlightTimerRef = useRef<number | null>(null);
+
+  // Deep-link support: `?date=YYYY-MM-DD&doseId=...` from the MyStack backdate
+  // conflict list → jump to that day and flash the matching log row.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const dateStr = params.get('date');
+      const doseId = params.get('doseId');
+      if (dateStr) {
+        const parsed = new Date(dateStr + 'T00:00:00');
+        if (!isNaN(parsed.getTime())) {
+          setSelectedDate(parsed);
+          setCurrentMonth(parsed);
+        }
+      }
+      if (doseId) {
+        setHighlightedDoseId(doseId);
+        if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = window.setTimeout(() => setHighlightedDoseId(null), 4000);
+      }
+    } catch { /* noop */ }
+    return () => {
+      if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+    };
+  }, []);
 
   const handleDoseAnimationComplete = useCallback(() => setShowDoseLoggedAnimation(false), []);
 
@@ -387,7 +414,20 @@ export function DailyLogScreen() {
             ) : (
               <div className="space-y-2">
                 {selectedDateDoses.map((dose) => (
-                  <GradientCard key={dose.id} className="flex items-center gap-3">
+                  <div
+                    key={dose.id}
+                    id={`dose-${dose.id}`}
+                    ref={(el) => {
+                      if (el && highlightedDoseId === dose.id) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }}
+                    className={cn(
+                      'rounded-2xl transition-all',
+                      highlightedDoseId === dose.id && 'ring-2 ring-amber-400 shadow-lg shadow-amber-500/20 animate-pulse',
+                    )}
+                  >
+                  <GradientCard className="flex items-center gap-3">
                     <div className={cn("w-2 h-10 rounded-full", getCategoryColor(dose.peptide_id))} />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -415,6 +455,7 @@ export function DailyLogScreen() {
                       <Trash2 size={16} />
                     </button>
                   </GradientCard>
+                  </div>
                 ))}
               </div>
             )}

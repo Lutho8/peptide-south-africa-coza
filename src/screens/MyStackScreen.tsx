@@ -910,13 +910,47 @@ export function MyStackScreen() {
                 doses,
               );
               const tone = v.severity === 'warning'
-                ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                ? 'border-amber-500/40 bg-amber-500/10 text-amber-200'
                 : 'border-border bg-muted/30 text-muted-foreground';
               const Icon = v.severity === 'warning' ? AlertTriangle : Info;
+              const reasonChip = (reason: string) => {
+                if (reason === 'before_start') return 'before start';
+                if (reason === 'over_frequency_for_week') return 'over-cadence';
+                return 'past planned window';
+              };
               return (
-                <div className={cn('flex items-start gap-2 rounded-lg border p-2.5 text-[11px] leading-relaxed', tone)}>
-                  <Icon size={12} className="mt-0.5 flex-shrink-0" />
-                  <span>{v.message}</span>
+                <div className={cn('rounded-lg border p-2.5 text-[11px] leading-relaxed', tone)}>
+                  <div className="flex items-start gap-2">
+                    <Icon size={12} className="mt-0.5 flex-shrink-0" />
+                    <span className="flex-1">{v.message}</span>
+                  </div>
+                  {v.conflicts.length > 0 && (
+                    <ul className="mt-2 space-y-1 max-h-48 overflow-y-auto pr-1">
+                      {v.conflicts.map((c) => (
+                        <li
+                          key={c.doseId}
+                          className="flex items-start justify-between gap-2 rounded border border-amber-500/20 bg-amber-500/5 p-1.5"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="font-mono text-[10px] text-amber-100">{c.date}{c.time ? ` ${c.time}` : ''}</span>
+                              <span className="text-[10px] text-amber-200/90">{c.dose} {c.unit}</span>
+                              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-amber-100">
+                                {reasonChip(c.reason)}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 text-[10px] text-amber-200/70">{c.detail}</p>
+                          </div>
+                          <a
+                            href={`/?screen=daily-log&date=${c.date}&doseId=${c.doseId}`}
+                            className="flex-shrink-0 self-center rounded border border-amber-400/40 px-1.5 py-0.5 text-[10px] text-amber-100 hover:bg-amber-500/15 active:scale-[0.97]"
+                          >
+                            Open
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               );
             })()}

@@ -258,21 +258,37 @@ function formatNextDose(next: Date, time: string | null, now: Date): NextDoseInf
   return { date: nextDay.toISOString().split('T')[0], time, daysFromToday: days, label };
 }
 
+export type BackdateConflictReason =
+  | 'before_start'
+  | 'over_frequency_for_week'
+  | 'outside_planned_duration';
+
+export interface BackdateConflict {
+  date: string;
+  time: string | null;
+  dose: number;
+  unit: string;
+  reason: BackdateConflictReason;
+  weekIndex: number | null;
+  detail: string;
+  doseId: string;
+}
+
 export interface BackdateValidation {
-  /** True if no issues */
   ok: boolean;
-  /** Severity: info = informational, warning = action recommended */
   severity: 'info' | 'warning';
   message: string;
-  /** Useful counts */
   logsBeforeStart: number;
   logsAfterStart: number;
   expectedByNow: number;
+  conflicts: BackdateConflict[];
 }
 
 /**
- * Validate a proposed start date against logged doses for this peptide.
- * Surfaces mismatches like "you logged 8 doses but a 2-week-old start expects 4".
+ * Validate a proposed start date against logged doses. Returns a structured
+ * `conflicts` array so the UI can list every offending Daily-Log entry.
+ * `splitParts` collapses N same-day sub-doses into 1 complete dose before
+ * checking weekly cadence.
  */
 export function validateBackdate(
   peptideId: string,
@@ -281,47 +297,125 @@ export function validateBackdate(
   frequency: string,
   doses: DailyDoseEntry[],
   now: Date = new Date(),
+  opts: { plannedDuration?: number; splitParts?: number } = {},
 ): BackdateValidation {
   const cycleSlugs = new Set([slug(peptideId), slug(peptideName)].filter(Boolean));
-  const matched = doses.filter(d => cycleSlugs.has(slug(d.peptide_id)) || cycleSlugs.has(slug(d.peptide_name)));
-  const logsBeforeStart = matched.filter(d => d.date < startDate).length;
-  const logsAfterStart = matched.filter(d => d.date >= startDate).length;
+  const matched = doses
+    .filter(d => cycleSlugs.has(slug(d.peptide_id)) || cycleSlugs.has(slug(d.peptide_name)))
+    .sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
 
+  const splitParts = Math.max(1, opts.splitParts ?? 1);
   const perWeek = parseFrequencyPerWeek(frequency);
   const start = new Date(startDate);
   const calendarDays = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 86400000));
   const expectedByNow = Math.max(1, Math.round(((calendarDays + 1) / 7) * perWeek));
+  const plannedDuration = opts.plannedDuration;
 
-  if (logsBeforeStart > 0) {
+  const conflicts: BackdateConflict[] = [];
+  const weekBuckets = new Map<number, DailyDoseEntry[]>();
+
+  for (const d of matched) {
+    if (d.date < startDate) {
+      conflicts.push({
+        date: d.date, time: d.time || null, dose: d.dose, unit: d.unit,
+        reason: 'before_start', weekIndex: null,
+        detail: `Logged ${d.dose} ${d.unit} on ${d.date} — before this start date, won't count.`,
+        doseId: d.id,
+      });
+      continue;
+    }
+    const weekIdx = Math.floor((new Date(d.date).getTime() - start.getTime()) / (7 * 86400000));
+    if (plannedDuration && weekIdx >= Math.ceil(plannedDuration / 7)) {
+      conflicts.push({
+        date: d.date, time: d.time || null, dose: d.dose, unit: d.unit,
+        reason: 'outside_planned_duration', weekIndex: weekIdx,
+        detail: `Logged ${d.dose} ${d.unit} on ${d.date} — past the planned ${plannedDuration}-day window.`,
+        doseId: d.id,
+      });
+      continue;
+    }
+    if (!weekBuckets.has(weekIdx)) weekBuckets.set(weekIdx, []);
+    weekBuckets.get(weekIdx)!.push(d);
+  }
+
+  const expectedPerWeek = Math.max(1, Math.round(perWeek));
+  for (const [weekIdx, entries] of weekBuckets) {
+    const byDay = new Map<string, DailyDoseEntry[]>();
+    for (const e of entries) {
+      if (!byDay.has(e.date)) byDay.set(e.date, []);
+      byDay.get(e.date)!.push(e);
+    }
+    let completeDoses = 0;
+    for (const dayEntries of byDay.values()) {
+      completeDoses += Math.max(1, Math.floor(dayEntries.length / splitParts));
+    }
+    if (completeDoses > expectedPerWeek) {
+      const sorted = [...entries].sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+      const allowed = expectedPerWeek * splitParts;
+      sorted.slice(allowed).forEach(d => {
+        conflicts.push({
+          date: d.date, time: d.time || null, dose: d.dose, unit: d.unit,
+          reason: 'over_frequency_for_week', weekIndex: weekIdx,
+          detail: `Week ${weekIdx + 1} already has ${expectedPerWeek} complete dose${expectedPerWeek === 1 ? '' : 's'}; extra ${d.dose} ${d.unit} on ${d.date} won't add a week.`,
+          doseId: d.id,
+        });
+      });
+    }
+  }
+
+  const logsBeforeStart = conflicts.filter(c => c.reason === 'before_start').length;
+  const logsAfterStart = matched.length - logsBeforeStart;
+
+  if (conflicts.length > 0) {
+    const parts: string[] = [];
+    if (logsBeforeStart) parts.push(`${logsBeforeStart} before start`);
+    if (conflicts.some(c => c.reason === 'over_frequency_for_week')) parts.push(`some weeks exceed ${expectedPerWeek}× cadence`);
+    if (conflicts.some(c => c.reason === 'outside_planned_duration')) parts.push(`some past the planned window`);
     return {
-      ok: false,
-      severity: 'warning',
-      message: `${logsBeforeStart} previously logged dose${logsBeforeStart === 1 ? '' : 's'} fall before this start date and won't count toward the cycle. Pick an earlier start to include them.`,
-      logsBeforeStart, logsAfterStart, expectedByNow,
+      ok: false, severity: 'warning',
+      message: `${parts.join(' · ')} — review ${conflicts.length} entr${conflicts.length === 1 ? 'y' : 'ies'} below.`,
+      logsBeforeStart, logsAfterStart, expectedByNow, conflicts,
     };
   }
-  if (logsAfterStart > expectedByNow * 1.5 && logsAfterStart >= 3) {
-    return {
-      ok: false,
-      severity: 'warning',
-      message: `You've logged ${logsAfterStart} doses since ${startDate}, but a cycle starting then would only expect ~${expectedByNow}. Your real start may be earlier.`,
-      logsBeforeStart, logsAfterStart, expectedByNow,
-    };
-  }
+
   if (logsAfterStart === 0 && start < now && calendarDays > 7) {
     return {
-      ok: true,
-      severity: 'info',
-      message: `No doses logged in the past ${calendarDays} days. The week counter will advance but progress stays at 0% until you log a dose.`,
-      logsBeforeStart, logsAfterStart, expectedByNow,
+      ok: true, severity: 'info',
+      message: `No doses logged in the past ${calendarDays} days. The week counter advances but progress stays at 0% until you log a dose.`,
+      logsBeforeStart: 0, logsAfterStart: 0, expectedByNow, conflicts: [],
     };
   }
+
   return {
-    ok: true,
-    severity: 'info',
-    message: `${logsAfterStart} dose${logsAfterStart === 1 ? '' : 's'} logged since ${startDate}.`,
-    logsBeforeStart, logsAfterStart, expectedByNow,
+    ok: true, severity: 'info',
+    message: `${logsAfterStart} dose${logsAfterStart === 1 ? '' : 's'} logged since ${startDate} — no conflicts.`,
+    logsBeforeStart: 0, logsAfterStart, expectedByNow, conflicts: [],
   };
+}
+
+/**
+ * Compute the absolute next-fire timestamp (ms since epoch) for the next dose
+ * in this cycle, used to schedule push reminders. Returns null when nothing
+ * to schedule.
+ */
+export function computeNextFireAt(
+  cycle: Cycle,
+  doses: DailyDoseEntry[],
+  preferredTime: string = '09:00',
+  leadMinutes: number = 0,
+  now: Date = new Date(),
+): number | null {
+  const next = getNextDose(cycle, doses, now);
+  if (!next) return null;
+  const time = next.time || preferredTime;
+  const [h, m] = time.split(':').map(Number);
+  const dt = new Date(next.date + 'T00:00:00');
+  dt.setHours(Number.isFinite(h) ? h : 9, Number.isFinite(m) ? m : 0, 0, 0);
+  let fireAt = dt.getTime() - leadMinutes * 60_000;
+  if (fireAt <= now.getTime()) {
+    fireAt += 24 * 60 * 60_000;
+  }
+  return fireAt;
 }
 
 /**
