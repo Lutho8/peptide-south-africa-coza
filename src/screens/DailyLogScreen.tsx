@@ -455,6 +455,7 @@ export function DailyLogScreen() {
                       <Trash2 size={16} />
                     </button>
                   </GradientCard>
+                  </div>
                 ))}
               </div>
             )}
