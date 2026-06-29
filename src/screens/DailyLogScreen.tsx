@@ -51,6 +51,33 @@ export function DailyLogScreen() {
     notes: '',
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [highlightedDoseId, setHighlightedDoseId] = useState<string | null>(null);
+  const highlightTimerRef = useRef<number | null>(null);
+
+  // Deep-link support: `?date=YYYY-MM-DD&doseId=...` from the MyStack backdate
+  // conflict list → jump to that day and flash the matching log row.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const dateStr = params.get('date');
+      const doseId = params.get('doseId');
+      if (dateStr) {
+        const parsed = new Date(dateStr + 'T00:00:00');
+        if (!isNaN(parsed.getTime())) {
+          setSelectedDate(parsed);
+          setCurrentMonth(parsed);
+        }
+      }
+      if (doseId) {
+        setHighlightedDoseId(doseId);
+        if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = window.setTimeout(() => setHighlightedDoseId(null), 4000);
+      }
+    } catch { /* noop */ }
+    return () => {
+      if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+    };
+  }, []);
 
   const handleDoseAnimationComplete = useCallback(() => setShowDoseLoggedAnimation(false), []);
 
