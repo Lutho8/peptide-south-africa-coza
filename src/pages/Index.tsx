@@ -66,6 +66,30 @@ const Index = () => {
   const { getDirection, getTransitionVariants } = useScreenTransition();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
+
+  // Sync `?screen=` query param → activeTab so deep links from elsewhere in
+  // the app (e.g. "Open in Daily Log" from the backdate conflict list) land
+  // on the right tab.
+  useEffect(() => {
+    const applyFromQuery = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const screen = params.get('screen') as TabId | 'settings' | null;
+        if (!screen) return;
+        if (screen === 'settings') {
+          setShowSettings(true);
+          return;
+        }
+        if (['home', 'stack', 'daily-log', 'dosage', 'transformation'].includes(screen)) {
+          setShowSettings(false);
+          setActiveTab(screen as TabId);
+        }
+      } catch { /* noop */ }
+    };
+    applyFromQuery();
+    window.addEventListener('popstate', applyFromQuery);
+    return () => window.removeEventListener('popstate', applyFromQuery);
+  }, []);
   const [showSettings, setShowSettings] = useState(false);
   const [showResearch, setShowResearch] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
