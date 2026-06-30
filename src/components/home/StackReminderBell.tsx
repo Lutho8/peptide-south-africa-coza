@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { Cycle } from '@/data/userData';
 import type { DailyDoseEntry } from '@/hooks/useDailyDoses';
-import { getCycles, saveCycles } from '@/services/storage';
+import { updateCycle } from '@/services/storage';
 import { getNextDose, getCycleProgress } from '@/lib/cycleProgress';
 import {
   scheduleCycleReminders,
@@ -67,17 +67,13 @@ export function StackReminderBell({ cycle, doses }: StackReminderBellProps) {
     setSaving(true);
     try {
       // Persist to cycle storage
-      const all = getCycles();
-      const idx = all.findIndex(c => c.id === cycle.id);
-      if (idx >= 0) {
-        all[idx] = {
-          ...all[idx],
-          reminderEnabled: enabled,
-          reminderLeadMinutes: Number(lead) || 0,
-          doseTimes: times.slice(0, splitParts),
-        };
-        saveCycles(all);
-      }
+      const updated: Cycle = {
+        ...cycle,
+        reminderEnabled: enabled,
+        reminderLeadMinutes: Number(lead) || 0,
+        doseTimes: times.slice(0, splitParts),
+      };
+      updateCycle(updated);
 
       if (enabled) {
         // Ensure SW + permission
