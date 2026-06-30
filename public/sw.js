@@ -275,8 +275,12 @@ async function checkDueNotifications() {
     }
     for (const { reminder, notificationId } of notificationsToShow) {
       await markNotificationFired(notificationId);
-      await self.registration.showNotification(`💉 Time for ${reminder.peptideName}`, {
-        body: `Scheduled dose: ${reminder.dose} at ${reminder.time}`,
+      const title = reminder.mode === 'computed' && reminder.body
+        ? `💉 ${reminder.peptideName}`
+        : `💉 Time for ${reminder.peptideName}`;
+      const body = reminder.body || `Scheduled dose: ${reminder.dose} at ${reminder.time}`;
+      await self.registration.showNotification(title, {
+        body,
         icon: '/favicon.png',
         badge: '/favicon.png',
         tag: notificationId,
@@ -292,10 +296,16 @@ async function checkDueNotifications() {
           peptideId: reminder.peptideId,
           dose: reminder.dose,
           time: reminder.time,
+          cycleId: reminder.cycleId,
         },
       });
-      const nextFireTime = calculateNextFireTime(reminder.time, reminder.days);
-      await updateReminderNextFireTime(reminder.id, nextFireTime);
+      if (reminder.mode === 'computed') {
+        // Don't auto-roll — page will recompute on next open or dose log.
+        await updateReminderNextFireTime(reminder.id, null);
+      } else {
+        const nextFireTime = calculateNextFireTime(reminder.time, reminder.days);
+        await updateReminderNextFireTime(reminder.id, nextFireTime);
+      }
     }
     if (Math.random() < 0.1) {
       await cleanupFiredNotifications();
