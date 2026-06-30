@@ -73,7 +73,7 @@ function daysBetween(start: Date, end: Date): number {
  * Daily peptides collapse multiple same-day logs into one occurrence so a
  * burst of corrective entries doesn't fast-forward the cycle.
  */
-function countLoggedDoses(cycle: Cycle, doses: DailyDoseEntry[], perWeek: number): number {
+function countLoggedDoses(cycle: Cycle, doses: DailyDoseEntry[], perWeek: number, splitParts: number): number {
   const cycleSlugs = new Set([slug(cycle.peptideId), slug(cycle.peptideName)].filter(Boolean));
   const startStr = cycle.startDate;
 
@@ -82,14 +82,18 @@ function countLoggedDoses(cycle: Cycle, doses: DailyDoseEntry[], perWeek: number
     return cycleSlugs.has(slug(d.peptide_id)) || cycleSlugs.has(slug(d.peptide_name));
   });
 
-  // For daily-or-more frequencies, dedupe by date so two same-day logs still
-  // count as one cycle day. For sub-daily frequencies (weekly, EOD, monthly),
-  // every logged dose counts as its own occurrence.
-  if (perWeek >= 7) {
-    const days = new Set(matches.map(m => m.date));
-    return days.size;
+  // Group by date so N same-day sub-doses collapse into max(1, floor(N/split))
+  // complete doses. This applies for ALL cadences: split AM+PM weekly = 1/week.
+  const byDay = new Map<string, number>();
+  for (const m of matches) byDay.set(m.date, (byDay.get(m.date) ?? 0) + 1);
+
+  let complete = 0;
+  for (const count of byDay.values()) {
+    complete += Math.max(1, Math.floor(count / Math.max(1, splitParts)));
   }
-  return matches.length;
+  // For daily-or-more cadences each unique day still counts at most once if no splits.
+  if (perWeek >= 7 && splitParts <= 1) return byDay.size;
+  return complete;
 }
 
 export function getCycleProgress(
@@ -98,17 +102,19 @@ export function getCycleProgress(
   now: Date = new Date(),
 ): CycleProgress {
   const perWeek = parseFrequencyPerWeek(cycle.frequency);
+  const splitParts = Math.max(1, cycle.splitParts ?? 1);
   const start = new Date(cycle.startDate);
   const calendarDays = daysBetween(start, now);
 
-  // Planned dose count for the entire cycle.
-  const dosesPlanned = Math.max(1, Math.round((cycle.plannedDuration / 7) * perWeek));
+  // Planned dose count = complete doses for the whole cycle.
+  const completePerWeek = perWeek / splitParts;
+  const dosesPlanned = Math.max(1, Math.round((cycle.plannedDuration / 7) * completePerWeek));
 
   // Expected by today based on the schedule (capped at planned).
-  const dosesExpectedRaw = Math.floor(((calendarDays + 1) / 7) * perWeek);
+  const dosesExpectedRaw = Math.floor(((calendarDays + 1) / 7) * completePerWeek);
   const dosesExpected = Math.min(dosesPlanned, Math.max(0, dosesExpectedRaw));
 
-  const dosesLogged = Math.min(dosesPlanned, countLoggedDoses(cycle, doses, perWeek));
+  const dosesLogged = Math.min(dosesPlanned, countLoggedDoses(cycle, doses, perWeek, splitParts));
   const dosesBehind = Math.max(0, dosesExpected - dosesLogged);
 
   const progress = Math.min(100, (dosesLogged / dosesPlanned) * 100);
@@ -123,7 +129,7 @@ export function getCycleProgress(
     isOverdue: dosesLogged >= dosesPlanned,
     calendarDays,
     dosesBehind,
-    perWeek,
+    perWeek: completePerWeek,
   };
 }
 
