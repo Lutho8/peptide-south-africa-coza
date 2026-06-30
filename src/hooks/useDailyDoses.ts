@@ -177,6 +177,13 @@ export function useDailyDoses() {
       setDoses(updatedDoses);
       saveLocalDoses(updatedDoses);
 
+      // Notify cycle reminder scheduler to roll the next_fire_at forward.
+      try {
+        window.dispatchEvent(new CustomEvent('rtd:dose-logged', {
+          detail: { peptideId: newDose.peptide_id, peptideName: newDose.peptide_name, date: newDose.date },
+        }));
+      } catch { /* noop */ }
+
       return newDose;
     } catch (error) {
       console.error('Error adding dose:', error);
