@@ -88,10 +88,7 @@ export function StackReminderBell({ cycle, doses }: StackReminderBellProps) {
         }
       }
 
-      await scheduleCycleReminders(
-        { ...cycle, reminderEnabled: enabled, reminderLeadMinutes: Number(lead) || 0, doseTimes: times.slice(0, splitParts) },
-        doses,
-      );
+      await scheduleCycleReminders(updated, doses);
 
       window.dispatchEvent(new CustomEvent('rtd:stack-changed'));
       toast.success(enabled ? 'Reminders updated' : 'Reminders turned off');
