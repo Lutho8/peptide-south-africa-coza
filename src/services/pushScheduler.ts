@@ -14,6 +14,13 @@ export interface ScheduledReminder {
   enabled: boolean;
   nextFireTime?: number; // Unix timestamp
   isSnooze?: boolean;
+  /** 'weekly' (legacy time+days) or 'computed' (absolute next_fire_at, no auto-roll). */
+  mode?: 'weekly' | 'computed';
+  cycleId?: string;
+  leadMinutes?: number;
+  splitIndex?: number;
+  /** Optional context for SW to use as notification body. */
+  body?: string;
 }
 
 // Service worker registration reference
@@ -80,20 +87,24 @@ function calculateNextFireTime(time: string, days: string[]): number {
 // Save reminder to IndexedDB
 export async function saveReminderToIndexedDB(reminder: ScheduledReminder): Promise<void> {
   const db = await openDB();
-  
-  const reminderWithFireTime = {
-    ...reminder,
-    nextFireTime: reminder.enabled ? calculateNextFireTime(reminder.time, reminder.days) : undefined,
-  };
-  
+
+  // Computed mode trusts the provided nextFireTime (per-cycle absolute schedule).
+  // Weekly mode (legacy) recalculates from time+days.
+  const nextFireTime = !reminder.enabled
+    ? undefined
+    : reminder.mode === 'computed'
+      ? reminder.nextFireTime
+      : calculateNextFireTime(reminder.time, reminder.days);
+
+  const reminderWithFireTime = { ...reminder, nextFireTime };
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.put(reminderWithFireTime);
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => {
-      // Notify service worker of the update
       notifyServiceWorker('SYNC_REMINDERS');
       resolve();
     };
@@ -103,21 +114,21 @@ export async function saveReminderToIndexedDB(reminder: ScheduledReminder): Prom
 // Save multiple reminders at once
 export async function bulkSaveReminders(reminders: ScheduledReminder[]): Promise<void> {
   const db = await openDB();
-  
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    
+
     for (const reminder of reminders) {
-      const reminderWithFireTime = {
-        ...reminder,
-        nextFireTime: reminder.enabled ? calculateNextFireTime(reminder.time, reminder.days) : undefined,
-      };
-      store.put(reminderWithFireTime);
+      const nextFireTime = !reminder.enabled
+        ? undefined
+        : reminder.mode === 'computed'
+          ? reminder.nextFireTime
+          : calculateNextFireTime(reminder.time, reminder.days);
+      store.put({ ...reminder, nextFireTime });
     }
-    
+
     transaction.oncomplete = () => {
-      // Notify service worker of the update
       notifyServiceWorker('SYNC_REMINDERS');
       resolve();
     };
@@ -412,4 +423,138 @@ export function scheduleSnooze(reminderData: {
 // Get the current service worker registration
 export function getServiceWorkerRegistration(): ServiceWorkerRegistration | null {
   return swRegistration;
+}
+
+// ───────────────────────────── Cycle-aware reminders ─────────────────────────────
+//
+// One ScheduledReminder per (cycleId, splitIndex) using absolute nextFireTime.
+// Pause / behind / complete cycle states are respected:
+//   - status === 'break'         → reminders disabled, no fire
+//   - dosesBehind >= 2 (Behind)  → schedule next dose at now+30min "Catch-up"
+//   - isOverdue / complete       → single "Cycle complete — start break" reminder
+//
+// Caller imports from '@/services/pushScheduler' and calls
+// scheduleCycleReminders(cycle, doses).
+
+import type { Cycle } from '@/data/userData';
+import type { DailyDoseEntry } from '@/hooks/useDailyDoses';
+import { computeNextFireAt, getCycleProgress } from '@/lib/cycleProgress';
+
+function cycleReminderId(cycleId: string, splitIndex: number): string {
+  return `cycle:${cycleId}:${splitIndex}`;
+}
+
+async function removeCycleReminders(cycleId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.openCursor();
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const cursor = req.result;
+      if (!cursor) return resolve();
+      const value = cursor.value as ScheduledReminder;
+      if (value.cycleId === cycleId && (value.mode === 'computed' || value.id.startsWith(`cycle:${cycleId}:`))) {
+        cursor.delete();
+      }
+      cursor.continue();
+    };
+    tx.oncomplete = () => resolve();
+  });
+}
+
+export async function scheduleCycleReminders(cycle: Cycle, doses: DailyDoseEntry[]): Promise<void> {
+  await removeCycleReminders(cycle.id);
+
+  if (!cycle.reminderEnabled) {
+    notifyServiceWorker('SYNC_REMINDERS');
+    return;
+  }
+
+  const progress = getCycleProgress(cycle, doses);
+  const lead = Math.max(0, cycle.reminderLeadMinutes ?? 0);
+  const splitParts = Math.max(1, cycle.splitParts ?? 1);
+  const doseTimes = (cycle.doseTimes && cycle.doseTimes.length > 0)
+    ? cycle.doseTimes
+    : ['09:00'];
+
+  // Cycle paused → record disabled placeholders so popover can read state.
+  if (cycle.status === 'break') {
+    notifyServiceWorker('SYNC_REMINDERS');
+    return;
+  }
+
+  // Complete → single one-shot reminder ~ in 1h.
+  if (progress.isOverdue) {
+    await saveReminderToIndexedDB({
+      id: cycleReminderId(cycle.id, 0),
+      cycleId: cycle.id,
+      mode: 'computed',
+      peptideId: cycle.peptideId,
+      peptideName: cycle.peptideName,
+      dose: cycle.dose,
+      time: doseTimes[0],
+      days: [],
+      enabled: true,
+      nextFireTime: Date.now() + 60 * 60 * 1000,
+      leadMinutes: lead,
+      body: `Cycle complete — start your ${cycle.breakDuration}-day break.`,
+    });
+    return;
+  }
+
+  // Behind ≥ 2 → catch-up reminder in 30 min, ignore split times.
+  if (progress.dosesBehind >= 2) {
+    await saveReminderToIndexedDB({
+      id: cycleReminderId(cycle.id, 0),
+      cycleId: cycle.id,
+      mode: 'computed',
+      peptideId: cycle.peptideId,
+      peptideName: cycle.peptideName,
+      dose: cycle.dose,
+      time: doseTimes[0],
+      days: [],
+      enabled: true,
+      nextFireTime: Date.now() + 30 * 60 * 1000,
+      leadMinutes: lead,
+      body: `Catch-up dose — ${progress.dosesBehind} behind schedule.`,
+    });
+    return;
+  }
+
+  // On-track / nearing: one reminder per administration time.
+  for (let i = 0; i < Math.min(doseTimes.length, splitParts); i++) {
+    const time = doseTimes[i];
+    const fireAt = computeNextFireAt(cycle, doses, time, lead);
+    if (!fireAt) continue;
+    await saveReminderToIndexedDB({
+      id: cycleReminderId(cycle.id, i),
+      cycleId: cycle.id,
+      mode: 'computed',
+      peptideId: cycle.peptideId,
+      peptideName: cycle.peptideName,
+      dose: cycle.dose,
+      time,
+      days: [],
+      enabled: true,
+      nextFireTime: fireAt,
+      leadMinutes: lead,
+      splitIndex: i,
+      body: splitParts > 1
+        ? `Sub-dose ${i + 1}/${splitParts} · ${cycle.dose}`
+        : `Time for ${cycle.dose}`,
+    });
+  }
+}
+
+export async function scheduleAllCycleReminders(cycles: Cycle[], doses: DailyDoseEntry[]): Promise<void> {
+  for (const c of cycles) {
+    if (c.status === 'completed') continue;
+    try {
+      await scheduleCycleReminders(c, doses);
+    } catch (err) {
+      console.warn('scheduleCycleReminders failed for', c.id, err);
+    }
+  }
 }

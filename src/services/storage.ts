@@ -340,6 +340,20 @@ export interface ActiveStackItem {
   peptideId: string;
   dose: string;
   frequency: string;
+  /** Number of sub-doses that together make one complete dose (e.g. AM+PM = 2). */
+  splitParts?: number;
+  /** Per-administration amount that user injects (one entry, repeated across doseTimes). */
+  perAdministration?: { amount: number; unit: 'mg' | 'IU' | 'units' };
+  /** Total complete doses per week. */
+  dosesPerWeek?: number;
+  /** Experience level used to seed dosing. */
+  experienceLevel?: 'beginner' | 'intermediate' | 'advanced' | 'athlete';
+  /** Preferred administration times in HH:MM. Length should equal splitParts for split doses. */
+  doseTimes?: string[];
+  /** Whether push reminders are enabled for this peptide. */
+  reminderEnabled?: boolean;
+  /** Lead-time in minutes before the scheduled dose to fire the reminder. */
+  reminderLeadMinutes?: number;
 }
 
 export function getActiveStack(): ActiveStackItem[] {

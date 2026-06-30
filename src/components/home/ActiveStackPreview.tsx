@@ -4,15 +4,16 @@ import { Badge } from '@/components/ui/badge';
 import { getActiveStack, getCycles, type ActiveStackItem, type Cycle } from '@/services/storage';
 import { peptides } from '@/data/peptides';
 import { findPeptideOrBlend } from '@/data/blendAdapters';
-import { Layers, ChevronRight, Plus, Pause, AlertCircle, Info, Clock } from 'lucide-react';
+import { Layers, ChevronRight, Plus, Pause, AlertCircle, Info, Clock, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSyncPhase } from '@/hooks/useCloudSync';
 import { useAuth } from '@/contexts/AuthContext';
 import { StackSyncBadge, type SyncStatus } from '@/components/sync/StackSyncBadge';
 import { StackPreviewSkeleton } from './StackPreviewSkeleton';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
-import { getCycleProgress, cycleStatusLabel, getCyclePhase, getNextDose } from '@/lib/cycleProgress';
+import { getCycleProgress, cycleStatusLabel, getCyclePhase, getNextDose, getLoggedDoseDates } from '@/lib/cycleProgress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { StackReminderBell } from './StackReminderBell';
 
 interface ActiveStackPreviewProps {
   onViewStack: () => void;
@@ -156,40 +157,109 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
                       ? 'bg-primary/15 text-primary border-primary/30'
                       : 'bg-muted text-muted-foreground border-border';
 
+          const splitParts = Math.max(1, item.splitParts ?? cycle?.splitParts ?? 1);
+          const doseTimes = (cycle?.doseTimes && cycle.doseTimes.length > 0)
+            ? cycle.doseTimes.slice(0, splitParts)
+            : (item.doseTimes && item.doseTimes.length > 0)
+              ? item.doseTimes.slice(0, splitParts)
+              : splitParts === 2 ? ['08:00', '20:00'] : splitParts === 3 ? ['08:00', '14:00', '20:00'] : ['09:00'];
+          const loggedDates = cycle ? getLoggedDoseDates(cycle, doses) : new Set<string>();
+          const todayIso = new Date().toISOString().split('T')[0];
+          const todaySubdoseCount = doses.filter(
+            d => d.date === todayIso && (d.peptide_id === item.peptideId || d.peptide_name === peptide.name)
+          ).length;
+          const expandable = !!cycle;
+
           return (
-            <div
+            <Collapsible
               key={item.peptideId}
-              className="flex items-center justify-between gap-2 rounded-lg bg-muted/30 px-2.5 py-1.5"
+              className="rounded-lg bg-muted/30 px-2.5 py-1.5"
             >
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                {cycle?.status === 'break' ? (
-                  <p className="text-[11px] text-amber-400/90 truncate">
-                    <span className="inline-flex items-center gap-1">
-                      <Pause size={9} /> Paused{cycle.pauseReason === 'out_of_stock' ? ' — out of stock' : cycle.pauseReason === 'missed_doses' ? ' — catching up' : ''}
-                    </span>
-                  </p>
-                ) : primaryText ? (
-                  <>
-                    <p className="text-[11px] text-muted-foreground truncate">{primaryText}</p>
-                    {secondaryText && (
-                      <p className="text-[10px] text-muted-foreground/80 truncate flex items-center gap-1">
-                        <Clock size={9} /> {secondaryText}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    <span className="inline-flex items-center gap-1">
-                      <AlertCircle size={9} /> No cycle yet · tap to start
-                    </span>
-                  </p>
-                )}
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                  {cycle?.status === 'break' ? (
+                    <p className="text-[11px] text-amber-400/90 truncate">
+                      <span className="inline-flex items-center gap-1">
+                        <Pause size={9} /> Paused{cycle.pauseReason === 'out_of_stock' ? ' — out of stock' : cycle.pauseReason === 'missed_doses' ? ' — catching up' : ''}
+                      </span>
+                    </p>
+                  ) : primaryText ? (
+                    <>
+                      <p className="text-[11px] text-muted-foreground truncate">{primaryText}</p>
+                      {secondaryText && (
+                        <p className="text-[10px] text-muted-foreground/80 truncate flex items-center gap-1">
+                          <Clock size={9} /> {secondaryText}
+                          {splitParts > 1 && (
+                            <span className="ml-1 px-1 rounded bg-primary/10 text-primary text-[9px]">
+                              {todaySubdoseCount % splitParts}/{splitParts} sub today
+                            </span>
+                          )}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      <span className="inline-flex items-center gap-1">
+                        <AlertCircle size={9} /> No cycle yet · tap to start
+                      </span>
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <Badge variant="outline" className={cn('text-[10px]', badgeTone)}>
+                    {statusLabel}
+                  </Badge>
+                  {cycle && <StackReminderBell cycle={cycle} doses={doses} />}
+                  {expandable && (
+                    <CollapsibleTrigger
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/60 text-muted-foreground data-[state=open]:rotate-180 transition-transform"
+                      aria-label="Show dose breakdown"
+                    >
+                      <ChevronDown size={13} />
+                    </CollapsibleTrigger>
+                  )}
+                </div>
               </div>
-              <Badge variant="outline" className={cn('text-[10px] flex-shrink-0', badgeTone)}>
-                {statusLabel}
-              </Badge>
-            </div>
+
+              {cycle && (
+                <CollapsibleContent onClick={(e) => e.stopPropagation()}>
+                  <div className="mt-2 rounded-md bg-background/40 border border-border/40 p-2 space-y-1">
+                    <p className="text-[10px] text-muted-foreground/80 uppercase tracking-wide">
+                      Today · {splitParts > 1 ? `${splitParts} sub-doses = 1 complete dose` : '1 administration = 1 complete dose'}
+                    </p>
+                    {doseTimes.map((t, i) => {
+                      const subLogged = todaySubdoseCount > i;
+                      return (
+                        <div key={i} className="flex items-center justify-between text-[11px]">
+                          <span className="text-foreground">
+                            {t} — {item.dose}
+                            {splitParts === 2 && (
+                              <span className="text-muted-foreground"> ({i === 0 ? 'AM' : 'PM'})</span>
+                            )}
+                            {splitParts >= 3 && (
+                              <span className="text-muted-foreground"> (#{i + 1})</span>
+                            )}
+                          </span>
+                          <span className={cn(
+                            'px-1.5 py-0.5 rounded text-[9px] border',
+                            subLogged
+                              ? 'bg-primary/15 text-primary border-primary/30'
+                              : 'bg-muted/40 text-muted-foreground border-border/50',
+                          )}>
+                            {subLogged ? 'Logged' : 'Upcoming'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border/30">
+                      Progress counts <strong>complete</strong> doses · {info?.dosesLogged ?? 0}/{info?.dosesPlanned ?? 0}
+                    </p>
+                  </div>
+                </CollapsibleContent>
+              )}
+            </Collapsible>
           );
         })}
         {rows.length > 5 && (

@@ -53,6 +53,14 @@ export interface Cycle {
   pausedAt?: string;   // ISO date when paused
   resumedAt?: string;  // ISO date when last resumed
   missedDays?: number;
+  /** Sub-doses that together make one complete dose. Mirrors stack item. */
+  splitParts?: number;
+  /** HH:MM administration times. Length should equal splitParts for split doses. */
+  doseTimes?: string[];
+  /** Whether computed push reminders are enabled for this cycle. */
+  reminderEnabled?: boolean;
+  /** Lead-time minutes before scheduled dose. */
+  reminderLeadMinutes?: number;
 }
 
 // Default empty profile for new members. Each user fills in their own data.
