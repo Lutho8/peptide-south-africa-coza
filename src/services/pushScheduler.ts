@@ -14,6 +14,13 @@ export interface ScheduledReminder {
   enabled: boolean;
   nextFireTime?: number; // Unix timestamp
   isSnooze?: boolean;
+  /** 'weekly' (legacy time+days) or 'computed' (absolute next_fire_at, no auto-roll). */
+  mode?: 'weekly' | 'computed';
+  cycleId?: string;
+  leadMinutes?: number;
+  splitIndex?: number;
+  /** Optional context for SW to use as notification body. */
+  body?: string;
 }
 
 // Service worker registration reference
