@@ -87,20 +87,24 @@ function calculateNextFireTime(time: string, days: string[]): number {
 // Save reminder to IndexedDB
 export async function saveReminderToIndexedDB(reminder: ScheduledReminder): Promise<void> {
   const db = await openDB();
-  
-  const reminderWithFireTime = {
-    ...reminder,
-    nextFireTime: reminder.enabled ? calculateNextFireTime(reminder.time, reminder.days) : undefined,
-  };
-  
+
+  // Computed mode trusts the provided nextFireTime (per-cycle absolute schedule).
+  // Weekly mode (legacy) recalculates from time+days.
+  const nextFireTime = !reminder.enabled
+    ? undefined
+    : reminder.mode === 'computed'
+      ? reminder.nextFireTime
+      : calculateNextFireTime(reminder.time, reminder.days);
+
+  const reminderWithFireTime = { ...reminder, nextFireTime };
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.put(reminderWithFireTime);
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => {
-      // Notify service worker of the update
       notifyServiceWorker('SYNC_REMINDERS');
       resolve();
     };
@@ -110,21 +114,21 @@ export async function saveReminderToIndexedDB(reminder: ScheduledReminder): Prom
 // Save multiple reminders at once
 export async function bulkSaveReminders(reminders: ScheduledReminder[]): Promise<void> {
   const db = await openDB();
-  
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    
+
     for (const reminder of reminders) {
-      const reminderWithFireTime = {
-        ...reminder,
-        nextFireTime: reminder.enabled ? calculateNextFireTime(reminder.time, reminder.days) : undefined,
-      };
-      store.put(reminderWithFireTime);
+      const nextFireTime = !reminder.enabled
+        ? undefined
+        : reminder.mode === 'computed'
+          ? reminder.nextFireTime
+          : calculateNextFireTime(reminder.time, reminder.days);
+      store.put({ ...reminder, nextFireTime });
     }
-    
+
     transaction.oncomplete = () => {
-      // Notify service worker of the update
       notifyServiceWorker('SYNC_REMINDERS');
       resolve();
     };
