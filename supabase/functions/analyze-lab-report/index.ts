@@ -232,9 +232,12 @@ If the file is unreadable, return:
               role: "user",
               content: [
                 { type: "text", text: userText },
-                { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${imageBase64}` } },
+                resolvedMime === "application/pdf"
+                  ? { type: "file", file: { filename: effectiveFileName, file_data: `data:application/pdf;base64,${base64}` } }
+                  : { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${base64}` } },
               ],
             },
+
           ],
         }),
         signal: AbortSignal.timeout(45_000),
