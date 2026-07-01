@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ScanStage } from '@/hooks/useScanProgress';
 
@@ -8,11 +10,30 @@ interface Props {
   stage: ScanStage;
   label: string;
   percent: number;
+  startedAt?: number | null;
   onCancel?: () => void;
+  onRetry?: () => void;
+  stalledAfterMs?: number;
 }
 
-export function ScanProgress({ stage, label, percent, onCancel }: Props) {
+function fmtElapsed(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(s / 60);
+  return `${m}:${String(s % 60).padStart(2, '0')}`;
+}
+
+export function ScanProgress({ stage, label, percent, startedAt, onCancel, onRetry, stalledAfterMs = 60_000 }: Props) {
   const activeIndex = ORDER.indexOf(stage as any);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!startedAt || stage === 'done' || stage === 'error') return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [startedAt, stage]);
+
+  const elapsedMs = startedAt ? now - startedAt : 0;
+  const showStalled = !!(onRetry && startedAt && elapsedMs > stalledAfterMs && stage !== 'done' && stage !== 'error');
 
   return (
     <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card/60 to-card/40 p-5">
@@ -69,10 +90,25 @@ export function ScanProgress({ stage, label, percent, onCancel }: Props) {
 
       <div className="flex items-center justify-between">
         <p className="text-[11px] text-muted-foreground">
-          Usually completes in 30–60 seconds. Larger lab reports may take longer.
+          {startedAt ? `Elapsed ${fmtElapsed(elapsedMs)} · usually 30–60s` : 'Usually completes in 30–60 seconds.'}
         </p>
         <span className="text-[11px] font-mono tabular-nums text-primary">{percent}%</span>
       </div>
+
+      {showStalled && (
+        <div className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+          <p className="text-xs text-amber-600 font-semibold mb-2">
+            Taking longer than expected. Larger reports sometimes need a nudge.
+          </p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-foreground text-background px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider hover:opacity-90 transition-opacity"
+          >
+            <RefreshCw size={12} /> Retry analysis
+          </button>
+        </div>
+      )}
 
       {onCancel && stage !== 'done' && (
         <button

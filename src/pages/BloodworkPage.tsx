@@ -30,17 +30,22 @@ const INITIAL_STATE: ScanFormState = {
   peptideHistoryNotes: '',
 };
 
-function mapScanError(e: unknown): string {
+function mapScanError(e: unknown): { message: string; code?: string } {
+  if (e && typeof e === 'object' && 'code' in (e as any)) {
+    const env = e as { message?: string; code?: string };
+    return { message: env.message || 'Scan failed.', code: env.code };
+  }
   const msg = e instanceof Error ? e.message : String(e ?? '');
-  if (/abort/i.test(msg)) return '';
-  if (/429|rate/i.test(msg)) return 'Too many scans right now. Wait 30 seconds and try again.';
-  if (/402|credit/i.test(msg)) return 'Premium scan credits exhausted for this hour. Try again shortly.';
+  if (/abort/i.test(msg)) return { message: '' };
+  if (/429|rate/i.test(msg)) return { message: 'Too many scans right now. Wait 30 seconds and try again.', code: 'RATE_LIMITED' };
+  if (/402|credit/i.test(msg)) return { message: 'Premium scan credits exhausted for this hour. Try again shortly.', code: 'CREDITS_EXHAUSTED' };
   if (/parse|empty|json/i.test(msg))
-    return "We couldn't read this lab report. Try a clearer scan or a different file format (PDF, JPG, PNG).";
+    return { message: "We couldn't read this lab report. Try a clearer scan or a different file format (PDF, JPG, PNG).", code: 'EMPTY_RESPONSE' };
   if (/upload|storage|network|fetch/i.test(msg))
-    return 'Something went wrong on our side. Try again — your file is still saved.';
-  return msg || 'Unexpected error during scan.';
+    return { message: 'Something went wrong on our side. Try again — your file is still saved.', code: 'TRANSPORT' };
+  return { message: msg || 'Unexpected error during scan.' };
 }
+
 
 export default function BloodworkPage() {
   const { user } = useAuth();
@@ -51,10 +56,12 @@ export default function BloodworkPage() {
   const [result, setResult] = useState<BloodworkScanResult | null>(null);
   const [labReportId, setLabReportId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [stackActivated, setStackActivated] = useState(false);
   const lastTierRef = useRef<'baseline' | 'deep' | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const progress = useScanProgress();
+
 
   // Post-purchase return handler — fires when user comes back from the shop.
   useEffect(() => {
@@ -72,27 +79,58 @@ export default function BloodworkPage() {
 
 
   const runScan = useCallback(
-    async (tier: 'baseline' | 'deep') => {
-      if (!user || !form.file) return;
+    async (tier: 'baseline' | 'deep', opts?: { reuseReportId?: string }) => {
+      if (!user) return;
+      const reuse = opts?.reuseReportId ?? null;
+      if (!reuse && !form.file) return;
 
       setRunning(tier);
       setResult(null);
       setError(null);
+      setErrorCode(null);
       lastTierRef.current = tier;
       progress.start();
       abortRef.current = new AbortController();
 
-      if (form.file.size > 10 * 1024 * 1024) {
-        progress.fail();
-        setError('File must be under 10MB. Please upload a smaller file.');
-        setRunning(null);
-        return;
-      }
-      if (form.file.type && form.file.type !== 'application/pdf' && !form.file.type.startsWith('image/')) {
-        progress.fail();
-        setError('Please upload a PDF or image of your lab report.');
-        setRunning(null);
-        return;
+      if (!reuse && form.file) {
+        if (form.file.size > 10 * 1024 * 1024) {
+          progress.fail();
+          setError('File is over 10 MB. Please export a smaller PDF or a compressed image.');
+          setErrorCode('FILE_TOO_LARGE');
+          setRunning(null);
+          return;
+        }
+        const ALLOWED = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+        const okType =
+          ALLOWED.includes(form.file.type) ||
+          /\.(pdf|jpe?g|png|webp|heic|heif)$/i.test(form.file.name);
+        if (!okType) {
+          progress.fail();
+          setError('Unsupported file type. Upload a PDF, JPG, PNG, WEBP, or HEIC of your lab report.');
+          setErrorCode('UNSUPPORTED_CONTENT');
+          setRunning(null);
+          return;
+        }
+
+        // Magic-byte sniff — catch mislabeled files up-front.
+        try {
+          const head = new Uint8Array(await form.file.slice(0, 12).arrayBuffer());
+          const ascii = new TextDecoder().decode(head);
+          const isPdf = ascii.startsWith('%PDF');
+          const isJpeg = head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+          const isPng = head[0] === 0x89 && ascii.slice(1, 4) === 'PNG';
+          const isWebp = ascii.startsWith('RIFF') && new TextDecoder().decode(head.slice(8, 12)) === 'WEBP';
+          const looksHeic = ascii.slice(4, 12).includes('ftyp');
+          if (!isPdf && !isJpeg && !isPng && !isWebp && !looksHeic) {
+            progress.fail();
+            setError("This file doesn't look like a valid PDF or image. Re-export from your lab portal as PDF or JPG and try again.");
+            setErrorCode('UNSUPPORTED_CONTENT');
+            setRunning(null);
+            return;
+          }
+        } catch {
+          // If we can't read the header, let the server try.
+        }
       }
 
       void captureLead({
@@ -100,35 +138,49 @@ export default function BloodworkPage() {
         source: tier === 'deep' ? 'bloodwork_deep' : 'bloodwork_baseline',
         planInterest: 'premium',
         activityType: 'calculator_use',
-        activityData: { goals: form.goals, scanType: tier },
+        activityData: { goals: form.goals, scanType: tier, retry: !!reuse },
       });
 
       try {
-        const filePath = `${user.id}/${Date.now()}-${form.file.name}`;
-        const { error: uploadError } = await supabase.storage.from('lab-reports').upload(filePath, form.file);
-        if (uploadError) {
-          console.error('[bloodwork] upload failed:', uploadError);
-          throw new Error(`upload: ${uploadError.message}`);
-        }
+        let reportId: string;
+        let fileName: string;
+        let mimeType: string | undefined;
 
-        const { data: report, error: insertError } = await supabase
-          .from('lab_reports')
-          .insert({
-            user_id: user.id,
-            file_url: filePath,
-            file_name: form.file.name,
-            status: 'pending',
-          })
-          .select()
-          .single();
-        if (insertError) {
-          console.error('[bloodwork] insert failed:', insertError);
-          throw new Error(`upload: ${insertError.message}`);
-        }
+        if (reuse) {
+          reportId = reuse;
+          fileName = form.file?.name ?? 'lab-report';
+          mimeType = form.file?.type;
+          progress.advance('extract');
+          progress.advance('generate');
+        } else {
+          const filePath = `${user.id}/${Date.now()}-${form.file!.name}`;
+          const { error: uploadError } = await supabase.storage.from('lab-reports').upload(filePath, form.file!);
+          if (uploadError) {
+            console.error('[bloodwork] upload failed:', uploadError);
+            throw { message: uploadError.message, code: 'STORAGE_DOWNLOAD_FAILED' };
+          }
 
-        setLabReportId(report.id);
-        progress.advance('extract');
-        progress.advance('generate');
+          const { data: report, error: insertError } = await supabase
+            .from('lab_reports')
+            .insert({
+              user_id: user.id,
+              file_url: filePath,
+              file_name: form.file!.name,
+              status: 'pending',
+            })
+            .select()
+            .single();
+          if (insertError) {
+            console.error('[bloodwork] insert failed:', insertError);
+            throw { message: insertError.message, code: 'STORAGE_DOWNLOAD_FAILED' };
+          }
+          reportId = report.id;
+          fileName = form.file!.name;
+          mimeType = form.file!.type;
+          setLabReportId(report.id);
+          progress.advance('extract');
+          progress.advance('generate');
+        }
 
         // 3-attempt exponential backoff (2s, 4s, 8s) on retryable errors.
         const BACKOFFS = [0, 2000, 4000];
@@ -142,9 +194,9 @@ export default function BloodworkPage() {
 
           const { data, error: fnError } = await supabase.functions.invoke('analyze-lab-report', {
             body: {
-              reportId: report.id,
-              fileName: form.file.name,
-              mimeType: form.file.type,
+              reportId,
+              fileName,
+              mimeType,
               scanType: tier,
               age: form.age ? Number(form.age) : undefined,
               sex: form.sex,
@@ -157,7 +209,6 @@ export default function BloodworkPage() {
           if (abortRef.current?.signal.aborted) { progress.reset(); return; }
 
           if (fnError) {
-            // Transport-level failure — treat as retryable
             console.error('[bloodwork] edge fn transport error', { attempt, fnError });
             lastEnvelope = { ok: false, code: 'TRANSPORT', retryable: true, message: fnError.message };
             continue;
@@ -166,7 +217,10 @@ export default function BloodworkPage() {
             lastEnvelope = data;
             console.warn('[bloodwork] envelope error', { attempt, data });
             if ((data as any).retryable && attempt < BACKOFFS.length - 1) continue;
-            throw new Error((data as any).message || (data as any).code || 'Scan failed');
+            throw {
+              message: (data as any).message || 'Scan failed',
+              code: (data as any).code,
+            };
           }
           payload = (data as any)?.data;
           if (payload) break;
@@ -174,7 +228,10 @@ export default function BloodworkPage() {
         }
 
         if (!payload) {
-          throw new Error(lastEnvelope?.message || 'Scan failed after 3 attempts. You can try again or enter values manually.');
+          throw {
+            message: lastEnvelope?.message || 'Scan failed after 3 attempts. You can retry or enter values manually below.',
+            code: lastEnvelope?.code,
+          };
         }
 
         progress.advance('finalize');
@@ -188,6 +245,14 @@ export default function BloodworkPage() {
             : typeof payload.insights === 'string'
             ? payload.insights.split(/\n+/).filter(Boolean)
             : [],
+          insights_de: Array.isArray(payload.insights_de)
+            ? payload.insights_de
+            : typeof payload.insights_de === 'string'
+            ? payload.insights_de.split(/\n+/).filter(Boolean)
+            : undefined,
+          summary: typeof payload.summary === 'string' ? payload.summary : undefined,
+          summary_de: typeof payload.summary_de === 'string' ? payload.summary_de : undefined,
+          detected_language: payload.detected_language === 'de' ? 'de' : 'en',
           protocol: payload.protocol || {},
           goals: form.goals,
         };
@@ -200,15 +265,16 @@ export default function BloodworkPage() {
         }, 100);
       } catch (e) {
         console.error('[bloodwork] scan failed:', e);
-        const mapped = mapScanError(e) || 'Scan failed unexpectedly. Please retry or enter manually.';
+        const mapped = mapScanError(e);
         progress.fail();
-        setError(mapped);
+        setError(mapped.message || 'Scan failed unexpectedly. Please retry or enter manually.');
+        setErrorCode(mapped.code ?? null);
         void captureLead({
           email: user.email,
           source: 'bloodwork_scan_failed',
           planInterest: 'premium',
           activityType: 'calculator_use',
-          activityData: { tier, reason: e instanceof Error ? e.message : String(e) },
+          activityData: { tier, reason: mapped.message, code: mapped.code },
         });
       } finally {
         setRunning(null);
@@ -224,19 +290,27 @@ export default function BloodworkPage() {
     progress.reset();
     setRunning(null);
     setError(null);
+    setErrorCode(null);
   }, [progress]);
 
   const handleRetry = useCallback(() => {
     setError(null);
+    setErrorCode(null);
     progress.reset();
-    if (lastTierRef.current) void runScan(lastTierRef.current);
-  }, [progress, runScan]);
+    if (lastTierRef.current) {
+      // Reuse the already-uploaded report so the user doesn't lose their file on retry.
+      void runScan(lastTierRef.current, labReportId ? { reuseReportId: labReportId } : undefined);
+    }
+  }, [progress, runScan, labReportId]);
 
   const handleResetUpload = useCallback(() => {
     setError(null);
+    setErrorCode(null);
+    setLabReportId(null);
     progress.reset();
     setForm((s) => ({ ...s, file: null }));
   }, [progress]);
+
 
   const handleDownload = useCallback(() => {
     if (!result) return;
@@ -291,8 +365,10 @@ export default function BloodworkPage() {
               onChange={setForm}
               running={running}
               error={error}
-              progress={{ stage: progress.stage, label: progress.label, percent: progress.percent }}
-              onRun={runScan}
+              errorCode={errorCode}
+              progress={{ stage: progress.stage, label: progress.label, percent: progress.percent, startedAt: progress.startedAt }}
+
+              onRun={(t) => runScan(t)}
               onCancel={handleCancel}
               onRetry={handleRetry}
               onResetUpload={handleResetUpload}

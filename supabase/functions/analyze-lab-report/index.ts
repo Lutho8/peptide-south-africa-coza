@@ -96,15 +96,35 @@ serve(async (req) => {
       });
     }
 
-    // Resolve MIME
+    // Resolve MIME by sniffing magic bytes (client-provided type is untrustworthy).
     const lowerName = effectiveFileName.toLowerCase();
     let resolvedMime = mimeType as string | undefined;
-    if (!resolvedMime) {
-      if (lowerName.endsWith(".pdf")) resolvedMime = "application/pdf";
-      else if (lowerName.endsWith(".png")) resolvedMime = "image/png";
-      else if (lowerName.endsWith(".webp")) resolvedMime = "image/webp";
-      else resolvedMime = "image/jpeg";
+    try {
+      const headBytes = Uint8Array.from(atob(base64.slice(0, 64)), (c) => c.charCodeAt(0));
+      const asAscii = new TextDecoder().decode(headBytes);
+      if (asAscii.startsWith("%PDF")) resolvedMime = "application/pdf";
+      else if (headBytes[0] === 0xff && headBytes[1] === 0xd8 && headBytes[2] === 0xff) resolvedMime = "image/jpeg";
+      else if (headBytes[0] === 0x89 && asAscii.slice(1, 4) === "PNG") resolvedMime = "image/png";
+      else if (asAscii.startsWith("RIFF") && asAscii.slice(8, 12) === "WEBP") resolvedMime = "image/webp";
+      else if (asAscii.slice(4, 12).includes("ftypheic") || asAscii.slice(4, 12).includes("ftypheix") || asAscii.slice(4, 12).includes("ftypmif1")) resolvedMime = "image/heic";
+      else if (!resolvedMime) {
+        if (lowerName.endsWith(".pdf")) resolvedMime = "application/pdf";
+        else if (lowerName.endsWith(".png")) resolvedMime = "image/png";
+        else if (lowerName.endsWith(".webp")) resolvedMime = "image/webp";
+        else if (lowerName.endsWith(".heic") || lowerName.endsWith(".heif")) resolvedMime = "image/heic";
+        else resolvedMime = "image/jpeg";
+      }
+    } catch { /* fall through to defaults */ }
+
+    const ALLOWED_MIMES = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
+    if (!ALLOWED_MIMES.has(resolvedMime!)) {
+      return new Response(JSON.stringify({
+        ok: false, code: "UNSUPPORTED_CONTENT", retryable: false,
+        message: "This file doesn't look like a valid PDF or image. Please re-export your lab report as a PDF, JPG, or PNG.",
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+
 
 
     // Update status & save patient context
@@ -129,31 +149,37 @@ serve(async (req) => {
 The user is requesting a ${isDeep ? "DEEP DECODE" : "BASELINE"} scan.
 ${isDeep ? "Expand each protocol section to include up to 32 biomarkers across 8 panels and add 4 follow-up retest milestones over 12 months." : "Provide a concise but complete protocol (under 60 seconds of reading)."}
 
-Lab reports may be in ENGLISH or GERMAN — auto-detect, but ALWAYS write your output in ENGLISH using simple layman's terms.
+Lab reports may be in ENGLISH or GERMAN — auto-detect the source language.
 
 Common German terms: Blutbild=blood panel, Leberwerte=liver values, Nierenwerte=kidney values, Schilddrüse=thyroid, Cholesterin=cholesterol, Nüchternblutzucker=fasting glucose, Referenzbereich/Normbereich=reference range, Einheit=unit, Wert=value, Gesamttestosteron=total testosterone, Östradiol=estradiol, Insulin=insulin. Decimal commas (5,4) → decimal points (5.4).
+
+BILINGUAL OUTPUT — ALWAYS return every human-readable field in BOTH English and German. Translate accurately using natural, plain layman terms (not literal machine translation). Populate the *_de fields even when the source is English, and populate the English fields even when the source is German.
 
 Personalise the recommendations using the user's age, sex, goals, and peptide history.
 
 Return ONLY a valid JSON object with this exact structure:
 {
   "summary": "2-3 sentence plain-English overview.",
+  "summary_de": "Same 2-3 sentence overview translated to plain German.",
   "report_date": "YYYY-MM-DD or null",
   "detected_language": "en" or "de",
   "health_score": 0-100 (overall health considering all biomarkers and goals),
   "biomarkers": [
     {
       "name": "Full English name",
+      "name_de": "German name (e.g. 'Gesamttestosteron', 'Nüchternblutzucker')",
       "short_name": "Abbreviation",
       "value": 123.4,
       "unit": "ng/mL",
       "reference_range": "100-300",
       "status": "normal|high|low|critical",
       "category": "hormone|liver|kidney|lipid|metabolic|thyroid|inflammation|other",
-      "layman_explanation": "1 sentence plain English."
+      "layman_explanation": "1 sentence plain English.",
+      "layman_explanation_de": "Dieselbe Erklärung auf einfachem Deutsch."
     }
   ],
   "insights": ["6 to 8 plain-English findings, each one short sentence, ordered by importance"],
+  "insights_de": ["Same 6-8 findings translated to plain German, same length and order as 'insights'."],
   "protocol": {
     "stack_summary": "1-2 sentence overview of the recommended peptide stack and why it fits the user's goals.",
     "stack": [
@@ -295,18 +321,27 @@ If the file is unreadable, return:
     if (Array.isArray(parsed.insights)) insightsArr = parsed.insights.map((s: any) => String(s));
     else if (typeof parsed.insights === "string") insightsArr = parsed.insights.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
 
+    let insightsDeArr: string[] = [];
+    if (Array.isArray(parsed.insights_de)) insightsDeArr = parsed.insights_de.map((s: any) => String(s));
+    else if (typeof parsed.insights_de === "string") insightsDeArr = parsed.insights_de.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
+
     const healthScore =
       typeof parsed.health_score === "number" && parsed.health_score >= 0 && parsed.health_score <= 100
         ? Math.round(parsed.health_score)
         : null;
+
+    const detectedLang = parsed.detected_language === "de" ? "de" : "en";
 
     await supabase
       .from("lab_reports")
       .update({
         status: "completed",
         ai_summary: parsed.summary || null,
+        ai_summary_de: parsed.summary_de || null,
         extracted_biomarkers: parsed.biomarkers || [],
         ai_insights: insightsArr.join("\n"),
+        ai_insights_de: insightsDeArr.join("\n"),
+        detected_language: detectedLang,
         report_date: parsed.report_date || null,
         health_score: healthScore,
         protocol: parsed.protocol || null,
@@ -319,9 +354,10 @@ If the file is unreadable, return:
       .eq("user_id", user.id);
 
     return new Response(
-      JSON.stringify({ success: true, data: { ...parsed, insights: insightsArr, health_score: healthScore } }),
+      JSON.stringify({ success: true, data: { ...parsed, insights: insightsArr, insights_de: insightsDeArr, detected_language: detectedLang, health_score: healthScore } }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (e) {
     console.error("[analyze-lab-report] unhandled error:", e);
     return new Response(JSON.stringify({

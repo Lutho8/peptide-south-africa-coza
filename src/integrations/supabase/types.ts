@@ -630,8 +630,11 @@ export type Database = {
       lab_reports: {
         Row: {
           ai_insights: string | null
+          ai_insights_de: string | null
           ai_summary: string | null
+          ai_summary_de: string | null
           created_at: string
+          detected_language: string | null
           extracted_biomarkers: Json | null
           file_name: string
           file_url: string
@@ -653,8 +656,11 @@ export type Database = {
         }
         Insert: {
           ai_insights?: string | null
+          ai_insights_de?: string | null
           ai_summary?: string | null
+          ai_summary_de?: string | null
           created_at?: string
+          detected_language?: string | null
           extracted_biomarkers?: Json | null
           file_name: string
           file_url: string
@@ -676,8 +682,11 @@ export type Database = {
         }
         Update: {
           ai_insights?: string | null
+          ai_insights_de?: string | null
           ai_summary?: string | null
+          ai_summary_de?: string | null
           created_at?: string
+          detected_language?: string | null
           extracted_biomarkers?: Json | null
           file_name?: string
           file_url?: string
