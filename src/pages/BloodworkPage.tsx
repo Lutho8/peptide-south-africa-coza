@@ -365,8 +365,10 @@ export default function BloodworkPage() {
               onChange={setForm}
               running={running}
               error={error}
-              progress={{ stage: progress.stage, label: progress.label, percent: progress.percent }}
-              onRun={runScan}
+              errorCode={errorCode}
+              progress={{ stage: progress.stage, label: progress.label, percent: progress.percent, startedAt: progress.startedAt }}
+
+              onRun={(t) => runScan(t)}
               onCancel={handleCancel}
               onRetry={handleRetry}
               onResetUpload={handleResetUpload}
