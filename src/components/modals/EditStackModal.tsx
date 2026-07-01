@@ -241,7 +241,17 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
 
                 <div>
                   <Label className="text-xs text-muted-foreground">Peptide / Blend</Label>
-                  <Select value={newPeptideId} onValueChange={setNewPeptideId}>
+                  <Select value={newPeptideId} onValueChange={(id) => {
+                    setNewPeptideId(id);
+                    const p = findPeptideOrBlend(id) as { dosing?: Record<string, string> } | null;
+                    const src = p?.dosing?.[newTier] || p?.dosing?.intermediate || p?.dosing?.beginner;
+                    if (src) {
+                      const { dose, frequency } = splitDosing(src);
+                      setNewDose(dose);
+                      setNewFrequency(frequency);
+                    }
+                  }}>
+
                     <SelectTrigger className="bg-muted border-border">
                       <SelectValue placeholder="Select peptide or blend" />
                     </SelectTrigger>
