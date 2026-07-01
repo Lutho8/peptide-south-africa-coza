@@ -154,7 +154,7 @@ function StepUpload({ state, onChange }: { state: ScanFormState; onChange: (s: S
   const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
   const ALLOWED = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
-  const setFile = (file: File | null) => {
+  const setFile = async (file: File | null) => {
     if (!file) {
       setFileError(null);
       onChange({ ...state, file: null });
@@ -164,6 +164,10 @@ function StepUpload({ state, onChange }: { state: ScanFormState; onChange: (s: S
       setFileError('File is over 10 MB. Please compress or export a smaller PDF.');
       return;
     }
+    if (file.size < 512) {
+      setFileError('File looks empty or corrupt. Please re-export your lab report.');
+      return;
+    }
     const okType =
       ALLOWED.includes(file.type) ||
       /\.(pdf|jpe?g|png|webp|heic|heif)$/i.test(file.name);
@@ -171,9 +175,26 @@ function StepUpload({ state, onChange }: { state: ScanFormState; onChange: (s: S
       setFileError('Unsupported file type. Use PDF, JPG, PNG, WEBP or HEIC.');
       return;
     }
+    // Magic-byte sniff for a friendly, immediate error before upload.
+    try {
+      const head = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+      const ascii = new TextDecoder().decode(head);
+      const isPdf = ascii.startsWith('%PDF');
+      const isJpeg = head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+      const isPng = head[0] === 0x89 && ascii.slice(1, 4) === 'PNG';
+      const isWebp = ascii.startsWith('RIFF') && new TextDecoder().decode(head.slice(8, 12)) === 'WEBP';
+      const looksHeic = ascii.slice(4, 12).includes('ftyp');
+      if (!isPdf && !isJpeg && !isPng && !isWebp && !looksHeic) {
+        setFileError("This file doesn't look like a valid PDF or image inside. Re-export from your lab portal as PDF or JPG.");
+        return;
+      }
+    } catch {
+      /* best-effort — server will re-validate */
+    }
     setFileError(null);
     onChange({ ...state, file });
   };
+
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
