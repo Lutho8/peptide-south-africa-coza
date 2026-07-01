@@ -86,12 +86,26 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [lang, setLang] = useState<Lang>(() => {
+    if (typeof window === 'undefined') return (result.detected_language ?? 'en') as Lang;
+    const saved = window.localStorage.getItem(LANG_KEY);
+    if (saved === 'en' || saved === 'de') return saved;
+    return (result.detected_language ?? 'en') as Lang;
+  });
+  const t = UI[lang];
+  const catLabels = CATEGORY_LABELS[lang];
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') window.localStorage.setItem(LANG_KEY, lang);
+  }, [lang]);
+
+  const hasGerman = !!(result.summary_de || (result.insights_de && result.insights_de.length) || result.biomarkers.some((b) => b.name_de || b.layman_explanation_de));
 
   // Debounce search 150ms
   useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedSearch(search.trim().toLowerCase()), 150);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim().toLowerCase()), 150);
+    return () => window.clearTimeout(timer);
   }, [search]);
 
   // Keyboard: '/' focuses, Esc clears
@@ -107,6 +121,7 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
 
   const statusCounts = useMemo(() => {
     const c = { normal: 0, high: 0, low: 0, critical: 0 };
