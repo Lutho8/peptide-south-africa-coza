@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Search, X, ShoppingBag } from 'lucide-react';
+import { Download, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Search, X, ShoppingBag, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtocolSections, Protocol } from './ProtocolSections';
 import { SystemDashboard } from './SystemDashboard';
@@ -15,12 +15,15 @@ import { trackBwEvent } from '@/lib/bloodwork/analytics';
 
 export interface ResultBiomarker {
   name: string;
+  name_de?: string;
   short_name?: string;
   value: number;
   unit: string;
   reference_range: string;
   status: 'normal' | 'high' | 'low' | 'critical';
   category: string;
+  layman_explanation?: string;
+  layman_explanation_de?: string;
 }
 
 export interface BloodworkScanResult {
@@ -28,21 +31,27 @@ export interface BloodworkScanResult {
   health_score?: number;
   biomarkers: ResultBiomarker[];
   insights: string[];
+  insights_de?: string[];
+  summary?: string;
+  summary_de?: string;
+  detected_language?: 'en' | 'de';
   protocol: Protocol;
   goals: string[];
 }
 
+type Lang = 'en' | 'de';
+const LANG_KEY = 'rtd:bloodwork:lang';
+
 const CATEGORY_ORDER = ['hormone', 'lipid', 'metabolic', 'liver', 'kidney', 'inflammation', 'thyroid', 'other'];
-const CATEGORY_LABELS: Record<string, string> = {
-  hormone: 'Hormones',
-  lipid: 'Lipids',
-  metabolic: 'Metabolic',
-  liver: 'Liver',
-  kidney: 'Kidney',
-  inflammation: 'Inflammation',
-  thyroid: 'Thyroid',
-  other: 'Other',
+const CATEGORY_LABELS: Record<Lang, Record<string, string>> = {
+  en: { hormone: 'Hormones', lipid: 'Lipids', metabolic: 'Metabolic', liver: 'Liver', kidney: 'Kidney', inflammation: 'Inflammation', thyroid: 'Thyroid', other: 'Other' },
+  de: { hormone: 'Hormone', lipid: 'Lipide', metabolic: 'Stoffwechsel', liver: 'Leber', kidney: 'Nieren', inflammation: 'Entzündung', thyroid: 'Schilddrüse', other: 'Sonstige' },
 };
+
+const UI = {
+  en: { title: 'Your Bloodwork Results', analysed: (n: number, g: number) => `${n} biomarkers analysed · ${g} goals`, shopStack: 'Shop my stack', download: 'Download PDF', biomarkerPanel: 'Biomarker panel', insights: 'Insights', searchPlaceholder: 'Search biomarkers… (press / to focus)', shown: (a: number, b: number) => `${a}/${b} shown`, all: 'All', normal: 'Normal', low: 'Low', high: 'High', critical: 'Critical', noMatch: 'No biomarkers match this filter.', reset: 'Reset filters', clear: 'Clear filters', ref: 'Ref', langLabel: 'Language' },
+  de: { title: 'Ihre Blutwert-Ergebnisse', analysed: (n: number, g: number) => `${n} Biomarker analysiert · ${g} Ziele`, shopStack: 'Mein Stack kaufen', download: 'PDF laden', biomarkerPanel: 'Biomarker-Panel', insights: 'Erkenntnisse', searchPlaceholder: 'Biomarker suchen… (drücken Sie /)', shown: (a: number, b: number) => `${a}/${b} sichtbar`, all: 'Alle', normal: 'Normal', low: 'Niedrig', high: 'Hoch', critical: 'Kritisch', noMatch: 'Keine Biomarker entsprechen diesem Filter.', reset: 'Filter zurücksetzen', clear: 'Filter löschen', ref: 'Ref', langLabel: 'Sprache' },
+} as const;
 
 type StatusFilter = 'all' | 'normal' | 'high' | 'low' | 'critical';
 
@@ -51,6 +60,7 @@ interface Props {
   onDownload: () => void;
   labReportId: string | null;
 }
+
 
 export function BloodworkResults(props: Props) {
   const patternsTop = detectPatterns(props.result.biomarkers);
