@@ -321,18 +321,27 @@ If the file is unreadable, return:
     if (Array.isArray(parsed.insights)) insightsArr = parsed.insights.map((s: any) => String(s));
     else if (typeof parsed.insights === "string") insightsArr = parsed.insights.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
 
+    let insightsDeArr: string[] = [];
+    if (Array.isArray(parsed.insights_de)) insightsDeArr = parsed.insights_de.map((s: any) => String(s));
+    else if (typeof parsed.insights_de === "string") insightsDeArr = parsed.insights_de.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
+
     const healthScore =
       typeof parsed.health_score === "number" && parsed.health_score >= 0 && parsed.health_score <= 100
         ? Math.round(parsed.health_score)
         : null;
+
+    const detectedLang = parsed.detected_language === "de" ? "de" : "en";
 
     await supabase
       .from("lab_reports")
       .update({
         status: "completed",
         ai_summary: parsed.summary || null,
+        ai_summary_de: parsed.summary_de || null,
         extracted_biomarkers: parsed.biomarkers || [],
         ai_insights: insightsArr.join("\n"),
+        ai_insights_de: insightsDeArr.join("\n"),
+        detected_language: detectedLang,
         report_date: parsed.report_date || null,
         health_score: healthScore,
         protocol: parsed.protocol || null,
@@ -345,9 +354,10 @@ If the file is unreadable, return:
       .eq("user_id", user.id);
 
     return new Response(
-      JSON.stringify({ success: true, data: { ...parsed, insights: insightsArr, health_score: healthScore } }),
+      JSON.stringify({ success: true, data: { ...parsed, insights: insightsArr, insights_de: insightsDeArr, detected_language: detectedLang, health_score: healthScore } }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (e) {
     console.error("[analyze-lab-report] unhandled error:", e);
     return new Response(JSON.stringify({
