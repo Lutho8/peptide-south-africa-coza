@@ -16,11 +16,33 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+export type ExperienceTier = 'beginner' | 'intermediate' | 'advanced' | 'athlete';
+
 export interface StackItem {
   peptideId: string;
   dose: string;
   frequency: string;
+  experienceLevel?: ExperienceTier;
 }
+
+const TIER_LABELS: { value: ExperienceTier; label: string }[] = [
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Inter' },
+  { value: 'advanced', label: 'Adv' },
+  { value: 'athlete', label: 'Athlete' },
+];
+
+/** Split a dosing string like "0.8mg 2x/week" into { dose, frequency }. */
+function splitDosing(s: string | undefined): { dose: string; frequency: string } {
+  if (!s) return { dose: '', frequency: '' };
+  const trimmed = s.trim();
+  // Match leading amount+unit token(s), e.g. "0.8mg", "300mcg", "2.5mg", "100 IU"
+  const m = trimmed.match(/^([\d.,]+\s*(?:mg|mcg|µg|iu|units?|u))\b\s*(.*)$/i);
+  if (m) return { dose: m[1].trim(), frequency: m[2].trim() };
+  const parts = trimmed.split(/\s+/);
+  return { dose: parts[0] ?? '', frequency: parts.slice(1).join(' ') };
+}
+
 
 interface EditStackModalProps {
   open: boolean;
@@ -35,6 +57,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
   const [newPeptideId, setNewPeptideId] = useState('');
   const [newDose, setNewDose] = useState('');
   const [newFrequency, setNewFrequency] = useState('');
+  const [newTier, setNewTier] = useState<ExperienceTier>('intermediate');
   const [userGoals, setUserGoals] = useState<string[]>([]);
 
   useEffect(() => {
@@ -43,8 +66,13 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
       setShowAddNew(false);
       const profile = getUserProfile();
       setUserGoals(profile?.goals ?? []);
+      const exp = (profile as { experience?: string } | null)?.experience;
+      if (exp === 'beginner' || exp === 'intermediate' || exp === 'advanced' || exp === 'athlete') {
+        setNewTier(exp);
+      }
     }
   }, [open, currentStack]);
+
 
   const goalCategories = getCategoriesForGoals(userGoals);
   const goalLabelList = getGoalLabels(userGoals);
@@ -79,7 +107,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
       return;
     }
 
-    setStack([...stack, { peptideId: newPeptideId, dose: newDose, frequency: newFrequency }]);
+    setStack([...stack, { peptideId: newPeptideId, dose: newDose, frequency: newFrequency, experienceLevel: newTier }]);
     setNewPeptideId('');
     setNewDose('');
     setNewFrequency('');
@@ -213,7 +241,17 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
 
                 <div>
                   <Label className="text-xs text-muted-foreground">Peptide / Blend</Label>
-                  <Select value={newPeptideId} onValueChange={setNewPeptideId}>
+                  <Select value={newPeptideId} onValueChange={(id) => {
+                    setNewPeptideId(id);
+                    const p = findPeptideOrBlend(id) as { dosing?: Record<string, string> } | null;
+                    const src = p?.dosing?.[newTier] || p?.dosing?.intermediate || p?.dosing?.beginner;
+                    if (src) {
+                      const { dose, frequency } = splitDosing(src);
+                      setNewDose(dose);
+                      setNewFrequency(frequency);
+                    }
+                  }}>
+
                     <SelectTrigger className="bg-muted border-border">
                       <SelectValue placeholder="Select peptide or blend" />
                     </SelectTrigger>
@@ -288,7 +326,46 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
                   </Select>
                 </div>
 
+                <div>
+                  <Label className="text-xs text-muted-foreground">Experience level</Label>
+                  <div className="mt-1 grid grid-cols-4 gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="Experience level">
+                    {TIER_LABELS.map(t => {
+                      const active = newTier === t.value;
+                      return (
+                        <button
+                          key={t.value}
+                          type="button"
+                          role="tab"
+                          aria-selected={active}
+                          onClick={() => {
+                            setNewTier(t.value);
+                            const p = findPeptideOrBlend(newPeptideId) as { dosing?: Record<string, string> } | null;
+                            const src = p?.dosing?.[t.value];
+                            if (src) {
+                              const { dose, frequency } = splitDosing(src);
+                              setNewDose(dose);
+                              setNewFrequency(frequency);
+                            }
+                          }}
+                          className={cn(
+                            'min-h-[36px] rounded-md px-2 text-xs font-medium transition-colors',
+                            active
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Auto-fills the recommended dose for this tier. You can still edit below.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
+
                   <div>
                     <Label className="text-xs text-muted-foreground">Dose</Label>
                     <Input

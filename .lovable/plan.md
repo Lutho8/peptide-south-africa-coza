@@ -1,75 +1,29 @@
-## Goal
+## Fix 1 — Bloodwork "Scan interrupted" error
 
-Make the Active Stack card show a clear per-peptide dosing breakdown, persist split-dose awareness everywhere, and add a working "bell" reminder popover that drives push notifications using absolute `next_fire_at` timestamps per cycle.
+**Root cause:** `supabase/functions/analyze-lab-report/index.ts` line 235 references an undefined variable `imageBase64` when building the AI request. The download step assigns the file bytes to `base64`, but the fetch body still uses the old name. Every scan throws `ReferenceError: imageBase64 is not defined`, which the client maps to "Couldn't reach the AI service."
 
-## 1. Persist `splitParts` end-to-end
+Additional issue: PDFs are sent as `image_url`, which the AI gateway rejects. PDFs must use the `file` content type per the multimodal input spec.
 
-- Extend `ActiveStackItem` (in `src/services/storage.ts` + `src/data/userData.ts`) with optional fields: `splitParts`, `perAdministration`, `dosesPerWeek`, `experienceLevel`, `doseTimes: string[]` (e.g. `["08:00","20:00"]`).
-- When a user adds/edits a peptide in `MyStackScreen`, run `parseDosing` (or `planForExperience`) and persist the parsed `DosingPlan`. Backfill missing fields lazily on read.
-- Update `getCycleProgress` in `src/lib/cycleProgress.ts` to accept the per-cycle `splitParts` and collapse N same-day administrations into 1 complete dose for **all** cadences (currently only daily-or-more dedupes by date).
-- Threading: `Cycle` already mirrors stack metadata — add `splitParts`, `doseTimes`, `reminderLeadMinutes`, `reminderEnabled` to it. `MyStackScreen.handleStartCycle` writes them when creating the cycle.
-- `DailyLogScreen` reads `splitParts` for the matching stack item and shows "Sub-dose 1/2 logged — log PM dose to complete today" instead of "1 dose logged".
+**Changes to `supabase/functions/analyze-lab-report/index.ts`:**
+- Replace `imageBase64` with `base64`.
+- Branch on `resolvedMime`: for `application/pdf`, send `{ type: "file", file: { filename, file_data: "data:application/pdf;base64,..." } }`; for images, keep the `image_url` block.
 
-## 2. Active Stack card — expanded per-peptide breakdown
+Redeploy the function; retest via the Bloodwork wizard.
 
-Edit `src/components/home/ActiveStackPreview.tsx`:
+## Fix 2 — Experience-level segmented control in Add-to-Stack
 
-- For each row, after the existing "Week N / Total · Phase" line, render a compact dosing breakdown derived from the persisted `DosingPlan`:
-  - One row per scheduled administration time, e.g.
-    - `08:00 — 2.5 mg (AM)`
-    - `20:00 — 2.5 mg (PM)`  → footer "= 1 complete dose · 1×/week"
-  - Today-aware status chips per sub-dose: `Logged`, `Due`, `Upcoming`, `Missed`.
-- Progress line stays as "X / Y complete doses" (unchanged numerator semantics, now correctly counting split doses as 1).
-- Keep the row collapsed by default on the dashboard; tapping the row expands the breakdown inline (Radix Collapsible) so the dashboard stays scannable.
+**Where:** `src/components/modals/EditStackModal.tsx` (the Add-to-Stack form on My Stack).
 
-## 3. Bell reminder popover
+**Changes:**
+1. Extend `StackItem` with an optional `experienceLevel: 'beginner' | 'intermediate' | 'advanced' | 'athlete'` (already supported on `ActiveStackItem` in storage; propagate through `onSave`).
+2. In the "Add Peptide" form, add a 4-way segmented control (Beginner / Intermediate / Advanced / Athlete) above the Dose/Frequency inputs. Default = the user's profile experience (`getUserProfile().experience`) or `intermediate`.
+3. When the peptide is selected OR the tier changes, auto-populate the `Dose` and `Frequency` inputs from `peptide.dosing[tier]` (parsed via existing `doseParser` to split "dose" vs "frequency"). User can still edit manually.
+4. Persist `experienceLevel` on the stack item so downstream dosing recommendations, PK sim, and reminder scheduling use the chosen tier (existing `ActiveStackItem.experienceLevel` field already flows through `scheduleCycleReminders` / `RecommendedDoseDisplay`).
+5. Show the tier as a small badge on each existing stack row so users can see/change per-peptide tier inline.
 
-New component `src/components/home/StackReminderBell.tsx`, rendered next to each row's badge in `ActiveStackPreview`:
+**Files touched:**
+- `src/components/modals/EditStackModal.tsx` — UI + state + auto-fill logic.
+- `src/screens/MyStackScreen.tsx` — pass `experienceLevel` through the `onSave` handler into `setActiveStack`.
+- `src/services/storage.ts` — already has `experienceLevel` on `ActiveStackItem`; no schema change needed.
 
-- Icon: `Bell` (lucide). Opens a `Popover` (existing `@/components/ui/popover`).
-- Popover contents:
-  - Header: peptide name + computed next dose ("Tomorrow 08:00 · in 14h 23m").
-  - Toggle: "Remind me" (enabled/disabled).
-  - Lead-time select: 0, 5, 15, 30, 60, 120 min.
-  - Per-administration time editor (one input per `doseTimes` entry, default seeded from frequency parser).
-  - Footer: "Snooze until next dose" and "Open in My Stack".
-- On save:
-  - Persist `reminderEnabled`, `reminderLeadMinutes`, `doseTimes` onto the cycle/stack item.
-  - Compute `nextFireAt` via `computeNextFireAt(cycle, doses, time, leadMinutes)` for each `doseTimes` entry and write one `ScheduledReminder` per administration to IndexedDB.
-
-## 4. Push scheduler — absolute `next_fire_at` per cycle
-
-Edit `src/services/pushScheduler.ts`:
-
-- Extend `ScheduledReminder` with: `mode: 'weekly' | 'computed'`, `cycleId?: string`, `nextFireTime: number` (now required for `computed` mode), `leadMinutes?: number`, `splitIndex?: number`.
-- In `saveReminderToIndexedDB` / `bulkSaveReminders`, if `mode === 'computed'`, **trust** the provided `nextFireTime` and do not overwrite it via `calculateNextFireTime`.
-- Add `scheduleCycleReminders(cycle, doses, opts)`: deletes existing reminders for that `cycleId` then writes one per `doseTimes` entry using `computeNextFireAt`.
-- Respect cycle state:
-  - `status === 'break'` → mark all that cycle's reminders `enabled: false` (skip scheduling).
-  - `dosesBehind >= 2` (Behind) → schedule next dose at `now + 30 min` instead of waiting for the cadence window, with a "Catch-up dose" body.
-  - `isOverdue` / phase `complete` → skip and surface a one-time "Cycle complete — start break" reminder.
-- After each successful dose log (`DailyLogScreen` write path), call `scheduleCycleReminders` for the affected cycle so `next_fire_at` rolls forward immediately.
-- `useStorageInit` already calls `forceSyncAndCheck`; add a `rtd:stack-changed` / `rtd:dose-logged` listener that re-runs `scheduleCycleReminders` for all active cycles.
-
-## 5. Service worker (`public/sw.js`)
-
-- When iterating reminders, prefer `nextFireTime` as the absolute fire time (already supported). Add handling for `mode === 'computed'`: after firing, do NOT auto-advance by weekly cadence — instead emit a `CYCLE_REMINDER_FIRED` message so the page (when open) recomputes and writes the next `nextFireTime`. If the page is closed, the next app open will reschedule via step 4.
-- Bump SW cache version to force update.
-
-## 6. UI cleanup / consistency
-
-- `MyStackScreen` stack cards: show the same per-administration breakdown + the bell popover.
-- `DailyLogScreen`: when a peptide has `splitParts > 1`, group its today entries under one "complete dose" header with a progress pill (`1/2 sub-doses`).
-- Add a small "How split doses count" line to the existing `ActiveStackPreview` explainer.
-
-## Technical notes
-
-- No schema migration required for `dose_reminders` if we keep new fields client-side in IndexedDB only; if persistence across devices is needed for the popover settings, add columns `mode text default 'weekly'`, `cycle_id uuid`, `next_fire_at timestamptz`, `lead_minutes int` to `dose_reminders` and one matching block of GRANTs (already granted in current table). Flagging as **optional** — default plan keeps it local.
-- All new persisted fields are optional; existing stacks keep working (treated as `splitParts = 1`, `doseTimes = [parsed-default]`).
-- No business-logic changes to cycles other than `splitParts` collapsing and computed-mode scheduling.
-
-## Out of scope
-
-- Changing dosing guidance content per experience level (already shipped).
-- Backend cron-driven push (still client SW + IndexedDB).
-- Shop "per vial vs 3/5 pack" pricing display — separate concern, not touched here.
+No backend or data-model migration required.
