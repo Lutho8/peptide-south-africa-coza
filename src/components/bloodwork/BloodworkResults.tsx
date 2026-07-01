@@ -133,7 +133,7 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
     return result.biomarkers.filter((bm) => {
       if (statusFilter !== 'all' && bm.status !== statusFilter) return false;
       if (debouncedSearch) {
-        const hay = `${bm.name} ${bm.short_name ?? ''}`.toLowerCase();
+        const hay = `${bm.name} ${bm.name_de ?? ''} ${bm.short_name ?? ''}`.toLowerCase();
         if (!hay.includes(debouncedSearch)) return false;
       }
       return true;
@@ -144,19 +144,52 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
   const visibleCategories = CATEGORY_ORDER.filter((c) => grouped[c]?.length);
   const hasFilter = debouncedSearch !== '' || statusFilter !== 'all';
 
+  const summaryLine = lang === 'de' && result.summary_de ? result.summary_de : result.summary;
+
   return (
     <div className="space-y-12" id="bloodwork-results-root">
       {/* HEADER */}
       <header className="border-b border-border/50 pb-6">
-        <p className="font-mono text-[11px] tracking-widest text-muted-foreground uppercase">
-          {result.scan_type === 'deep' ? 'Deep Decode' : 'Baseline Scan'}
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-mono text-[11px] tracking-widest text-muted-foreground uppercase">
+            {result.scan_type === 'deep' ? 'Deep Decode' : 'Baseline Scan'}
+            {result.detected_language && (
+              <span className="ml-2 text-muted-foreground/70">· {result.detected_language === 'de' ? 'DE source' : 'EN source'}</span>
+            )}
+          </p>
+          {hasGerman && (
+            <div
+              role="group"
+              aria-label={t.langLabel}
+              className="inline-flex items-center gap-0 rounded-full border border-border/60 bg-card/40 p-0.5 text-[11px] font-semibold"
+            >
+              <Languages size={12} className="ml-1.5 text-muted-foreground" />
+              {(['en', 'de'] as Lang[]).map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLang(code)}
+                  aria-pressed={lang === code}
+                  className={cn(
+                    'px-2.5 py-1 rounded-full uppercase tracking-wider transition-colors',
+                    lang === code ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {code}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="mt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Your Bloodwork Results</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">{t.title}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {result.biomarkers.length} biomarkers analysed · {result.goals.length} goals
+              {t.analysed(result.biomarkers.length, result.goals.length)}
             </p>
+            {summaryLine && (
+              <p className="mt-3 text-sm text-foreground/90 leading-relaxed max-w-2xl">{summaryLine}</p>
+            )}
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {typeof result.health_score === 'number' && <HealthScoreRing score={result.health_score} />}
@@ -168,18 +201,19 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
               }}
               className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/20 transition-colors"
             >
-              <ShoppingBag size={14} /> Shop my stack
+              <ShoppingBag size={14} /> {t.shopStack}
             </button>
             <button
               type="button"
               onClick={onDownload}
               className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-card/40 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-foreground hover:border-primary/60 hover:text-primary transition-colors"
             >
-              <Download size={14} /> Download PDF
+              <Download size={14} /> {t.download}
             </button>
           </div>
         </div>
       </header>
+
 
       {/* SYSTEM DASHBOARD */}
       <SystemDashboard
