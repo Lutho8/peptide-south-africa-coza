@@ -30,17 +30,22 @@ const INITIAL_STATE: ScanFormState = {
   peptideHistoryNotes: '',
 };
 
-function mapScanError(e: unknown): string {
+function mapScanError(e: unknown): { message: string; code?: string } {
+  if (e && typeof e === 'object' && 'code' in (e as any)) {
+    const env = e as { message?: string; code?: string };
+    return { message: env.message || 'Scan failed.', code: env.code };
+  }
   const msg = e instanceof Error ? e.message : String(e ?? '');
-  if (/abort/i.test(msg)) return '';
-  if (/429|rate/i.test(msg)) return 'Too many scans right now. Wait 30 seconds and try again.';
-  if (/402|credit/i.test(msg)) return 'Premium scan credits exhausted for this hour. Try again shortly.';
+  if (/abort/i.test(msg)) return { message: '' };
+  if (/429|rate/i.test(msg)) return { message: 'Too many scans right now. Wait 30 seconds and try again.', code: 'RATE_LIMITED' };
+  if (/402|credit/i.test(msg)) return { message: 'Premium scan credits exhausted for this hour. Try again shortly.', code: 'CREDITS_EXHAUSTED' };
   if (/parse|empty|json/i.test(msg))
-    return "We couldn't read this lab report. Try a clearer scan or a different file format (PDF, JPG, PNG).";
+    return { message: "We couldn't read this lab report. Try a clearer scan or a different file format (PDF, JPG, PNG).", code: 'EMPTY_RESPONSE' };
   if (/upload|storage|network|fetch/i.test(msg))
-    return 'Something went wrong on our side. Try again — your file is still saved.';
-  return msg || 'Unexpected error during scan.';
+    return { message: 'Something went wrong on our side. Try again — your file is still saved.', code: 'TRANSPORT' };
+  return { message: msg || 'Unexpected error during scan.' };
 }
+
 
 export default function BloodworkPage() {
   const { user } = useAuth();
