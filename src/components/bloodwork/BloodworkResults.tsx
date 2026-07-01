@@ -234,7 +234,7 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
       <section>
         <div className="flex items-center gap-3 mb-4 pb-2 border-b border-border/50">
           <span className="font-mono text-[11px] tracking-widest text-muted-foreground">02 —</span>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Biomarker panel</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t.biomarkerPanel}</h2>
         </div>
 
         {/* FILTER BAR */}
@@ -247,9 +247,10 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search biomarkers… (press / to focus)"
+                placeholder={t.searchPlaceholder}
                 className="w-full pl-9 pr-9 py-2 rounded-lg bg-card/40 border border-border/60 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                aria-label="Search biomarkers"
+                aria-label={t.searchPlaceholder}
+
               />
               {search && (
                 <button
@@ -266,7 +267,7 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
               {(['all', 'normal', 'low', 'high', 'critical'] as StatusFilter[]).map((s) => (
                 <FilterChip
                   key={s}
-                  label={s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+                  label={s === 'all' ? t.all : t[s as 'normal' | 'high' | 'low' | 'critical']}
                   count={s === 'all' ? result.biomarkers.length : statusCounts[s]}
                   active={statusFilter === s}
                   status={s}
@@ -277,7 +278,7 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
           </div>
           <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
             <span className="tabular-nums">
-              {filtered.length}/{result.biomarkers.length} shown
+              {t.shown(filtered.length, result.biomarkers.length)}
             </span>
             {hasFilter && (
               <button
@@ -288,7 +289,8 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
                 }}
                 className="uppercase tracking-wider hover:text-primary transition-colors"
               >
-                Clear filters
+                {t.clear}
+
               </button>
             )}
           </div>
@@ -296,7 +298,7 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
 
         {filtered.length === 0 ? (
           <div className="rounded-xl border border-border/40 bg-card/30 p-8 text-center">
-            <p className="text-sm text-muted-foreground">No biomarkers match this filter.</p>
+            <p className="text-sm text-muted-foreground">{t.noMatch}</p>
             <button
               type="button"
               onClick={() => {
@@ -305,18 +307,20 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
               }}
               className="mt-2 text-xs uppercase tracking-wider text-primary hover:underline"
             >
-              Reset filters
+              {t.reset}
+
             </button>
           </div>
         ) : (
           <div className="space-y-6">
             {visibleCategories.map((cat) => (
               <div key={cat} data-bm-category={cat}>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{CATEGORY_LABELS[cat]}</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{catLabels[cat]}</p>
                 <div className="rounded-xl border border-border/50 overflow-hidden">
                   {grouped[cat].map((bm, i) => (
-                    <BiomarkerRow key={`${cat}-${i}`} bm={bm} last={i === grouped[cat].length - 1} />
+                    <BiomarkerRow key={`${cat}-${i}`} bm={bm} last={i === grouped[cat].length - 1} lang={lang} refLabel={t.ref} statusLabels={{ normal: t.normal, high: t.high, low: t.low, critical: t.critical }} />
                   ))}
+
                 </div>
               </div>
             ))}
