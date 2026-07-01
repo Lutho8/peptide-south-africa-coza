@@ -30,7 +30,8 @@ interface Props {
   onChange: (next: ScanFormState) => void;
   running: 'baseline' | 'deep' | null;
   error: string | null;
-  progress: { stage: ScanStage; label: string; percent: number };
+  errorCode?: string | null;
+  progress: { stage: ScanStage; label: string; percent: number; startedAt?: number | null };
   onRun: (tier: 'baseline' | 'deep') => void;
   onCancel: () => void;
   onRetry: () => void;
@@ -40,9 +41,10 @@ interface Props {
 }
 
 export function BloodworkWizard({
-  state, onChange, running, error, progress, onRun, onCancel, onRetry, onResetUpload,
+  state, onChange, running, error, errorCode, progress, onRun, onCancel, onRetry, onResetUpload,
   labReportId, onManualSaved,
 }: Props) {
+
   const [step, setStep] = useState(1);
   const [maxReached, setMaxReached] = useState(1);
 
@@ -83,14 +85,16 @@ export function BloodworkWizard({
               {error ? (
                 <ScanError
                   message={error}
+                  code={errorCode ?? null}
                   onRetry={onRetry}
                   onReset={() => { onResetUpload(); setStep(1); }}
                   labReportId={labReportId}
                   onManualSaved={onManualSaved}
                 />
               ) : (
-                <ScanProgress {...progress} onCancel={onCancel} />
+                <ScanProgress {...progress} onCancel={onCancel} onRetry={onRetry} />
               )}
+
             </motion.div>
           ) : (
             <motion.div
