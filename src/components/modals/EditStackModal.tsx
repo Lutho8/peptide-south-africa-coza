@@ -57,6 +57,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
   const [newPeptideId, setNewPeptideId] = useState('');
   const [newDose, setNewDose] = useState('');
   const [newFrequency, setNewFrequency] = useState('');
+  const [newTier, setNewTier] = useState<ExperienceTier>('intermediate');
   const [userGoals, setUserGoals] = useState<string[]>([]);
 
   useEffect(() => {
@@ -65,8 +66,13 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
       setShowAddNew(false);
       const profile = getUserProfile();
       setUserGoals(profile?.goals ?? []);
+      const exp = (profile as { experience?: string } | null)?.experience;
+      if (exp === 'beginner' || exp === 'intermediate' || exp === 'advanced' || exp === 'athlete') {
+        setNewTier(exp);
+      }
     }
   }, [open, currentStack]);
+
 
   const goalCategories = getCategoriesForGoals(userGoals);
   const goalLabelList = getGoalLabels(userGoals);
