@@ -16,11 +16,33 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+export type ExperienceTier = 'beginner' | 'intermediate' | 'advanced' | 'athlete';
+
 export interface StackItem {
   peptideId: string;
   dose: string;
   frequency: string;
+  experienceLevel?: ExperienceTier;
 }
+
+const TIER_LABELS: { value: ExperienceTier; label: string }[] = [
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Inter' },
+  { value: 'advanced', label: 'Adv' },
+  { value: 'athlete', label: 'Athlete' },
+];
+
+/** Split a dosing string like "0.8mg 2x/week" into { dose, frequency }. */
+function splitDosing(s: string | undefined): { dose: string; frequency: string } {
+  if (!s) return { dose: '', frequency: '' };
+  const trimmed = s.trim();
+  // Match leading amount+unit token(s), e.g. "0.8mg", "300mcg", "2.5mg", "100 IU"
+  const m = trimmed.match(/^([\d.,]+\s*(?:mg|mcg|µg|iu|units?|u))\b\s*(.*)$/i);
+  if (m) return { dose: m[1].trim(), frequency: m[2].trim() };
+  const parts = trimmed.split(/\s+/);
+  return { dose: parts[0] ?? '', frequency: parts.slice(1).join(' ') };
+}
+
 
 interface EditStackModalProps {
   open: boolean;
