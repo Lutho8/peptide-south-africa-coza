@@ -449,7 +449,15 @@ function HealthScoreRing({ score }: { score: number }) {
   );
 }
 
-function BiomarkerRow({ bm, last }: { bm: ResultBiomarker; last: boolean }) {
+function BiomarkerRow({
+  bm, last, lang, refLabel, statusLabels,
+}: {
+  bm: ResultBiomarker;
+  last: boolean;
+  lang: Lang;
+  refLabel: string;
+  statusLabels: Record<'normal' | 'high' | 'low' | 'critical', string>;
+}) {
   const tone =
     bm.status === 'normal'
       ? 'bg-green-500/10 text-green-500 border-green-500/20'
@@ -461,11 +469,17 @@ function BiomarkerRow({ bm, last }: { bm: ResultBiomarker; last: boolean }) {
   const Icon =
     bm.status === 'normal' ? CheckCircle : bm.status === 'high' ? TrendingUp : bm.status === 'low' ? TrendingDown : AlertTriangle;
 
+  const displayName = lang === 'de' && bm.name_de ? bm.name_de : bm.name;
+  const explanation = lang === 'de' && bm.layman_explanation_de ? bm.layman_explanation_de : bm.layman_explanation;
+
   return (
-    <div className={cn('flex items-center gap-3 p-3 bg-card/30', !last && 'border-b border-border/40')}>
+    <div className={cn('flex items-start gap-3 p-3 bg-card/30', !last && 'border-b border-border/40')}>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{bm.name}</p>
-        <p className="text-[10px] text-muted-foreground">Ref: {bm.reference_range}</p>
+        <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+        <p className="text-[10px] text-muted-foreground">{refLabel}: {bm.reference_range}</p>
+        {explanation && (
+          <p className="text-[11px] text-muted-foreground/90 mt-1 leading-snug">{explanation}</p>
+        )}
       </div>
       <div className="text-right shrink-0">
         <p className="text-base font-bold text-foreground tabular-nums">{bm.value}</p>
@@ -477,11 +491,12 @@ function BiomarkerRow({ bm, last }: { bm: ResultBiomarker; last: boolean }) {
           tone
         )}
       >
-        <Icon size={10} /> {bm.status}
+        <Icon size={10} /> {statusLabels[bm.status]}
       </span>
     </div>
   );
 }
+
 
 function groupByCategory(list: ResultBiomarker[]): Record<string, ResultBiomarker[]> {
   const out: Record<string, ResultBiomarker[]> = {};
