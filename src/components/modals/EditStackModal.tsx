@@ -107,7 +107,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
       return;
     }
 
-    setStack([...stack, { peptideId: newPeptideId, dose: newDose, frequency: newFrequency }]);
+    setStack([...stack, { peptideId: newPeptideId, dose: newDose, frequency: newFrequency, experienceLevel: newTier }]);
     setNewPeptideId('');
     setNewDose('');
     setNewFrequency('');
