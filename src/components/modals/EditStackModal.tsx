@@ -326,7 +326,46 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
                   </Select>
                 </div>
 
+                <div>
+                  <Label className="text-xs text-muted-foreground">Experience level</Label>
+                  <div className="mt-1 grid grid-cols-4 gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="Experience level">
+                    {TIER_LABELS.map(t => {
+                      const active = newTier === t.value;
+                      return (
+                        <button
+                          key={t.value}
+                          type="button"
+                          role="tab"
+                          aria-selected={active}
+                          onClick={() => {
+                            setNewTier(t.value);
+                            const p = findPeptideOrBlend(newPeptideId) as { dosing?: Record<string, string> } | null;
+                            const src = p?.dosing?.[t.value];
+                            if (src) {
+                              const { dose, frequency } = splitDosing(src);
+                              setNewDose(dose);
+                              setNewFrequency(frequency);
+                            }
+                          }}
+                          className={cn(
+                            'min-h-[36px] rounded-md px-2 text-xs font-medium transition-colors',
+                            active
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Auto-fills the recommended dose for this tier. You can still edit below.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
+
                   <div>
                     <Label className="text-xs text-muted-foreground">Dose</Label>
                     <Input
