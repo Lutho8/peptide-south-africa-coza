@@ -56,10 +56,12 @@ export default function BloodworkPage() {
   const [result, setResult] = useState<BloodworkScanResult | null>(null);
   const [labReportId, setLabReportId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [stackActivated, setStackActivated] = useState(false);
   const lastTierRef = useRef<'baseline' | 'deep' | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const progress = useScanProgress();
+
 
   // Post-purchase return handler — fires when user comes back from the shop.
   useEffect(() => {
