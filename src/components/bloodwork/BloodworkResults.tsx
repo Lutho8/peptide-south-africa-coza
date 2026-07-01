@@ -329,22 +329,26 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
       </section>
 
       {/* INSIGHTS */}
-      {result.insights.length > 0 && (
-        <section>
-          <div className="flex items-center gap-3 mb-4 pb-2 border-b border-border/50">
-            <span className="font-mono text-[11px] tracking-widest text-muted-foreground">03 —</span>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Insights</h2>
-          </div>
-          <ol className="space-y-3">
-            {result.insights.map((line, i) => (
-              <li key={i} className="flex gap-3 text-sm text-muted-foreground leading-relaxed">
-                <span className="font-mono text-[10px] text-primary mt-1 shrink-0">{String(i + 1).padStart(2, '0')}</span>
-                <span>{line}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
+      {(() => {
+        const activeInsights = lang === 'de' && result.insights_de && result.insights_de.length ? result.insights_de : result.insights;
+        return activeInsights.length > 0 ? (
+          <section>
+            <div className="flex items-center gap-3 mb-4 pb-2 border-b border-border/50">
+              <span className="font-mono text-[11px] tracking-widest text-muted-foreground">03 —</span>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t.insights}</h2>
+            </div>
+            <ol className="space-y-3">
+              {activeInsights.map((line, i) => (
+                <li key={i} className="flex gap-3 text-sm text-muted-foreground leading-relaxed">
+                  <span className="font-mono text-[10px] text-primary mt-1 shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null;
+      })()}
+
 
       {/* PROTOCOL */}
       <ProtocolSections protocol={result.protocol} goals={result.goals} labReportId={labReportId} />
