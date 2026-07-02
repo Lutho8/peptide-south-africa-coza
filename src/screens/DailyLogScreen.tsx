@@ -270,8 +270,25 @@ export function DailyLogScreen() {
         </div>
       </div>
 
+      {/* Last dose recall — quick "when did I last take X" reminder */}
+      <LastDoseRecall
+        doses={doses}
+        onRepeat={(d: DailyDoseEntry) => {
+          setFormData({
+            peptideId: d.peptide_id,
+            dose: String(d.dose),
+            unit: d.unit,
+            time: format(new Date(), 'HH:mm'),
+            notes: d.notes ?? '',
+          });
+          setSelectedDate(new Date());
+          setIsAddModalOpen(true);
+        }}
+      />
+
       {/* View Toggle */}
       <div className="flex gap-2">
+
         <Button
           variant={showSummary ? 'outline' : 'default'}
           size="sm"
