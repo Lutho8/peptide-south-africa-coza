@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
+import { DosingSchedule } from '@/components/dosage/DosingSchedule';
+import { getAvailableRoutes } from '@/data/dosingRoutes';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { 
@@ -943,7 +945,13 @@ export function DosageScreen() {
                       <div className="p-2 rounded bg-primary/20">
                         <p className="text-primary">Athlete</p>
                         <p className="text-foreground font-medium">{peptide.dosing.athlete}</p>
-                      </div>
+                    </div>
+
+                    {getAvailableRoutes(peptide.id).length > 0 && (
+                      <DosingSchedule peptideId={peptide.id} tier={experienceLevel as any} />
+                    )}
+
+
                     </div>
 
                     <div className="text-xs space-y-1">

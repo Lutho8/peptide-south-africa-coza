@@ -20,6 +20,8 @@ import { InsulinNeedleGuide } from '@/components/doses/InsulinNeedleGuide';
 import { UnitToggle } from '@/components/doses/UnitToggle';
 import { DoseLoggedAnimation } from '@/components/doses/DoseLoggedAnimation';
 import { EditDoseModal } from '@/components/doses/EditDoseModal';
+import { LastDoseRecall } from '@/components/doses/LastDoseRecall';
+import type { DailyDoseEntry } from '@/hooks/useDailyDoses';
 import { z } from 'zod';
 
 const doseEntrySchema = z.object({
@@ -268,8 +270,25 @@ export function DailyLogScreen() {
         </div>
       </div>
 
+      {/* Last dose recall — quick "when did I last take X" reminder */}
+      <LastDoseRecall
+        doses={doses}
+        onRepeat={(d: DailyDoseEntry) => {
+          setFormData({
+            peptideId: d.peptide_id,
+            dose: String(d.dose),
+            unit: d.unit,
+            time: format(new Date(), 'HH:mm'),
+            notes: d.notes ?? '',
+          });
+          setSelectedDate(new Date());
+          setIsAddModalOpen(true);
+        }}
+      />
+
       {/* View Toggle */}
       <div className="flex gap-2">
+
         <Button
           variant={showSummary ? 'outline' : 'default'}
           size="sm"

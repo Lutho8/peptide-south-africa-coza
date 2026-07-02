@@ -7,6 +7,8 @@ import { JsonLd, buildPeptideSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Badge } from '@/components/ui/badge';
+import { DosingSchedule } from '@/components/dosage/DosingSchedule';
+import { getAvailableRoutes } from '@/data/dosingRoutes';
 
 const BASE_URL = 'https://peptide-mastery.lovable.app';
 
@@ -157,6 +159,11 @@ export default function PeptideEntityPage() {
           <p className="text-sm text-muted-foreground mt-2">
             Frequency: {peptide.frequency} · Duration: {peptide.recommendedDuration || 'Consult research'}
           </p>
+          {getAvailableRoutes(peptide.id).length > 0 && (
+            <div className="mt-4">
+              <DosingSchedule peptideId={peptide.id} />
+            </div>
+          )}
         </section>
 
         {/* Expected Results Timeline */}
