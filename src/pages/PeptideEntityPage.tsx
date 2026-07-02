@@ -159,6 +159,11 @@ export default function PeptideEntityPage() {
           <p className="text-sm text-muted-foreground mt-2">
             Frequency: {peptide.frequency} · Duration: {peptide.recommendedDuration || 'Consult research'}
           </p>
+          {getAvailableRoutes(peptide.id).length > 0 && (
+            <div className="mt-4">
+              <DosingSchedule peptideId={peptide.id} />
+            </div>
+          )}
         </section>
 
         {/* Expected Results Timeline */}
