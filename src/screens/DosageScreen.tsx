@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
+import { DosingSchedule } from '@/components/dosage/DosingSchedule';
+import { getAvailableRoutes } from '@/data/dosingRoutes';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { 
