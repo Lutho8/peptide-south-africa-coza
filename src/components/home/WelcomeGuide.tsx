@@ -18,7 +18,9 @@ export function WelcomeGuide({ onDoseTracker, onBodyStats, onCycles, onResearch 
 
   useEffect(() => {
     const wasDismissed = localStorage.getItem(STORAGE_KEY);
-    if (!wasDismissed) setDismissed(false);
+    const tourDone = localStorage.getItem('rtd-dashboard-tour-done');
+    // Hide for anyone who already dismissed OR who has completed the guided tour
+    if (!wasDismissed && !tourDone) setDismissed(false);
   }, []);
 
   const handleDismiss = () => {

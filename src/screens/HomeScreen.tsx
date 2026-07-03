@@ -150,7 +150,7 @@ export function HomeScreen({
       </motion.div>
 
       {/* Today's Reminders Preview */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} data-tour="reminders">
         <TodaysReminders 
           reminders={reminders} 
           onViewSettings={() => navigate('/reminders/today')}
@@ -180,7 +180,7 @@ export function HomeScreen({
       </motion.div>
 
       {/* Active Protocol Preview */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} data-tour="active-stack">
         <ActiveStackPreview onViewStack={onNavigateStack} />
       </motion.div>
 

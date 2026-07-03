@@ -1,105 +1,46 @@
-## 1. Dual-route dosing on peptides
+## Goal
 
-Extend each affected peptide's `dosing` field so it can carry per-route AND per-sex tables, while remaining backward-compatible with the current flat `{ beginner / intermediate / advanced / athlete }` shape.
+The existing `DashboardTour` overlay is oversized on mobile, tooltip placement drifts off-screen, and copy doesn't explain *why* each feature helps the user achieve their goals. It also re-shows for users who already finished it in a prior version. Rebuild the tour as a mobile-first, centered, one-time guided walkthrough with clear "what this does for you" copy.
 
-New optional shape (added alongside the existing flat shape):
+## Changes
 
-```ts
-dosing: {
-  // legacy flat fields kept for fallback
-  beginner: string; intermediate: string; advanced: string; athlete: string;
+### 1. `src/components/onboarding/DashboardTour.tsx` — rewrite
+- **Centered modal layout on mobile** (< 640px): instead of an anchored tooltip that jumps around the viewport, render a centered bottom-sheet-style card (max-h 85vh, w-[calc(100%-24px)], rounded-t-3xl on mobile / rounded-2xl centered on desktop). The spotlight ring still highlights the target element via smooth scroll + SVG cutout, but the explanation card lives in a fixed, predictable position (bottom sheet mobile / centered card desktop) so it never overflows.
+- **Expanded, goal-oriented copy** for each step — each step gets:
+  - `title` (what the feature is)
+  - `body` (what it does)
+  - `benefit` ("Helps you: ..." line in an accent pill) tying it to a user goal (adherence, safe cycling, informed dosing, progress tracking, etc.)
+- **New 7-step flow** covering the full dashboard:
+  1. Welcome header — orientation
+  2. Today's Doses — daily adherence
+  3. Active Stack Preview — current protocol at a glance
+  4. Quick Actions — jump into Dose Tracker / Body Stats / Cycles / Peptides / Bloodwork / Inventory
+  5. Reminders — never miss a dose
+  6. Bloodwork/Transformation entry — measure results
+  7. Bottom nav + profile — navigation & account
+- **One-time enforcement**: keep `rtd-dashboard-tour-done` localStorage key. Add a second guard — a per-user key `rtd-dashboard-tour-done:<userId>` — so completed users never see it again even after cache clears where the profile persists. `resetDashboardTour()` clears both. The tour only auto-mounts when neither key is set AND `force` is false.
+- **Skip = Done**: pressing Skip also writes the completion key (currently already does; keep). Add explicit "Don't show again" affordance on step 1.
+- **Mobile polish**: touch targets ≥ 44px, larger Next button, safe-area padding (`env(safe-area-inset-bottom)`), backdrop tap does not dismiss (prevents accidental skips), ESC closes on desktop only.
+- **Spotlight fix**: when the target isn't found or is off-screen, skip the ring and just show the centered card with the step content — no more empty highlight or off-screen jumps.
 
-  routes?: {
-    intranasal?: DoseTable;
-    subcutaneous?: DoseTable;
-  };
-}
+### 2. `src/components/home/WelcomeGuide.tsx` — hide for tour-completed users
+Currently `WelcomeGuide` shows for anyone who hasn't dismissed it, independent of the tour. Update its mount check so it also hides when `rtd-dashboard-tour-done` (or the per-user variant) is set. Users who finished the tour don't need the quick-start card taking space on mobile.
 
-type DoseTable = {
-  beginner:     { male: string; female: string; notes?: string };
-  intermediate: { male: string; female: string; notes?: string };
-  advanced:     { male: string; female: string; notes?: string };
-  athlete:      { male: string; female: string; notes?: string };
-  frequency: string;           // e.g. "1× daily, morning"
-  cycleDays: string;           // e.g. "14–30 on / 14 off"
-  sourceNotes?: string;        // latest reference summary
-}
-```
+### 3. `src/screens/HomeScreen.tsx` — add missing `data-tour` anchors
+Add `data-tour="active-stack"` to the ActiveStackPreview wrapper, `data-tour="reminders"` to TodaysReminders wrapper, and `data-tour="transformation"` (reuse Body Composition card) so the new step targets resolve. `bottom-nav` and `profile-avatar` anchors already exist elsewhere — verify and add if missing.
 
-Peptides updated with both routes (from an audit of `administration:` fields):
-- Selank
-- Semax
-- N-Acetyl Selank Amidate (NA-Selank)
-- N-Acetyl Semax Amidate (NA-Semax)
-- DSIP (already flagged "Subcutaneous or intranasal")
-- Oxytocin
-- PT-141 (verify — commonly SC + intranasal)
-- Kisspeptin-10 (verify — SC + intranasal)
-- Epithalon / N-Acetyl Epitalon Amidate (SC + intranasal variants)
-- VIP (intranasal + SC in research use)
-- P21 (intranasal + SC in research use)
+### 4. Backfill: mark existing users as tour-complete
+For users whose account was created before this change AND who already have logged doses / stacks (signal they've used the app), auto-set the completion key on first mount so they never see the new tour. Implemented client-side in `DashboardTour` mount effect: if `storage.getDailyDoses().length > 0` OR active stack exists, write the completion key and skip mounting.
 
-Dose values sourced from current peer-reviewed and research-community references (2024–2026); each peptide's `sourceNotes` will summarize provenance. Female values default to 80–85% of male dose where sex-specific data is thin, with an explicit `notes` caveat, matching the app's existing "research-only" framing.
+## Technical notes
 
-Example (Selank):
+- No backend changes.
+- No new dependencies.
+- Keeps existing `resetDashboardTour()` export so Settings "Replay tour" still works (and `WelcomeGuide` "Take the 60-second guided tour" button).
+- All copy stays English-only per project memory.
+- Preserves the orange accent styling.
 
-```text
-Intranasal:  Beginner 250 mcg/day M / 200 mcg/day F
-             Intermediate 500 mcg/day M / 400 mcg/day F
-             Advanced 750 mcg/day M / 600 mcg/day F
-             Athlete 500 mcg 2×/day M / 400 mcg 2×/day F
-Subcutaneous: Beginner 100 mcg/day M / 80 mcg/day F
-              Intermediate 200 mcg/day M / 160 mcg/day F
-              Advanced 300 mcg/day M / 250 mcg/day F
-              Athlete 200 mcg 2×/day M / 160 mcg 2×/day F
-```
+## Out of scope
 
-Similar tables added for Semax and each peptide above. All values remain in **mg/IU/units**, never mcg-only in UI (mcg used only for intranasal micro-doses where clinically standard; UI will render both mcg and mg equivalents).
-
-## 2. Dashboard Dosing Schedule surfaces
-
-- `RecommendedDoseDisplay`, `DosingReference`, `DosageScreen`, `PeptideEntityPage`, and `EditStackModal` read the new `dosing.routes` when present.
-- Add a **Route toggle** (Intranasal / Subcutaneous) that appears only when both routes exist for the selected peptide.
-- Add a **Sex indicator** driven by `profile.sex` (Male / Female / Not set → shows male column with note).
-- The existing experience-tier segmented control (Beginner / Intermediate / Advanced / Athlete) drives the row lookup.
-- Fallback: if `dosing.routes` is missing, behavior is unchanged.
-
-## 3. "Last dose" reminder in Daily Log
-
-In `DailyLogScreen`, above the day's entry list, render a compact `LastDoseRecall` card per peptide currently in the user's active stack:
-
-```text
-┌─ Selank ─────────────────────────────┐
-│ Last dose: 250 mcg intranasal        │
-│ Yesterday, 08:12 · 22 h 40 m ago     │
-│ Next due (schedule): today ~08:00    │
-│ [Log same again]  [Edit]             │
-└──────────────────────────────────────┘
-```
-
-Data source:
-- Pull last entry from `useDailyDoses` filtered by `peptideId`, sorted desc.
-- Compute "next due" from the peptide's `frequency` + `cycleProgress` (already in `src/lib/cycleProgress.ts`).
-- "Log same again" pre-fills the Add-Dose modal with the previous dose/unit/route/time = now.
-
-Mobile: card is 44px+ touch targets, horizontally scrollable when >2 active peptides, matches existing glassmorphism style.
-
-## 4. Files to edit
-
-- `src/data/peptides.ts` — add `dosing.routes` to Semax (and any others in this file).
-- `src/data/peptidesExpanded.ts` — add `dosing.routes` to Selank, DSIP, Oxytocin, PT-141, Kisspeptin, Epithalon variants, VIP, P21.
-- `src/data/peptidesNewCatalog.ts` — NA-Selank, NA-Semax.
-- `src/components/dosage/RecommendedDoseDisplay.tsx` — route/sex-aware lookup + toggle.
-- `src/components/doses/DosingReference.tsx` — respect selected route.
-- `src/components/modals/EditStackModal.tsx` — persist `route` per StackItem alongside `experienceLevel`.
-- `src/screens/DosageScreen.tsx` and `src/pages/PeptideEntityPage.tsx` — render both route tables when present.
-- `src/screens/DailyLogScreen.tsx` — insert new `LastDoseRecall` list.
-- `src/components/doses/LastDoseRecall.tsx` — new component.
-- `src/hooks/useDailyDoses.ts` — expose `getLastDoseByPeptide(peptideId)`.
-
-No schema/RLS changes required; `route` is stored client-side on the StackItem and daily dose entry (already free-form JSON).
-
-## 5. Out of scope
-
-- No changes to bloodwork, notifications infrastructure, or cycle reminder scheduler beyond reading `dosing.routes` when computing next dose text.
-- No new AI calls; dosing data is static.
+- No redesign of individual dashboard cards themselves (only the tour + welcome guide).
+- No changes to `OnboardingChecklist` (separate account-level flow).
