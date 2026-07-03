@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, X, Sparkles, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { getDoseLogs, getActiveStack } from '@/services/storage';
+import { getDoseLogs, getActiveStack, getUserProfile } from '@/services/storage';
+import { getGoalLabels } from '@/data/goalMap';
 
 const GLOBAL_KEY = 'rtd-dashboard-tour-done';
 const userKey = (uid?: string | null) => `rtd-dashboard-tour-done:${uid || 'anon'}`;
@@ -29,50 +30,94 @@ interface TourStep {
   benefit: string;
 }
 
-const STEPS: TourStep[] = [
-  {
-    target: 'welcome-header',
-    title: 'Welcome to your Dashboard',
-    body: 'This is your home base — every peptide tool, log, reminder, and result lives here in one place.',
-    benefit: 'Helps you: stay organised across every protocol from a single screen.',
-  },
-  {
-    target: 'todays-doses',
-    title: "Today's Doses",
-    body: 'See what you need to inject or dose today, in mg/IU/units. Tap a dose to log it in seconds.',
-    benefit: 'Helps you: hit daily adherence — the #1 driver of peptide results.',
-  },
-  {
-    target: 'active-stack',
-    title: 'Your Active Stack',
-    body: 'A live view of your current protocol — peptides, doses, timing, and cycle progress at a glance.',
-    benefit: 'Helps you: run safe, structured cycles without losing track of where you are.',
-  },
-  {
-    target: 'reminders',
-    title: 'Smart Reminders',
-    body: 'Push alerts for each dose, snoozeable and per-peptide. Never rely on memory again.',
-    benefit: 'Helps you: never miss a dose, even on split-dose or twice-weekly protocols.',
-  },
-  {
-    target: 'quick-actions',
-    title: 'Quick Actions',
-    body: 'Jump into Dose Tracker, Body Stats, Cycles, Peptides, Bloodwork, and Inventory in one tap.',
-    benefit: 'Helps you: reach any tool in ≤2 taps, from anywhere on the dashboard.',
-  },
-  {
-    target: 'bottom-nav',
-    title: 'Bottom Navigation',
-    body: 'Home, Peptides, Log, Stack, and More — always one tap away at the bottom of your screen.',
-    benefit: 'Helps you: move between core features without scrolling or menus.',
-  },
-  {
-    target: 'profile-avatar',
-    title: 'Profile & Settings',
-    body: 'Your account, notification preferences, data export, and sign-out all live in the top-right avatar.',
-    benefit: 'Helps you: personalise reminders and keep your research data yours.',
-  },
-];
+/**
+ * Build tour steps personalised to the user's profile (goals + experience).
+ * We inject a "For your <goal> goal…" sentence + tailor the benefit line
+ * so each dashboard feature is framed against what the user is trying to achieve.
+ */
+function buildSteps(profile: ReturnType<typeof getUserProfile> | null): TourStep[] {
+  const goals = profile?.goals ?? [];
+  const goalLabels = getGoalLabels(goals);
+  const primaryGoal = goalLabels[0];
+  const experience = profile?.experience ?? 'beginner';
+  const expLabel =
+    experience === 'advanced' ? 'advanced' : experience === 'intermediate' ? 'intermediate' : 'beginner';
+
+  const goalLine = primaryGoal
+    ? `Tailored for your ${primaryGoal.toLowerCase()} goal at ${expLabel} level.`
+    : `Set your goals in Profile to personalise this further.`;
+
+  // Goal-specific benefit copy for the Active Stack step
+  const stackBenefitByGoal: Record<string, string> = {
+    'fat-loss': 'Helps you: sequence GLP-1s + metabolic peptides safely across your cut.',
+    'muscle-gain': 'Helps you: time GH-secretagogues with training days for lean gains.',
+    'recovery': 'Helps you: layer BPC-157/TB-500 healing cycles without overlap.',
+    'longevity': 'Helps you: run long-arc epithalon/MOTS-c cycles with proper breaks.',
+    'cognitive': 'Helps you: rotate nootropic peptides on structured on/off weeks.',
+    'energy': 'Helps you: stack metabolic + GH peptides for daily performance.',
+    'sleep': 'Helps you: dose evening peptides (CJC/Ipamorelin) at the right window.',
+    'metabolic': 'Helps you: track metabolic peptide cycles and bloodwork response.',
+  };
+  const stackBenefit =
+    (goals[0] && stackBenefitByGoal[goals[0]]) ||
+    'Helps you: run safe, structured cycles without losing track of where you are.';
+
+  // Beginner vs advanced framing on the reminders/quick-actions copy
+  const remindersBody =
+    experience === 'beginner'
+      ? 'Push alerts for each dose, snoozeable and per-peptide. Perfect while you build the habit.'
+      : 'Push alerts per-peptide with lead-time and split-dose support — configurable at the peptide level.';
+
+  return [
+    {
+      target: 'welcome-header',
+      title: primaryGoal ? `Your ${primaryGoal} Dashboard` : 'Welcome to your Dashboard',
+      body: `This is your home base — every peptide tool, log, reminder, and result lives here. ${goalLine}`,
+      benefit: 'Helps you: stay organised across every protocol from a single screen.',
+    },
+    {
+      target: 'todays-doses',
+      title: "Today's Doses",
+      body: 'See what you need to inject or dose today, in mg/IU/units. Tap a dose to log it in seconds.',
+      benefit:
+        experience === 'beginner'
+          ? 'Helps you: build the daily habit that drives 90% of peptide results.'
+          : 'Helps you: hit >95% adherence — the #1 driver of measurable results.',
+    },
+    {
+      target: 'active-stack',
+      title: 'Your Active Stack',
+      body: 'A live view of your current protocol — peptides, doses, timing, and cycle progress at a glance.',
+      benefit: stackBenefit,
+    },
+    {
+      target: 'reminders',
+      title: 'Smart Reminders',
+      body: remindersBody,
+      benefit: 'Helps you: never miss a dose, even on split-dose or twice-weekly protocols.',
+    },
+    {
+      target: 'quick-actions',
+      title: 'Quick Actions',
+      body: 'Jump into Dose Tracker, Body Stats, Cycles, Peptides, Bloodwork, and Inventory in one tap.',
+      benefit: primaryGoal
+        ? `Helps you: reach the tools that matter for ${primaryGoal.toLowerCase()} in ≤2 taps.`
+        : 'Helps you: reach any tool in ≤2 taps, from anywhere on the dashboard.',
+    },
+    {
+      target: 'bottom-nav',
+      title: 'Bottom Navigation',
+      body: 'Home, Peptides, Log, Stack, and More — always one tap away at the bottom of your screen.',
+      benefit: 'Helps you: move between core features without scrolling or menus.',
+    },
+    {
+      target: 'profile-avatar',
+      title: 'Profile & Settings',
+      body: 'Your account, notification preferences, data export, and sign-out all live in the top-right avatar.',
+      benefit: 'Helps you: personalise reminders and keep your research data yours.',
+    },
+  ];
+}
 
 interface Rect { top: number; left: number; width: number; height: number; }
 
@@ -118,7 +163,11 @@ export function DashboardTour({ force = false, onClose }: DashboardTourProps) {
     } catch {}
   }, [force, uid]);
 
+  const STEPS = useMemo(() => {
+    try { return buildSteps(getUserProfile()); } catch { return buildSteps(null); }
+  }, [uid, active]);
   const step = STEPS[stepIdx];
+  const pct = Math.round(((stepIdx + 1) / STEPS.length) * 100);
 
   const measure = useCallback(() => {
     if (!step?.target) { setRect(null); return; }
@@ -259,9 +308,18 @@ export function DashboardTour({ force = false, onClose }: DashboardTourProps) {
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-orange-500">
                     Dashboard Tour
                   </p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                     Step {stepIdx + 1} of {STEPS.length}
+                    <span className="text-orange-500 font-semibold">· {pct}%</span>
                   </p>
+                </div>
+              </div>
+              <div className="hidden sm:flex flex-1 mx-3 max-w-[140px] items-center">
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-orange-500 transition-all duration-300"
+                    style={{ width: `${pct}%` }}
+                  />
                 </div>
               </div>
               <button

@@ -7,6 +7,7 @@ import { getAliasesFor, boundedLevenshtein } from '@/data/peptideAliases';
 import { Search, Filter, Star, Check, FlaskConical, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { WidgetHint } from '@/components/onboarding/WidgetHint';
 
 interface PeptidesScreenProps {
   onViewPeptide: (peptide: Peptide) => void;
@@ -123,6 +124,23 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
   return (
     <div className="pb-24 space-y-4 fade-in">
       <h1 className="text-2xl font-bold text-foreground">Peptide Database</h1>
+
+      <WidgetHint
+        id="peptides-intro"
+        title="Browse 98+ peptides — filter, then tap for the full profile"
+        body="Search by name (partial works), or use the filter tabs to narrow by FDA status, testing, stock, and category. Tap any card for dosing, half-life, and study links."
+        steps={[
+          'Type a partial name in the search bar — e.g. "Tesa" or "BPC".',
+          'Use "Janoshik Tested" for third-party verified peptides only.',
+          'Tap a card → Add to Stack to start tracking it.',
+        ]}
+        goalHooks={{
+          'fat-loss': 'try the "Top Longevity" and category filters — Retatrutide, Tirzepatide sit here.',
+          'recovery': 'BPC-157 and TB-500 are your top healing candidates — search either name.',
+          'cognitive': 'search Semax, Selank, or Cerebrolysin for cognitive-edge peptides.',
+        }}
+      />
+
 
       {/* Search Bar */}
       <div className="relative">

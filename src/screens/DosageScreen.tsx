@@ -17,6 +17,7 @@ import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDispl
 import { DosingSchedule } from '@/components/dosage/DosingSchedule';
 import { getAvailableRoutes } from '@/data/dosingRoutes';
 import { cn } from '@/lib/utils';
+import { WidgetHint } from '@/components/onboarding/WidgetHint';
 import { toast } from 'sonner';
 import { 
   getCalculatorSettings, 
@@ -409,6 +410,23 @@ export function DosageScreen() {
           {settingsSaved ? 'Saved!' : 'Save'}
         </Button>
       </div>
+
+      <WidgetHint
+        id="dosage-intro"
+        title="Turn a mg dose into an exact syringe unit count"
+        body="Pick your peptide, vial size, and syringe type — we'll show you the exact units to draw and the recommended schedule for your experience level."
+        steps={[
+          'Select a peptide from the picker below.',
+          'Set your vial mg and bacteriostatic water volume.',
+          'Read your units-per-dose on a U-100 or U-40 syringe — and enable reminders.',
+        ]}
+        goalHooks={{
+          'fat-loss': 'GLP-1 dosing needs weekly titration — start low, use the beginner schedule.',
+          'recovery': 'BPC-157 works best split AM/PM near the injury site.',
+          'muscle-gain': 'CJC/Ipamorelin timing pre-bed aligns with your natural GH pulse.',
+        }}
+      />
+
 
       {/* Notification Permission Banner */}
       {!notificationsEnabled && (
