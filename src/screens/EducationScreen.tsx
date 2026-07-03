@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { StackingMatrix } from '@/components/stacking/StackingMatrix';
+import { WidgetHint } from '@/components/onboarding/WidgetHint';
 
 interface EducationSection {
   id: string;
