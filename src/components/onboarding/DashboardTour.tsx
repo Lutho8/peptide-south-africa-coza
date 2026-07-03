@@ -308,11 +308,19 @@ export function DashboardTour({ force = false, onClose }: DashboardTourProps) {
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-orange-500">
                     Dashboard Tour
                   </p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                     Step {stepIdx + 1} of {STEPS.length}
+                    <span className="text-orange-500 font-semibold">· {pct}%</span>
                   </p>
                 </div>
               </div>
+              <div className="hidden sm:flex flex-1 mx-3 max-w-[140px] items-center">
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-orange-500 transition-all duration-300"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
               <button
                 onClick={close}
                 aria-label="Close tour"
