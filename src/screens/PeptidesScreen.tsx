@@ -125,6 +125,23 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
     <div className="pb-24 space-y-4 fade-in">
       <h1 className="text-2xl font-bold text-foreground">Peptide Database</h1>
 
+      <WidgetHint
+        id="peptides-intro"
+        title="Browse 98+ peptides — filter, then tap for the full profile"
+        body="Search by name (partial works), or use the filter tabs to narrow by FDA status, testing, stock, and category. Tap any card for dosing, half-life, and study links."
+        steps={[
+          'Type a partial name in the search bar — e.g. "Tesa" or "BPC".',
+          'Use "Janoshik Tested" for third-party verified peptides only.',
+          'Tap a card → Add to Stack to start tracking it.',
+        ]}
+        goalHooks={{
+          'fat-loss': 'try the "Top Longevity" and category filters — Retatrutide, Tirzepatide sit here.',
+          'recovery': 'BPC-157 and TB-500 are your top healing candidates — search either name.',
+          'cognitive': 'search Semax, Selank, or Cerebrolysin for cognitive-edge peptides.',
+        }}
+      />
+
+
       {/* Search Bar */}
       <div className="relative">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
