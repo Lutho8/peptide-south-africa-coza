@@ -17,6 +17,7 @@ import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDispl
 import { DosingSchedule } from '@/components/dosage/DosingSchedule';
 import { getAvailableRoutes } from '@/data/dosingRoutes';
 import { cn } from '@/lib/utils';
+import { WidgetHint } from '@/components/onboarding/WidgetHint';
 import { toast } from 'sonner';
 import { 
   getCalculatorSettings, 
