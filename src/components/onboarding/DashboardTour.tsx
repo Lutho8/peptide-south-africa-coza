@@ -163,7 +163,11 @@ export function DashboardTour({ force = false, onClose }: DashboardTourProps) {
     } catch {}
   }, [force, uid]);
 
+  const STEPS = useMemo(() => {
+    try { return buildSteps(getUserProfile()); } catch { return buildSteps(null); }
+  }, [uid, active]);
   const step = STEPS[stepIdx];
+  const pct = Math.round(((stepIdx + 1) / STEPS.length) * 100);
 
   const measure = useCallback(() => {
     if (!step?.target) { setRect(null); return; }
