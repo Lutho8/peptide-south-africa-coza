@@ -7,6 +7,7 @@ import { getAliasesFor, boundedLevenshtein } from '@/data/peptideAliases';
 import { Search, Filter, Star, Check, FlaskConical, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { WidgetHint } from '@/components/onboarding/WidgetHint';
 
 interface PeptidesScreenProps {
   onViewPeptide: (peptide: Peptide) => void;
