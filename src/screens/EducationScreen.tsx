@@ -230,6 +230,23 @@ export function EducationScreen() {
     <div className="pb-24 space-y-6 fade-in">
       <h1 className="text-2xl font-bold text-foreground">Education Hub</h1>
 
+      <WidgetHint
+        id="education-intro"
+        title="Learn what to stack, when, and why"
+        body="Every section here maps to a decision you'll make in your protocol — start with the Stacking Matrix to see which peptides pair safely."
+        steps={[
+          'Open the Stacking Matrix to check any two peptides for synergy or conflict.',
+          'Read Peptide Basics if you\'re new — 2 minutes, no jargon.',
+          'Come back here whenever you\'re about to add something new to your stack.',
+        ]}
+        goalHooks={{
+          'recovery': 'jump to BPC-157 / TB-500 pairing guidance first.',
+          'muscle-gain': 'read the GH-secretagogue timing section for training days.',
+          'longevity': 'the Epithalon / MOTS-c long-arc protocols matter most here.',
+        }}
+      />
+
+
       {/* Educational Sections */}
       <div className="space-y-3">
         {educationSections.map((section) => {
