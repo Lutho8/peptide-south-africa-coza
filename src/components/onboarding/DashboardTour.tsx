@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, X, Sparkles, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { getDoseLogs, getActiveStack } from '@/services/storage';
+import { getDoseLogs, getActiveStack, getUserProfile } from '@/services/storage';
+import { getGoalLabels } from '@/data/goalMap';
 
 const GLOBAL_KEY = 'rtd-dashboard-tour-done';
 const userKey = (uid?: string | null) => `rtd-dashboard-tour-done:${uid || 'anon'}`;
