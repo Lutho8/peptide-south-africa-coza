@@ -600,7 +600,25 @@ export function MyStackScreen() {
 
   return (
     <div className="pb-24 space-y-6 fade-in">
+      <WidgetHint
+        id="mystack-intro"
+        title="Your stack is the source of truth for every dose and cycle"
+        body="Add peptides here to unlock reminders, cycle tracking, dosing schedules, and bloodwork correlations. Everything on the dashboard reads from this list."
+        steps={[
+          'Tap "Edit stack" to add or remove peptides.',
+          'Start a cycle on each item to enable progress tracking and pause/resume.',
+          'Use "Recalculate" if you\'ve been off-schedule to realign your cycle.',
+        ]}
+        goalHooks={{
+          'fat-loss': 'add one GLP-1 (Retatrutide/Tirzepatide) + optionally MOTS-c for metabolic support.',
+          'recovery': 'BPC-157 + TB-500 stack well together for 4–6 week healing blocks.',
+          'muscle-gain': 'CJC-1295 + Ipamorelin is the classic GH-secretagogue starter stack.',
+          'longevity': 'Epithalon + MOTS-c on structured long-arc cycles fits longevity best.',
+        }}
+      />
+
       {/* User Profile Header */}
+
       <GradientCard className="relative overflow-hidden premium-border">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-primary/5 pointer-events-none" />
         <div className="relative flex items-center gap-4">
