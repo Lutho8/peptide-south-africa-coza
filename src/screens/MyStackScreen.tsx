@@ -31,6 +31,7 @@ import { AnimatePresence } from 'framer-motion';
 import { useDailyDoses, type DailyDoseEntry } from '@/hooks/useDailyDoses';
 import { getCycleProgress as computeCycleProgress, cycleStatusLabel, validateBackdate, recalculateCycle, getCyclePhase, getNextDose } from '@/lib/cycleProgress';
 import { BuyStackCard } from '@/components/stack/BuyStackCard';
+import { WidgetHint } from '@/components/onboarding/WidgetHint';
 
 // --- Stack Item Card ---
 interface StackItemProps {
