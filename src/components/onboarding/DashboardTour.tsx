@@ -321,6 +321,7 @@ export function DashboardTour({ force = false, onClose }: DashboardTourProps) {
                     style={{ width: `${pct}%` }}
                   />
                 </div>
+              </div>
               <button
                 onClick={close}
                 aria-label="Close tour"
