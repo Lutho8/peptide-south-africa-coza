@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:native": "vite build --mode native && npx cap sync",
+    "prerender": "node scripts/prerender.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",

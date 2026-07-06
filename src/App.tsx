@@ -3,7 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import AppRouter from "@/AppRouter";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { startCycleNotificationChecker, stopCycleNotificationChecker } from "@/services/cycleNotifications";
 import { Loader2 } from "lucide-react";
@@ -61,8 +62,8 @@ const queryClient = new QueryClient();
 /**
  * Detect if the current URL is an OAuth callback.
  * OAuth providers redirect to /auth/callback?code=xxx
- * With HashRouter, we need to detect this BEFORE the router renders
- * because HashRouter only handles hash-based routes.
+ * We detect this BEFORE the router renders so the code exchange happens
+ * immediately, regardless of whether the active router is Browser or Hash.
  */
 function isOAuthCallback(): boolean {
   const pathname = window.location.pathname;
@@ -83,7 +84,7 @@ const App = () => {
   }, []);
 
   // If this is an OAuth callback, render the callback handler directly
-  // bypassing HashRouter so the code exchange can happen immediately.
+  // bypassing the router so the code exchange can happen immediately.
   if (isCallback) {
     return (
       <QueryClientProvider client={queryClient}>
@@ -103,7 +104,7 @@ const App = () => {
               <Toaster />
               <Sonner />
             </ErrorBoundary>
-            <HashRouter>
+            <AppRouter>
               <ErrorBoundary fallbackTitle="Page failed to load" boundaryName="Router">
                 <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
                   <Routes>
@@ -150,7 +151,7 @@ const App = () => {
                   </Routes>
                 </Suspense>
               </ErrorBoundary>
-            </HashRouter>
+            </AppRouter>
 
             <VercelAnalytics />
           </TooltipProvider>
