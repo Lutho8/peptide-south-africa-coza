@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "ride-the-tide-mcp",
+      "version": "0.1.0",
+      "title": "Ride The Tide Peptide Research"
+    },
+    "tools": [
+      {
+        "name": "list_peptides",
+        "title": "List peptides",
+        "description": "Browse the Ride The Tide peptide research catalog. Optionally filter by category or search term (matches name, short name, or mechanism).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "enum": [
+                "weight-loss",
+                "gh-secretagogue",
+                "healing",
+                "anti-aging",
+                "cognitive",
+                "immune",
+                "skin-hair",
+                "hormonal",
+                "bioregulators",
+                "longevity",
+                "metabolic"
+              ],
+              "description": "Filter by peptide category (e.g. 'weight-loss', 'healing', 'cognitive')."
+            },
+            "search": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Free-text search across name, short name and mechanism."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Max results to return (default 25)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_peptide",
+        "title": "Get peptide details",
+        "description": "Return the full research profile for a single peptide: mechanism, benefits, dosing by experience level, expected results, risks and references.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Peptide id (e.g. 'bpc157', 'ipamorelin', 'retatrutide'). Use list_peptides to discover ids."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "check_stack_compatibility",
+        "title": "Check peptide stack compatibility",
+        "description": "Check the compatibility (synergistic, compatible, caution, avoid) between two peptides using the Ride The Tide stacking matrix.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "peptideId1": {
+              "type": "string",
+              "minLength": 1,
+              "description": "First peptide id (e.g. 'bpc157')."
+            },
+            "peptideId2": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Second peptide id (e.g. 'tb500')."
+            }
+          },
+          "required": [
+            "peptideId1",
+            "peptideId2"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "recommend_peptides_for_goal",
+        "title": "Recommend peptides for a goal",
+        "description": "Return peptides from the Ride The Tide catalog that map to a user goal (fat-loss, muscle-gain, recovery, longevity, cognitive, energy, sleep, metabolic), sorted by longevity score.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "goal": {
+              "type": "string",
+              "enum": [
+                "fat-loss",
+                "muscle-gain",
+                "recovery",
+                "longevity",
+                "cognitive",
+                "energy",
+                "sleep",
+                "metabolic"
+              ],
+              "description": "User goal id."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "description": "Max results (default 8)."
+            }
+          },
+          "required": [
+            "goal"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
