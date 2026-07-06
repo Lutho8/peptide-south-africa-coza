@@ -55,13 +55,11 @@ export function buildOrganizationSchema() {
 export function buildLocalBusinessSchema() {
   return {
     '@context': 'https://schema.org',
-    '@type': 'MedicalBusiness',
+    '@type': 'LocalBusiness',
     '@id': 'https://peptide-south-africa.co.za/#localbusiness',
     name: businessInfo.legalName,
     url: 'https://peptide-south-africa.co.za',
-    logo: 'https://peptide-south-africa.co.za/logo-animated.png',
     image: 'https://peptide-south-africa.co.za/logo-animated.png',
-    email: businessInfo.email,
     telephone: businessInfo.telephone,
     priceRange: 'R500 - R4000',
     address: postalAddressSchema(),
@@ -71,10 +69,6 @@ export function buildLocalBusinessSchema() {
       longitude: businessInfo.geo.longitude,
     },
     areaServed: { '@type': 'Country', name: 'South Africa' },
-    medicalSpecialty: [
-      { '@type': 'MedicalSpecialty', name: 'Endocrinology' },
-      { '@type': 'MedicalSpecialty', name: 'Sports medicine' },
-    ],
   };
 }
 
