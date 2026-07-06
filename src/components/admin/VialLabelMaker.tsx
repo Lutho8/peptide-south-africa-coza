@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { QRCodeSVG } from 'qrcode.react';
+import { logAudit } from '@/lib/auditLog';
 
 interface VialLabel {
   id: string;
@@ -224,6 +225,19 @@ export default function VialLabelMaker() {
     };
 
     setLabels(prev => [...prev, label]);
+    void logAudit({
+      action: 'admin.label_generate',
+      entityType: 'vial_label',
+      entityId: selectedPeptide,
+      metadata: {
+        peptideName,
+        coaAmount: coa,
+        bacWater: bac,
+        dose,
+        doseUnit,
+        concentration: concentrationMgMl,
+      },
+    });
     toast.success(`Label created for ${peptideName}`);
   };
 

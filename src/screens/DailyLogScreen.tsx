@@ -22,6 +22,7 @@ import { DoseLoggedAnimation } from '@/components/doses/DoseLoggedAnimation';
 import { EditDoseModal } from '@/components/doses/EditDoseModal';
 import { LastDoseRecall } from '@/components/doses/LastDoseRecall';
 import type { DailyDoseEntry } from '@/hooks/useDailyDoses';
+import { logAudit } from '@/lib/auditLog';
 import { z } from 'zod';
 
 const doseEntrySchema = z.object({
@@ -155,6 +156,20 @@ export function DailyLogScreen() {
         notes: formData.notes || undefined,
       });
 
+      void logAudit({
+        action: 'dose.create',
+        entityType: 'daily_dose',
+        entityId: formData.peptideId,
+        metadata: {
+          peptide_id: formData.peptideId,
+          peptide_name: peptide?.shortName,
+          dose: doseNumber,
+          unit: formData.unit,
+          date: format(selectedDate, 'yyyy-MM-dd'),
+          time: formData.time,
+        },
+      });
+
       // Trigger haptic + animation
       setShowDoseLoggedAnimation(true);
       if (navigator.vibrate) {
@@ -186,6 +201,7 @@ export function DailyLogScreen() {
   const handleDeleteDose = async (doseId: string) => {
     try {
       await deleteDose(doseId);
+      void logAudit({ action: 'dose.delete', entityType: 'daily_dose', entityId: doseId });
       toast({
         title: 'Dose deleted',
         description: 'Entry removed from your log',
@@ -202,6 +218,12 @@ export function DailyLogScreen() {
   const handleEditSave = async (doseId: string, updates: { time?: string; notes?: string; dose?: number; unit?: 'mg' | 'IU' | 'units' }) => {
     try {
       await updateDose(doseId, updates);
+      void logAudit({
+        action: 'dose.update',
+        entityType: 'daily_dose',
+        entityId: doseId,
+        metadata: updates as Record<string, unknown>,
+      });
       toast({
         title: 'Dose updated',
         description: 'Changes saved successfully',
