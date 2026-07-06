@@ -6,7 +6,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { LANDING_SECTIONS } from '@/lib/landingSections';
 import { useAuth } from '@/contexts/AuthContext';
 import { SEOHead } from '@/components/seo/SEOHead';
-import { JsonLd, buildOrganizationSchema, buildWebSiteSchema, buildFAQSchema } from '@/components/seo/JsonLd';
+import { JsonLd, buildOrganizationSchema, buildWebSiteSchema, buildFAQSchema, buildLocalBusinessSchema } from '@/components/seo/JsonLd';
 import { faqCategories } from './FAQSection';
 
 import { PeptideCategory } from '@/data/peptides';
@@ -69,6 +69,7 @@ export function LandingPage() {
         canonical="https://peptide-mastery.lovable.app"
       />
       <JsonLd data={buildOrganizationSchema()} id="org-schema" />
+      <JsonLd data={buildLocalBusinessSchema()} id="localbusiness-schema" />
       <JsonLd data={buildWebSiteSchema()} id="website-schema" />
       <JsonLd data={buildFAQSchema(allFaqs)} id="faq-schema" />
       <LandingHeader

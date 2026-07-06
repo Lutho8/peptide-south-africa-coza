@@ -124,6 +124,17 @@ export function LandingFooter() {
               Peptides mentioned are for research purposes only and are not approved for human consumption unless specifically noted as FDA-approved medications.
             </p>
           </div>
+          <address className="not-italic text-sm text-muted-foreground mb-6 flex flex-col gap-1 items-center md:items-start" itemScope itemType="https://schema.org/PostalAddress">
+            <span>
+              <span itemProp="streetAddress">De Buurt, Richwood</span>,{' '}
+              <span itemProp="addressLocality">Milnerton</span>,{' '}
+              <span itemProp="postalCode">7441</span>,{' '}
+              <span itemProp="addressRegion">Western Cape</span>, South Africa
+            </span>
+            <a href="tel:+27721790189" className="hover:text-primary transition-colors" itemProp="telephone">
+              +27 72 179 0189
+            </a>
+          </address>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
             <p>© {new Date().getFullYear()} Peptide South Africa. All rights reserved.</p>
             <div className="flex gap-4">

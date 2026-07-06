@@ -1,30 +1,31 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { businessInfo, postalAddressSchema } from '@/data/businessInfo';
 
 interface JsonLdProps {
-  data: Record<string, any>;
+  data: Record<string, any> | Record<string, any>[];
   id?: string;
 }
 
-export function JsonLd({ data, id }: JsonLdProps) {
-  const jsonLdId = id || `jsonld-${data['@type'] || 'default'}`;
-  
-  useEffect(() => {
-    const existing = document.getElementById(jsonLdId);
-    if (existing) existing.remove();
-    
-    const script = document.createElement('script');
-    script.id = jsonLdId;
-    script.type = 'application/ld+json';
-    script.textContent = JSON.stringify(data);
-    document.head.appendChild(script);
-    
-    return () => {
-      const el = document.getElementById(jsonLdId);
-      if (el) el.remove();
-    };
-  }, [data, jsonLdId]);
-
-  return null;
+/**
+ * Emits JSON-LD structured data via Helmet so it is present in server-rendered
+ * / prerendered HTML and read by crawlers without executing JS. Previously this
+ * injected a <script> through document.head in a useEffect, which never runs
+ * for crawlers that don't execute JS — so the structured data was effectively
+ * invisible to search engines. Rendering through Helmet fixes that while still
+ * working client-side. (`id` is accepted for backward compatibility; Helmet
+ * dedupes identical tags automatically.)
+ */
+export function JsonLd({ data }: JsonLdProps) {
+  const items = Array.isArray(data) ? data : [data];
+  return (
+    <Helmet>
+      {items.map((item, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(item)}
+        </script>
+      ))}
+    </Helmet>
+  );
 }
 
 // Reusable schema builders
@@ -36,12 +37,40 @@ export function buildOrganizationSchema() {
     url: 'https://peptide-south-africa.co.za',
     logo: 'https://peptide-south-africa.co.za/logo-animated.png',
     description: 'Peptide research platform providing protocol tracking, dosage guidance, and biomarker analysis.',
-    sameAs: [],
+    email: businessInfo.email,
+    telephone: businessInfo.telephone,
+    address: postalAddressSchema(),
+    sameAs: [
+      'https://peptide-south-africa.com',
+      'https://capetownpeptideclub.co.za',
+    ],
     knowsAbout: [
       'Peptide therapy', 'BPC-157', 'TB-500', 'Retatrutide', 'Tirzepatide',
       'Growth hormone secretagogues', 'Reconstitution', 'Biomarker analysis',
       'Peptide stacking', 'Peptide dosing protocols'
     ]
+  };
+}
+
+export function buildLocalBusinessSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': ['MedicalBusiness', 'LocalBusiness'],
+    '@id': 'https://peptide-south-africa.co.za/#localbusiness',
+    name: businessInfo.legalName,
+    url: 'https://peptide-south-africa.co.za',
+    logo: 'https://peptide-south-africa.co.za/logo-animated.png',
+    image: 'https://peptide-south-africa.co.za/logo-animated.png',
+    email: businessInfo.email,
+    telephone: businessInfo.telephone,
+    address: postalAddressSchema(),
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: businessInfo.geo.latitude,
+      longitude: businessInfo.geo.longitude,
+    },
+    areaServed: { '@type': 'Country', name: 'South Africa' },
+    medicalSpecialty: ['Endocrinology', 'SportsMedicine'],
   };
 }
 
