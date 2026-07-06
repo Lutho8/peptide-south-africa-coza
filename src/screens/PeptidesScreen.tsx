@@ -180,12 +180,15 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
       <div className="relative">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder='Try "Tesa", "BPC", "Sema"… partial names work'
+          placeholder='Search — try "BPC", "cat:healing", "fda:true", "score:>=8"'
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10 bg-card border-border"
         />
       </div>
+      <p className="text-xs text-muted-foreground -mt-2">
+        Showing <span className="font-semibold text-foreground">{filteredPeptides.length}</span> of {peptides.length} peptides
+      </p>
 
       {/* Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
