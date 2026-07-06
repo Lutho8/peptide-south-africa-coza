@@ -163,6 +163,10 @@ export default function AdminDashboard() {
               <Upload className="h-4 w-4" />
               COA Upload
             </TabsTrigger>
+            <TabsTrigger value="audit" className="gap-1.5">
+              <ScrollText className="h-4 w-4" />
+              Audit Log
+            </TabsTrigger>
             <TabsTrigger value="seo" className="gap-1.5" asChild>
               <Link to="/admin/seo">
                 <Search className="h-4 w-4" />
@@ -252,6 +256,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="coa">
             <COAUploadManager />
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <AuditLogViewer />
           </TabsContent>
         </Tabs>
       </div>
