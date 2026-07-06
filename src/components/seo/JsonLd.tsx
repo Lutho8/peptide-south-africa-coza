@@ -63,7 +63,7 @@ export function buildLocalBusinessSchema() {
     image: 'https://peptide-south-africa.co.za/logo-animated.png',
     email: businessInfo.email,
     telephone: businessInfo.telephone,
-    priceRange: '$$',
+    priceRange: 'R500 - R4000',
     address: postalAddressSchema(),
     geo: {
       '@type': 'GeoCoordinates',

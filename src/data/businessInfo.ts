@@ -4,7 +4,7 @@
 // across the ecosystem is a core local-SEO ranking factor.
 
 export const businessInfo = {
-  legalName: 'Peptide South Africa',
+  legalName: 'Peptide South Africa Pty Ltd',
   streetAddress: 'De Buurt, Richwood',
   addressLocality: 'Milnerton',
   addressRegion: 'Western Cape',
