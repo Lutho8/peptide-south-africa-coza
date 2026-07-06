@@ -55,7 +55,7 @@ export function buildOrganizationSchema() {
 export function buildLocalBusinessSchema() {
   return {
     '@context': 'https://schema.org',
-    '@type': ['MedicalBusiness', 'LocalBusiness'],
+    '@type': 'MedicalBusiness',
     '@id': 'https://peptide-south-africa.co.za/#localbusiness',
     name: businessInfo.legalName,
     url: 'https://peptide-south-africa.co.za',
@@ -63,6 +63,7 @@ export function buildLocalBusinessSchema() {
     image: 'https://peptide-south-africa.co.za/logo-animated.png',
     email: businessInfo.email,
     telephone: businessInfo.telephone,
+    priceRange: '$$',
     address: postalAddressSchema(),
     geo: {
       '@type': 'GeoCoordinates',
@@ -70,7 +71,10 @@ export function buildLocalBusinessSchema() {
       longitude: businessInfo.geo.longitude,
     },
     areaServed: { '@type': 'Country', name: 'South Africa' },
-    medicalSpecialty: ['Endocrinology', 'SportsMedicine'],
+    medicalSpecialty: [
+      { '@type': 'MedicalSpecialty', name: 'Endocrinology' },
+      { '@type': 'MedicalSpecialty', name: 'Sports medicine' },
+    ],
   };
 }
 
@@ -148,7 +152,11 @@ export function buildPeptideSchema(peptide: {
     url: `https://peptide-south-africa.co.za/peptides/${peptide.slug}`,
     description: peptide.description,
     medicineSystem: 'WesternConventional',
-    relevantSpecialty: ['Endocrinology', 'Sports Medicine', 'Anti-Aging Medicine'],
+    relevantSpecialty: [
+      { '@type': 'MedicalSpecialty', name: 'Endocrinology' },
+      { '@type': 'MedicalSpecialty', name: 'Sports medicine' },
+      { '@type': 'MedicalSpecialty', name: 'Anti-aging medicine' },
+    ],
     additionalProperty: [
       peptide.molecularWeight && { '@type': 'PropertyValue', name: 'Molecular Weight', value: peptide.molecularWeight },
       peptide.halfLife && { '@type': 'PropertyValue', name: 'Half-Life', value: peptide.halfLife },
