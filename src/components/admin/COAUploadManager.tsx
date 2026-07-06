@@ -15,6 +15,7 @@ import {
 import { peptides } from '@/data/peptides';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { logAudit } from '@/lib/auditLog';
 
 interface ParsedCOA {
   taskNumber: string;
@@ -133,6 +134,13 @@ export default function COAUploadManager() {
     }).catch(() => {
       toast.success(`COA for ${peptideName} saved. See console for data.`);
       console.log('COA Entry:', coaEntry);
+    });
+
+    void logAudit({
+      action: 'admin.coa_upload',
+      entityType: 'peptide',
+      entityId: selectedPeptide,
+      metadata: { peptideName, taskNumber, purity, sampleName },
     });
 
     // Reset form

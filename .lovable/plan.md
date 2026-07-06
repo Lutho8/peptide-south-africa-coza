@@ -1,46 +1,85 @@
-## Goal
+## Scope
 
-The existing `DashboardTour` overlay is oversized on mobile, tooltip placement drifts off-screen, and copy doesn't explain *why* each feature helps the user achieve their goals. It also re-shows for users who already finished it in a prior version. Rebuild the tour as a mobile-first, centered, one-time guided walkthrough with clear "what this does for you" copy.
+Four related fixes across admin, onboarding, and peptide search.
 
-## Changes
+---
 
-### 1. `src/components/onboarding/DashboardTour.tsx` — rewrite
-- **Centered modal layout on mobile** (< 640px): instead of an anchored tooltip that jumps around the viewport, render a centered bottom-sheet-style card (max-h 85vh, w-[calc(100%-24px)], rounded-t-3xl on mobile / rounded-2xl centered on desktop). The spotlight ring still highlights the target element via smooth scroll + SVG cutout, but the explanation card lives in a fixed, predictable position (bottom sheet mobile / centered card desktop) so it never overflows.
-- **Expanded, goal-oriented copy** for each step — each step gets:
-  - `title` (what the feature is)
-  - `body` (what it does)
-  - `benefit` ("Helps you: ..." line in an accent pill) tying it to a user goal (adherence, safe cycling, informed dosing, progress tracking, etc.)
-- **New 7-step flow** covering the full dashboard:
-  1. Welcome header — orientation
-  2. Today's Doses — daily adherence
-  3. Active Stack Preview — current protocol at a glance
-  4. Quick Actions — jump into Dose Tracker / Body Stats / Cycles / Peptides / Bloodwork / Inventory
-  5. Reminders — never miss a dose
-  6. Bloodwork/Transformation entry — measure results
-  7. Bottom nav + profile — navigation & account
-- **One-time enforcement**: keep `rtd-dashboard-tour-done` localStorage key. Add a second guard — a per-user key `rtd-dashboard-tour-done:<userId>` — so completed users never see it again even after cache clears where the profile persists. `resetDashboardTour()` clears both. The tour only auto-mounts when neither key is set AND `force` is false.
-- **Skip = Done**: pressing Skip also writes the completion key (currently already does; keep). Add explicit "Don't show again" affordance on step 1.
-- **Mobile polish**: touch targets ≥ 44px, larger Next button, safe-area padding (`env(safe-area-inset-bottom)`), backdrop tap does not dismiss (prevents accidental skips), ESC closes on desktop only.
-- **Spotlight fix**: when the target isn't found or is off-screen, skip the ring and just show the centered card with the step content — no more empty highlight or off-screen jumps.
+### 1. Audit log for admin actions & dosage changes
 
-### 2. `src/components/home/WelcomeGuide.tsx` — hide for tour-completed users
-Currently `WelcomeGuide` shows for anyone who hasn't dismissed it, independent of the tour. Update its mount check so it also hides when `rtd-dashboard-tour-done` (or the per-user variant) is set. Users who finished the tour don't need the quick-start card taking space on mobile.
+**New table `public.audit_logs`** (migration):
+- `user_id uuid` (actor), `action text` (e.g. `dose.create`, `dose.update`, `dose.delete`, `admin.view_users`, `admin.coa_upload`, `admin.label_generate`, `admin.role_check_failed`), `entity_type text`, `entity_id text`, `metadata jsonb`, `ip text nullable`, `created_at`.
+- GRANTs: `INSERT` for `authenticated` (users log their own), `SELECT` for admins only via `has_role`, `ALL` for `service_role`.
+- RLS:
+  - Insert: `auth.uid() = user_id`.
+  - Select: `public.has_role(auth.uid(), 'admin')`.
 
-### 3. `src/screens/HomeScreen.tsx` — add missing `data-tour` anchors
-Add `data-tour="active-stack"` to the ActiveStackPreview wrapper, `data-tour="reminders"` to TodaysReminders wrapper, and `data-tour="transformation"` (reuse Body Composition card) so the new step targets resolve. `bottom-nav` and `profile-avatar` anchors already exist elsewhere — verify and add if missing.
+**Client helper `src/lib/auditLog.ts`**:
+- `logAudit({ action, entityType?, entityId?, metadata? })` — best-effort insert, swallow errors so audit failures never break user flows.
 
-### 4. Backfill: mark existing users as tour-complete
-For users whose account was created before this change AND who already have logged doses / stacks (signal they've used the app), auto-set the completion key on first mount so they never see the new tour. Implemented client-side in `DashboardTour` mount effect: if `storage.getDailyDoses().length > 0` OR active stack exists, write the completion key and skip mounting.
+**Call sites**:
+- `DailyLogScreen` / dose create + update + delete handlers → `dose.create|update|delete` with peptide id + dose + unit in metadata.
+- `AdminDashboard` mount (success) → `admin.dashboard.open`; failure branch → `admin.role_check_failed` with error message.
+- `COAUploadManager` upload success → `admin.coa_upload`.
+- `VialLabelMaker` generate → `admin.label_generate`.
+
+**Admin viewer**: new tab in `AdminDashboard` → `Audit Log` — paginated table of last 200 rows (actor display_name via join, action, entity, timestamp).
+
+---
+
+### 2. DashboardTour JSX + progress bar correctness
+
+- Re-read `src/components/onboarding/DashboardTour.tsx` end-to-end.
+- Verify:
+  - Every conditional/fragment has matching closing tags (mobile bottom-sheet vs desktop centered branches).
+  - Progress bar: `pct` computed once per step, width bound as inline style `{ width: `${pct}%` }`, container has explicit height + rounded track.
+  - Step dots render `STEPS.length` items, active dot styled distinctly, keyboard focus preserved.
+- Run `tsgo` + a Playwright smoke that opens `/`, forces `localStorage.removeItem('rtd-dashboard-tour-done')`, reloads, and screenshots each of the 7 steps to confirm no runtime errors and the bar fills 14% → 100%.
+
+---
+
+### 3. Improved Peptide Database search & filtering
+
+`src/screens/PeptidesScreen.tsx` upgrades (no data-model changes):
+
+- **Search**
+  - Add token-AND matching: split query on whitespace, every token must match at least one haystack field. Keeps current alias + Levenshtein fallback.
+  - Add scope hints: `cat:healing`, `fda:true`, `janoshik:true`, `stock:in-stock`, `price:<50`, `score:>=8` — parsed via a small `parseQuery()` helper, applied as extra predicates.
+  - Debounce input (150ms) via `useDeferredValue` to keep typing smooth on the full 98-peptide list.
+- **Filters**
+  - Add a Category multi-select chip row (existing `getCategoryLabel` values) above the current filter tabs.
+  - Add a price range slider (min–max) using shadcn `Slider`.
+  - Add "Reset filters" pill when any non-default filter is active.
+- **Sort**
+  - Add `janoshikPurity` and `recentlyAdded` sort options.
+- **Result meta**
+  - Show `X of Y peptides` count + active-filter summary chips (each removable).
+- **Persistence**
+  - Persist last filter + sort in `localStorage` key `rtd-peptides-filters` so power users don't reset on nav.
+
+Widget hint copy unchanged; behavior remains additive.
+
+---
+
+### 4. Restore `has_role` execute permission + client fallback
+
+**Migration** (idempotent, safe to re-run):
+```sql
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.has_active_subscription(uuid) TO authenticated;
+```
+
+**Client fallback in `AdminDashboard.checkAdminAccess`**:
+- Try `supabase.rpc('has_role', ...)` first.
+- If it errors with a permission-denied code (`42501`) OR any error, fall back to a direct `select` on `public.user_roles` filtered by `user_id = auth.uid()` and `role = 'admin'` (RLS already allows the user to read their own rows). Only redirect if both paths return no admin row.
+- Log the fallback path via `logAudit({ action: 'admin.role_check_fallback', metadata: { reason } })` so we notice if the grant regresses again.
+- Mirror the same fallback in `useAccessControl` for consistency (it already uses the direct select — keep as-is, just add the audit ping on failure).
+
+Edge functions `gsc-status`, `gsc-verify-live`, `gsc-resubmit-sitemap` continue to work once the grant is restored (they use the user JWT).
+
+---
 
 ## Technical notes
 
-- No backend changes.
-- No new dependencies.
-- Keeps existing `resetDashboardTour()` export so Settings "Replay tour" still works (and `WelcomeGuide` "Take the 60-second guided tour" button).
-- All copy stays English-only per project memory.
-- Preserves the orange accent styling.
-
-## Out of scope
-
-- No redesign of individual dashboard cards themselves (only the tour + welcome guide).
-- No changes to `OnboardingChecklist` (separate account-level flow).
+- Audit inserts are fire-and-forget; never `await` in a way that blocks UI. Wrap in `try/catch` and log to console only in dev.
+- All new client code is presentation/logic only — no schema drift beyond the two migrations above.
+- Verification: `tsgo` typecheck, `bunx vitest run` for any touched util, Playwright smoke for tour + admin dashboard load (with injected Supabase session).

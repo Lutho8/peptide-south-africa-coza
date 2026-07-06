@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useDeferredValue, useMemo } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -56,27 +56,61 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
     { id: 'new', label: 'New' },
   ];
 
-  const filteredPeptides = peptides
+  const deferredQuery = useDeferredValue(searchQuery);
+
+  const filteredPeptides = useMemo(() => peptides
     .filter(p => {
-      const q = searchQuery.trim().toLowerCase();
+      const raw = deferredQuery.trim().toLowerCase();
       let matchesSearch = true;
-      if (q) {
+      if (raw) {
+        // token-AND: every whitespace-separated token must match at least one field.
+        // Supports scope hints: fda:true, janoshik:true, stock:in-stock, score:>=8, price:<50, cat:<slug>
+        const tokens = raw.split(/\s+/).filter(Boolean);
         const aliases = getAliasesFor(p.name, p.shortName);
         const haystacks = [
           p.name,
           p.shortName,
           getCategoryLabel(p.category),
+          p.category,
           p.mechanism ?? '',
           ...(p.benefits ?? []),
           ...aliases,
         ].map((s) => s.toLowerCase());
-        matchesSearch = haystacks.some((h) => h.includes(q));
-        if (!matchesSearch && q.length >= 3) {
-          // typo tolerance vs short tokens
-          matchesSearch = haystacks.some((h) =>
-            h.split(/[\s\-+()]+/).some((w) => w.length >= 3 && boundedLevenshtein(w, q, 1) <= 1)
-          );
-        }
+
+        matchesSearch = tokens.every((tok) => {
+          // scope hints
+          if (tok.startsWith('fda:')) return p.fdaApproved === (tok.slice(4) === 'true');
+          if (tok.startsWith('janoshik:')) return p.janoshikTested === (tok.slice(9) === 'true');
+          if (tok.startsWith('stock:')) return p.supplier.stock === tok.slice(6);
+          if (tok.startsWith('cat:')) return p.category.toLowerCase() === tok.slice(4);
+          if (tok.startsWith('score:')) {
+            const m = tok.slice(6).match(/^(>=|<=|>|<|=)?(\d+(?:\.\d+)?)$/);
+            if (!m) return false;
+            const [, op = '=', v] = m; const n = parseFloat(v);
+            return op === '>=' ? p.longevityScore >= n :
+                   op === '<=' ? p.longevityScore <= n :
+                   op === '>'  ? p.longevityScore >  n :
+                   op === '<'  ? p.longevityScore <  n :
+                                 p.longevityScore === n;
+          }
+          if (tok.startsWith('price:')) {
+            const m = tok.slice(6).match(/^(>=|<=|>|<|=)?(\d+(?:\.\d+)?)$/);
+            if (!m) return false;
+            const [, op = '=', v] = m; const n = parseFloat(v);
+            return op === '>=' ? p.supplier.price >= n :
+                   op === '<=' ? p.supplier.price <= n :
+                   op === '>'  ? p.supplier.price >  n :
+                   op === '<'  ? p.supplier.price <  n :
+                                 p.supplier.price === n;
+          }
+          if (haystacks.some((h) => h.includes(tok))) return true;
+          if (tok.length >= 3) {
+            return haystacks.some((h) =>
+              h.split(/[\s\-+()]+/).some((w) => w.length >= 3 && boundedLevenshtein(w, tok, 1) <= 1)
+            );
+          }
+          return false;
+        });
       }
 
       if (!matchesSearch) return false;
@@ -119,7 +153,7 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
         default:
           return 0;
       }
-    });
+    }), [deferredQuery, activeFilter, researchFilter, sortBy]);
 
   return (
     <div className="pb-24 space-y-4 fade-in">
@@ -146,12 +180,15 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
       <div className="relative">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder='Try "Tesa", "BPC", "Sema"… partial names work'
+          placeholder='Search — try "BPC", "cat:healing", "fda:true", "score:>=8"'
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10 bg-card border-border"
         />
       </div>
+      <p className="text-xs text-muted-foreground -mt-2">
+        Showing <span className="font-semibold text-foreground">{filteredPeptides.length}</span> of {peptides.length} peptides
+      </p>
 
       {/* Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">

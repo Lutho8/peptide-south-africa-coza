@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload, Search } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload, Search, ScrollText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,8 @@ import { format } from 'date-fns';
 import CRMEnrollmentsTable from '@/components/admin/CRMEnrollmentsTable';
 import VialLabelMaker from '@/components/admin/VialLabelMaker';
 import COAUploadManager from '@/components/admin/COAUploadManager';
+import AuditLogViewer from '@/components/admin/AuditLogViewer';
+import { logAudit } from '@/lib/auditLog';
 
 interface UserRow {
   id: string;
@@ -37,29 +39,63 @@ export default function AdminDashboard() {
       return;
     }
 
+    // Primary: has_role RPC. Fallback: direct user_roles read (RLS lets users
+    // read their own rows). This survives the RPC losing EXECUTE grant.
+    let allowed = false;
+    let usedFallback = false;
+    let primaryError: string | null = null;
+
     try {
       const { data, error } = await supabase.rpc('has_role', {
         _user_id: user.id,
         _role: 'admin',
       });
-
       if (error) throw error;
-
-      if (!data) {
-        toast.error('Access denied. Admin privileges required.');
+      allowed = !!data;
+    } catch (err) {
+      primaryError = err instanceof Error ? err.message : String(err);
+      console.warn('has_role RPC failed, falling back to direct role check', err);
+      usedFallback = true;
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        if (error) throw error;
+        allowed = !!data;
+      } catch (fallbackErr) {
+        console.error('Fallback role check failed', fallbackErr);
+        void logAudit({
+          action: 'admin.role_check_failed',
+          metadata: { primaryError, fallbackError: String(fallbackErr) },
+        });
+        toast.error('Failed to verify admin access');
         navigate('/');
+        setLoading(false);
         return;
       }
-
-      setIsAdmin(true);
-      await loadUsers();
-    } catch (err) {
-      console.error('Admin check failed:', err);
-      toast.error('Failed to verify admin access');
-      navigate('/');
-    } finally {
-      setLoading(false);
     }
+
+    if (usedFallback) {
+      void logAudit({
+        action: 'admin.role_check_fallback',
+        metadata: { reason: primaryError },
+      });
+    }
+
+    if (!allowed) {
+      toast.error('Access denied. Admin privileges required.');
+      navigate('/');
+      setLoading(false);
+      return;
+    }
+
+    setIsAdmin(true);
+    void logAudit({ action: 'admin.dashboard.open' });
+    await loadUsers();
+    setLoading(false);
   };
 
   const loadUsers = async () => {
@@ -126,6 +162,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="coa" className="gap-1.5">
               <Upload className="h-4 w-4" />
               COA Upload
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="gap-1.5">
+              <ScrollText className="h-4 w-4" />
+              Audit Log
             </TabsTrigger>
             <TabsTrigger value="seo" className="gap-1.5" asChild>
               <Link to="/admin/seo">
@@ -216,6 +256,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="coa">
             <COAUploadManager />
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <AuditLogViewer />
           </TabsContent>
         </Tabs>
       </div>
