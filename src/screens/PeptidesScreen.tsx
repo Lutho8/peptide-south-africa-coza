@@ -35,6 +35,17 @@ const researchStatusLabel: Record<ResearchStatus, string> = {
   preclinical: 'Research',
 };
 
+type SortKey = 'longevity' | 'name' | 'price' | 'priceDesc' | 'janoshikPurity' | 'recentlyAdded';
+
+const sortLabels: Record<SortKey, string> = {
+  longevity: 'Longevity Score',
+  name: 'Name (A→Z)',
+  price: 'Price (low → high)',
+  priceDesc: 'Price (high → low)',
+  janoshikPurity: 'Janoshik Purity',
+  recentlyAdded: 'Recently Added',
+};
+
 const researchStatusTabs: { id: ResearchStatus; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'approved', label: 'FDA Approved' },
