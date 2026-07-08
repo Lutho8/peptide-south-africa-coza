@@ -200,25 +200,66 @@ export function getCycles(): Cycle[] {
   return cycles;
 }
 
+// Fire-and-forget audit hook. Dynamic import avoids pulling supabase into any
+// caller that might be running in a non-browser context (SSR/tests).
+function auditFireAndForget(action: string, metadata: Record<string, unknown>) {
+  import('@/lib/auditLog')
+    .then(({ logAudit }) => logAudit({ action, entityType: 'cycle', metadata }))
+    .catch(() => { /* audit must never break dose writes */ });
+}
+
 export function saveCycle(cycle: Cycle): void {
   const cycles = getCycles();
   cycles.push(cycle);
   setStoredData(STORAGE_KEYS.CYCLES, cycles);
+  auditFireAndForget('dose.cycle.create', {
+    cycleId: cycle.id,
+    peptideId: (cycle as any).peptideId,
+    peptideName: (cycle as any).peptideName,
+    doseMg: (cycle as any).doseMg ?? (cycle as any).dose,
+    frequency: (cycle as any).frequency,
+    status: (cycle as any).status,
+  });
 }
 
 export function updateCycle(cycle: Cycle): void {
   const cycles = getCycles();
   const index = cycles.findIndex(c => c.id === cycle.id);
   if (index !== -1) {
+    const before = cycles[index] as any;
     cycles[index] = cycle;
     setStoredData(STORAGE_KEYS.CYCLES, cycles);
+    const after = cycle as any;
+    const diff: Record<string, { before: unknown; after: unknown }> = {};
+    for (const k of ['doseMg', 'dose', 'frequency', 'status', 'startDate', 'endDate']) {
+      if (before?.[k] !== after?.[k]) diff[k] = { before: before?.[k], after: after?.[k] };
+    }
+    auditFireAndForget('dose.cycle.update', {
+      cycleId: cycle.id,
+      peptideId: after.peptideId,
+      diff,
+    });
+    if (before?.status !== after?.status) {
+      auditFireAndForget('dose.cycle.status_change', {
+        cycleId: cycle.id,
+        peptideId: after.peptideId,
+        from: before?.status,
+        to: after?.status,
+      });
+    }
   }
 }
 
 export function deleteCycle(cycleId: string): void {
   const cycles = getCycles();
+  const target = cycles.find(c => c.id === cycleId) as any;
   const filtered = cycles.filter(c => c.id !== cycleId);
   setStoredData(STORAGE_KEYS.CYCLES, filtered);
+  auditFireAndForget('dose.cycle.delete', {
+    cycleId,
+    peptideId: target?.peptideId,
+    peptideName: target?.peptideName,
+  });
 }
 
 // Notification Settings Storage
@@ -361,7 +402,19 @@ export function getActiveStack(): ActiveStackItem[] {
 }
 
 export function saveActiveStack(stack: ActiveStackItem[]): void {
+  const prev = getActiveStack();
   setStoredData(STORAGE_KEYS.ACTIVE_STACK, stack);
+  const prevIds = new Set(prev.map((p: any) => p.peptideId ?? p.id));
+  const nextIds = new Set(stack.map((p: any) => p.peptideId ?? p.id));
+  const addedIds = [...nextIds].filter((id) => !prevIds.has(id));
+  const removedIds = [...prevIds].filter((id) => !nextIds.has(id));
+  import('@/lib/auditLog')
+    .then(({ logAudit }) => logAudit({
+      action: 'dose.stack.update',
+      entityType: 'active_stack',
+      metadata: { addedIds, removedIds, size: stack.length },
+    }))
+    .catch(() => { /* ignore */ });
 }
 
 // Dosage Presets Storage

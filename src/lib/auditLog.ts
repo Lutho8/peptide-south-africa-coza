@@ -4,12 +4,19 @@ export type AuditAction =
   | 'dose.create'
   | 'dose.update'
   | 'dose.delete'
+  | 'dose.cycle.create'
+  | 'dose.cycle.update'
+  | 'dose.cycle.delete'
+  | 'dose.cycle.status_change'
+  | 'dose.cycle.recalculate'
+  | 'dose.stack.update'
   | 'admin.dashboard.open'
   | 'admin.role_check_failed'
   | 'admin.role_check_fallback'
   | 'admin.coa_upload'
   | 'admin.label_generate'
-  | 'admin.view_audit_log';
+  | 'admin.view_audit_log'
+  | 'admin.audit_log.filter';
 
 export interface AuditPayload {
   action: AuditAction | string;

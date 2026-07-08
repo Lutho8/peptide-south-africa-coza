@@ -1,13 +1,23 @@
-import { useState, useDeferredValue, useMemo } from 'react';
+import { useState, useDeferredValue, useMemo, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { peptides, Peptide, PeptideCategory, getCategoryLabel } from '@/data/peptides';
 import { getAliasesFor, boundedLevenshtein } from '@/data/peptideAliases';
-import { Search, Filter, Star, Check, FlaskConical, ShieldCheck } from 'lucide-react';
+import { Search, Filter, Star, Check, FlaskConical, ShieldCheck, Bookmark, BookmarkPlus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { WidgetHint } from '@/components/onboarding/WidgetHint';
+import {
+  listSavedSearches,
+  saveSavedSearch,
+  removeSavedSearch,
+  summarizeSearch,
+  type SavedPeptideSearch,
+} from '@/lib/savedPeptideSearches';
 
 interface PeptidesScreenProps {
   onViewPeptide: (peptide: Peptide) => void;
@@ -23,6 +33,17 @@ const researchStatusLabel: Record<ResearchStatus, string> = {
   phase2: 'Preclinical',
   phase1: 'Preclinical',
   preclinical: 'Research',
+};
+
+type SortKey = 'longevity' | 'name' | 'price' | 'priceDesc' | 'janoshikPurity' | 'recentlyAdded';
+
+const sortLabels: Record<SortKey, string> = {
+  longevity: 'Longevity Score',
+  name: 'Name (A→Z)',
+  price: 'Price (low → high)',
+  priceDesc: 'Price (high → low)',
+  janoshikPurity: 'Janoshik Purity',
+  recentlyAdded: 'Recently Added',
 };
 
 const researchStatusTabs: { id: ResearchStatus; label: string }[] = [
@@ -45,7 +66,12 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const [researchFilter, setResearchFilter] = useState<ResearchStatus>('all');
-  const [sortBy, setSortBy] = useState<'longevity' | 'name' | 'price'>('longevity');
+  const [sortBy, setSortBy] = useState<SortKey>('longevity');
+  const [savedSearches, setSavedSearches] = useState<SavedPeptideSearch[]>(() => listSavedSearches());
+  const [saveName, setSaveName] = useState('');
+  const [saveOpen, setSaveOpen] = useState(false);
+
+  const peptideIndex = useMemo(() => new Map(peptides.map((p, i) => [p.id, i])), []);
 
   const filterTabs: { id: FilterTab; label: string }[] = [
     { id: 'all', label: 'All' },
@@ -150,10 +176,53 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
           return a.name.localeCompare(b.name);
         case 'price':
           return a.supplier.price - b.supplier.price;
+        case 'priceDesc':
+          return b.supplier.price - a.supplier.price;
+        case 'janoshikPurity':
+          return (b.janoshikPurity ?? 0) - (a.janoshikPurity ?? 0);
+        case 'recentlyAdded':
+          return (peptideIndex.get(b.id) ?? 0) - (peptideIndex.get(a.id) ?? 0);
         default:
           return 0;
       }
-    }), [deferredQuery, activeFilter, researchFilter, sortBy]);
+    }), [deferredQuery, activeFilter, researchFilter, sortBy, peptideIndex]);
+
+  const isDirty =
+    searchQuery.trim() !== '' ||
+    activeFilter !== 'all' ||
+    researchFilter !== 'all' ||
+    sortBy !== 'longevity';
+
+  const applySaved = (s: SavedPeptideSearch) => {
+    setSearchQuery(s.query);
+    setActiveFilter(s.activeFilter as FilterTab);
+    setResearchFilter(s.researchFilter as ResearchStatus);
+    setSortBy(s.sortBy as SortKey);
+    toast.success(`Applied "${s.name}"`);
+  };
+
+  const handleSave = () => {
+    const summary = summarizeSearch({
+      query: searchQuery, activeFilter, researchFilter, sortBy,
+    });
+    const rec = saveSavedSearch({
+      name: saveName.trim() || summary,
+      query: searchQuery,
+      activeFilter,
+      researchFilter,
+      sortBy,
+    });
+    setSavedSearches(listSavedSearches());
+    setSaveName('');
+    setSaveOpen(false);
+    toast.success(`Saved "${rec.name}"`);
+  };
+
+  const handleDelete = (id: string) => {
+    removeSavedSearch(id);
+    setSavedSearches(listSavedSearches());
+    toast('Removed saved search');
+  };
 
   return (
     <div className="pb-24 space-y-4 fade-in">
@@ -229,25 +298,79 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
         </div>
       </div>
 
-      {/* Sort Options */}
-      <div className="flex items-center gap-2">
+      {/* Sort + Saved Searches */}
+      <div className="flex items-center gap-2 flex-wrap">
         <Filter size={14} className="text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">Sort by:</span>
-        {(['longevity', 'name', 'price'] as const).map((option) => (
-          <button
-            key={option}
-            onClick={() => setSortBy(option)}
-            className={cn(
-              "px-2 py-1 rounded text-xs transition-all",
-              sortBy === option
-                ? "bg-primary/20 text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {option === 'longevity' ? 'Longevity Score' : 
-             option === 'name' ? 'Name' : 'Price'}
-          </button>
-        ))}
+        <span className="text-xs text-muted-foreground">Sort:</span>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as SortKey)}
+          className="bg-card border border-border rounded px-2 py-1 text-xs text-foreground"
+        >
+          {(Object.keys(sortLabels) as SortKey[]).map((k) => (
+            <option key={k} value={k}>{sortLabels[k]}</option>
+          ))}
+        </select>
+
+        <div className="ml-auto flex items-center gap-2">
+          <Popover open={saveOpen} onOpenChange={setSaveOpen}>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="outline" disabled={!isDirty} className="h-8 gap-1">
+                <BookmarkPlus size={14} /> Save search
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-64 space-y-2">
+              <p className="text-xs text-muted-foreground">
+                {summarizeSearch({ query: searchQuery, activeFilter, researchFilter, sortBy })}
+              </p>
+              <Input
+                autoFocus
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="Name (optional)"
+                className="h-8 text-sm"
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
+              />
+              <Button size="sm" className="w-full" onClick={handleSave}>Save</Button>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="outline" className="h-8 gap-1">
+                <Bookmark size={14} /> Saved ({savedSearches.length})
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-2">
+              {savedSearches.length === 0 ? (
+                <p className="text-xs text-muted-foreground p-2">No saved searches yet.</p>
+              ) : (
+                <div className="space-y-1 max-h-72 overflow-y-auto">
+                  {savedSearches.map((s) => (
+                    <div key={s.id} className="flex items-center gap-2 p-2 rounded hover:bg-muted">
+                      <button
+                        onClick={() => applySaved(s)}
+                        className="flex-1 text-left"
+                      >
+                        <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {summarizeSearch(s)}
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(s.id)}
+                        className="text-muted-foreground hover:text-destructive"
+                        aria-label="Delete saved search"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Peptide Cards */}
