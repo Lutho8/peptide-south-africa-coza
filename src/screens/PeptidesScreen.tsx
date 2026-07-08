@@ -1,13 +1,23 @@
-import { useState, useDeferredValue, useMemo } from 'react';
+import { useState, useDeferredValue, useMemo, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { peptides, Peptide, PeptideCategory, getCategoryLabel } from '@/data/peptides';
 import { getAliasesFor, boundedLevenshtein } from '@/data/peptideAliases';
-import { Search, Filter, Star, Check, FlaskConical, ShieldCheck } from 'lucide-react';
+import { Search, Filter, Star, Check, FlaskConical, ShieldCheck, Bookmark, BookmarkPlus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { WidgetHint } from '@/components/onboarding/WidgetHint';
+import {
+  listSavedSearches,
+  saveSavedSearch,
+  removeSavedSearch,
+  summarizeSearch,
+  type SavedPeptideSearch,
+} from '@/lib/savedPeptideSearches';
 
 interface PeptidesScreenProps {
   onViewPeptide: (peptide: Peptide) => void;
