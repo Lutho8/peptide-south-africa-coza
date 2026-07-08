@@ -176,10 +176,53 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
           return a.name.localeCompare(b.name);
         case 'price':
           return a.supplier.price - b.supplier.price;
+        case 'priceDesc':
+          return b.supplier.price - a.supplier.price;
+        case 'janoshikPurity':
+          return (b.janoshikPurity ?? 0) - (a.janoshikPurity ?? 0);
+        case 'recentlyAdded':
+          return (peptideIndex.get(b.id) ?? 0) - (peptideIndex.get(a.id) ?? 0);
         default:
           return 0;
       }
-    }), [deferredQuery, activeFilter, researchFilter, sortBy]);
+    }), [deferredQuery, activeFilter, researchFilter, sortBy, peptideIndex]);
+
+  const isDirty =
+    searchQuery.trim() !== '' ||
+    activeFilter !== 'all' ||
+    researchFilter !== 'all' ||
+    sortBy !== 'longevity';
+
+  const applySaved = (s: SavedPeptideSearch) => {
+    setSearchQuery(s.query);
+    setActiveFilter(s.activeFilter as FilterTab);
+    setResearchFilter(s.researchFilter as ResearchStatus);
+    setSortBy(s.sortBy as SortKey);
+    toast.success(`Applied "${s.name}"`);
+  };
+
+  const handleSave = () => {
+    const summary = summarizeSearch({
+      query: searchQuery, activeFilter, researchFilter, sortBy,
+    });
+    const rec = saveSavedSearch({
+      name: saveName.trim() || summary,
+      query: searchQuery,
+      activeFilter,
+      researchFilter,
+      sortBy,
+    });
+    setSavedSearches(listSavedSearches());
+    setSaveName('');
+    setSaveOpen(false);
+    toast.success(`Saved "${rec.name}"`);
+  };
+
+  const handleDelete = (id: string) => {
+    removeSavedSearch(id);
+    setSavedSearches(listSavedSearches());
+    toast('Removed saved search');
+  };
 
   return (
     <div className="pb-24 space-y-4 fade-in">
