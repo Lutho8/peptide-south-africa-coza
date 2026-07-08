@@ -55,7 +55,12 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const [researchFilter, setResearchFilter] = useState<ResearchStatus>('all');
-  const [sortBy, setSortBy] = useState<'longevity' | 'name' | 'price'>('longevity');
+  const [sortBy, setSortBy] = useState<SortKey>('longevity');
+  const [savedSearches, setSavedSearches] = useState<SavedPeptideSearch[]>(() => listSavedSearches());
+  const [saveName, setSaveName] = useState('');
+  const [saveOpen, setSaveOpen] = useState(false);
+
+  const peptideIndex = useMemo(() => new Map(peptides.map((p, i) => [p.id, i])), []);
 
   const filterTabs: { id: FilterTab; label: string }[] = [
     { id: 'all', label: 'All' },
