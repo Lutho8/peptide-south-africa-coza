@@ -7,7 +7,7 @@ import { JsonLd, buildHowToSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { GradientCard } from '@/components/ui/GradientCard';
 
-const BASE_URL = 'https://peptide-mastery.lovable.app';
+const BASE_URL = 'https://peptide-south-africa.co.za';
 
 const guideContent: Record<string, { steps: Array<{ name: string; text: string }>; sections: Array<{ title: string; content: string }> }> = {
   reconstitution: {

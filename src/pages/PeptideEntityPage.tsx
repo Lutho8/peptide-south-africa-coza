@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { DosingSchedule } from '@/components/dosage/DosingSchedule';
 import { getAvailableRoutes } from '@/data/dosingRoutes';
 
-const BASE_URL = 'https://peptide-mastery.lovable.app';
+const BASE_URL = 'https://peptide-south-africa.co.za';
 
 export default function PeptideEntityPage() {
   const { slug } = useParams<{ slug: string }>();

@@ -9,7 +9,7 @@ import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Badge } from '@/components/ui/badge';
 
-const BASE_URL = 'https://peptide-mastery.lovable.app';
+const BASE_URL = 'https://peptide-south-africa.co.za';
 
 export default function CategoryHubPage() {
   const { slug } = useParams<{ slug: string }>();
