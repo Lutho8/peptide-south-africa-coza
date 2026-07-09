@@ -285,7 +285,7 @@ export default function VialLabelMaker() {
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: ${theme.printHeader}; border-bottom: 2px solid ${theme.printBorder};">
           <div style="display: flex; align-items: center; gap: 6px;">
             <img src="/logo-animated.png" style="width: 22px; height: 22px;" />
-            <span style="font-weight: 700; font-size: 13px; letter-spacing: 0.5px; color: ${theme.printBorder};">RIDE THE TIDE</span>
+            <span style="font-weight: 700; font-size: 13px; letter-spacing: 0.5px; color: ${theme.printBorder};">PEPTIDE SOUTH AFRICA</span>
           </div>
           <span style="font-size: 8px; color: ${theme.printAccent}; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;">Research Only</span>
         </div>
@@ -494,8 +494,8 @@ export default function VialLabelMaker() {
                     theme.header,
                   )}>
                     <div className="flex items-center gap-2">
-                      <img src="/logo-animated.png" className="w-5 h-5" alt="RTD" />
-                      <span className={cn("font-bold text-xs tracking-wide", theme.accent)}>RIDE THE TIDE</span>
+                      <img src="/logo-animated.png" className="w-5 h-5" alt="PSA" />
+                      <span className={cn("font-bold text-xs tracking-wide", theme.accent)}>PEPTIDE SOUTH AFRICA</span>
                     </div>
                     <span className="text-[8px] font-semibold tracking-widest text-muted-foreground uppercase">Research Only</span>
                   </div>
