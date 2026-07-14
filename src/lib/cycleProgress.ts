@@ -68,6 +68,15 @@ function daysBetween(start: Date, end: Date): number {
   return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
 }
 
+/** Local YYYY-MM-DD (avoids UTC drift from toISOString().split('T')[0]). */
+function localIso(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+
 /**
  * Count logged doses for a cycle's peptide between startDate and now.
  * Daily peptides collapse multiple same-day logs into one occurrence so a
