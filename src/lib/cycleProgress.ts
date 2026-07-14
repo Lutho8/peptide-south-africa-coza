@@ -235,43 +235,61 @@ export function getNextDose(
   cycle: Cycle,
   doses: DailyDoseEntry[] = [],
   now: Date = new Date(),
+  doseTimes?: string[],
 ): NextDoseInfo | null {
   if (cycle.status === 'break') return null;
   const perWeek = parseFrequencyPerWeek(cycle.frequency);
   if (perWeek <= 0) return null;
   const intervalDays = 7 / perWeek;
 
+  const slots = (doseTimes && doseTimes.length > 0)
+    ? doseTimes
+    : (cycle.doseTimes && cycle.doseTimes.length > 0 ? cycle.doseTimes : []);
+
   const logs = matchedDoses(cycle, doses);
+  const todayIso = localIso(now);
+  const nowHM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  // Same-day upcoming slot beats a next-interval calculation.
+  if (slots.length > 0) {
+    const upcomingToday = slots.filter(t => t > nowHM).sort();
+    if (upcomingToday.length > 0) {
+      // Only offer today's next slot if we haven't already logged all today's slots.
+      const loggedToday = logs.filter(l => l.date === todayIso).length;
+      if (loggedToday < slots.length) {
+        return formatNextDose(new Date(todayIso + 'T00:00:00'), upcomingToday[0], now);
+      }
+    }
+  }
+
   let anchor: Date;
-  let time: string | null = null;
+  let time: string | null = slots[0] || null;
 
   if (logs.length === 0) {
     anchor = new Date(cycle.startDate);
-    // No prior log → "next" dose is today (or start date if future)
-    const todayIso = now.toISOString().split('T')[0];
-    const next = anchor > now ? anchor : new Date(todayIso);
+    const next = anchor > now ? anchor : new Date(todayIso + 'T00:00:00');
     return formatNextDose(next, time, now);
   }
 
   const last = logs[logs.length - 1];
-  anchor = new Date(last.date);
-  time = last.time || null;
+  anchor = new Date(last.date + 'T00:00:00');
   const next = new Date(anchor);
   next.setDate(next.getDate() + Math.max(1, Math.round(intervalDays)));
-  return formatNextDose(next, time, now);
+  return formatNextDose(next, time ?? last.time ?? null, now);
 }
 
 function formatNextDose(next: Date, time: string | null, now: Date): NextDoseInfo {
-  const today = new Date(now.toISOString().split('T')[0]);
-  const nextDay = new Date(next.toISOString().split('T')[0]);
+  const today = new Date(localIso(now) + 'T00:00:00');
+  const nextDay = new Date(localIso(next) + 'T00:00:00');
   const days = Math.round((nextDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   let label: string;
   if (days < 0) label = `${Math.abs(days)}d overdue`;
   else if (days === 0) label = time ? `Today ${time}` : 'Today';
   else if (days === 1) label = time ? `Tomorrow ${time}` : 'Tomorrow';
   else label = `in ${days} days`;
-  return { date: nextDay.toISOString().split('T')[0], time, daysFromToday: days, label };
+  return { date: localIso(nextDay), time, daysFromToday: days, label };
 }
+
 
 export type BackdateConflictReason =
   | 'before_start'
