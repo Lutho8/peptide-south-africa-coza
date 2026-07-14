@@ -239,7 +239,12 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
                       Today · {splitParts > 1 ? `${splitParts} sub-doses = 1 complete dose` : '1 administration = 1 complete dose'}
                     </p>
                     {doseTimes.map((t, i) => {
-                      const subLogged = todaySubdoseCount > i;
+                      const slotMin = toMin(t);
+                      // Match a logged dose within ±90 min of this slot. Fall back
+                      // to positional count only when no logs have a timestamp.
+                      const subLogged = loggedSlotMins.length > 0
+                        ? loggedSlotMins.some(m => Math.abs(m - slotMin) <= 90)
+                        : todaySubdoseCount > i;
                       return (
                         <div key={i} className="flex items-center justify-between text-[11px]">
                           <span className="text-foreground">
