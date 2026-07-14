@@ -1,85 +1,43 @@
-## Scope
+## Re-verify + polish: reminder & split-dose stack
 
-Three additive upgrades: peptide search sort/saved-searches, audit log filters + pagination, and complete dose-audit coverage across stack/cycle screens.
+Verified all four items ship correctly. Found four small correctness/UX issues while auditing. Fix them in a single focused pass.
 
----
+### Issues found
 
-### 1. Peptide Database — sort options + saved searches
+1. **UTC date drift** — `getNextDose` / `formatNextDose` in `src/lib/cycleProgress.ts` use `new Date().toISOString().split('T')[0]` to derive "today". For SA users (UTC+2) that's the previous UTC day, so "Today 09:00" can show as "Tomorrow" late at night. Fix: local-date helper.
 
-`src/screens/PeptidesScreen.tsx`:
+2. **Weekly cadence past-time fallback** — `computeNextFireAt` adds a fixed `+24h` when the computed fire is in the past. For a weekly peptide that produces a next-fire tomorrow instead of +7 days. Fix: advance by the frequency interval (`7 / perWeek` days, min 1).
 
-- **Sort options** (extend existing `sortBy`): add `janoshikPurity`, `recentlyAdded`, `priceAsc`, `priceDesc`. Expose via a shadcn `Select` in the filter row.
-- **Saved searches** — new lightweight local store `src/lib/savedPeptideSearches.ts` (localStorage key `rtd-peptide-saved-searches`):
-  - Shape: `{ id, name, query, activeFilter, researchFilter, sortBy, createdAt }`.
-  - Helpers: `list()`, `save(entry)`, `remove(id)`, `rename(id, name)`.
-- **UI** in the filters strip:
-  - "Save search" button (opens a small inline popover with a name field, defaults to a summary like `"fda + score>=8"`). Disabled when no filters differ from defaults.
-  - "Saved" dropdown listing entries — clicking one applies its query/filters/sort in a single state update. Each row has a trash icon to delete.
-  - Toast on save/apply/delete.
-- No schema changes; entirely client-side per device (matches existing `rtd-peptides-filters` pattern from the previous plan).
+3. **Multiple daily times → next time selection** — `getNextDose` always uses the last logged time and ignores `cycle.doseTimes`. When splitParts>1 and it's currently 10:00 with slots ["08:00","20:00"], bell should say "Today 20:00", not the last log's time. Fix: when the anchor date is today and doseTimes has upcoming slots, pick the next slot ≥ now; otherwise fall back to first slot on next interval day.
 
----
+4. **Sub-dose "Logged" indicator order** — In `ActiveStackPreview.tsx` the collapsible marks slots logged by `todaySubdoseCount > i`, so logging PM first paints AM as logged. Fix: compare each slot's HH:MM against the actual logged times for today (allow ±90 min tolerance) so the correct slot lights up.
 
-### 2. Audit Log tab — filters + pagination
+### Files to edit
 
-`src/components/admin/AuditLogViewer.tsx`:
+- `src/lib/cycleProgress.ts`
+  - Add `localIso(d)` helper.
+  - Replace both `toISOString().split('T')[0]` calls in `getNextDose` and `formatNextDose` with `localIso`.
+  - In `getNextDose`, accept optional `doseTimes: string[]` and when the next date is today, pick the next slot ≥ current HH:MM; when it's a future date, use `doseTimes[0]`.
+  - In `computeNextFireAt`, when `fireAt <= now`, roll forward by `max(1, round(7/perWeek))` days instead of a hard 24h.
 
-- **Filter controls** above the table (all optional, AND-combined):
-  - **Action type**: multi-select of distinct actions present in the current window plus known constants from `AuditAction` union.
-  - **Date range**: two shadcn date pickers (`from`, `to`) — sends `created_at >= from` / `< to+1d`.
-  - **Target user**: text input matching against `user_id` (UUID prefix) OR a display name via join to `profiles` (fetched once).
-- **Pagination**:
-  - Page size 50, server-side using `.range(offset, offset+49)` and `count: 'exact'` on the query.
-  - Prev / Next buttons + `Page X of Y` + total count.
-  - Reset to page 1 whenever any filter changes.
-- **Query building**: single `buildQuery()` helper composes `.eq('action', ...)` / `.in('action', ...)`, `.gte`/`.lt` on `created_at`, `.ilike` on joined profile name (via `profiles!inner(display_name)` select), and `.or('user_id.ilike.%q%')` when the input parses as a UUID fragment.
-- Preserve existing free-text `filter` input as a client-side narrowing over the current page.
-- Fire `admin.view_audit_log` once per mount (unchanged), plus a per-filter `admin.audit_log.filter` ping with the applied criteria (debounced, best-effort).
+- `src/services/pushScheduler.ts`
+  - Pass `cycle.doseTimes` into the updated `getNextDose` via `computeNextFireAt` (already receives `preferredTime` per slot — no behavior change needed once #2 lands).
 
----
+- `src/components/home/StackReminderBell.tsx`
+  - Pass `cycle.doseTimes` into `getNextDose(cycle, doses, undefined, cycle.doseTimes)` so the "Next: …" line reflects the upcoming slot for split-dose peptides.
 
-### 3. Complete dosage-change audit coverage
+- `src/components/home/ActiveStackPreview.tsx`
+  - Replace `subLogged = todaySubdoseCount > i` with a per-slot check that scans today's logged doses for a time within ±90 min of `t`; falls back to count-order only when logs have no time.
 
-Goal: every path that creates, edits, or removes a scheduled or logged dose emits an audit entry.
+### Non-goals
 
-**Storage-layer helper** `src/services/storage.ts` (or a thin wrapper next to the existing dose CRUD): add opt-in audit hooks so we don't have to instrument every caller. Where `storage.ts` already exposes `saveCycle`, `updateCycle`, `deleteCycle`, `saveActiveStack`, wrap each with a `logAudit` call:
+- No schema changes, no new fields, no migration.
+- No new UI (no snooze presets, no test-fire button — those were the "enhance" option, not chosen).
+- No changes to `splitParts` persistence, `Collapsible` layout, or bell popover chrome.
 
-- `saveCycle` → `dose.cycle.create` with `{ cycleId, peptideId, peptideName, doseMg, frequency }`.
-- `updateCycle` → `dose.cycle.update` with a diff (`{ before: {...}, after: {...} }`) for `doseMg`, `frequency`, `status`, `startDate`, `endDate`.
-- `deleteCycle` → `dose.cycle.delete` with `{ cycleId, peptideId }`.
-- `saveActiveStack` → `dose.stack.update` with `{ addedIds, removedIds, changedIds }` computed against previous stack snapshot.
+### Verification
 
-**Screen-level call sites** that bypass the storage helpers (or need richer metadata):
-
-- `src/screens/CycleManagementScreen.tsx`:
-  - `handleAddCycle`, `handleTogglePause`, `handleMarkComplete`, `handleDelete`, `handleReset` → each already calls `saveCycle`/`updateCycle`/`deleteCycle`. Rely on the wrapper.
-  - Additionally emit `dose.cycle.status_change` when status transitions (pause/resume/complete) with explicit before/after status.
-- `src/screens/MyStackScreen.tsx`:
-  - `saveActiveStack` wrapper covers stack edits.
-  - `handlePauseCycle`, `handleStartCycle`, `handleCompleteCycle`, `handleSavePauseEdit`, and the recalculation path each already go through `updateCycle`/`saveCycle` — wrapper covers them; add extra `dose.cycle.recalculate` when `recalculateCycle` reports `changed`.
-- `src/components/doses/EditDoseModal.tsx` — inspect and add `dose.update` for its save handler (metadata: `doseId`, `before`, `after`).
-- `src/components/doses/EditCyclePanel.tsx` — add `dose.cycle.update` on its submit (in addition to whatever storage call runs, to guarantee coverage if it takes an alternate path).
-- `src/screens/DailyLogScreen.tsx` — existing `dose.create|update|delete` unchanged.
-
-**New audit actions** added to the `AuditAction` union in `src/lib/auditLog.ts`:
-
-```
-dose.cycle.create
-dose.cycle.update
-dose.cycle.delete
-dose.cycle.status_change
-dose.cycle.recalculate
-dose.stack.update
-admin.audit_log.filter
-```
-
-All inserts remain fire-and-forget via `logAudit`.
-
----
-
-## Technical notes
-
-- No schema/migration changes; `audit_logs` already exists with correct RLS/GRANTs.
-- Saved-search store is local per browser to match the existing filter-persistence pattern.
-- Audit wrapper in `storage.ts` must swallow errors so audit failures never break dose writes.
-- Verification: `tsgo` typecheck; Playwright smoke on `/admin` audit tab (apply date range + action filter, page next/prev, screenshot); on Peptides screen (save a search, reload, re-apply from dropdown).
+- Typecheck.
+- Manual: with cycle `Retatrutide weekly, doseTimes ["09:00"]`, log a dose Wednesday 09:00 → bell shows "Next: in 7 days", not "Tomorrow 09:00".
+- Manual: with `MOTS-c splitParts=2, doseTimes ["08:00","20:00"]`, at 12:00 log the AM slot → PM slot shows "Upcoming" (not both).
+- Manual (SA timezone): at 22:00 local, "Today 09:00" scheduled for tomorrow morning displays as "Tomorrow 09:00", not "in 2 days".
