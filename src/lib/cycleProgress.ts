@@ -438,7 +438,7 @@ export function computeNextFireAt(
   leadMinutes: number = 0,
   now: Date = new Date(),
 ): number | null {
-  const next = getNextDose(cycle, doses, now);
+  const next = getNextDose(cycle, doses, now, [preferredTime]);
   if (!next) return null;
   const time = next.time || preferredTime;
   const [h, m] = time.split(':').map(Number);
@@ -446,7 +446,9 @@ export function computeNextFireAt(
   dt.setHours(Number.isFinite(h) ? h : 9, Number.isFinite(m) ? m : 0, 0, 0);
   let fireAt = dt.getTime() - leadMinutes * 60_000;
   if (fireAt <= now.getTime()) {
-    fireAt += 24 * 60 * 60_000;
+    const perWeek = parseFrequencyPerWeek(cycle.frequency);
+    const stepDays = perWeek > 0 ? Math.max(1, Math.round(7 / perWeek)) : 1;
+    fireAt += stepDays * 24 * 60 * 60_000;
   }
   return fireAt;
 }
