@@ -165,9 +165,18 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
               : splitParts === 2 ? ['08:00', '20:00'] : splitParts === 3 ? ['08:00', '14:00', '20:00'] : ['09:00'];
           const loggedDates = cycle ? getLoggedDoseDates(cycle, doses) : new Set<string>();
           const todayIso = new Date().toISOString().split('T')[0];
-          const todaySubdoseCount = doses.filter(
+          const todaysLogs = doses.filter(
             d => d.date === todayIso && (d.peptide_id === item.peptideId || d.peptide_name === peptide.name)
-          ).length;
+          );
+          const todaySubdoseCount = todaysLogs.length;
+          // Convert HH:MM to minutes for tolerant matching.
+          const toMin = (t: string) => {
+            const [h, m] = t.split(':').map(Number);
+            return (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0);
+          };
+          const loggedSlotMins = todaysLogs
+            .map(l => (l.time ? toMin(l.time) : null))
+            .filter((v): v is number => v !== null);
           const expandable = !!cycle;
 
           return (
