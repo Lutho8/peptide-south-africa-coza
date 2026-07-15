@@ -1,43 +1,44 @@
-## Re-verify + polish: reminder & split-dose stack
+# Fix Semax/Selank dosing display + mobile tap targets
 
-Verified all four items ship correctly. Found four small correctness/UX issues while auditing. Fix them in a single focused pass.
+## Problem
+1. Peptide entity + Dosage screen show Semax/Selank only in **mcg** and users can't tell the SubQ dose in **mg/units** — even though `ROUTE_DOSING` already contains a `subcutaneous` table, its values are also in mcg, so the SubQ tab looks like "just more intranasal numbers".
+2. Project standard (Core memory) is: **mg, IU, or units only — never mcg.**
+3. Mobile users report unclickable CTAs on the dosing card: the route toggle (36px), sex toggle (32px), and tier chips are below the 44px minimum, and the whole card is narrow on 360px screens.
 
-### Issues found
+## Changes
 
-1. **UTC date drift** — `getNextDose` / `formatNextDose` in `src/lib/cycleProgress.ts` use `new Date().toISOString().split('T')[0]` to derive "today". For SA users (UTC+2) that's the previous UTC day, so "Today 09:00" can show as "Tomorrow" late at night. Fix: local-date helper.
+### 1. `src/data/dosingRoutes.ts` — mg-first for SubQ, mg + mcg reference for intranasal
+Rewrite the Semax, Selank, NA-Selank-Amidate, NA-Semax-Amidate (and any other mcg-only entries: DSIP, Oxytocin, PT-141, Kisspeptin, VIP, P21 where applicable) so every `DoseCell.male/female` string is expressed in **mg** as the primary unit, with the mcg equivalent appended in parentheses for intranasal micro-doses only.
 
-2. **Weekly cadence past-time fallback** — `computeNextFireAt` adds a fixed `+24h` when the computed fire is in the past. For a weekly peptide that produces a next-fire tomorrow instead of +7 days. Fix: advance by the frequency interval (`7 / perWeek` days, min 1).
+Examples:
+- Selank SubQ intermediate male: `0.2 mg / day` (was `200 mcg / day`)
+- Selank intranasal intermediate male: `0.5 mg / day (500 mcg)`
+- Semax SubQ athlete male: `0.25 mg × 2 / day`
+- Semax intranasal beginner: `0.3 mg / day (300 mcg)`
 
-3. **Multiple daily times → next time selection** — `getNextDose` always uses the last logged time and ignores `cycle.doseTimes`. When splitParts>1 and it's currently 10:00 with slots ["08:00","20:00"], bell should say "Today 20:00", not the last log's time. Fix: when the anchor date is today and doseTimes has upcoming slots, pick the next slot ≥ now; otherwise fall back to first slot on next interval day.
+Update the file header comment to reflect the mg-first rule and remove the "mcg allowed" carve-out. Update `sourceNotes` where they reference mcg. Keep frequencies/cycle strings untouched.
 
-4. **Sub-dose "Logged" indicator order** — In `ActiveStackPreview.tsx` the collapsible marks slots logged by `todaySubdoseCount > i`, so logging PM first paints AM as logged. Fix: compare each slot's HH:MM against the actual logged times for today (allow ±90 min tolerance) so the correct slot lights up.
+### 2. `src/components/dosage/DosingSchedule.tsx` — SubQ-first default + mg/units helper + bigger touch targets
+- When both routes exist, default the selected route to **subcutaneous** (users complained SubQ was hidden). Intranasal remains one tap away.
+- Under each active tier cell, render a small "≈ X units (U-40)" line by feeding the parsed dose through the existing `parseDose` + `convertDose` helpers from `src/lib/doseMath.ts` (same pattern as `RecommendedDoseDisplay`). Skip the units line for intranasal (no syringe).
+- Raise minimum tap sizes to meet the 44px rule from Core memory:
+  - Route tabs: `min-h-[44px]`, `px-3`, larger icon + label
+  - Sex tabs: `min-h-[44px]`, `px-3`
+  - Tier cards: `min-h-[80px]` and full-width tap area (already button, just enlarge)
+- Add `touch-manipulation` class to all interactive elements to remove the 300ms tap delay on iOS.
+- Ensure the card lays out cleanly at 360px: switch tier grid to `grid-cols-2` on mobile (already), but reduce inner padding on `<sm` so nothing overflows.
 
-### Files to edit
+### 3. Peptide entity + Dosage screen — no logic changes
+`PeptideEntityPage` and `DosageScreen` already mount `<DosingSchedule>` when routes exist. They pick up the SubQ-first default automatically. No changes required beyond a quick visual verification.
 
-- `src/lib/cycleProgress.ts`
-  - Add `localIso(d)` helper.
-  - Replace both `toISOString().split('T')[0]` calls in `getNextDose` and `formatNextDose` with `localIso`.
-  - In `getNextDose`, accept optional `doseTimes: string[]` and when the next date is today, pick the next slot ≥ current HH:MM; when it's a future date, use `doseTimes[0]`.
-  - In `computeNextFireAt`, when `fireAt <= now`, roll forward by `max(1, round(7/perWeek))` days instead of a hard 24h.
+### 4. Verify with typecheck
+Run `tsgo` after edits — nothing else to test since this is a pure data + presentation change.
 
-- `src/services/pushScheduler.ts`
-  - Pass `cycle.doseTimes` into the updated `getNextDose` via `computeNextFireAt` (already receives `preferredTime` per slot — no behavior change needed once #2 lands).
+## Files touched
+- `src/data/dosingRoutes.ts` (data rewrite, mcg → mg)
+- `src/components/dosage/DosingSchedule.tsx` (default route, units line, 44px targets)
 
-- `src/components/home/StackReminderBell.tsx`
-  - Pass `cycle.doseTimes` into `getNextDose(cycle, doses, undefined, cycle.doseTimes)` so the "Next: …" line reflects the upcoming slot for split-dose peptides.
-
-- `src/components/home/ActiveStackPreview.tsx`
-  - Replace `subLogged = todaySubdoseCount > i` with a per-slot check that scans today's logged doses for a time within ±90 min of `t`; falls back to count-order only when logs have no time.
-
-### Non-goals
-
-- No schema changes, no new fields, no migration.
-- No new UI (no snooze presets, no test-fire button — those were the "enhance" option, not chosen).
-- No changes to `splitParts` persistence, `Collapsible` layout, or bell popover chrome.
-
-### Verification
-
-- Typecheck.
-- Manual: with cycle `Retatrutide weekly, doseTimes ["09:00"]`, log a dose Wednesday 09:00 → bell shows "Next: in 7 days", not "Tomorrow 09:00".
-- Manual: with `MOTS-c splitParts=2, doseTimes ["08:00","20:00"]`, at 12:00 log the AM slot → PM slot shows "Upcoming" (not both).
-- Manual (SA timezone): at 22:00 local, "Today 09:00" scheduled for tomorrow morning displays as "Tomorrow 09:00", not "in 2 days".
+## Out of scope (not requested)
+- No changes to intranasal-only peptides that legitimately have no SubQ route
+- No changes to Daily Log, cycle scheduler, or reminder logic
+- No broader mobile audit beyond the dosing card the user pointed to
