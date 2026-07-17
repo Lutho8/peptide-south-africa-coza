@@ -43,7 +43,7 @@ const footerLinks: Record<string, FooterLink[]> = {
     { label: 'Contact', href: 'mailto:contact@peptide-south-africa.com' },
   ],
   Network: [
-    { label: 'RTD Research Peptides', href: 'https://peptide-south-africa.com' },
+    { label: 'PSA Research Peptides', href: 'https://peptide-south-africa.com' },
     { label: 'Cape Town Peptide Club', href: 'https://capetownpeptideclub.co.za' },
     { label: 'WhatsApp Us', href: 'https://wa.me/491624747159?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20RTD' },
   ],
