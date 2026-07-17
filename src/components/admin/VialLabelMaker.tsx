@@ -246,7 +246,7 @@ export default function VialLabelMaker() {
   };
 
   const handleCopyLabel = async (label: VialLabel) => {
-    const text = `RTD | ${label.peptideName}\n${label.coaAmount}mg COA / ${label.bacWater}mL BAC\nConc: ${label.concentration}mg/mL\nDose: ${label.dosePerInjection}${label.doseUnit} = ${label.units}u (${label.cc}cc)\nRecon: ${label.reconDate} | Exp: ${label.expiryDate}${label.batchNumber ? `\nBatch: ${label.batchNumber}` : ''}${label.purity && label.showPurity ? `\nPurity: ${label.purity}` : ''}`;
+    const text = `PEPTIDE SOUTH AFRICA | ${label.peptideName}\n${label.coaAmount}mg COA / ${label.bacWater}mL BAC\nConc: ${label.concentration}mg/mL\nDose: ${label.dosePerInjection}${label.doseUnit} = ${label.units}u (${label.cc}cc)\nRecon: ${label.reconDate} | Exp: ${label.expiryDate}${label.batchNumber ? `\nBatch: ${label.batchNumber}` : ''}${label.purity && label.showPurity ? `\nPurity: ${label.purity}` : ''}`;
     try {
       await navigator.clipboard.writeText(text);
       setCopied(label.id);
@@ -333,7 +333,7 @@ export default function VialLabelMaker() {
             <Tag className="h-5 w-5 text-primary" />
             Professional Vial Label Maker
           </CardTitle>
-          <CardDescription>Create pharmaceutical-grade labels with RTD branding, QR codes, and reconstitution details</CardDescription>
+          <CardDescription>Create pharmaceutical-grade labels with Peptide South Africa branding, QR codes, and reconstitution details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Peptide / COA / BAC inputs */}
@@ -380,7 +380,7 @@ export default function VialLabelMaker() {
             </div>
             <div>
               <Label>Batch # (optional)</Label>
-              <Input value={batchNumber} onChange={e => setBatchNumber(e.target.value)} placeholder="e.g. RTD-2026-001" className="mt-1" />
+              <Input value={batchNumber} onChange={e => setBatchNumber(e.target.value)} placeholder="e.g. PSA-2026-001" className="mt-1" />
             </div>
             <div className="flex items-end gap-2">
               <div className="flex items-center gap-2 pb-2">
