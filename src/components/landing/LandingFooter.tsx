@@ -43,9 +43,9 @@ const footerLinks: Record<string, FooterLink[]> = {
     { label: 'Contact', href: 'mailto:contact@peptide-south-africa.com' },
   ],
   Network: [
-    { label: 'PSA Research Peptides', href: 'https://peptide-south-africa.com' },
+    { label: 'PSA Research Peptides', href: 'https://peptide-south-africa.com?utm_source=tracker&utm_medium=footer&utm_campaign=buy_peptides' },
     { label: 'Cape Town Peptide Club', href: 'https://capetownpeptideclub.co.za' },
-    { label: 'WhatsApp Us', href: 'https://wa.me/491624747159?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20RTD' },
+    { label: 'WhatsApp Us', href: 'https://wa.me/27641344646?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20Peptide%20South%20Africa' },
   ],
 };
 
