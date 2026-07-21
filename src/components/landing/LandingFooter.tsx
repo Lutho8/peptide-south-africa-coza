@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Twitter, Mail, Linkedin } from 'lucide-react';
 import logoIcon from '@/assets/logo-icon.png';
 import { blogPosts } from '@/data/blogPosts';
+import { businessInfo } from '@/data/businessInfo';
 
 type FooterLink = { label: string; href: string; isRoute?: boolean; external?: boolean };
 
