@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Twitter, Mail, Linkedin } from 'lucide-react';
 import logoIcon from '@/assets/logo-icon.png';
 import { blogPosts } from '@/data/blogPosts';
+import { businessInfo } from '@/data/businessInfo';
 
 type FooterLink = { label: string; href: string; isRoute?: boolean; external?: boolean };
 
@@ -131,8 +132,8 @@ export function LandingFooter() {
               <span itemProp="postalCode">7441</span>,{' '}
               <span itemProp="addressRegion">Western Cape</span>, South Africa
             </span>
-            <a href="tel:+27721790189" className="hover:text-primary transition-colors" itemProp="telephone">
-              +27 72 179 0189
+            <a href={`tel:${businessInfo.telephone}`} className="hover:text-primary transition-colors" itemProp="telephone">
+              {businessInfo.telephoneDisplay}
             </a>
           </address>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">

@@ -37,7 +37,9 @@ function unitsHint(peptideId: string, doseStr: string): string | null {
   const conc = resolveConcentration(peptideId, getStoredVialSize(peptideId));
   const out = convertDose(parsed, conc.mgPerMl, 'U-40');
   if (!out) return null;
-  return `≈ ${Math.round(out.units)} units (U-40)`;
+  // Show 1 decimal for sub-unit doses so low-mass peptides don't display "≈ 0 units".
+  const display = out.units >= 10 ? Math.round(out.units).toString() : out.units.toFixed(1);
+  return `≈ ${display} units (U-40)`;
 }
 
 /**
