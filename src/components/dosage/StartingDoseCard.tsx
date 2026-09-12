@@ -31,7 +31,7 @@ export function StartingDoseCard({ peptideId, peptideName }: { peptideId: string
         </ol>
         <a className="mt-3 inline-block text-primary underline" href="/?tab=daily-log">Open Daily Log</a>
       </details>
-      {reference.reviewedAt && <p className="text-xs text-muted-foreground">Reference reviewed {reference.reviewedAt}. Read the linked prescribing information for contraindications and the complete instructions.</p>}
+      {reference.reviewedAt && <p className="text-xs text-muted-foreground">Reference reviewed {reference.reviewedAt}.{reference.labels.length > 0 ? ' Read the linked prescribing information for contraindications and the complete instructions.' : ''}</p>}
     </section>
   );
 }
