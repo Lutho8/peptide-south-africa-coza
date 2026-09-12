@@ -70,7 +70,7 @@ const authStorage = isBrowser
       removeItem: (k: string) => { delete memoryStore[k]; },
     };
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database, 'tracker'>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   db: {
     schema: 'tracker',
   },

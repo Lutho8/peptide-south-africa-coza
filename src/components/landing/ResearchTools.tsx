@@ -1,5 +1,6 @@
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpenCheck, LayoutDashboard, Search } from 'lucide-react';
+import { Calculator, LayoutDashboard, Search } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ResearchToolsProps {
@@ -8,6 +9,7 @@ interface ResearchToolsProps {
 }
 
 export function ResearchTools({ onSearchClick, onStartClick }: ResearchToolsProps) {
+  const navigate = useNavigate();
   const tools = [
     {
       icon: Search,
@@ -24,11 +26,11 @@ export function ResearchTools({ onSearchClick, onStartClick }: ResearchToolsProp
       onClick: onStartClick,
     },
     {
-      icon: BookOpenCheck,
-      title: 'Understand the two pathways',
-      description: 'Separate guided clinical questions from independent research before you continue.',
+      icon: Calculator,
+      title: 'U-40 & U-100 calculator',
+      description: 'Convert mg, mcg, mL and syringe markings from your exact concentration. No sign-in needed.',
       color: 'from-green-500 to-emerald-500',
-      onClick: onStartClick,
+      onClick: () => navigate('/calculator'),
     },
   ];
 
@@ -44,7 +46,7 @@ export function ResearchTools({ onSearchClick, onStartClick }: ResearchToolsProp
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Research Tools</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Three clear places to begin, without a product quiz or an automatically generated stack.
+            Calculate a measurement, explore the evidence, or open your tracking dashboard.
           </p>
         </motion.div>
 
@@ -60,6 +62,7 @@ export function ResearchTools({ onSearchClick, onStartClick }: ResearchToolsProp
               <Card 
                 className="h-full group hover:border-accent/50 transition-all duration-300 cursor-pointer bg-card/50 backdrop-blur-sm"
                 onClick={tool.onClick}
+                role="button" tabIndex={0} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); tool.onClick?.(); } }}
               >
                 <CardHeader>
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>

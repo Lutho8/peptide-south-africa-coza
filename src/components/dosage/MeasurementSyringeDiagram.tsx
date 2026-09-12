@@ -1,3 +1,4 @@
+import { formatMeasurementNumber } from '@/lib/measurementMath';
 import { cn } from '@/lib/utils';
 import type { MeasurementSyringeType } from '@/lib/measurementMath';
 
@@ -16,7 +17,7 @@ const BARREL_WIDTH = 284;
 const BARREL_HEIGHT = 44;
 
 function formatMark(value: number): string {
-  return Number(value.toFixed(2)).toString();
+  return formatMeasurementNumber(value, 4);
 }
 
 export function MeasurementSyringeDiagram({

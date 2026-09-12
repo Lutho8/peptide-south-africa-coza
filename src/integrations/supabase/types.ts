@@ -337,6 +337,12 @@ type GeneratedDatabase = {
         }
         Relationships: []
       }
+      daily_checkins: {
+        Row: { id: string; user_id: string; date: string; observed_at: string; metrics: Json; created_at: string; updated_at: string }
+        Insert: { id?: string; user_id: string; date: string; observed_at: string; metrics: Json; created_at?: string; updated_at?: string }
+        Update: { date?: string; observed_at?: string; metrics?: Json; updated_at?: string }
+        Relationships: []
+      }
       daily_doses: {
         Row: {
           created_at: string

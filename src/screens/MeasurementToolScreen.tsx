@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { MeasurementReference } from '@/components/dosage/MeasurementReference';
 import { MeasurementSyringeDiagram } from '@/components/dosage/MeasurementSyringeDiagram';
 import { CompanionNav, type CompanionSection } from '@/components/companion/CompanionNav';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,8 @@ import {
   calculateMeasurement,
   type MeasurementAmountUnit,
   type MeasurementSyringeType,
+  formatMeasurementNumber,
+  isMeasurableMark,
 } from '@/lib/measurementMath';
 import {
   formatMeasurementSchedule,
@@ -76,7 +79,7 @@ function parsePositive(value: string): number {
 }
 
 function formatNumber(value: number, decimals = 3): string {
-  return Number(value.toFixed(decimals)).toString();
+  return formatMeasurementNumber(value, decimals);
 }
 
 function createPresetId(): string {
@@ -101,9 +104,10 @@ function modeIcon(mode: MeasurementGuidanceMode) {
 interface MeasurementToolScreenProps {
   initialSection?: CompanionSection;
   onSectionChange?: (section: CompanionSection) => void;
+  calculatorOnly?: boolean;
 }
 
-export function MeasurementToolScreen({ initialSection, onSectionChange }: MeasurementToolScreenProps = {}) {
+export function MeasurementToolScreen({ initialSection, onSectionChange, calculatorOnly = false }: MeasurementToolScreenProps = {}) {
   const { user } = useAuth();
   const saved = useMemo(() => getCalculatorSettings(), []);
   const selectableCompounds = useMemo(() => getAllSelectablePeptides(), []);
@@ -111,19 +115,20 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
   const [guidanceMode, setGuidanceMode] = useState<MeasurementGuidanceMode>(savedGuidanceMode(saved.experienceLevel));
   const [vialAmount, setVialAmount] = useState(saved.savedAt ? saved.lastVialSize : '');
   const [diluentVolume, setDiluentVolume] = useState(saved.savedAt ? saved.lastBacWater : '');
-  const [enteredAmount, setEnteredAmount] = useState(saved.savedAt ? saved.lastTargetDose : '');
-  const [enteredUnit, setEnteredUnit] = useState<MeasurementAmountUnit>('mg');
+  const [enteredAmount, setEnteredAmount] = useState(saved.savedAt && saved.lastTargetUnit ? saved.lastTargetDose : '');
+  const [enteredUnit, setEnteredUnit] = useState<MeasurementAmountUnit>(saved.lastTargetUnit || 'mg');
   const [syringeType, setSyringeType] = useState<MeasurementSyringeType | ''>(() => {
     if (!saved.savedAt || saved.syringeType === 'u50') return '';
     return saved.syringeType === 'u100' ? 'U-100' : 'U-40';
   });
   const [barrelCapacityMl, setBarrelCapacityMl] = useState('');
+  const [markIncrement, setMarkIncrement] = useState('');
   const [scheduleMode, setScheduleMode] = useState<MeasurementScheduleMode>('not-recorded');
   const [scheduleDetails, setScheduleDetails] = useState('');
   const [recordedItems, setRecordedItems] = useState<ActiveStackItem[]>(() => getActiveStack());
   const [presets, setPresets] = useState<DosagePreset[]>(() => getDosagePresets());
   const [presetName, setPresetName] = useState('');
-  const [companionSection, setCompanionSection] = useState<CompanionSection>(initialSection ?? initialCompanionSection);
+  const [companionSection, setCompanionSection] = useState<CompanionSection>(calculatorOnly ? 'measure' : initialSection ?? initialCompanionSection);
   const trackedForUser = useRef<string | null>(null);
 
   useEffect(() => {
@@ -204,9 +209,10 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
       lastVialSize: vialAmount,
       lastBacWater: diluentVolume,
       lastTargetDose: enteredAmount,
+      lastTargetUnit: enteredUnit,
       lastSelectedPeptide: selectedCompoundId,
     });
-  }, [diluentVolume, enteredAmount, guidanceMode, result, selectedCompoundId, syringeType, vialAmount]);
+  }, [diluentVolume, enteredAmount, enteredUnit, guidanceMode, result, selectedCompoundId, syringeType, vialAmount]);
 
   const clearMeasurement = () => {
     setVialAmount('');
@@ -215,6 +221,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
     setEnteredUnit('mg');
     setSyringeType('');
     setBarrelCapacityMl('');
+    setMarkIncrement('');
     setScheduleMode('not-recorded');
     setScheduleDetails('');
     setPresetName('');
@@ -238,6 +245,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
       setDiluentVolume('');
       setSyringeType('');
       setBarrelCapacityMl('');
+    setMarkIncrement('');
       toast.info('Recorded amount and schedule loaded. Confirm the vial and physical syringe separately.');
       return;
     }
@@ -262,7 +270,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
   };
 
   const savePreset = () => {
-    if (!result || !syringeType) {
+    if (!result || !syringeType || !result.fitsSelectedBarrel || (markIncrement && !isMeasurableMark(result.syringeUnits, Number(markIncrement)))) {
       toast.error('Complete and verify the measurement before saving it.');
       return;
     }
@@ -295,7 +303,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
   };
 
   const saveMeasurementToJournal = async () => {
-    if (!user || !result || !syringeType) return;
+    if (!user || !result || !syringeType || !result.fitsSelectedBarrel || (markIncrement && !isMeasurableMark(result.syringeUnits, Number(markIncrement)))) return;
     const compoundName = selectedCompound?.name || 'Custom measurement';
     const equation = `${formatNumber(result.targetAmountMg)} mg ÷ ${formatNumber(result.concentrationMgPerMl)} mg/mL = ${formatNumber(result.volumeMl)} mL × ${result.syringeUnitsPerMl} units/mL = ${formatNumber(result.syringeUnits, 2)} units`;
     try {
@@ -304,7 +312,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
         entry_type: 'measurement',
         peptide_id: selectedCompoundId || null,
         title: `${compoundName} measurement`,
-        body: `${equation}\n\nRecorded schedule: ${scheduleLabel}\nPhysical syringe: ${syringeType} · ${barrelCapacityMl} mL\n\nSaved from deterministic calculator values; this is not a dosing recommendation.`,
+        body: `Vial: ${vialAmount} mg; diluent: ${diluentVolume} mL; amount: ${enteredAmount} ${enteredUnit}.\n${equation}\n\nRecorded schedule: ${scheduleLabel}\nPhysical syringe: ${syringeType} · ${barrelCapacityMl} mL\n\nSaved from deterministic calculator values; this is not a dosing recommendation.`,
       });
       void recordCompanionEvent(user.id, 'journal_entry_created', { entry_type: 'measurement' });
       toast.success('Measurement saved to your private journal.');
@@ -360,10 +368,10 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
         {companionSection === 'measure' && <Button type="button" variant="outline" size="sm" onClick={clearMeasurement}><Eraser className="mr-2 h-4 w-4" />Clear measurement</Button>}
       </header>
 
-      <CompanionNav active={companionSection} onChange={changeCompanionSection} />
+      {!calculatorOnly && <CompanionNav active={companionSection} onChange={changeCompanionSection} />}
 
       {companionSection === 'measure' ? <>
-      {guidanceMode === 'beginner' ? <BeginnerReconstitutionPrimer /> : null}
+      {guidanceMode === 'beginner' ? <details className="rounded-xl border border-border p-4"><summary className="cursor-pointer font-semibold">Beginner guide: understand reconstitution</summary><BeginnerReconstitutionPrimer /></details> : null}
 
       <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background p-4 sm:p-5">
         <div className="flex gap-3">
@@ -408,6 +416,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">{selectedCompound ? `${selectedCompound.name} selected. Enter the exact values from its vial/COA and your established plan.` : 'Use custom when the item is not in the library.'}</p>
+            {/bpc.?157/i.test(selectedCompoundId) && <p className="rounded-xl border border-border p-3 text-sm">There is no established BPC-157 dose for knee or tendon injuries. Personal reports cannot establish an effective or safe schedule. Use this tool to check the arithmetic for an amount already recorded with your clinician.</p>}
 
             {relevantPresets.length > 0 && (
               <div className="rounded-xl border border-border bg-muted/30 p-3">
@@ -461,13 +470,14 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
             <div className="space-y-2">
               <Label>Syringe scale</Label>
               <div className="grid grid-cols-2 gap-2" role="group" aria-label="Syringe scale">
-                {(['U-40', 'U-100'] as const).map((type) => <button key={type} type="button" aria-pressed={syringeType === type} onClick={() => setSyringeType(type)} className={cn('min-h-14 rounded-xl border px-4 font-semibold transition', syringeType === type ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground hover:border-primary/50')}>{type}<span className="mt-0.5 block text-[10px] font-normal opacity-80">{type === 'U-40' ? '40 units = 1 mL' : '100 units = 1 mL'}</span></button>)}
+                {(['U-40', 'U-100'] as const).map((type) => <button key={type} type="button" aria-pressed={syringeType === type} onClick={() => { setSyringeType(type); setMarkIncrement(''); }} className={cn('min-h-14 rounded-xl border px-4 font-semibold transition', syringeType === type ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground hover:border-primary/50')}>{type}<span className="mt-0.5 block text-[10px] font-normal opacity-80">{type === 'U-40' ? '40 units = 1 mL' : '100 units = 1 mL'}</span></button>)}
               </div>
             </div>
             <div className="space-y-2">
               <Label>Barrel capacity</Label>
-              <Select value={barrelCapacityMl} onValueChange={setBarrelCapacityMl}><SelectTrigger><SelectValue placeholder="Select printed capacity" /></SelectTrigger><SelectContent><SelectItem value="0.3">0.3 mL</SelectItem><SelectItem value="0.5">0.5 mL</SelectItem><SelectItem value="1">1 mL</SelectItem></SelectContent></Select>
+              <Select value={barrelCapacityMl} onValueChange={setBarrelCapacityMl}><SelectTrigger aria-label="Barrel capacity"><SelectValue placeholder="Select printed capacity" /></SelectTrigger><SelectContent><SelectItem value="0.3">0.3 mL</SelectItem><SelectItem value="0.5">0.5 mL</SelectItem><SelectItem value="1">1 mL</SelectItem></SelectContent></Select>
             </div>
+            <div className="space-y-2"><Label htmlFor="mark-increment">Smallest marked increment (units)</Label><Input id="mark-increment" type="number" inputMode="decimal" min="0" step="any" value={markIncrement} onChange={event => setMarkIncrement(event.target.value)} placeholder="Read your barrel, e.g. 0.5, 1 or 2" /><p className="text-sm text-muted-foreground">A fractional result is only measurable if your syringe has that marking. Do not round a dose to the nearest line.</p></div>
           </Card>
         </div>
 
@@ -483,12 +493,15 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
                     <ResultTile label={`${syringeType} barrel marking`} value={`${formatNumber(result.syringeUnits, 2)} units`} primary />
                     <ResultTile label="Volume to measure" value={`${formatNumber(result.volumeMl)} mL`} primary />
                     <ResultTile label="Entered concentration" value={`${formatNumber(result.concentrationMgPerMl)} mg/mL`} />
+                    <ResultTile label="Amount in this volume" value={`${formatNumber(result.targetAmountMg)} mg / ${formatNumber(result.targetAmountMg * 1000)} mcg`} />
                     <ResultTile label="Approx. measures per vial" value={String(usesPerVial)} />
+                    <ResultTile label="Amount per syringe unit" value={`${formatNumber(result.concentrationMgPerMl * 1000 / result.syringeUnitsPerMl)} mcg`} />
                   </div>
+                  {markIncrement && !isMeasurableMark(result.syringeUnits, Number(markIncrement)) && <p role="alert" className="rounded-xl border border-destructive/30 p-3 text-sm">This result falls between the markings you entered. Do not estimate or round it. Ask your pharmacist to verify a measurable preparation and device.</p>}
                   <MeasurementSyringeDiagram syringeType={syringeType} barrelCapacityMl={parsePositive(barrelCapacityMl)} units={result.syringeUnits} volumeMl={result.volumeMl} amountLabel={`${enteredAmount} ${enteredUnit}`} fitsSelectedBarrel={result.fitsSelectedBarrel} />
                   <div className="rounded-xl border border-border bg-muted/30 p-3 text-sm"><p className="font-semibold text-foreground">Check the arithmetic</p><p className="mt-1 leading-relaxed text-muted-foreground">{formatNumber(result.targetAmountMg)} mg ÷ {formatNumber(result.concentrationMgPerMl)} mg/mL = {formatNumber(result.volumeMl)} mL × {result.syringeUnitsPerMl} units/mL = <strong className="text-foreground">{formatNumber(result.syringeUnits, 2)} units</strong>.</p></div>
                   {!result.fitsSelectedBarrel && <div className="flex gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" /><p>The result exceeds the selected barrel. Re-check the label, diluent, recorded amount, printed scale and capacity. The app will not choose a replacement.</p></div>}
-                  <div className="space-y-3 border-t border-border pt-4"><Label htmlFor="preset-name">Save this checked setup</Label><div className="flex gap-2"><Input id="preset-name" placeholder={`${selectedCompound?.shortName || 'Custom'} setup`} value={presetName} onChange={(event) => setPresetName(event.target.value)} /><Button type="button" onClick={savePreset}><Save className="mr-2 h-4 w-4" />Save</Button></div><Button type="button" variant="outline" className="w-full" onClick={() => void saveMeasurementToJournal()}><Save className="mr-2 h-4 w-4" />Save measurement to private journal</Button></div>
+                  <div className="space-y-3 border-t border-border pt-4"><Label htmlFor="preset-name">Save this checked setup</Label><div className="flex gap-2"><Input id="preset-name" placeholder={`${selectedCompound?.shortName || 'Custom'} setup`} value={presetName} onChange={(event) => setPresetName(event.target.value)} /><Button type="button" disabled={!result.fitsSelectedBarrel || Boolean(markIncrement && !isMeasurableMark(result.syringeUnits, Number(markIncrement)))} onClick={savePreset}><Save className="mr-2 h-4 w-4" />Save</Button></div><Button type="button" variant="outline" className="w-full" disabled={!user || !result.fitsSelectedBarrel || Boolean(markIncrement && !isMeasurableMark(result.syringeUnits, Number(markIncrement)))} onClick={() => void saveMeasurementToJournal()}><Save className="mr-2 h-4 w-4" />Save measurement to private journal</Button></div>
                 </div>
               )}
             </div>
@@ -506,6 +519,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
           <div className="flex gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><p><strong>Important:</strong> “units” are syringe volume markings—not mg or mcg. Different vial concentrations can make the same number of units contain very different amounts. This app checks values you supply; it does not diagnose, prescribe or recommend a personal amount.</p></div>
         </div>
       </div>
+      <MeasurementReference vialAmountMg={parsePositive(vialAmount)} diluentMl={parsePositive(diluentVolume)} barrelCapacityMl={parsePositive(barrelCapacityMl)} syringeType={syringeType} />
       </> : companionSection === 'ask' ? (
         <Suspense fallback={<CompanionLoading />}>
           <EvidenceAskPanel
