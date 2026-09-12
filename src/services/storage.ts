@@ -307,6 +307,7 @@ export interface CalculatorSettings {
   lastVialSize: string;
   lastBacWater: string;
   lastTargetDose: string;
+  lastTargetUnit?: 'mg' | 'mcg';
   lastSelectedPeptide: string;
   savedAt: string;
 }

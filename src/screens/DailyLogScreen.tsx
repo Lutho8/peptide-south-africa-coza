@@ -1,3 +1,4 @@
+import { DailyCheckinPanel } from '@/components/tracking/DailyCheckinPanel';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, addDays, subDays } from 'date-fns';
 import { peptides } from '@/data/peptides';
@@ -16,7 +17,6 @@ import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useSwipeNav } from '@/hooks/useSwipeNav';
 import { DoseSummary } from '@/components/doses/DoseSummary';
 import { QuickAddReminderButton } from '@/components/doses/QuickAddReminderButton';
-import { UnitToggle } from '@/components/doses/UnitToggle';
 import { DoseLoggedAnimation } from '@/components/doses/DoseLoggedAnimation';
 import { EditDoseModal } from '@/components/doses/EditDoseModal';
 import { LastDoseRecall } from '@/components/doses/LastDoseRecall';
@@ -31,7 +31,7 @@ import { useInjectionRecordsCloud } from '@/hooks/useInjectionRecordsCloud';
 const doseEntrySchema = z.object({
   peptideId: z.string().min(1, 'Please select a peptide'),
   dose: z.number().min(0.001, 'Dose must be greater than 0').max(10000, 'Dose seems too high'),
-  unit: z.enum(['mg', 'IU', 'units']),
+  unit: z.enum(['mg', 'mcg', 'IU', 'units']),
   time: z.string().min(1, 'Please enter a time'),
   notes: z.string().max(200, 'Notes must be less than 200 characters').optional(),
 });
@@ -58,7 +58,7 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
   const [formData, setFormData] = useState({
     peptideId: '',
     dose: '',
-    unit: 'mg' as 'mg' | 'IU' | 'units',
+    unit: 'mg' as 'mg' | 'mcg' | 'IU' | 'units',
     time: format(new Date(), 'HH:mm'),
     notes: '',
   });
@@ -185,8 +185,8 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
         date: format(selectedDate, 'yyyy-MM-dd'),
         peptide_id: formData.peptideId,
         peptide_name: peptide?.shortName || formData.peptideId,
-        dose: doseNumber,
-        unit: formData.unit,
+        dose: formData.unit === 'mcg' ? doseNumber / 1000 : doseNumber,
+        unit: formData.unit === 'mcg' ? 'mg' : formData.unit,
         time: formData.time,
         notes: formData.notes || undefined,
       });
@@ -196,7 +196,7 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
           siteId: administrationSiteId,
           peptideId: formData.peptideId,
           peptideName: peptide?.shortName || formData.peptideId,
-          doseMg: formData.unit === 'mg' ? doseNumber : undefined,
+          doseMg: formData.unit === 'mg' ? doseNumber : formData.unit === 'mcg' ? doseNumber / 1000 : undefined,
           route: administrationRoute,
           painScore: painScore === '' ? undefined : Number(painScore),
           swellingScore: swellingScore === '' ? undefined : Number(swellingScore),
@@ -339,7 +339,7 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Calendar className="text-primary" size={28} />
-          <h1 className="text-2xl font-bold text-foreground">Daily Dose Log</h1>
+          <h1 className="text-2xl font-bold text-foreground">Daily Log</h1>
         </div>
         <div className="flex items-center gap-2">
           {isSyncing ? (
@@ -354,6 +354,8 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
           </span>
         </div>
       </div>
+
+      <DailyCheckinPanel key={`${user?.id || "guest"}:${format(selectedDate, "yyyy-MM-dd")}`} date={format(selectedDate, "yyyy-MM-dd")} doses={doses} />
 
       {/* Last dose recall — quick "when did I last take X" reminder */}
       <LastDoseRecall
@@ -663,10 +665,9 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
 
               <div className="space-y-2">
                 <Label>Unit</Label>
-                <UnitToggle
-                  value={formData.unit}
-                  onChange={(val) => setFormData(prev => ({ ...prev, unit: val }))}
-                />
+                <div className="flex flex-wrap gap-1" role="group" aria-label="Recorded dose unit">{(['mg', 'mcg', 'IU', 'units'] as const).map(unit => <Button key={unit} type="button" size="sm" variant={formData.unit === unit ? 'default' : 'outline'} aria-pressed={formData.unit === unit} onClick={() => setFormData(previous => ({ ...previous, unit }))}>{unit}</Button>)}</div>
+                {formData.unit === 'mcg' && <p className="text-sm text-muted-foreground">Saved as the equivalent mg amount: 1,000 mcg = 1 mg.</p>}
+                {formData.unit === 'units' && <p className="text-sm text-muted-foreground">Record U-40 or U-100 and the vial concentration in Notes. Syringe units alone do not identify a dose.</p>}
               </div>
             </div>
 

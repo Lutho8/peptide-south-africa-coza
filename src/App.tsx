@@ -13,6 +13,7 @@ import { isAuthCallbackLocation } from "@/lib/authCallback";
 import { AdminRoute, ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 // Lazy load all route pages for better code splitting
+const CalculatorPage = lazy(() => import("./pages/CalculatorPage"));
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -82,6 +83,7 @@ const App = () => {
                   <Routes>
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/" element={<Index />} />
+                    <Route path="/calculator" element={<CalculatorPage />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/disclaimer" element={<Disclaimer />} />
