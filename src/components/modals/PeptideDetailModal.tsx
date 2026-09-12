@@ -1,5 +1,6 @@
 import { AlertTriangle, ExternalLink, FileText, FlaskConical, Shield } from 'lucide-react';
 import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
+import { StartingDoseCard } from '@/components/dosage/StartingDoseCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GradientCard } from '@/components/ui/GradientCard';
@@ -35,8 +36,10 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
         {peptide && (
           <div className="space-y-4">
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed text-muted-foreground">
-              This is a catalogue record, not a product recommendation or personal plan. It deliberately omits dosage, timing and outcome predictions.
+              Explore the compound, check whether a starting-dose reference exists, and read the sources in context. Product-specific references need to match your prescribed medicine and indication.
             </div>
+
+            <StartingDoseCard peptideId={peptide.id} peptideName={peptide.name} />
 
             <GradientCard>
               <div className="mb-2 flex items-center gap-2">
@@ -135,7 +138,7 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
             <AIAgentPanel peptideId={peptide.id} peptideName={peptide.name} />
 
             <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-              <strong className="text-foreground">Medical disclaimer:</strong> The app does not diagnose, prescribe, select a product or supply a dosage. Route patient-specific decisions to a qualified healthcare professional.
+              <strong className="text-foreground">Medical disclaimer:</strong> Published dose references are educational. A qualified healthcare professional should confirm your individual treatment and monitoring plan.
             </div>
           </div>
         )}
