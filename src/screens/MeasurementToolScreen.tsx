@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MeasurementReference } from '@/components/dosage/MeasurementReference';
+import { StartingDoseCard } from '@/components/dosage/StartingDoseCard';
 import { MeasurementSyringeDiagram } from '@/components/dosage/MeasurementSyringeDiagram';
 import { CompanionNav, type CompanionSection } from '@/components/companion/CompanionNav';
 import { cn } from '@/lib/utils';
@@ -416,7 +417,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange, calcula
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">{selectedCompound ? `${selectedCompound.name} selected. Enter the exact values from its vial/COA and your established plan.` : 'Use custom when the item is not in the library.'}</p>
-            {/bpc.?157/i.test(selectedCompoundId) && <p className="rounded-xl border border-border p-3 text-sm">There is no established BPC-157 dose for knee or tendon injuries. Personal reports cannot establish an effective or safe schedule. Use this tool to check the arithmetic for an amount already recorded with your clinician.</p>}
+            {selectedCompound && <StartingDoseCard peptideId={selectedCompound.id} peptideName={selectedCompound.name} />}
 
             {relevantPresets.length > 0 && (
               <div className="rounded-xl border border-border bg-muted/30 p-3">

@@ -22,4 +22,14 @@ describe('saved calculator units', () => {
     state.unit = undefined; render(<MeasurementToolScreen calculatorOnly />);
     expect(screen.getByLabelText('Prescribed or recorded dose')).toHaveValue(null);
   });
+  it('shows a product reference without prefilling a dose or escalating it with experience level', () => {
+    state.unit = undefined; render(<MeasurementToolScreen calculatorOnly />);
+    fireEvent.click(screen.getByLabelText('Compound or recorded plan'));
+    fireEvent.click(screen.getByRole('option', { name: 'Semaglutide', exact: true }));
+    expect(screen.getByText(/0.25 mg under the skin once weekly/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Prescribed or recorded dose')).toHaveValue(null);
+    fireEvent.change(screen.getByLabelText('Prescribed or recorded dose'), { target: { value: '0.25' } });
+    fireEvent.click(screen.getByRole('button', { name: /Biohacker Adds/ }));
+    expect(screen.getByLabelText('Prescribed or recorded dose')).toHaveValue(0.25);
+  });
 });
