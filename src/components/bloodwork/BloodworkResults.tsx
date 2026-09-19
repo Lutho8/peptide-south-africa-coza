@@ -4,6 +4,7 @@ import { Download, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Search,
 import { cn } from '@/lib/utils';
 import type { Protocol } from './ProtocolSections';
 import { trackBwEvent } from '@/lib/bloodwork/analytics';
+import { buildResearchPathways } from '@/lib/bloodwork/researchPathways';
 
 export interface ResultBiomarker {
   name: string;
@@ -130,6 +131,10 @@ function BloodworkResultsInner({ result, onDownload, preferredLanguage }: Props)
   const hasFilter = debouncedSearch !== '' || statusFilter !== 'all';
 
   const summaryLine = lang === 'de' && result.summary_de ? result.summary_de : result.summary;
+  const researchPathways = useMemo(
+    () => buildResearchPathways(result.biomarkers, result.goals),
+    [result.biomarkers, result.goals]
+  );
 
   return (
     <div className="space-y-12" id="bloodwork-results-root">
@@ -317,6 +322,39 @@ function BloodworkResultsInner({ result, onDownload, preferredLanguage }: Props)
           </section>
         ) : null;
       })()}
+
+      <section aria-labelledby="bloodwork-peptide-guidance">
+        <div className="flex items-center gap-3 mb-4 pb-2 border-b border-border/50">
+          <span className="font-mono text-[11px] tracking-widest text-muted-foreground">04 —</span>
+          <h2 id="bloodwork-peptide-guidance" className="text-sm font-bold uppercase tracking-wider text-foreground">
+            {lang === 'de' ? 'Peptid-Eignung & nächste Schritte' : 'Peptide suitability & next steps'}
+          </h2>
+        </div>
+        <div className="space-y-3">
+          {researchPathways.map((pathway) => (
+            <article
+              key={pathway.title}
+              className={cn(
+                'rounded-xl border p-4',
+                pathway.level === 'caution' ? 'border-amber-500/30 bg-amber-500/5' : 'border-border/50 bg-card/30'
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <Stethoscope size={17} className={pathway.level === 'caution' ? 'mt-0.5 text-amber-600' : 'mt-0.5 text-primary'} />
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">{lang === 'de' ? pathway.titleDe : pathway.title}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{lang === 'de' ? pathway.bodyDe : pathway.body}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <p className="mt-3 text-[11px] italic text-muted-foreground">
+          {lang === 'de'
+            ? 'Nur zu Bildungszwecken — keine medizinische Beratung oder Verschreibung.'
+            : 'For educational purposes only — not medical advice or a prescription.'}
+        </p>
+      </section>
 
     </div>
   );

@@ -16,6 +16,7 @@ import { PremiumGate } from '@/components/bloodwork/PremiumGate';
 import { BloodworkWizard } from '@/components/bloodwork/BloodworkWizard';
 import { useScanProgress } from '@/hooks/useScanProgress';
 import { exportBloodworkProtocolPDF } from '@/utils/bloodworkProtocolPdf';
+import { extractPdfText } from '@/lib/pdfText';
 
 const DISCLAIMER =
   'This analysis is for educational and informational purposes only. It does not constitute medical advice. Consult a qualified healthcare provider before making any changes to your health regimen, including peptide protocols, supplements, or diagnostic testing.';
@@ -169,6 +170,18 @@ export default function BloodworkPage() {
         let reportId: string;
         let fileName: string;
         let mimeType: string | undefined;
+        let extractedText: string | undefined;
+        let textExtractionAttempted = false;
+
+        if (form.file && (form.file.type === 'application/pdf' || /\.pdf$/i.test(form.file.name))) {
+          textExtractionAttempted = true;
+          try {
+            const localText = await extractPdfText(form.file);
+            if (localText.length >= 40) extractedText = localText.slice(0, 50_000);
+          } catch (pdfError) {
+            console.warn('[bloodwork] local PDF text extraction failed; server fallback remains available', pdfError);
+          }
+        }
 
         if (reuse) {
           reportId = reuse;
@@ -234,6 +247,8 @@ export default function BloodworkPage() {
               peptideHistoryNotes: form.peptideHistoryNotes || undefined,
               reportCountry: form.reportCountry,
               languageHint: form.languageHint === 'auto' ? undefined : form.languageHint,
+              extractedText,
+              textExtractionAttempted,
             },
           });
 

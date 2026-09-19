@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { chatCompletion, requireApiKey, MODEL_DEFAULT, MODEL_VISION, PDF_PLUGIN } from "../_shared/ai.ts";
+import { chatCompletion, MODEL_DEFAULT, MODEL_VISION, PDF_PLUGIN } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -296,8 +296,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    requireApiKey();
-
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing authorization header");
 
@@ -325,6 +323,8 @@ serve(async (req) => {
       goals = [],
       peptideHistoryUsed,
       peptideHistoryNotes,
+      extractedText: clientExtractedText,
+      textExtractionAttempted = false,
     } = body || {};
 
     if (!reportId) {
@@ -402,10 +402,15 @@ serve(async (req) => {
       .eq("user_id", user.id);
 
     const isDeep = scanType === "deep";
-    let extractedText: string | null = null;
+    let extractedText: string | null = typeof clientExtractedText === "string"
+      ? normalizeText(clientExtractedText).slice(0, 50_000)
+      : null;
     let deterministicFallback: ReturnType<typeof buildFallbackResult> | null = null;
 
-    if (resolvedMime === "application/pdf") {
+    if (extractedText) {
+      deterministicFallback = buildFallbackResult(extractedText, scanType, languageHint === "de" || languageHint === "en" ? languageHint : undefined);
+      console.log("[analyze-lab-report] received local pdf text", { chars: extractedText.length, biomarkers: deterministicFallback.biomarkers.length });
+    } else if (resolvedMime === "application/pdf" && Deno.env.get("OPENROUTER_API_KEY")) {
       try {
         const textStart = Date.now();
         extractedText = await extractTextFromPdf(base64, effectiveFileName);
@@ -415,6 +420,18 @@ serve(async (req) => {
         }
       } catch (e) {
         console.warn("[analyze-lab-report] pdf text extraction fallback failed", { error: String(e) });
+      }
+    }
+
+    if (!Deno.env.get("OPENROUTER_API_KEY")) {
+      if (deterministicFallback?.biomarkers.length) {
+        console.warn("[analyze-lab-report] OPENROUTER_API_KEY missing; using deterministic local-text analysis");
+      } else {
+        const message = resolvedMime === "application/pdf" && textExtractionAttempted
+          ? "This PDF appears to be scanned or image-only, so no selectable lab text was found. Upload a searchable PDF or clear page images, or enter the values manually."
+          : "Automated image analysis is temporarily unavailable. Upload a searchable PDF or enter the values manually.";
+        await supabase.from("lab_reports").update({ status: "failed", ai_summary: message }).eq("id", reportId).eq("user_id", user.id);
+        return jsonResponse({ ok: false, code: "TEXT_EXTRACTION_REQUIRED", retryable: false, message });
       }
     }
 
@@ -439,41 +456,43 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
     ].filter(Boolean).join("\n");
 
     const aiStart = Date.now();
-    let parsed: any | null = null;
+    let parsed: any | null = !Deno.env.get("OPENROUTER_API_KEY") ? deterministicFallback : null;
     let response: Response | null = null;
-    try {
-      const content = extractedText
-        ? [{ type: "text", text: userText }]
-        : [
-          { type: "text", text: userText },
-          resolvedMime === "application/pdf"
-            ? { type: "file", file: { filename: effectiveFileName, file_data: `data:application/pdf;base64,${base64}` } }
-            : { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${base64}` } },
-        ];
+    if (!parsed) {
+      try {
+        const content = extractedText
+          ? [{ type: "text", text: userText }]
+          : [
+            { type: "text", text: userText },
+            resolvedMime === "application/pdf"
+              ? { type: "file", file: { filename: effectiveFileName, file_data: `data:application/pdf;base64,${base64}` } }
+              : { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${base64}` } },
+          ];
 
-      response = await chatCompletion({
-        model: extractedText ? MODEL_DEFAULT : MODEL_VISION,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content },
-        ],
-        jsonMode: true,
-        plugins: extractedText ? undefined : PDF_PLUGIN,
-        timeoutMs: extractedText ? 35_000 : 55_000,
-      });
-    } catch (e) {
-      const isTimeout = (e as Error)?.name === "TimeoutError" || /timeout|abort/i.test(String(e));
-      console.error("[analyze-lab-report] AI call failed", { durationMs: Date.now() - aiStart, error: String(e), fallback: !!deterministicFallback });
-      if (!deterministicFallback || deterministicFallback.biomarkers.length === 0) {
-        await supabase.from("lab_reports").update({ status: "failed", ai_summary: isTimeout ? "AI scan timed out." : "AI scan failed." }).eq("id", reportId);
-        return jsonResponse({
-          ok: false,
-          code: isTimeout ? "TIMEOUT" : "AI_NETWORK_ERROR",
-          retryable: true,
-          message: isTimeout ? "Scan timed out. This file may be scanned or complex; retry, upload a clearer export, or enter values manually." : "Couldn't reach the AI service. Check your connection and retry.",
+        response = await chatCompletion({
+          model: extractedText ? MODEL_DEFAULT : MODEL_VISION,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content },
+          ],
+          jsonMode: true,
+          plugins: extractedText ? undefined : PDF_PLUGIN,
+          timeoutMs: extractedText ? 35_000 : 55_000,
         });
+      } catch (e) {
+        const isTimeout = (e as Error)?.name === "TimeoutError" || /timeout|abort/i.test(String(e));
+        console.error("[analyze-lab-report] AI call failed", { durationMs: Date.now() - aiStart, error: String(e), fallback: !!deterministicFallback });
+        if (!deterministicFallback || deterministicFallback.biomarkers.length === 0) {
+          await supabase.from("lab_reports").update({ status: "failed", ai_summary: isTimeout ? "AI scan timed out." : "AI scan failed." }).eq("id", reportId);
+          return jsonResponse({
+            ok: false,
+            code: isTimeout ? "TIMEOUT" : "AI_NETWORK_ERROR",
+            retryable: true,
+            message: isTimeout ? "Scan timed out. This file may be scanned or complex; retry, upload a clearer export, or enter values manually." : "Couldn't reach the AI service. Check your connection and retry.",
+          });
+        }
+        parsed = deterministicFallback;
       }
-      parsed = deterministicFallback;
     }
 
     if (!parsed && response) {
@@ -529,7 +548,7 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
     const biomarkers = Array.isArray(parsed.biomarkers) ? parsed.biomarkers : [];
     const protocol = { stack: [], supplements: [], nutrition: [], exercise: [], stress: [], environment: [], retest: [] };
 
-    await supabase
+    const { error: persistError } = await supabase
       .from("lab_reports")
       .update({
         status: "completed",
@@ -547,6 +566,11 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
       })
       .eq("id", reportId)
       .eq("user_id", user.id);
+
+    if (persistError) {
+      console.error("[analyze-lab-report] result persistence failed", { reportId, error: persistError.message });
+      return jsonResponse({ ok: false, code: "PERSIST_FAILED", retryable: true, message: "The analysis completed but could not be saved. Please retry." }, 500);
+    }
 
     return jsonResponse({ success: true, data: { ...parsed, biomarkers, insights: insightsArr, insights_de: insightsDeArr, detected_language: detectedLang, health_score: healthScore, protocol } });
   } catch (e) {
