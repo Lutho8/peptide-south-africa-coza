@@ -14,11 +14,10 @@ const bloodworkFunction = readFileSync(
 describe('bloodwork OpenAI provider boundary', () => {
   it('uses the Responses API for high-detail PDF vision without provider storage', () => {
     expect(helper).toContain('https://api.openai.com/v1/responses');
-    expect(helper).toContain('https://api.openai.com/v1/files');
     expect(helper).toMatch(/type:\s*"input_file"/);
-    expect(helper).toMatch(/purpose",\s*"user_data"/);
-    expect(helper).toMatch(/file_id:\s*uploadedFileId/);
-    expect(helper).toMatch(/method:\s*"DELETE"/);
+    expect(helper).toMatch(/filename:\s*opts\.file\.filename/);
+    expect(helper).toMatch(/file_data:\s*`data:application\/pdf;base64,/);
+    expect(helper).not.toMatch(/file_id|OPENAI_FILES_URL/);
     expect(helper).toMatch(/detail:\s*"high"/);
     expect(helper).toMatch(/store:\s*false/);
     expect(helper).toMatch(/OPENAI_API_KEY/);
