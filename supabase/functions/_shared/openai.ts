@@ -1,4 +1,5 @@
 export const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
+export const OPENAI_FILES_URL = "https://api.openai.com/v1/files";
 
 export const OPENAI_BLOODWORK_MODEL =
   Deno.env.get("OPENAI_MODEL_BLOODWORK") ?? "gpt-4.1";
@@ -25,16 +26,32 @@ type OpenAIResponseOptions = {
   timeoutMs?: number;
 };
 
-export function createOpenAIResponse(opts: OpenAIResponseOptions): Promise<Response> {
+export async function createOpenAIResponse(opts: OpenAIResponseOptions): Promise<Response> {
+  const apiKey = requireOpenAIKey();
   const content: Record<string, unknown>[] = [
     { type: "input_text", text: opts.inputText },
   ];
+  let uploadedFileId: string | null = null;
 
   if (opts.file?.mimeType === "application/pdf") {
+    const form = new FormData();
+    form.append("purpose", "user_data");
+    form.append("file", new Blob([Uint8Array.from(atob(opts.file.base64), (char) => char.charCodeAt(0))], {
+      type: "application/pdf",
+    }), opts.file.filename);
+    const upload = await fetch(OPENAI_FILES_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: form,
+      signal: opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined,
+    });
+    if (!upload.ok) throw new Error(`OpenAI file upload failed (${upload.status})`);
+    const uploaded = await upload.json() as { id?: unknown };
+    if (typeof uploaded.id !== "string") throw new Error("OpenAI file upload returned no id");
+    uploadedFileId = uploaded.id;
     content.push({
       type: "input_file",
-      filename: opts.file.filename,
-      file_data: `data:application/pdf;base64,${opts.file.base64}`,
+      file_id: uploadedFileId,
       detail: "high",
     });
   } else if (opts.file) {
@@ -45,22 +62,32 @@ export function createOpenAIResponse(opts: OpenAIResponseOptions): Promise<Respo
     });
   }
 
-  return fetch(OPENAI_RESPONSES_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${requireOpenAIKey()}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: opts.model ?? OPENAI_BLOODWORK_MODEL,
-      instructions: opts.instructions,
-      input: [{ role: "user", content }],
-      text: { format: { type: "json_object" } },
-      max_output_tokens: 8_000,
-      store: false,
-    }),
-    signal: opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined,
-  });
+  try {
+    return await fetch(OPENAI_RESPONSES_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: opts.model ?? OPENAI_BLOODWORK_MODEL,
+        instructions: opts.instructions,
+        input: [{ role: "user", content }],
+        text: { format: { type: "json_object" } },
+        max_output_tokens: 8_000,
+        store: false,
+      }),
+      signal: opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined,
+    });
+  } finally {
+    if (uploadedFileId) {
+      const removed = await fetch(`${OPENAI_FILES_URL}/${uploadedFileId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (!removed.ok) throw new Error(`OpenAI file cleanup failed (${removed.status})`);
+    }
+  }
 }
 
 export function extractOpenAIOutputText(payload: unknown): string {
