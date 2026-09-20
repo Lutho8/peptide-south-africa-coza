@@ -29,5 +29,7 @@ describe('bloodwork OpenAI provider boundary', () => {
     expect(bloodworkFunction).toMatch(/recommended_stack_peptides:\s*\[\]/);
     expect(bloodworkFunction).toMatch(/const protocol = \{ stack: \[\], supplements: \[\]/);
     expect(bloodworkFunction).toMatch(/qualified healthcare professional/);
+    expect(bloodworkFunction).toMatch(/safeUpstreamErrorMetadata/);
+    expect(bloodworkFunction).not.toMatch(/error\.message/);
   });
 });

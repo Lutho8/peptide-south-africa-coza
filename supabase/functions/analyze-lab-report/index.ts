@@ -289,6 +289,20 @@ function parseJsonContent(content: string): AnalysisResult {
   return JSON.parse(jsonMatch[1]!.trim()) as AnalysisResult;
 }
 
+function safeUpstreamErrorMetadata(body: string): string {
+  try {
+    const error = (JSON.parse(body) as { error?: { type?: unknown; code?: unknown; param?: unknown } }).error;
+    if (!error) return "";
+    return [error.type, error.code, error.param]
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => value.replace(/[^A-Za-z0-9_.[\]-]/g, "").slice(0, 100))
+      .filter(Boolean)
+      .join("/");
+  } catch {
+    return "";
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -478,6 +492,7 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
       if (!response.ok) {
         const errText = await response.text();
         console.error("[analyze-lab-report] AI non-2xx", { status: response.status, body: errText.slice(0, 500), fallback: !!deterministicFallback });
+        const upstreamMetadata = safeUpstreamErrorMetadata(errText);
         if (deterministicFallback && deterministicFallback.biomarkers.length > 0) {
           parsed = deterministicFallback;
         } else if (response.status === 429) {
@@ -487,7 +502,12 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
           await supabase.from("lab_reports").update({ status: "failed", ai_summary: "AI credits exhausted." }).eq("id", reportId);
           return jsonResponse({ ok: false, code: "CREDITS_EXHAUSTED", retryable: false, message: "Scan credits exhausted. Try again later or use manual entry." });
         } else {
-          return jsonResponse({ ok: false, code: "AI_GATEWAY_ERROR", retryable: true, message: `AI gateway error (${response.status}). Retry in a moment.` });
+          return jsonResponse({
+            ok: false,
+            code: "AI_GATEWAY_ERROR",
+            retryable: true,
+            message: `AI gateway error (${response.status}${upstreamMetadata ? `; ${upstreamMetadata}` : ""}). Retry in a moment.`,
+          });
         }
       } else {
         const aiData = await response.json();
