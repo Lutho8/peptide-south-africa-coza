@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { chatCompletion, MODEL_DEFAULT, MODEL_VISION, PDF_PLUGIN } from "../_shared/ai.ts";
+import {
+  createOpenAIResponse,
+  extractOpenAIOutputText,
+  OPENAI_BLOODWORK_MODEL,
+} from "../_shared/openai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -280,26 +284,6 @@ function buildFallbackResult(text: string, scanType: string, detectedLanguage?: 
   };
 }
 
-async function extractTextFromPdf(base64: string, fileName: string): Promise<string | null> {
-  const prompt = "Extract all readable text and lab table rows from this PDF. Return plain text only, preserving biomarker rows as: name | result | reference range | unit. Do not summarize.";
-  const response = await chatCompletion({
-    model: MODEL_VISION,
-    messages: [{
-      role: "user",
-      content: [
-        { type: "text", text: prompt },
-        { type: "file", file: { filename: fileName, file_data: `data:application/pdf;base64,${base64}` } },
-      ],
-    }],
-    plugins: PDF_PLUGIN,
-    timeoutMs: 25_000,
-  });
-  if (!response.ok) return null;
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  return typeof content === "string" && content.trim().length > 100 ? normalizeText(content) : null;
-}
-
 function parseJsonContent(content: string): AnalysisResult {
   const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || content.match(/(\{[\s\S]*\})/) || [null, content];
   return JSON.parse(jsonMatch[1]!.trim()) as AnalysisResult;
@@ -415,7 +399,7 @@ serve(async (req) => {
       .eq("user_id", user.id);
 
     const isDeep = scanType === "deep";
-    let extractedText: string | null = typeof clientExtractedText === "string"
+    const extractedText: string | null = typeof clientExtractedText === "string"
       ? normalizeText(clientExtractedText).slice(0, 50_000)
       : null;
     let deterministicFallback: ReturnType<typeof buildFallbackResult> | null = null;
@@ -423,22 +407,11 @@ serve(async (req) => {
     if (extractedText) {
       deterministicFallback = buildFallbackResult(extractedText, scanType, languageHint === "de" || languageHint === "en" ? languageHint : undefined);
       console.log("[analyze-lab-report] received local pdf text", { chars: extractedText.length, biomarkers: deterministicFallback.biomarkers.length });
-    } else if (resolvedMime === "application/pdf" && Deno.env.get("OPENROUTER_API_KEY")) {
-      try {
-        const textStart = Date.now();
-        extractedText = await extractTextFromPdf(base64, effectiveFileName);
-        if (extractedText) {
-          deterministicFallback = buildFallbackResult(extractedText, scanType, languageHint === "de" || languageHint === "en" ? languageHint : undefined);
-          console.log("[analyze-lab-report] extracted pdf text", { chars: extractedText.length, biomarkers: deterministicFallback.biomarkers.length, durationMs: Date.now() - textStart });
-        }
-      } catch (e) {
-        console.warn("[analyze-lab-report] pdf text extraction fallback failed", { error: String(e) });
-      }
     }
 
-    if (!Deno.env.get("OPENROUTER_API_KEY")) {
+    if (!Deno.env.get("OPENAI_API_KEY")) {
       if (deterministicFallback?.biomarkers.length) {
-        console.warn("[analyze-lab-report] OPENROUTER_API_KEY missing; using deterministic local-text analysis");
+        console.warn("[analyze-lab-report] OPENAI_API_KEY missing; using deterministic local-text analysis");
       } else {
         const message = resolvedMime === "application/pdf" && textExtractionAttempted
           ? "This PDF appears to be scanned or image-only, so no selectable lab text was found. Upload a searchable PDF or clear page images, or enter the values manually."
@@ -469,27 +442,19 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
     ].filter(Boolean).join("\n");
 
     const aiStart = Date.now();
-    let parsed: AnalysisResult | null = !Deno.env.get("OPENROUTER_API_KEY") ? deterministicFallback : null;
+    let parsed: AnalysisResult | null = !Deno.env.get("OPENAI_API_KEY") ? deterministicFallback : null;
     let response: Response | null = null;
     if (!parsed) {
       try {
-        const content = extractedText
-          ? [{ type: "text", text: userText }]
-          : [
-            { type: "text", text: userText },
-            resolvedMime === "application/pdf"
-              ? { type: "file", file: { filename: effectiveFileName, file_data: `data:application/pdf;base64,${base64}` } }
-              : { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${base64}` } },
-          ];
-
-        response = await chatCompletion({
-          model: extractedText ? MODEL_DEFAULT : MODEL_VISION,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content },
-          ],
-          jsonMode: true,
-          plugins: extractedText ? undefined : PDF_PLUGIN,
+        response = await createOpenAIResponse({
+          model: OPENAI_BLOODWORK_MODEL,
+          instructions: systemPrompt,
+          inputText: userText,
+          file: extractedText ? undefined : {
+            base64,
+            filename: effectiveFileName,
+            mimeType: resolvedMime,
+          },
           timeoutMs: extractedText ? 35_000 : 55_000,
         });
       } catch (e) {
@@ -526,7 +491,7 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
         }
       } else {
         const aiData = await response.json();
-        const content = aiData.choices?.[0]?.message?.content || "";
+        const content = extractOpenAIOutputText(aiData);
         try {
           parsed = parseJsonContent(content);
         } catch (e) {

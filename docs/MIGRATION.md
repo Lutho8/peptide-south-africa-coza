@@ -15,7 +15,7 @@ what still has to be configured outside the codebase.
 | Lovable service | Used by | Replaced with |
 |---|---|---|
 | `@lovable.dev/cloud-auth-js` | Google / Apple sign-in | Native `supabase.auth.signInWithOAuth` |
-| `ai.gateway.lovable.dev` + `LOVABLE_API_KEY` | AI guidance and analysis | Local privacy engine for profile guidance; OpenRouter only for approved safety and bloodwork analysis |
+| `ai.gateway.lovable.dev` + `LOVABLE_API_KEY` | AI guidance and analysis | Local privacy engine for profile guidance; OpenRouter for approved safety analysis and OpenAI Responses for bloodwork document vision |
 | `connector-gateway.lovable.dev/google_search_console` | `gsc-status`, `gsc-resubmit-sitemap` | Google service account, signed JWT (`_shared/google.ts`) |
 | `@lovable.dev/email-js` | `process-email-queue` | Provider-agnostic sender (`_shared/email.ts`), Resend-ready |
 | `@lovable.dev/mcp-js` (Vite plugin + runtime) | `supabase/functions/mcp` | Official `@modelcontextprotocol/sdk`, hand-written |
@@ -43,11 +43,14 @@ what still has to be configured outside the codebase.
 
 **Edge functions**
 
-- `_shared/ai.ts` — one OpenRouter client for safety and bloodwork analysis. Model ids
+- `_shared/ai.ts` — the OpenRouter client for approved safety analysis. Model ids
   come from `AI_MODEL_DEFAULT` / `AI_MODEL_VISION` so the catalogue can move
   without a code change. OpenRouter uses the same OpenAI-shaped request and the
   same 429 / 402 status codes as the old gateway, so error handling remains
-  consistent. `peptide-ai-agent` keeps profiles, goals, and stacks inside the
+  consistent. `_shared/openai.ts` uses the OpenAI Responses API for high-detail
+  bloodwork PDF/image input with provider-side response storage disabled; it
+  requires `OPENAI_API_KEY` and optionally accepts `OPENAI_MODEL_BLOODWORK`.
+  `peptide-ai-agent` keeps profiles, goals, and stacks inside the
   owned Supabase function and returns deterministic, privacy-first guidance.
 - `_shared/google.ts` — mints a Google access token from a service-account JSON
   key by signing a JWT with WebCrypto (RS256) and exchanging it at
@@ -94,7 +97,8 @@ what still has to be configured outside the codebase.
    email collisions with the target project before importing — `auth.users.email`
    is unique, and a collision silently orphans that user's data.
 4. **Set the edge function secrets** listed in `.env.example`, then deploy the
-   tracker Edge Functions. AI and bloodwork require `OPENROUTER_API_KEY`;
+   tracker Edge Functions. Safety analysis requires `OPENROUTER_API_KEY` and
+   bloodwork document vision requires `OPENAI_API_KEY`;
    transactional email requires `RESEND_API_KEY`.
 5. **Configure OAuth providers** in the owned Supabase project with your own Google and Apple
    credentials, and add both production domains to the allowed redirect URLs.
