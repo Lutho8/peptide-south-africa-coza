@@ -62,8 +62,10 @@ export async function createOpenAIResponse(opts: OpenAIResponseOptions): Promise
     });
   }
 
+  let response: Response | null = null;
+  let requestError: unknown = null;
   try {
-    return await fetch(OPENAI_RESPONSES_URL, {
+    response = await fetch(OPENAI_RESPONSES_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -79,15 +81,20 @@ export async function createOpenAIResponse(opts: OpenAIResponseOptions): Promise
       }),
       signal: opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined,
     });
-  } finally {
-    if (uploadedFileId) {
-      const removed = await fetch(`${OPENAI_FILES_URL}/${uploadedFileId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${apiKey}` },
-      });
-      if (!removed.ok) throw new Error(`OpenAI file cleanup failed (${removed.status})`);
-    }
+  } catch (error) {
+    requestError = error;
   }
+
+  if (uploadedFileId) {
+    const removed = await fetch(`${OPENAI_FILES_URL}/${uploadedFileId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (!removed.ok) throw new Error(`OpenAI file cleanup failed (${removed.status})`);
+  }
+  if (requestError) throw requestError;
+  if (!response) throw new Error("OpenAI response was unavailable");
+  return response;
 }
 
 export function extractOpenAIOutputText(payload: unknown): string {
