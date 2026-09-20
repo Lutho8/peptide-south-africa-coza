@@ -16,6 +16,7 @@ import { PremiumGate } from '@/components/bloodwork/PremiumGate';
 import { BloodworkWizard } from '@/components/bloodwork/BloodworkWizard';
 import { useScanProgress } from '@/hooks/useScanProgress';
 import { exportBloodworkProtocolPDF } from '@/utils/bloodworkProtocolPdf';
+import { extractPdfText } from '@/lib/pdfText';
 
 const DISCLAIMER =
   'This analysis is for educational and informational purposes only. It does not constitute medical advice. Consult a qualified healthcare provider before making any changes to your health regimen, including peptide protocols, supplements, or diagnostic testing.';
@@ -35,6 +36,16 @@ type FunctionEnvelope = {
   message: string;
   code: string;
   retryable: boolean;
+};
+
+type AnalyzePayload = Partial<BloodworkScanResult> & {
+  insights?: string[] | string;
+  insights_de?: string[] | string;
+};
+
+type AnalyzeEnvelope = Partial<FunctionEnvelope> & {
+  ok?: boolean;
+  data?: AnalyzePayload;
 };
 
 function safeStorageName(name: string): string {
@@ -71,7 +82,7 @@ async function readFunctionError(error: unknown): Promise<FunctionEnvelope> {
 }
 
 function mapScanError(e: unknown): { message: string; code?: string } {
-  if (e && typeof e === 'object' && 'code' in (e as any)) {
+  if (e && typeof e === 'object' && 'code' in e) {
     const env = e as { message?: string; code?: string };
     return { message: env.message || 'Scan failed.', code: env.code };
   }
@@ -169,6 +180,18 @@ export default function BloodworkPage() {
         let reportId: string;
         let fileName: string;
         let mimeType: string | undefined;
+        let extractedText: string | undefined;
+        let textExtractionAttempted = false;
+
+        if (form.file && (form.file.type === 'application/pdf' || /\.pdf$/i.test(form.file.name))) {
+          textExtractionAttempted = true;
+          try {
+            const localText = await extractPdfText(form.file);
+            if (localText.length >= 40) extractedText = localText.slice(0, 50_000);
+          } catch (pdfError) {
+            console.warn('[bloodwork] local PDF text extraction failed; server fallback remains available', pdfError);
+          }
+        }
 
         if (reuse) {
           reportId = reuse;
@@ -213,8 +236,8 @@ export default function BloodworkPage() {
 
         // Initial attempt plus 2s and 4s backoff on retryable errors.
         const BACKOFFS = [0, 2000, 4000];
-        let payload: any = null;
-        let lastEnvelope: any = null;
+        let payload: AnalyzePayload | null = null;
+        let lastEnvelope: AnalyzeEnvelope | null = null;
         for (let attempt = 0; attempt < BACKOFFS.length; attempt++) {
           if (abortRef.current?.signal.aborted) { progress.reset(); return; }
           if (BACKOFFS[attempt] > 0) {
@@ -234,6 +257,8 @@ export default function BloodworkPage() {
               peptideHistoryNotes: form.peptideHistoryNotes || undefined,
               reportCountry: form.reportCountry,
               languageHint: form.languageHint === 'auto' ? undefined : form.languageHint,
+              extractedText,
+              textExtractionAttempted,
             },
           });
 
@@ -246,16 +271,17 @@ export default function BloodworkPage() {
             if (functionError.retryable && attempt < BACKOFFS.length - 1) continue;
             throw functionError;
           }
-          if ((data as any)?.ok === false) {
-            lastEnvelope = data;
+          const envelope = data && typeof data === 'object' ? data as AnalyzeEnvelope : null;
+          if (envelope?.ok === false) {
+            lastEnvelope = envelope;
             console.warn('[bloodwork] envelope error', { attempt, data });
-            if ((data as any).retryable && attempt < BACKOFFS.length - 1) continue;
+            if (envelope.retryable && attempt < BACKOFFS.length - 1) continue;
             throw {
-              message: (data as any).message || 'Scan failed',
-              code: (data as any).code,
+              message: envelope.message || 'Scan failed',
+              code: envelope.code,
             };
           }
-          payload = (data as any)?.data;
+          payload = envelope?.data ?? null;
           if (payload) break;
           lastEnvelope = { ok: false, code: 'EMPTY_RESPONSE', retryable: true, message: 'Empty AI response — please retry.' };
         }

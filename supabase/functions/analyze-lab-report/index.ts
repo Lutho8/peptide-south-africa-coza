@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { chatCompletion, requireApiKey, MODEL_DEFAULT, MODEL_VISION, PDF_PLUGIN } from "../_shared/ai.ts";
+import {
+  createOpenAIResponse,
+  extractOpenAIOutputText,
+  OPENAI_BLOODWORK_MODEL,
+} from "../_shared/openai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +22,19 @@ type Biomarker = {
   category: string;
   layman_explanation?: string;
   layman_explanation_de?: string;
+};
+
+type AnalysisResult = {
+  summary?: string;
+  summary_de?: string;
+  report_date?: string | null;
+  detected_language?: "en" | "de";
+  health_score?: number | null;
+  biomarkers?: Biomarker[];
+  insights?: string[] | string;
+  insights_de?: string[] | string;
+  protocol?: Record<string, unknown>;
+  recommended_stack_peptides?: unknown[];
 };
 
 const CATEGORY_BY_NAME: Record<string, string> = {
@@ -205,7 +222,7 @@ function parseBiomarkersFromText(text: string): Biomarker[] {
       }
     }
 
-    const loose = row.match(/^([A-Za-zÄÖÜäöüß().\/\-\s]{3,}?)\s+[ES]?\s*([<>]?\d+[.,]?\d*\s*[▲▼]?)\s+((?:bis|ab|<|>|\d)[^\s]*(?:\s*-\s*\d+[.,]?\d*)?)\s+([A-Za-zµμ%\/^0-9,.²-]+)/);
+    const loose = row.match(/^([A-Za-zÄÖÜäöüß()./\-\s]{3,}?)\s+[ES]?\s*([<>]?\d+[.,]?\d*\s*[▲▼]?)\s+((?:bis|ab|<|>|\d)[^\s]*(?:\s*-\s*\d+[.,]?\d*)?)\s+([A-Za-zµμ%/^0-9,.²-]+)/);
     if (loose) {
       const name = loose[1].trim();
       const rawValue = loose[2];
@@ -267,37 +284,29 @@ function buildFallbackResult(text: string, scanType: string, detectedLanguage?: 
   };
 }
 
-async function extractTextFromPdf(base64: string, fileName: string): Promise<string | null> {
-  const prompt = "Extract all readable text and lab table rows from this PDF. Return plain text only, preserving biomarker rows as: name | result | reference range | unit. Do not summarize.";
-  const response = await chatCompletion({
-    model: MODEL_VISION,
-    messages: [{
-      role: "user",
-      content: [
-        { type: "text", text: prompt },
-        { type: "file", file: { filename: fileName, file_data: `data:application/pdf;base64,${base64}` } },
-      ],
-    }],
-    plugins: PDF_PLUGIN,
-    timeoutMs: 25_000,
-  });
-  if (!response.ok) return null;
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  return typeof content === "string" && content.trim().length > 100 ? normalizeText(content) : null;
+function parseJsonContent(content: string): AnalysisResult {
+  const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || content.match(/(\{[\s\S]*\})/) || [null, content];
+  return JSON.parse(jsonMatch[1]!.trim()) as AnalysisResult;
 }
 
-function parseJsonContent(content: string) {
-  const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || content.match(/(\{[\s\S]*\})/) || [null, content];
-  return JSON.parse(jsonMatch[1]!.trim());
+function safeUpstreamErrorMetadata(body: string): string {
+  try {
+    const error = (JSON.parse(body) as { error?: { type?: unknown; code?: unknown; param?: unknown } }).error;
+    if (!error) return "";
+    return [error.type, error.code, error.param]
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => value.replace(/[^A-Za-z0-9_.[\]-]/g, "").slice(0, 100))
+      .filter(Boolean)
+      .join("/");
+  } catch {
+    return "";
+  }
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    requireApiKey();
-
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing authorization header");
 
@@ -325,6 +334,8 @@ serve(async (req) => {
       goals = [],
       peptideHistoryUsed,
       peptideHistoryNotes,
+      extractedText: clientExtractedText,
+      textExtractionAttempted = false,
     } = body || {};
 
     if (!reportId) {
@@ -402,19 +413,25 @@ serve(async (req) => {
       .eq("user_id", user.id);
 
     const isDeep = scanType === "deep";
-    let extractedText: string | null = null;
+    const extractedText: string | null = typeof clientExtractedText === "string"
+      ? normalizeText(clientExtractedText).slice(0, 50_000)
+      : null;
     let deterministicFallback: ReturnType<typeof buildFallbackResult> | null = null;
 
-    if (resolvedMime === "application/pdf") {
-      try {
-        const textStart = Date.now();
-        extractedText = await extractTextFromPdf(base64, effectiveFileName);
-        if (extractedText) {
-          deterministicFallback = buildFallbackResult(extractedText, scanType, languageHint === "de" || languageHint === "en" ? languageHint : undefined);
-          console.log("[analyze-lab-report] extracted pdf text", { chars: extractedText.length, biomarkers: deterministicFallback.biomarkers.length, durationMs: Date.now() - textStart });
-        }
-      } catch (e) {
-        console.warn("[analyze-lab-report] pdf text extraction fallback failed", { error: String(e) });
+    if (extractedText) {
+      deterministicFallback = buildFallbackResult(extractedText, scanType, languageHint === "de" || languageHint === "en" ? languageHint : undefined);
+      console.log("[analyze-lab-report] received local pdf text", { chars: extractedText.length, biomarkers: deterministicFallback.biomarkers.length });
+    }
+
+    if (!Deno.env.get("OPENAI_API_KEY")) {
+      if (deterministicFallback?.biomarkers.length) {
+        console.warn("[analyze-lab-report] OPENAI_API_KEY missing; using deterministic local-text analysis");
+      } else {
+        const message = resolvedMime === "application/pdf" && textExtractionAttempted
+          ? "This PDF appears to be scanned or image-only, so no selectable lab text was found. Upload a searchable PDF or clear page images, or enter the values manually."
+          : "Automated image analysis is temporarily unavailable. Upload a searchable PDF or enter the values manually.";
+        await supabase.from("lab_reports").update({ status: "failed", ai_summary: message }).eq("id", reportId).eq("user_id", user.id);
+        return jsonResponse({ ok: false, code: "TEXT_EXTRACTION_REQUIRED", retryable: false, message });
       }
     }
 
@@ -439,41 +456,35 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
     ].filter(Boolean).join("\n");
 
     const aiStart = Date.now();
-    let parsed: any | null = null;
+    let parsed: AnalysisResult | null = !Deno.env.get("OPENAI_API_KEY") ? deterministicFallback : null;
     let response: Response | null = null;
-    try {
-      const content = extractedText
-        ? [{ type: "text", text: userText }]
-        : [
-          { type: "text", text: userText },
-          resolvedMime === "application/pdf"
-            ? { type: "file", file: { filename: effectiveFileName, file_data: `data:application/pdf;base64,${base64}` } }
-            : { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${base64}` } },
-        ];
-
-      response = await chatCompletion({
-        model: extractedText ? MODEL_DEFAULT : MODEL_VISION,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content },
-        ],
-        jsonMode: true,
-        plugins: extractedText ? undefined : PDF_PLUGIN,
-        timeoutMs: extractedText ? 35_000 : 55_000,
-      });
-    } catch (e) {
-      const isTimeout = (e as Error)?.name === "TimeoutError" || /timeout|abort/i.test(String(e));
-      console.error("[analyze-lab-report] AI call failed", { durationMs: Date.now() - aiStart, error: String(e), fallback: !!deterministicFallback });
-      if (!deterministicFallback || deterministicFallback.biomarkers.length === 0) {
-        await supabase.from("lab_reports").update({ status: "failed", ai_summary: isTimeout ? "AI scan timed out." : "AI scan failed." }).eq("id", reportId);
-        return jsonResponse({
-          ok: false,
-          code: isTimeout ? "TIMEOUT" : "AI_NETWORK_ERROR",
-          retryable: true,
-          message: isTimeout ? "Scan timed out. This file may be scanned or complex; retry, upload a clearer export, or enter values manually." : "Couldn't reach the AI service. Check your connection and retry.",
+    if (!parsed) {
+      try {
+        response = await createOpenAIResponse({
+          model: OPENAI_BLOODWORK_MODEL,
+          instructions: systemPrompt,
+          inputText: userText,
+          file: extractedText ? undefined : {
+            base64,
+            filename: effectiveFileName,
+            mimeType: resolvedMime,
+          },
+          timeoutMs: extractedText ? 35_000 : 55_000,
         });
+      } catch (e) {
+        const isTimeout = (e as Error)?.name === "TimeoutError" || /timeout|abort/i.test(String(e));
+        console.error("[analyze-lab-report] AI call failed", { durationMs: Date.now() - aiStart, error: String(e), fallback: !!deterministicFallback });
+        if (!deterministicFallback || deterministicFallback.biomarkers.length === 0) {
+          await supabase.from("lab_reports").update({ status: "failed", ai_summary: isTimeout ? "AI scan timed out." : "AI scan failed." }).eq("id", reportId);
+          return jsonResponse({
+            ok: false,
+            code: isTimeout ? "TIMEOUT" : "AI_NETWORK_ERROR",
+            retryable: true,
+            message: isTimeout ? "Scan timed out. This file may be scanned or complex; retry, upload a clearer export, or enter values manually." : "Couldn't reach the AI service. Check your connection and retry.",
+          });
+        }
+        parsed = deterministicFallback;
       }
-      parsed = deterministicFallback;
     }
 
     if (!parsed && response) {
@@ -481,6 +492,7 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
       if (!response.ok) {
         const errText = await response.text();
         console.error("[analyze-lab-report] AI non-2xx", { status: response.status, body: errText.slice(0, 500), fallback: !!deterministicFallback });
+        const upstreamMetadata = safeUpstreamErrorMetadata(errText);
         if (deterministicFallback && deterministicFallback.biomarkers.length > 0) {
           parsed = deterministicFallback;
         } else if (response.status === 429) {
@@ -490,11 +502,16 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
           await supabase.from("lab_reports").update({ status: "failed", ai_summary: "AI credits exhausted." }).eq("id", reportId);
           return jsonResponse({ ok: false, code: "CREDITS_EXHAUSTED", retryable: false, message: "Scan credits exhausted. Try again later or use manual entry." });
         } else {
-          return jsonResponse({ ok: false, code: "AI_GATEWAY_ERROR", retryable: true, message: `AI gateway error (${response.status}). Retry in a moment.` });
+          return jsonResponse({
+            ok: false,
+            code: "AI_GATEWAY_ERROR",
+            retryable: true,
+            message: `AI gateway error (${response.status}${upstreamMetadata ? `; ${upstreamMetadata}` : ""}). Retry in a moment.`,
+          });
         }
       } else {
         const aiData = await response.json();
-        const content = aiData.choices?.[0]?.message?.content || "";
+        const content = extractOpenAIOutputText(aiData);
         try {
           parsed = parseJsonContent(content);
         } catch (e) {
@@ -515,12 +532,12 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
     if (!parsed.report_date && fallbackForMerge?.report_date) parsed.report_date = fallbackForMerge.report_date;
 
     let insightsArr: string[] = [];
-    if (Array.isArray(parsed.insights)) insightsArr = parsed.insights.map((s: any) => String(s));
+    if (Array.isArray(parsed.insights)) insightsArr = parsed.insights.map((s: unknown) => String(s));
     else if (typeof parsed.insights === "string") insightsArr = parsed.insights.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
     if (!insightsArr.length && fallbackForMerge?.insights) insightsArr = fallbackForMerge.insights;
 
     let insightsDeArr: string[] = [];
-    if (Array.isArray(parsed.insights_de)) insightsDeArr = parsed.insights_de.map((s: any) => String(s));
+    if (Array.isArray(parsed.insights_de)) insightsDeArr = parsed.insights_de.map((s: unknown) => String(s));
     else if (typeof parsed.insights_de === "string") insightsDeArr = parsed.insights_de.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
     if (!insightsDeArr.length && fallbackForMerge?.insights_de) insightsDeArr = fallbackForMerge.insights_de;
 
@@ -529,7 +546,7 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
     const biomarkers = Array.isArray(parsed.biomarkers) ? parsed.biomarkers : [];
     const protocol = { stack: [], supplements: [], nutrition: [], exercise: [], stress: [], environment: [], retest: [] };
 
-    await supabase
+    const { error: persistError } = await supabase
       .from("lab_reports")
       .update({
         status: "completed",
@@ -547,6 +564,11 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
       })
       .eq("id", reportId)
       .eq("user_id", user.id);
+
+    if (persistError) {
+      console.error("[analyze-lab-report] result persistence failed", { reportId, error: persistError.message });
+      return jsonResponse({ ok: false, code: "PERSIST_FAILED", retryable: true, message: "The analysis completed but could not be saved. Please retry." }, 500);
+    }
 
     return jsonResponse({ success: true, data: { ...parsed, biomarkers, insights: insightsArr, insights_de: insightsDeArr, detected_language: detectedLang, health_score: healthScore, protocol } });
   } catch (e) {
