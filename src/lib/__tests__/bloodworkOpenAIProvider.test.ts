@@ -18,6 +18,7 @@ describe('bloodwork OpenAI provider boundary', () => {
     expect(helper).toMatch(/detail:\s*"high"/);
     expect(helper).toMatch(/store:\s*false/);
     expect(helper).toMatch(/OPENAI_API_KEY/);
+    expect(helper).toMatch(/OPENAI_MODEL_BLOODWORK[\s\S]*gpt-4\.1/);
     expect(helper).not.toMatch(/OPENROUTER/i);
   });
 

@@ -1,7 +1,7 @@
 export const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 
 export const OPENAI_BLOODWORK_MODEL =
-  Deno.env.get("OPENAI_MODEL_BLOODWORK") ?? "gpt-4.1-mini";
+  Deno.env.get("OPENAI_MODEL_BLOODWORK") ?? "gpt-4.1";
 
 export class OpenAIConfigError extends Error {}
 
