@@ -20,6 +20,19 @@ type Biomarker = {
   layman_explanation_de?: string;
 };
 
+type AnalysisResult = {
+  summary?: string;
+  summary_de?: string;
+  report_date?: string | null;
+  detected_language?: "en" | "de";
+  health_score?: number | null;
+  biomarkers?: Biomarker[];
+  insights?: string[] | string;
+  insights_de?: string[] | string;
+  protocol?: Record<string, unknown>;
+  recommended_stack_peptides?: unknown[];
+};
+
 const CATEGORY_BY_NAME: Record<string, string> = {
   leukozyten: "inflammation",
   erythrozyten: "other",
@@ -205,7 +218,7 @@ function parseBiomarkersFromText(text: string): Biomarker[] {
       }
     }
 
-    const loose = row.match(/^([A-Za-zÄÖÜäöüß().\/\-\s]{3,}?)\s+[ES]?\s*([<>]?\d+[.,]?\d*\s*[▲▼]?)\s+((?:bis|ab|<|>|\d)[^\s]*(?:\s*-\s*\d+[.,]?\d*)?)\s+([A-Za-zµμ%\/^0-9,.²-]+)/);
+    const loose = row.match(/^([A-Za-zÄÖÜäöüß()./\-\s]{3,}?)\s+[ES]?\s*([<>]?\d+[.,]?\d*\s*[▲▼]?)\s+((?:bis|ab|<|>|\d)[^\s]*(?:\s*-\s*\d+[.,]?\d*)?)\s+([A-Za-zµμ%/^0-9,.²-]+)/);
     if (loose) {
       const name = loose[1].trim();
       const rawValue = loose[2];
@@ -287,9 +300,9 @@ async function extractTextFromPdf(base64: string, fileName: string): Promise<str
   return typeof content === "string" && content.trim().length > 100 ? normalizeText(content) : null;
 }
 
-function parseJsonContent(content: string) {
+function parseJsonContent(content: string): AnalysisResult {
   const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || content.match(/(\{[\s\S]*\})/) || [null, content];
-  return JSON.parse(jsonMatch[1]!.trim());
+  return JSON.parse(jsonMatch[1]!.trim()) as AnalysisResult;
 }
 
 serve(async (req) => {
@@ -456,7 +469,7 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
     ].filter(Boolean).join("\n");
 
     const aiStart = Date.now();
-    let parsed: any | null = !Deno.env.get("OPENROUTER_API_KEY") ? deterministicFallback : null;
+    let parsed: AnalysisResult | null = !Deno.env.get("OPENROUTER_API_KEY") ? deterministicFallback : null;
     let response: Response | null = null;
     if (!parsed) {
       try {
@@ -534,12 +547,12 @@ Interpret abnormal values conservatively. Do not diagnose, score overall health,
     if (!parsed.report_date && fallbackForMerge?.report_date) parsed.report_date = fallbackForMerge.report_date;
 
     let insightsArr: string[] = [];
-    if (Array.isArray(parsed.insights)) insightsArr = parsed.insights.map((s: any) => String(s));
+    if (Array.isArray(parsed.insights)) insightsArr = parsed.insights.map((s: unknown) => String(s));
     else if (typeof parsed.insights === "string") insightsArr = parsed.insights.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
     if (!insightsArr.length && fallbackForMerge?.insights) insightsArr = fallbackForMerge.insights;
 
     let insightsDeArr: string[] = [];
-    if (Array.isArray(parsed.insights_de)) insightsDeArr = parsed.insights_de.map((s: any) => String(s));
+    if (Array.isArray(parsed.insights_de)) insightsDeArr = parsed.insights_de.map((s: unknown) => String(s));
     else if (typeof parsed.insights_de === "string") insightsDeArr = parsed.insights_de.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
     if (!insightsDeArr.length && fallbackForMerge?.insights_de) insightsDeArr = fallbackForMerge.insights_de;
 

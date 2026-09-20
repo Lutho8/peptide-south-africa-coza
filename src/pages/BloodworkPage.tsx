@@ -38,6 +38,16 @@ type FunctionEnvelope = {
   retryable: boolean;
 };
 
+type AnalyzePayload = Partial<BloodworkScanResult> & {
+  insights?: string[] | string;
+  insights_de?: string[] | string;
+};
+
+type AnalyzeEnvelope = Partial<FunctionEnvelope> & {
+  ok?: boolean;
+  data?: AnalyzePayload;
+};
+
 function safeStorageName(name: string): string {
   const extension = name.match(/\.[a-z0-9]{2,5}$/i)?.[0]?.toLowerCase() ?? '';
   const stem = name
@@ -72,7 +82,7 @@ async function readFunctionError(error: unknown): Promise<FunctionEnvelope> {
 }
 
 function mapScanError(e: unknown): { message: string; code?: string } {
-  if (e && typeof e === 'object' && 'code' in (e as any)) {
+  if (e && typeof e === 'object' && 'code' in e) {
     const env = e as { message?: string; code?: string };
     return { message: env.message || 'Scan failed.', code: env.code };
   }
@@ -226,8 +236,8 @@ export default function BloodworkPage() {
 
         // Initial attempt plus 2s and 4s backoff on retryable errors.
         const BACKOFFS = [0, 2000, 4000];
-        let payload: any = null;
-        let lastEnvelope: any = null;
+        let payload: AnalyzePayload | null = null;
+        let lastEnvelope: AnalyzeEnvelope | null = null;
         for (let attempt = 0; attempt < BACKOFFS.length; attempt++) {
           if (abortRef.current?.signal.aborted) { progress.reset(); return; }
           if (BACKOFFS[attempt] > 0) {
@@ -261,16 +271,17 @@ export default function BloodworkPage() {
             if (functionError.retryable && attempt < BACKOFFS.length - 1) continue;
             throw functionError;
           }
-          if ((data as any)?.ok === false) {
-            lastEnvelope = data;
+          const envelope = data && typeof data === 'object' ? data as AnalyzeEnvelope : null;
+          if (envelope?.ok === false) {
+            lastEnvelope = envelope;
             console.warn('[bloodwork] envelope error', { attempt, data });
-            if ((data as any).retryable && attempt < BACKOFFS.length - 1) continue;
+            if (envelope.retryable && attempt < BACKOFFS.length - 1) continue;
             throw {
-              message: (data as any).message || 'Scan failed',
-              code: (data as any).code,
+              message: envelope.message || 'Scan failed',
+              code: envelope.code,
             };
           }
-          payload = (data as any)?.data;
+          payload = envelope?.data ?? null;
           if (payload) break;
           lastEnvelope = { ok: false, code: 'EMPTY_RESPONSE', retryable: true, message: 'Empty AI response — please retry.' };
         }
